@@ -202,3 +202,13 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(t.snapshot(at: 11.4).energy == 22)
     #expect(t.snapshot(at: 11.5).energy == 33)  // fresh Bubble from the boundary, not 0.2s in
 }
+
+@Test func changeFormKeepsEnergyAndValidFastMove() throws {
+    var t = try makeTracker()
+    t.setActive(speciesId: "medicham", at: 0)
+    t.identifyFastMove("COUNTER", at: 0)
+    t.changeForm(to: "lickitung")  // stand-in for a different form: Counter isn't in its moveset
+    #expect(t.active?.speciesId == "lickitung")
+    #expect(t.active?.fastMove?.moveId == "LICK")  // its only fast move
+    #expect(t.team.count == 1)
+}

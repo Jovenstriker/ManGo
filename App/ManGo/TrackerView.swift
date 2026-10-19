@@ -1,9 +1,12 @@
+import PhotosUI
 import PvPCore
 import SwiftUI
 
 struct TrackerView: View {
     @Bindable var model: TrackerModel
     @State private var pickingSpecies = false
+    @State private var screenshot: PhotosPickerItem?
+    @State private var screenshotResult: String?
 
     var body: some View {
         NavigationStack {
@@ -21,9 +24,35 @@ struct TrackerView: View {
             }
             .navigationTitle("Opponent Energy")
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("New battle", systemImage: "arrow.counterclockwise") { model.newBattle() }
+                ToolbarItem(placement: .topBarLeading) {
+                    // Starts screen recording with ManGo's screen reader.
+                    BroadcastPickerButton().frame(width: 44, height: 44)
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button("New battle", systemImage: "arrow.counterclockwise") { model.newBattle() }
+                        PhotosPicker(selection: $screenshot, matching: .screenshots) {
+                            Label("Test with screenshot", systemImage: "text.viewfinder")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+            .onChange(of: screenshot) { _, item in
+                guard let item else { return }
+                screenshot = nil
+                Task {
+                    guard let data = try? await item.loadTransferable(type: Data.self),
+                          let image = UIImage(data: data)?.cgImage
+                    else { return }
+                    screenshotResult = await model.testScreenshot(image)
+                }
+            }
+            .alert("Screenshot", isPresented: Binding(get: { screenshotResult != nil }, set: { if !$0 { screenshotResult = nil } })) {
+                Button("OK") {}
+            } message: {
+                Text(screenshotResult ?? "")
             }
             .sheet(isPresented: $pickingSpecies) {
                 if let data = model.data {
@@ -38,6 +67,7 @@ struct TrackerView: View {
         ScrollView {
             VStack(spacing: 20) {
                 teamRow(active: snap.pokemon)
+                screenReaderStatus(context: snap)
 
                 if snap.awaitingOpponent {
                     ContentUnavailableView(
@@ -77,6 +107,28 @@ struct TrackerView: View {
             if (model.tracker?.team.count ?? 0) < 3 {
                 Button("Add", systemImage: "plus") { pickingSpecies = true }
                     .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func screenReaderStatus(context snap: OpponentTracker.Snapshot) -> some View {
+        let forms = model.formOptions
+        HStack {
+            if let at = model.lastReadAt, Date.now.timeIntervalSince(at) < 3 {
+                Label(model.lastReadName.map { "Reading screen · \($0)" } ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
+                    .font(.caption).foregroundStyle(.green)
+            }
+            Spacer()
+            if forms.count > 1, let active = snap.pokemon {
+                Menu {
+                    ForEach(forms) { form in
+                        Button(form.speciesName) { model.changeForm(form.speciesId) }
+                            .disabled(form.speciesId == active.speciesId)
+                    }
+                } label: {
+                    Label("Form", systemImage: "arrow.triangle.swap").font(.caption)
+                }
             }
         }
     }

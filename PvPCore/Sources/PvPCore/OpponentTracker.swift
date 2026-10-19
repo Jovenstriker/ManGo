@@ -17,7 +17,7 @@ public let maxEnergy = 100
 /// so the tracker can be driven by taps, by a vision pipeline, or by tests.
 public struct OpponentTracker: Sendable {
     public struct Pokemon: Sendable, Hashable {
-        public let speciesId: String
+        public var speciesId: String
         public var fastMove: Move?
         public var revealedChargedMoves: [Move] = []
         /// Energy settled as of `chainStart` (or as of switching out).
@@ -100,6 +100,24 @@ public struct OpponentTracker: Sendable {
         if let i = activeIndex, team[i].fastMove != nil {
             team[i].chainStart = t + Double(switchTurns) * turnDuration
         }
+    }
+
+    /// Corrects the active Pokémon's form (e.g. Ninetales -> Alolan Ninetales) without
+    /// touching its energy. The fast move is kept if the new form can learn it.
+    public mutating func changeForm(to speciesId: String) {
+        guard let i = activeIndex, data.species[speciesId] != nil,
+              !team.contains(where: { $0.speciesId == speciesId })
+        else { return }
+        let fast = data.fastMoves(for: speciesId)
+        team[i].speciesId = speciesId
+        if let current = team[i].fastMove, !fast.contains(current) {
+            team[i].fastMove = nil
+            team[i].chainStart = nil
+        }
+        if team[i].fastMove == nil, fast.count == 1 {
+            team[i].fastMove = fast[0]
+        }
+        team[i].revealedChargedMoves.removeAll { !(data.species[speciesId]?.chargedMoves.contains($0.moveId) ?? false) }
     }
 
     /// The active opponent was seen starting `moveId`, within its first turn.

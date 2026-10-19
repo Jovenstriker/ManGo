@@ -47,17 +47,31 @@ With a free Apple ID the app stops working after 7 days; press ▶ again to rein
 Tests: `cd PvPCore && swift test --scratch-path ~/Library/Caches/ManGo-PvPCore`. The build folder
 has to live outside Documents, because iCloud's file metadata makes code signing fail there.
 
-## Computer vision plan
+## Reading the opponent's name
 
-The goal is to replace taps with events from a ReplayKit Broadcast Upload Extension, which has
-a memory limit of about 50 MB:
+`Extension/ManGoBroadcast` is a ReplayKit Broadcast Upload Extension ("ManGo Screen Reader").
+While it's recording, it reads the top-right of the screen twice a second with Vision and passes
+the text to the app through the App Group `group.com.jovenstriker.mango`. The app matches the text
+against the top 500 names, allowing for small OCR errors. Once a name has been read twice in a row,
+it becomes the active opponent:
+
+- a name already on their team counts as a switch, or as the replacement after a faint
+- a new name is added to their team
+- a 4th new name starts a new battle
+
+The screen shows only the base name, so the app picks the highest-ranked form (e.g. Shadow
+Ninetales). Use **Form** to correct it. Nicknamed Pokémon won't match.
+
+Start it with the record button in the app, or from Control Center (long-press Screen Recording →
+ManGo Screen Reader). **⋯ → Test with screenshot** runs the reader on a saved battle screenshot.
+
+## Computer vision: next steps
 
 | Event | Signal on screen |
 |---|---|
-| `setActive` | Opponent's name, read with Apple's Vision text recognition (top-right) |
-| `identifyFastMove` | First fast move animation or damage tick. The move's turn length and damage can tell candidate moves apart |
-| `opponentThrewChargedMove` | Charged move banner or shield prompt. Read the move name from the banner text |
+| `identifyFastMove` | First fast move animation or damage tick |
+| `opponentThrewChargedMove` | Charged move banner. Read the move name from the banner text |
 | `pause` / `resume` | Cinematic starts and ends (screen layout changes) |
 
-The extension and the app share events through an App Group. A Picture-in-Picture window can
-show the readout on top of the game.
+The app is suspended while Pokémon GO is in front. A Picture-in-Picture window would keep it
+running and show the readout on top of the game.

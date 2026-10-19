@@ -22,26 +22,30 @@ back-to-back, so energy comes from the clock alone:
   their replacement starts with no switch turn.
 - **Pokémon list:** only PvPoke's top 500 in Great League, sorted by rank.
 
-The engine is in `Sources/PvPCore` (a Swift package with no UI). `OpponentTracker` takes
+The engine is in `PvPCore/` (a Swift package with no UI). `OpponentTracker` takes
 timestamped events, so it doesn't care whether they come from taps or from computer vision.
 
 ## Layout
 
-    Sources/PvPCore/      GameData (PvPoke parsing), OpponentTracker (energy engine)
-    Tests/PvPCoreTests/   engine tests (swift-testing)
-    App/ManGo/            SwiftUI app (manual tap mode)
+    ManGo.xcodeproj       the iOS app project (open this)
+    App/ManGo/            SwiftUI app (manual tap mode); Xcode picks up new files automatically
     App/ManGo/Resources/  bundled PvPoke data. Refresh with scripts/update_pvpoke_data.sh
+    PvPCore/              Swift package: GameData (PvPoke parsing), OpponentTracker (energy engine)
 
-## Running it
+## Running it on your iPhone
 
-1. Install Xcode from the Mac App Store.
-2. File → New → Project → iOS App, named `ManGo`, saved in this folder. Delete the generated
-   `ContentView.swift` and `ManGoApp.swift`, then drag in `App/ManGo/` (including Resources).
-3. File → Add Package Dependencies → Add Local… → pick this folder → add `PvPCore` to the app target.
-4. Set the deployment target to iOS 17. Run on your phone (signing with a free Apple ID works,
-   but the app has to be reinstalled every 7 days).
+1. Open `ManGo.xcodeproj` in Xcode.
+2. Click the **ManGo** target → **Signing & Capabilities** → set **Team** to your Apple ID's
+   Personal Team (add your Apple ID under Xcode → Settings → Accounts first). If the bundle ID
+   `com.jovenstriker.mango` is taken, change it to anything unique.
+3. Plug in your iPhone, tap **Trust**, and turn on **Settings → Privacy & Security → Developer Mode**.
+4. Pick your iPhone at the top of the Xcode window and press **▶**.
+5. On first launch, trust the app under **Settings → General → VPN & Device Management**.
 
-Tests: `swift test` (or ⌘U in Xcode).
+With a free Apple ID the app stops working after 7 days; press ▶ again to reinstall.
+
+Tests: `cd PvPCore && swift test --scratch-path ~/Library/Caches/ManGo-PvPCore`. The build folder
+has to live outside Documents, because iCloud's file metadata makes code signing fail there.
 
 ## Computer vision plan
 

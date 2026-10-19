@@ -21,6 +21,10 @@ final class TrackerModel {
 
     init() {
         load()
+        #if DEBUG
+        // Launch with `-demoBattle` to start mid-battle against Medicham, for checking the UI.
+        if ProcessInfo.processInfo.arguments.contains("-demoBattle") { setActive("medicham") }
+        #endif
         ScreenTextObserver.start { [weak self] in
             self?.handleScreenText(BroadcastChannel.latest())
         }
@@ -102,7 +106,11 @@ final class TrackerModel {
 
     func changeForm(_ speciesId: String) { tracker?.changeForm(to: speciesId) }
 
-    func setActive(_ speciesId: String) { tracker?.setActive(speciesId: speciesId, at: now()) }
+    /// Starts counting with PvPoke's recommended fast move; tapping a fast move corrects it.
+    func setActive(_ speciesId: String) {
+        let recommended = data?.species[speciesId]?.recommendedMoveset.first
+        tracker?.setActive(speciesId: speciesId, at: now(), assumeFastMove: recommended)
+    }
     func sawFastMove(_ moveId: String) { tracker?.identifyFastMove(moveId, at: now()) }
     func opponentThrewChargedMove(_ moveId: String) { tracker?.opponentThrewChargedMove(moveId, at: now()) }
     func playerThrewChargedMove() { tracker?.playerThrewChargedMove(at: now()) }

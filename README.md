@@ -65,6 +65,16 @@ Ninetales). Use **Form** to correct it. Nicknamed Pokémon won't match.
 Start it with the record button in the app, or from Control Center (long-press Screen Recording →
 ManGo Screen Reader). **⋯ → Test with screenshot** runs the reader on a saved battle screenshot.
 
+## Overlay on top of Pokémon GO
+
+The card at the top of the app is a Picture-in-Picture "video" (`App/ManGo/PictureInPicture.swift`),
+redrawn 4 times a second. Swipe home with ManGo open and it pops out over Pokémon GO; you can also
+use **Pop out overlay**. While it's up, ManGo keeps running in the background, so screen reads keep
+arriving. You can't tap through a PiP window, so a newly detected Pokémon starts counting with
+PvPoke's recommended fast move. PiP needs a real iPhone; the simulator doesn't support it.
+
+Debug builds take a `-demoBattle` launch argument that starts mid-battle against Medicham.
+
 ## Computer vision: next steps
 
 | Event | Signal on screen |
@@ -73,5 +83,3 @@ ManGo Screen Reader). **⋯ → Test with screenshot** runs the reader on a save
 | `opponentThrewChargedMove` | Charged move banner. Read the move name from the banner text |
 | `pause` / `resume` | Cinematic starts and ends (screen layout changes) |
 
-The app is suspended while Pokémon GO is in front. A Picture-in-Picture window would keep it
-running and show the readout on top of the game.

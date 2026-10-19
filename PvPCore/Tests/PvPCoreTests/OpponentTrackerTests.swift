@@ -212,3 +212,16 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(t.active?.fastMove?.moveId == "LICK")  // its only fast move
     #expect(t.team.count == 1)
 }
+
+@Test func assumedFastMoveStartsCountingWithoutATap() throws {
+    var t = try makeTracker()
+    t.setActive(speciesId: "lickitung", at: 0)
+    t.setActive(speciesId: "medicham", at: 1, assumeFastMove: "COUNTER")  // 1-turn switch: from 1.5
+    #expect(t.active?.fastMove?.moveId == "COUNTER")
+    #expect(t.snapshot(at: 2.4).energy == 0)
+    #expect(t.snapshot(at: 2.5).energy == 6)
+    t.identifyFastMove("PSYCHO_CUT", at: 3)  // correction: 6 banked, then +9 per second
+    #expect(t.snapshot(at: 4).energy == 15)
+    t.setActive(speciesId: "azumarill", at: 5, assumeFastMove: "NOT_ITS_MOVE")  // ignored if invalid
+    #expect(t.active?.fastMove == nil)
+}

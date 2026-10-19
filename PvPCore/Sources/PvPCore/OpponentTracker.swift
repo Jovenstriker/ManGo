@@ -74,7 +74,10 @@ public struct OpponentTracker: Sendable {
     /// known (seen before, or the species has only one), its chain starts once the
     /// switch completes: 1 turn, or 0 for the lead, a switch right after the
     /// opponent's charged move, or a replacement after a faint (which also resumes the clock).
-    public mutating func setActive(speciesId: String, at now: TimeInterval) {
+    ///
+    /// `assumeFastMove` fills in a fast move that hasn't been seen yet (e.g. PvPoke's
+    /// recommended one), so counting starts without a tap. `identifyFastMove` corrects it.
+    public mutating func setActive(speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil) {
         let afterFaint = awaitingOpponent
         if afterFaint {
             awaitingOpponent = false
@@ -96,6 +99,10 @@ public struct OpponentTracker: Sendable {
             if fast.count == 1 { p.fastMove = fast[0] }
             team.append(p)
             activeIndex = team.count - 1
+        }
+        if let i = activeIndex, team[i].fastMove == nil, let id = assumeFastMove,
+           let move = data.fastMoves(for: speciesId).first(where: { $0.moveId == id }) {
+            team[i].fastMove = move
         }
         if let i = activeIndex, team[i].fastMove != nil {
             team[i].chainStart = t + Double(switchTurns) * turnDuration

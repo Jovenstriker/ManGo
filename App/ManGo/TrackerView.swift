@@ -7,6 +7,7 @@ struct TrackerView: View {
     @State private var pickingSpecies = false
     @State private var screenshot: PhotosPickerItem?
     @State private var screenshotResult: String?
+    @State private var overlay = OverlayController()
 
     var body: some View {
         NavigationStack {
@@ -54,6 +55,7 @@ struct TrackerView: View {
             } message: {
                 Text(screenshotResult ?? "")
             }
+            .task { overlay.attach(model) }
             .sheet(isPresented: $pickingSpecies) {
                 if let data = model.data {
                     SpeciesPicker(data: data) { model.setActive($0.speciesId) }
@@ -66,6 +68,7 @@ struct TrackerView: View {
     private func content(_ snap: OpponentTracker.Snapshot) -> some View {
         ScrollView {
             VStack(spacing: 20) {
+                overlaySection
                 teamRow(active: snap.pokemon)
                 screenReaderStatus(context: snap)
 
@@ -93,6 +96,22 @@ struct TrackerView: View {
     }
 
     // MARK: Sections
+
+    /// The PiP card. It pops out over Pokémon GO automatically when you leave the app.
+    private var overlaySection: some View {
+        VStack(spacing: 6) {
+            OverlayPreview(layer: overlay.displayLayer)
+                .aspectRatio(OverlayController.size.width / OverlayController.size.height, contentMode: .fit)
+                .frame(maxWidth: 260)
+            if overlay.isSupported {
+                Button(overlay.isActive ? "Close overlay" : "Pop out overlay",
+                       systemImage: "pip.enter") { overlay.toggle() }
+                    .font(.caption)
+            } else {
+                Text("Picture-in-Picture isn't available on this device").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
 
     private func teamRow(active: OpponentTracker.Pokemon?) -> some View {
         HStack {
@@ -151,7 +170,7 @@ struct TrackerView: View {
         let options = model.data?.fastMoves(for: p.speciesId) ?? []
         let recommended = model.data?.species[p.speciesId]?.recommendedMoveset.first
         VStack(alignment: .leading, spacing: 8) {
-            Text(p.fastMove == nil ? "Tap their fast move when you see it" : "Fast move · tap to re-sync")
+            Text(p.fastMove == nil ? "Tap their fast move when you see it" : "Fast move · tap when you see it to correct")
                 .font(.caption).foregroundStyle(.secondary)
             ForEach(options) { move in
                 Button {

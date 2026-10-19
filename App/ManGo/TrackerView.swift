@@ -39,7 +39,13 @@ struct TrackerView: View {
             VStack(spacing: 20) {
                 teamRow(active: snap.pokemon)
 
-                if let p = snap.pokemon {
+                if snap.awaitingOpponent {
+                    ContentUnavailableView(
+                        "Their Pokémon fainted",
+                        systemImage: "pause.circle",
+                        description: Text("Pick their next Pokémon when it comes out. Counting resumes then.")
+                    )
+                } else if let p = snap.pokemon {
                     energyGauge(snap)
                     fastMoveSection(p, turnInto: snap.turnIntoFastMove)
                     chargedMoveSection(snap)
@@ -65,7 +71,8 @@ struct TrackerView: View {
                 Button(name(p.speciesId)) { model.setActive(p.speciesId) }
                     .buttonStyle(.bordered)
                     .tint(isActive ? .accentColor : .secondary)
-                    .disabled(isActive)
+                    .strikethrough(p.isFainted)
+                    .disabled(isActive || p.isFainted)
             }
             if (model.tracker?.team.count ?? 0) < 3 {
                 Button("Add", systemImage: "plus") { pickingSpecies = true }
@@ -151,22 +158,38 @@ struct TrackerView: View {
         .disabled(snap.isPaused)
     }
 
-    /// While either side's charged move plays out, counting is stopped until the battle resumes.
+    /// While a charged move plays out or a fainted Pokémon is replaced, counting is
+    /// stopped until the battle resumes.
     private func chargedMoveControl(_ isPaused: Bool) -> some View {
-        Group {
+        VStack(spacing: 8) {
             if isPaused {
                 Button { model.resume() } label: {
                     Label("Battle resumed", systemImage: "play.fill").frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.borderedProminent)
                 .tint(.green)
             } else {
                 Button { model.playerThrewChargedMove() } label: {
                     Label("I threw a charged move", systemImage: "bolt.fill").frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.borderedProminent)
                 .tint(.orange)
+
+                HStack {
+                    Button { model.playerFainted() } label: {
+                        Text("Mine fainted").frame(maxWidth: .infinity)
+                    }
+                    Button {
+                        model.opponentFainted()
+                        if (model.tracker?.team.count ?? 0) < 3 { pickingSpecies = true }
+                    } label: {
+                        Text("Theirs fainted").frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .tint(.red)
             }
         }
-        .buttonStyle(.borderedProminent)
         .controlSize(.large)
     }
 

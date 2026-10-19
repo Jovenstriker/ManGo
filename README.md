@@ -18,6 +18,8 @@ back-to-back, so energy comes from the clock alone:
   1 turn later, or 0 turns if the opponent switches right after throwing a charged move.
   A Pokémon whose fast move is already known (seen before, or it has only one) starts
   counting on its own.
+- **Faint:** both sides stop attacking until the next Pokémon comes out. If theirs fainted,
+  their replacement starts with no switch turn.
 - **Pokémon list:** only PvPoke's top 500 in Great League, sorted by rank.
 
 The engine is in `Sources/PvPCore` (a Swift package with no UI). `OpponentTracker` takes

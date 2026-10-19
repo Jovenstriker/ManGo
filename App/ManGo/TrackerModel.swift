@@ -47,6 +47,8 @@ final class TrackerModel {
     func sawFastMove(_ moveId: String) { tracker?.identifyFastMove(moveId, at: now()) }
     func opponentThrewChargedMove(_ moveId: String) { tracker?.opponentThrewChargedMove(moveId, at: now()) }
     func playerThrewChargedMove() { tracker?.playerThrewChargedMove(at: now()) }
+    func playerFainted() { tracker?.playerFainted(at: now()) }
+    func opponentFainted() { tracker?.opponentFainted(at: now()) }
     func resume() { tracker?.resume(at: now()) }
     func setEnergy(_ energy: Int) { tracker?.setEnergy(energy, at: now()) }
 }

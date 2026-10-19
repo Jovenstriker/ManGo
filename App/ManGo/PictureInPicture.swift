@@ -27,8 +27,8 @@ final class OverlayController: NSObject {
         self.model = model
         displayLayer.videoGravity = .resizeAspect
 
-        // PiP needs a playback audio session. Mixing keeps Pokémon GO's sound playing.
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: .mixWithOthers)
+        // PiP needs a playback audio session. This may mute Pokémon GO's sound, which is fine.
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
         try? AVAudioSession.sharedInstance().setActive(true)
 
         if isSupported {

@@ -109,11 +109,55 @@ private func makeTracker() throws -> OpponentTracker {
     t.identifyFastMove("BUBBLE", at: 8)
     #expect(t.snapshot(at: 11).energy == 22)
 
-    // Medicham comes back: fast move already known, so the chain starts immediately.
+    // Medicham comes back: fast move already known, so it starts after the 1-turn switch.
     t.setActive(speciesId: "medicham", at: 20)
     #expect(t.snapshot(at: 20).energy == 30)
-    #expect(t.snapshot(at: 22).energy == 42)
+    #expect(t.snapshot(at: 20).turnIntoFastMove == nil)  // still switching in
+    #expect(t.snapshot(at: 21.4).energy == 30)
+    #expect(t.snapshot(at: 21.5).energy == 36)
     #expect(t.team.count == 2)
+}
+
+@Test func switchTakesOneTurn() throws {
+    var t = try makeTracker()
+    t.setActive(speciesId: "lickitung", at: 0)  // lead starts immediately
+    #expect(t.snapshot(at: 1).energy == 12)
+    t.setActive(speciesId: "medicham", at: 1)
+    t.setActive(speciesId: "lickitung", at: 3)  // Lick known: starts at 3.5
+    #expect(t.snapshot(at: 3.4).energy == 12)
+    #expect(t.snapshot(at: 4).energy == 18)
+
+}
+
+@Test func countdownIncludesSwitchTurn() throws {
+    var t = try makeTracker()
+    t.setActive(speciesId: "medicham", at: 0)
+    t.setActive(speciesId: "lickitung", at: 0)  // 0 energy, Lick starts at 0.5
+    let slam = try #require(t.snapshot(at: 0).chargedMoves.first)
+    #expect(slam.fastMovesNeeded == 6)  // Body Slam 35 / Lick 6
+    #expect(slam.turnsUntilReady == 7)  // 6 Licks + 1 switch turn
+}
+
+@Test func switchRightAfterChargedMoveIsFree() throws {
+    var t = try makeTracker()
+    t.setActive(speciesId: "medicham", at: 0)
+    t.identifyFastMove("COUNTER", at: 0)
+    t.setActive(speciesId: "lickitung", at: 1)  // normal switch: Lick from 1.5
+    #expect(t.snapshot(at: 2.5).energy == 12)
+    t.opponentThrewChargedMove("BODY_SLAM", at: 4.5)  // 6 Licks = 36, leaves 1
+    t.resume(at: 10)
+    t.setActive(speciesId: "medicham", at: 10)  // switch straight out of the charged move
+    #expect(t.snapshot(at: 10.9).energy == 6)  // Medicham left with 6 at 1s
+    #expect(t.snapshot(at: 11).energy == 12)  // first Counter lands 1s in: no switch turn
+    t.setActive(speciesId: "lickitung", at: 11)
+    #expect(t.snapshot(at: 11).energy == 1)
+}
+
+@Test func topRankedKeepsOnlyRankedSpecies() throws {
+    let data = try GameData(gamemasterJSON: Data(gamemaster.utf8), rankingsJSON: Data(rankings.utf8), topRanked: 1)
+    #expect(Array(data.species.keys) == ["medicham"])
+    #expect(data.species["medicham"]?.rank == 1)
+    #expect(data.moves.count == 13)  // moves stay complete
 }
 
 @Test func singleFastMoveSpeciesStartsAutomatically() throws {

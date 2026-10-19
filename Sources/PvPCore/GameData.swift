@@ -31,6 +31,8 @@ public struct Species: Codable, Hashable, Sendable, Identifiable {
     public let chargedMoves: [String]
     /// PvPoke's recommended moveset: [fast, charged1, charged2]. Empty if unranked.
     public var recommendedMoveset: [String] = []
+    /// 1-based PvPoke ranking. `nil` if unranked.
+    public var rank: Int?
 
     public var id: String { speciesId }
 
@@ -39,10 +41,10 @@ public struct Species: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
-/// PvPoke game data: every species and move, plus a league's ranking movesets.
+/// PvPoke game data: species and moves, plus a league's ranks and movesets.
 ///
 /// Load it from PvPoke's `src/data/gamemaster.json` and
-/// `src/data/rankings/all/overall/rankings-<cp>.json`.
+/// `src/data/rankings/all/overall/rankings-1500.json`.
 public struct GameData: Sendable {
     public let species: [String: Species]
     public let moves: [String: Move]
@@ -52,7 +54,8 @@ public struct GameData: Sendable {
         self.moves = Dictionary(moves.map { ($0.moveId, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
-    public init(gamemasterJSON: Data, rankingsJSON: Data? = nil) throws {
+    /// With `topRanked`, only the top N species in the rankings are kept.
+    public init(gamemasterJSON: Data, rankingsJSON: Data? = nil, topRanked: Int? = nil) throws {
         struct Gamemaster: Decodable {
             let pokemon: [Species]
             let moves: [Move]
@@ -66,9 +69,17 @@ public struct GameData: Sendable {
         var species = gm.pokemon
         if let rankingsJSON {
             let rankings = try JSONDecoder().decode([Ranking].self, from: rankingsJSON)
-            let movesets = Dictionary(rankings.map { ($0.speciesId, $0.moveset) }, uniquingKeysWith: { a, _ in a })
+            var byId: [String: (rank: Int, moveset: [String])] = [:]
+            for (i, r) in rankings.enumerated() where byId[r.speciesId] == nil {
+                byId[r.speciesId] = (i + 1, r.moveset)
+            }
             for i in species.indices {
-                species[i].recommendedMoveset = movesets[species[i].speciesId] ?? []
+                guard let r = byId[species[i].speciesId] else { continue }
+                species[i].rank = r.rank
+                species[i].recommendedMoveset = r.moveset
+            }
+            if let topRanked {
+                species = species.filter { ($0.rank ?? .max) <= topRanked }
             }
         }
         self.init(species: species, moves: gm.moves)
@@ -86,7 +97,7 @@ public struct GameData: Sendable {
         return ordered.compactMap { moves[$0] }
     }
 
-    /// Species whose name matches `query`, ranked species first.
+    /// Species whose name matches `query`: name-prefix matches first, then by rank.
     public func search(_ query: String, limit: Int = 20) -> [Species] {
         let q = query.lowercased()
         return species.values
@@ -94,7 +105,7 @@ public struct GameData: Sendable {
             .sorted { a, b in
                 let aPrefix = a.speciesName.lowercased().hasPrefix(q), bPrefix = b.speciesName.lowercased().hasPrefix(q)
                 if aPrefix != bPrefix { return aPrefix }
-                if a.recommendedMoveset.isEmpty != b.recommendedMoveset.isEmpty { return !a.recommendedMoveset.isEmpty }
+                if a.rank != b.rank { return (a.rank ?? .max) < (b.rank ?? .max) }
                 return a.speciesName < b.speciesName
             }
             .prefix(limit)

@@ -53,6 +53,8 @@ public struct OpponentTracker: Sendable {
 
     private var pausedAt: TimeInterval?
     private var pausedTotal: TimeInterval = 0
+    /// Battle time of the opponent's last charged move; a switch right after it is free.
+    private var lastChargedMoveAt: TimeInterval?
 
     public init(data: GameData) {
         self.data = data
@@ -65,9 +67,13 @@ public struct OpponentTracker: Sendable {
 
     /// The opponent's lead appeared, they switched, or a Pokémon fainted and a new one came in.
     /// The outgoing Pokémon keeps its energy. If the incoming fast move is already
-    /// known (seen before, or the species has only one), its chain starts now.
+    /// known (seen before, or the species has only one), its chain starts once the
+    /// switch completes: 1 turn, or 0 if the opponent just threw a charged move.
+    /// The lead (first Pokémon) starts immediately.
     public mutating func setActive(speciesId: String, at now: TimeInterval) {
         let t = battleTime(at: now)
+        let switchTurns = activeIndex == nil || justThrewChargedMove(atBattleTime: t) ? 0 : 1
+        lastChargedMoveAt = nil
         if let i = activeIndex {
             team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
             team[i].chainStart = nil
@@ -83,7 +89,7 @@ public struct OpponentTracker: Sendable {
             activeIndex = team.count - 1
         }
         if let i = activeIndex, team[i].fastMove != nil {
-            team[i].chainStart = t
+            team[i].chainStart = t + Double(switchTurns) * turnDuration
         }
     }
 
@@ -109,6 +115,7 @@ public struct OpponentTracker: Sendable {
         let current = energy(of: team[i], atBattleTime: t, rounding: .toNearestOrAwayFromZero)
         team[i].bankedEnergy = max(0, current - move.energy)
         if team[i].chainStart != nil { team[i].chainStart = t }
+        lastChargedMoveAt = t
         if !team[i].revealedChargedMoves.contains(move) {
             team[i].revealedChargedMoves.append(move)
         }
@@ -148,13 +155,18 @@ public struct OpponentTracker: Sendable {
         }
         let e = energy(of: p, atBattleTime: t)
 
-        var progress: TimeInterval?  // seconds into the current fast move
+        // Seconds into the current fast move; negative while a switch is still completing.
+        var progress: TimeInterval?
         var turnInto: Int?
         if let fast = p.fastMove, let start = p.chainStart {
             let moveDuration = Double(fast.turns) * turnDuration
-            let elapsed = max(0, t - start)
-            progress = elapsed.truncatingRemainder(dividingBy: moveDuration)
-            turnInto = Int(progress! / turnDuration)
+            let elapsed = t - start
+            if elapsed < 0 {
+                progress = elapsed
+            } else {
+                progress = elapsed.truncatingRemainder(dividingBy: moveDuration)
+                turnInto = Int(progress! / turnDuration)
+            }
         }
 
         let recommended = Set(data.species[p.speciesId]?.recommendedMoveset.dropFirst() ?? [])
@@ -192,6 +204,11 @@ public struct OpponentTracker: Sendable {
     private func battleTime(at now: TimeInterval) -> TimeInterval {
         let pausedNow = pausedAt.map { now - $0 } ?? 0
         return now - pausedTotal - pausedNow
+    }
+
+    private func justThrewChargedMove(atBattleTime t: TimeInterval) -> Bool {
+        guard let c = lastChargedMoveAt else { return false }
+        return t - c < turnDuration
     }
 
     private func energy(

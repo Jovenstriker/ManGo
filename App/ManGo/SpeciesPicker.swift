@@ -15,7 +15,13 @@ struct SpeciesPicker: View {
                     dismiss()
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(species.speciesName).font(.body)
+                        HStack {
+                            Text(species.speciesName).font(.body)
+                            Spacer()
+                            if let rank = species.rank {
+                                Text("#\(rank)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                            }
+                        }
                         Text(movesetLabel(species)).font(.caption).foregroundStyle(.secondary)
                     }
                 }

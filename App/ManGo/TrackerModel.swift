@@ -26,7 +26,11 @@ final class TrackerModel {
             guard let gm = Bundle.main.url(forResource: "gamemaster", withExtension: "json"),
                   let rankings = Bundle.main.url(forResource: "rankings-1500", withExtension: "json")
             else { throw CocoaError(.fileNoSuchFile) }
-            let data = try GameData(gamemasterJSON: Data(contentsOf: gm), rankingsJSON: Data(contentsOf: rankings))
+            let data = try GameData(
+                gamemasterJSON: Data(contentsOf: gm),
+                rankingsJSON: Data(contentsOf: rankings),
+                topRanked: 500
+            )
             tracker = OpponentTracker(data: data)
             loadError = nil
         } catch {

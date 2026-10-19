@@ -14,8 +14,11 @@ back-to-back, so energy comes from the clock alone:
   pauses during the cinematic.
 - **Your charged move:** pause the clock. Their fast move freezes mid-animation and continues
   when the battle resumes.
-- **Switch:** the outgoing Pokémon keeps its energy. A returning Pokémon whose fast move is
-  already known starts counting again right away.
+- **Switch:** the outgoing Pokémon keeps its energy. The incoming Pokémon's fast moves start
+  1 turn later, or 0 turns if the opponent switches right after throwing a charged move.
+  A Pokémon whose fast move is already known (seen before, or it has only one) starts
+  counting on its own.
+- **Pokémon list:** only PvPoke's top 500 in Great League, sorted by rank.
 
 The engine is in `Sources/PvPCore` (a Swift package with no UI). `OpponentTracker` takes
 timestamped events, so it doesn't care whether they come from taps or from computer vision.

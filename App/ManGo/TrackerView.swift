@@ -117,7 +117,10 @@ struct TrackerView: View {
         HStack {
             ForEach(model.tracker?.team ?? [], id: \.speciesId) { p in
                 let isActive = p.speciesId == active?.speciesId
-                Button(name(p.speciesId)) { model.setActive(p.speciesId) }
+                // Benched Pokémon show the energy they'll come back in with.
+                Button(isActive || p.isFainted ? name(p.speciesId) : "\(name(p.speciesId)) · \(p.bankedEnergy)") {
+                    model.setActive(p.speciesId)
+                }
                     .buttonStyle(.bordered)
                     .tint(isActive ? .accentColor : .secondary)
                     .strikethrough(p.isFainted)

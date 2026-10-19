@@ -23,7 +23,11 @@ final class TrackerModel {
         load()
         #if DEBUG
         // Launch with `-demoBattle` to start mid-battle against Medicham, for checking the UI.
-        if ProcessInfo.processInfo.arguments.contains("-demoBattle") { setActive("medicham") }
+        if ProcessInfo.processInfo.arguments.contains("-demoBattle") {
+            setActive("azumarill")
+            tracker?.setEnergy(42, at: now())
+            setActive("medicham")
+        }
         #endif
         ScreenTextObserver.start { [weak self] in
             self?.handleScreenText(BroadcastChannel.latest())
@@ -95,6 +99,14 @@ final class TrackerModel {
         }
         if team.count >= 3 { newBattle() }
         setActive(best.speciesId)
+    }
+
+    /// The opponent's other Pokémon that haven't fainted, with the energy they'll bring back in.
+    var bench: [(speciesId: String, name: String, energy: Int)] {
+        guard let tracker else { return [] }
+        return tracker.team
+            .filter { $0.speciesId != tracker.active?.speciesId && !$0.isFainted }
+            .map { ($0.speciesId, data?.species[$0.speciesId]?.speciesName ?? $0.speciesId, $0.bankedEnergy) }
     }
 
     /// Other forms sharing the active Pokémon's on-screen name, e.g. Shadow or Alolan.

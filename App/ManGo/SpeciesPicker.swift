@@ -36,8 +36,10 @@ struct SpeciesPicker: View {
         }
     }
 
+    /// PvPoke's recommended moveset, with each charged move's energy cost.
     private func movesetLabel(_ s: Species) -> String {
-        let ids = s.recommendedMoveset.isEmpty ? s.fastMoves.prefix(1) + s.chargedMoves.prefix(2) : s.recommendedMoveset[...]
-        return ids.compactMap { data.moves[$0]?.name }.joined(separator: " · ")
+        let rec = data.recommendedMoves(for: s.speciesId)
+        let charged = rec.charged.map { "\($0.name) \($0.energy)" }
+        return ([rec.fast?.name].compactMap { $0 } + charged).joined(separator: " · ")
     }
 }

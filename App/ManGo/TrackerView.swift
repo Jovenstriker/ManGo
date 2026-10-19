@@ -80,6 +80,7 @@ struct TrackerView: View {
                     )
                 } else if let p = snap.pokemon {
                     energyGauge(snap)
+                    pvpokeMoveset(p.speciesId)
                     fastMoveSection(p, turnInto: snap.turnIntoFastMove)
                     chargedMoveSection(snap)
                     chargedMoveControl(snap.isPaused)
@@ -166,6 +167,35 @@ struct TrackerView: View {
                 Text("Paused").font(.caption).foregroundStyle(.orange)
             }
         }
+    }
+
+    /// PvPoke's recommended moveset for Great League, with each move's energy.
+    @ViewBuilder
+    private func pvpokeMoveset(_ speciesId: String) -> some View {
+        if let rec = model.data?.recommendedMoves(for: speciesId), let fast = rec.fast {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("PvPoke recommended", systemImage: "star.fill")
+                    .font(.caption.bold()).foregroundStyle(.secondary)
+                HStack(alignment: .top) {
+                    moveStat(fast.name, detail: "+\(fast.energyGain) / \(fast.turns)T")
+                    ForEach(rec.charged) { move in
+                        Divider()
+                        moveStat(move.name, detail: "\(move.energy) energy")
+                    }
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.yellow.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    private func moveStat(_ name: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(name).font(.subheadline.bold()).lineLimit(1).minimumScaleFactor(0.7)
+            Text(detail).font(.caption).monospacedDigit().foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder

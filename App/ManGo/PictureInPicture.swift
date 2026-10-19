@@ -183,7 +183,8 @@ enum OverlayRenderer {
         let x = size.width * 0.42
         for (i, status) in snap.chargedMoves.prefix(2).enumerated() {
             let y = 92 + CGFloat(i) * 72
-            text("\(status.move.name) · \(status.move.energy)", at: CGPoint(x: x, y: y), size: 26, weight: .medium,
+            let star = status.isRecommended && !status.isRevealed ? "★ " : ""
+            text("\(star)\(status.move.name) · \(status.move.energy)", at: CGPoint(x: x, y: y), size: 26, weight: .medium,
                  color: UIColor(white: 0.75, alpha: 1), width: size.width - x - pad)
             let readiness: String
             if status.ready { readiness = "READY" }

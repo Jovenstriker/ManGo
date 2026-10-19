@@ -97,6 +97,14 @@ public struct GameData: Sendable {
         return ordered.compactMap { moves[$0] }
     }
 
+    /// PvPoke's recommended moveset as moves: the fast move and up to two charged moves.
+    /// Moves outside the species' list (Return, Frustration) are left out.
+    public func recommendedMoves(for speciesId: String) -> (fast: Move?, charged: [Move]) {
+        guard let s = species[speciesId], let first = s.recommendedMoveset.first else { return (nil, []) }
+        let charged = s.recommendedMoveset.dropFirst().filter { s.chargedMoves.contains($0) }
+        return (s.fastMoves.contains(first) ? moves[first] : nil, charged.compactMap { moves[$0] })
+    }
+
     /// Species whose name matches `query`: name-prefix matches first, then by rank.
     public func search(_ query: String, limit: Int = 20) -> [Species] {
         let q = query.lowercased()

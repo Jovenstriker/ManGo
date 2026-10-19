@@ -124,7 +124,8 @@ public struct OpponentTracker: Sendable {
         if team[i].fastMove == nil, fast.count == 1 {
             team[i].fastMove = fast[0]
         }
-        team[i].revealedChargedMoves.removeAll { !(data.species[speciesId]?.chargedMoves.contains($0.moveId) ?? false) }
+        let learnable = data.chargedMoves(for: speciesId)
+        team[i].revealedChargedMoves.removeAll { !learnable.contains($0) }
     }
 
     /// The active opponent was seen starting `moveId`, within its first turn.

@@ -225,3 +225,19 @@ private func makeTracker() throws -> OpponentTracker {
     t.setActive(speciesId: "azumarill", at: 5, assumeFastMove: "NOT_ITS_MOVE")  // ignored if invalid
     #expect(t.active?.fastMove == nil)
 }
+
+@Test func recommendedMovesOutsideTheListAreIgnored() throws {
+    let gm = """
+    {"pokemon":[{"speciesId":"machoke","speciesName":"Machoke","fastMoves":["COUNTER"],"chargedMoves":["CROSS_CHOP"]}],
+     "moves":[{"moveId":"COUNTER","name":"Counter","type":"fighting","energy":0,"energyGain":6,"turns":2},
+              {"moveId":"CROSS_CHOP","name":"Cross Chop","type":"fighting","energy":35,"energyGain":0,"turns":1},
+              {"moveId":"RETURN","name":"Return","type":"normal","energy":40,"energyGain":0,"turns":1}]}
+    """
+    let rankings = #"[{"speciesId":"machoke","moveset":["COUNTER","CROSS_CHOP","RETURN"]}]"#
+    let data = try GameData(gamemasterJSON: Data(gm.utf8), rankingsJSON: Data(rankings.utf8))
+    #expect(data.chargedMoves(for: "machoke").map(\.moveId) == ["CROSS_CHOP"])
+    let rec = data.recommendedMoves(for: "machoke")
+    #expect(rec.fast?.moveId == "COUNTER")
+    #expect(rec.charged.map(\.moveId) == ["CROSS_CHOP"])
+    #expect(rec.charged.map(\.energy) == [35])
+}

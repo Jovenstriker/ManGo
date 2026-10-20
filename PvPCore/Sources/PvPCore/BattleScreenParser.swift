@@ -40,7 +40,10 @@ public enum BattleEvent: Equatable, Sendable {
 /// - The opponent's Pokémon is named in the top-right box ("CP 1498 Stunfisk").
 /// - Charged moves end with a banner, "Stunfisk used Discharge!". Opponent charged
 ///   moves start with "Attack incoming!"; yours with "Get Ready!".
-/// - "Go, X!" is shown for both sides' switches, so it's not used.
+/// - "Go, X!" is shown for both sides' Pokémon. At the start it's always yours first, then
+///   the opponent's lead: the second one names their lead even if the name box is covered
+///   (by ManGo's own overlay, say) or it's the same species as yours. Mid-battle it isn't
+///   used, since it can't tell whose Pokémon it is.
 /// - After both leads appear there's a 3-2-1 countdown; the battle starts at a big "GO".
 /// - It ends with a big "YOU WIN!" (or lose/draw); the next one starts with "Finding opponent...".
 public struct BattleScreenParser: Sendable {
@@ -58,6 +61,8 @@ public struct BattleScreenParser: Sendable {
     private var pending: (key: String, count: Int, since: TimeInterval)?
     private var running: Bool?
     private var started = false
+    /// "Go, X!" names seen this battle before the opponent's lead was known.
+    private var goNames: [String] = []
     private var countdownSeen = false
     private var ended = false
     private var searching = false
@@ -175,6 +180,21 @@ public struct BattleScreenParser: Sendable {
             }
         }
 
+        // The opponent's lead from the start's "Go, X!" messages: yours, then theirs.
+        if opponentKey == nil {
+            for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
+                let text = line.text.trimmingCharacters(in: .whitespaces)
+                guard text.lowercased().hasPrefix("go,"),
+                      let match = matcher.match(String(text.dropFirst(3))) else { continue }
+                if goNames.last != match.key { goNames.append(match.key) }
+                if goNames.count == 2 {
+                    opponentKey = match.key
+                    pending = nil
+                    events.append(.opponentAppeared(match, since: read.time))
+                }
+            }
+        }
+
         // The opponent's Pokémon.
         let nameLines = lines.filter {
             $0.box.minX >= Self.nameBox.minX && (Self.nameBox.minY...Self.nameBox.maxY).contains($0.box.midY)
@@ -202,6 +222,7 @@ public struct BattleScreenParser: Sendable {
         pending = nil
         running = nil
         started = false
+        goNames = []
         countdownSeen = false
     }
 

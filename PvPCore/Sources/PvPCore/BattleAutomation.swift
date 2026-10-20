@@ -52,6 +52,8 @@ public struct BattleAutomation: Sendable {
     private var freeSwitchUntil: TimeInterval = -.infinity
     private var opponentThrewThisStop = false
     private var goAt: TimeInterval?
+    /// The lead is known but the countdown hasn't reached GO: its clock waits.
+    private var awaitingGo = false
 
 
     /// A switch this soon after the battle resumes counts as part of that stop.
@@ -72,6 +74,12 @@ public struct BattleAutomation: Sendable {
         previousReadTime = lastTime
         lastTime = read.time
         let t = read.time
+        if awaitingGo, let go = goAt, t >= go {
+            // GO itself wasn't read, but the countdown said when it would be.
+            awaitingGo = false
+            tracker.resume(at: go)
+            tracker.setEnergy(0, at: go)
+        }
         for event in parser.process(read) {
             switch event {
             case .searching:
@@ -89,6 +97,10 @@ public struct BattleAutomation: Sendable {
             case .battleStarted:
                 // Turn 0. The lead was probably read during the countdown: restart its clock now.
                 goAt = t
+                if awaitingGo {
+                    awaitingGo = false
+                    tracker.resume(at: t)
+                }
                 if tracker.team.count == 1, tracker.active?.fastMove != nil {
                     tracker.setEnergy(0, at: t)
                 }
@@ -167,6 +179,7 @@ public struct BattleAutomation: Sendable {
     private mutating func newBattle(_ tracker: inout OpponentTracker) {
         isBattleOver = false
         goAt = nil
+        awaitingGo = false
         stopped = false
         lastStopAt = -.infinity
         buttonsBackAt = nil
@@ -208,7 +221,13 @@ public struct BattleAutomation: Sendable {
         // A name change during a stop is a faint replacement or a switch right after their
         // charged move: both take 0 turns.
         let free = stopped || time < freeSwitchUntil
+        let isLead = tracker.active == nil
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free)
+        if isLead, goAt == nil {
+            // Named before the countdown's GO (from "Go, X!"): nothing happens until then.
+            tracker.pause(at: time)
+            awaitingGo = true
+        }
         note("Opponent: \(name(speciesId))")
     }
 

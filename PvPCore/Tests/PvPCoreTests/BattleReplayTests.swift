@@ -41,9 +41,10 @@ private func energiesAtThrows(_ log: [String]) -> [Int] {
     }
     energyAtThrows = energiesAtThrows(automation.log)
 
-    // Every pause in the recording: 7 opponent charged moves, 6 of yours (one back-to-back
+    // Every pause in the recording: the lead waiting for the countdown's GO (named from
+    // "Go, Stunfisk!" just before), 7 opponent charged moves, 6 of yours (one back-to-back
     // with theirs), 3 faints, and the end screen.
-    #expect(stops == 15)
+    #expect(stops == 16)
 
     // The opponent's team, in order, with the faint inferred from the screen.
     #expect(tracker.team.map(\.speciesId) == ["stunfisk", "cramorant", "fearow"])

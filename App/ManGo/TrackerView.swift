@@ -26,7 +26,7 @@ struct TrackerView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     // Starts screen recording with ManGo's screen reader.
-                    BroadcastPickerButton().frame(width: 44, height: 44)
+                    BroadcastPickerButton()
                 }
                 ToolbarItem(placement: .primaryAction) {
                     // For between battles; it also resets on its own when the next battle starts.

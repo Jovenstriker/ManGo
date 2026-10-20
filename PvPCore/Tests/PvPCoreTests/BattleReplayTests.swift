@@ -56,7 +56,9 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
     // move's cost (40 for all three moves). Fearow's Drill Run and Cramorant's first Dive
     // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
     // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
-    #expect(energyAtThrows == [63, 95, 73, 40, 40, 48, 48])
+    // Matches the fast moves counted by watching the recording: Stunfisk 6, 7 and 1 Thunder
+    // Shocks, Cramorant 5 Pecks each time, Fearow 6 Pecks.
+    #expect(energyAtThrows == [54, 77, 46, 40, 40, 40, 48])
     for energy in energyAtThrows {
         #expect(energy >= 40)
     }
@@ -131,12 +133,12 @@ private struct Screen {
     #expect(tracker.snapshot(at: 19.4).energy == 0)  // nothing counted during the stop
     #expect(tracker.team.first?.isFainted == true)
 
-    // The buttons are back at 20s; the battle resumed half a second before that.
+    // The buttons are back at 20s; the battle resumed 0.375s before that, at 19.625s.
     // Sand Attack: 4 energy per turn, no switch turn after a faint.
     play(Screen(opponent: "Corviknight"), from: 20, to: 22)
-    #expect(tracker.snapshot(at: 19.4).energy == 0)
-    #expect(tracker.snapshot(at: 20).energy == 4)
-    #expect(tracker.snapshot(at: 22).energy == 20)
+    #expect(tracker.snapshot(at: 20).energy == 0)
+    #expect(tracker.snapshot(at: 20.125).energy == 4)
+    #expect(tracker.snapshot(at: 22).energy == 16)
 }
 
 /// A second real battle (Altaria/Melmetal/Mimikyu vs Marowak/Sableye (Shadow)/Talonflame),
@@ -168,16 +170,12 @@ private struct Screen {
         "Marowak used Bone Club",
     ])
 
-    // The "GO" read as "CO" still starts Marowak's clock: it threw 5 Mud Slaps (50) before
-    // its first Rock Slide (45), keeping 5. Before the second: 1 Mud Slap, 1 in progress
-    // when your Sky Attack went off (it counts), and 3 after: 55. That matches the hits
-    // on your HP bar in the recording.
+    // The "GO" read as "CO" still starts Marowak's clock.
     // Every throw is at or above its cost: Rock Slide 45, Drain Punch and Foul Play 40,
     // Bone Club 35.
-    #expect(energyAtThrows.prefix(2) == [50, 55])
-    // Sableye: Drain Punch at 40 (left 0), then 7 Shadow Claws (counted by watching the
-    // recording) for 56 at its first Foul Play.
-    #expect(energyAtThrows == [50, 55, 40, 40, 56, 40, 60])
+    // Matches the fast moves counted by watching the recording: Marowak 5 then 4 Mud Slaps,
+    // Sableye 5, 5, 7 and 3 Shadow Claws, Marowak (back in with 0) 4 Mud Slaps.
+    #expect(energyAtThrows == [50, 45, 40, 40, 56, 40, 40])
     #expect(energyAtThrows.count == 7)
     #expect(zip(energyAtThrows, [45, 45, 40, 40, 40, 40, 35]).allSatisfy { $0 >= $1 })
 }

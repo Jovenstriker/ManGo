@@ -176,7 +176,9 @@ public struct OpponentTracker: Sendable {
         pause(at: now)
         guard let i = activeIndex, let fast = team[i].fastMove, let start = team[i].chainStart else { return }
         let t = battleTime(at: now)
-        if t >= start - 1e-9 {
+        // Only if they've had a turn since their chain began: not when you throw straight
+        // after their own charged move, or as they come in.
+        if t > start + 1e-6 {
             let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
             team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain)
         }

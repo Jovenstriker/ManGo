@@ -12,17 +12,24 @@ public struct BattleAutomation: Sendable {
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
-    /// How long before your buttons are read again the battle actually resumes.
-    ///
-    /// Fitted on two recorded battles: with the clock frozen when the buttons vanish and
-    /// resumed 0.5s before they're back, every opponent charged move lands at or above
-    /// its cost (five exactly on it), and the fast move counts match the ones counted by
-    /// watching the recordings (Marowak 5 Mud Slaps, Sableye 7 Shadow Claws) and the hits
-    /// on your HP bar. Freezing at "Get Ready!" instead overcounted Sableye by one; less
-    /// lead made some throws impossible (Dive at 32 energy).
-    public var resumeLead: TimeInterval = 0.5
+    // Timing, fitted on two recorded battles against the opponent's fast move counts
+    // before each of their 14 charged moves, counted by watching the recordings. These
+    // values get all 14 exactly; so do their neighbors (±0.125s), so it isn't a knife edge.
+    // Reads come 4 times a second, so the screen changed up to 0.25s before it's seen.
+
+    /// The battle stops this long before your buttons are first read as gone.
+    public var stopLead: TimeInterval = 0.125
+    /// For your charged moves, the battle runs on while your fast move finishes and
+    /// freezes this long before "Get Ready!" is read (if that's after the buttons vanish).
+    public var playerFreezeBeforeCue: TimeInterval = 0.625
+    /// The battle resumes this long before your buttons are read again after a charged move...
+    public var resumeLead: TimeInterval = 0.375
+    /// ...and this long after a faint, when the next Pokémon comes in.
+    public var faintResumeLead: TimeInterval = 0.75
+    private var chargedMoveThisStop = false
 
     private var lastTime: TimeInterval = -.infinity
+    private var previousReadTime: TimeInterval = -.infinity
     /// The charged move buttons are hidden, and the clock is stopped.
     private var stopped = false
     private var lastStopAt: TimeInterval = -.infinity
@@ -47,6 +54,7 @@ public struct BattleAutomation: Sendable {
 
     public mutating func process(_ read: ScreenRead, tracker: inout OpponentTracker) {
         guard read.time > lastTime else { return }
+        previousReadTime = lastTime
         lastTime = read.time
         let t = read.time
         for event in parser.process(read) {
@@ -74,15 +82,18 @@ public struct BattleAutomation: Sendable {
                 // Either side's charged move or a faint: no turns pass from here.
                 stopped = true
                 opponentThrewThisStop = false
-                lastStopAt = t
-                tracker.pause(at: t)
+                chargedMoveThisStop = false
+                let stop = max(t - stopLead, previousReadTime, resumedAt)
+                lastStopAt = stop
+                tracker.pause(at: stop)
 
             case .opponentChargeStarted:
                 break
 
             case .resumed(let free):
                 stopped = false
-                let resume = max(t - resumeLead, lastStopAt)
+                let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
+                let resume = max(t - lead, lastStopAt)
                 resumedAt = resume
                 if free { freeSwitchUntil = resume + Self.afterStopWindow }
                 tracker.resume(at: resume)
@@ -99,11 +110,19 @@ public struct BattleAutomation: Sendable {
                 let before = tracker.snapshot(at: t).energy
                 tracker.opponentThrewChargedMove(move.moveId, at: t)
                 opponentThrewThisStop = true
+                chargedMoveThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
 
             case .playerChargedMove:
-                // The clock froze when your buttons vanished. Their fast move in progress
-                // pays out; they start fresh after your move.
+                // Their fast move in progress pays out; they start fresh after your move.
+                let before = playerFreezeBeforeCue
+                if t - before > lastStopAt, t - lastStopAt < 2.5, tracker.isPaused {
+                    // The battle ran on while your fast move finished: move the freeze later.
+                    tracker.resume(at: lastStopAt)
+                    lastStopAt = t - before
+                    tracker.pause(at: lastStopAt)
+                }
+                chargedMoveThisStop = true
                 tracker.playerThrewChargedMove(at: t)
 
             case .opponentAppeared(let match, let since):

@@ -68,6 +68,9 @@ public enum ScreenTextReader {
 public struct ScreenRead: Codable, Sendable, Equatable {
     public let time: TimeInterval
     public let lines: [RecognizedText]
+    /// The screen reader's memory when it made this read, in MB: now and the peak so far.
+    public var memoryMB: Double?
+    public var peakMemoryMB: Double?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

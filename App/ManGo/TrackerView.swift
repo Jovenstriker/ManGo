@@ -76,9 +76,18 @@ struct TrackerView: View {
 
     @ViewBuilder
     private var screenReaderStatus: some View {
-        if let at = model.lastReadAt, Date.now.timeIntervalSince(at) < 3 {
-            Label(model.lastEvent ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
-                .font(.caption).foregroundStyle(.green).lineLimit(1)
+        VStack(spacing: 4) {
+            if let at = model.lastReadAt, Date.now.timeIntervalSince(at) < 3 {
+                Label(model.lastEvent ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
+                    .font(.caption).foregroundStyle(.green).lineLimit(1)
+            }
+            // Stays up after the battle so you can check the peak afterwards.
+            if let peak = model.readerPeakMemoryMB {
+                let now = model.readerMemoryMB.map { String(format: "%.1f MB now · ", $0) } ?? ""
+                Text(now + String(format: "%.1f MB peak", peak) + " · limit ~50 MB")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(peak > 45 ? .red : .secondary)
+            }
         }
     }
 

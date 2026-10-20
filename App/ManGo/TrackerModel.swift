@@ -14,6 +14,10 @@ final class TrackerModel {
     private var automation: BattleAutomation?
     private var lastReadTime: TimeInterval = 0
     private(set) var lastReadAt: Date?
+    /// The screen reader's memory from its latest read, and the highest peak seen this
+    /// session, in MB. iOS stops a broadcast extension that goes over about 50 MB.
+    private(set) var readerMemoryMB: Double?
+    private(set) var readerPeakMemoryMB: Double?
     /// The latest thing the screen reader noticed, e.g. "Stunfisk used Discharge (81 → 41)".
     var lastEvent: String? { automation?.log.last }
 
@@ -70,6 +74,8 @@ final class TrackerModel {
         for read in reads {
             automation.process(read, tracker: &tracker)
             lastReadTime = read.time
+            if let now = read.memoryMB { readerMemoryMB = now }
+            if let peak = read.peakMemoryMB { readerPeakMemoryMB = max(readerPeakMemoryMB ?? 0, peak) }
         }
         self.automation = automation
         self.tracker = tracker

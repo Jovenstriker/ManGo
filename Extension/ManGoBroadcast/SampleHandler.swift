@@ -22,7 +22,12 @@ final class SampleHandler: RPBroadcastSampleHandler {
                 in: pixels, orientation: orientation(of: sampleBuffer), region: ScreenTextReader.fullScreen
             )) ?? []
         }
-        BroadcastChannel.send(ScreenRead(time: now, lines: lines))
+        var read = ScreenRead(time: now, lines: lines)
+        if let memory = MemoryUsage.current() {
+            read.memoryMB = memory.now
+            read.peakMemoryMB = memory.peak
+        }
+        BroadcastChannel.send(read)
     }
 
     private func orientation(of sampleBuffer: CMSampleBuffer) -> CGImagePropertyOrientation {

@@ -12,9 +12,10 @@ public struct BattleAutomation: Sendable {
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
-    // Timing, fitted on two recorded battles against the opponent's fast move counts
-    // before each of their 14 charged moves, counted by watching the recordings. These
-    // values get all 14 exactly; so do their neighbors (±0.125s), so it isn't a knife edge.
+    // Timing, fitted on three recorded battles against the opponent's fast move counts
+    // counted by watching the recordings (see "Test Videos/*.log"): these values get 20 of
+    // 21 counts and checkpoints exactly, and nearby values do as well. The miss is a single
+    // fast move (Fearow's last stretch in the first battle), about one read of jitter.
     // Reads come 4 times a second, so the screen changed up to 0.25s before it's seen.
 
     /// The battle stops this long before your buttons are first read as gone.
@@ -24,8 +25,10 @@ public struct BattleAutomation: Sendable {
     public var playerFreezeBeforeCue: TimeInterval = 0.625
     /// The battle resumes this long before your buttons are read again after a charged move...
     public var resumeLead: TimeInterval = 0.375
-    /// ...and this long after a faint, when the next Pokémon comes in.
-    public var faintResumeLead: TimeInterval = 0.75
+    /// ...and this long after a faint, when the next Pokémon comes in. (Fearow after
+    /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
+    /// your buttons come back.)
+    public var faintResumeLead: TimeInterval = 0.25
     private var chargedMoveThisStop = false
 
     private var lastTime: TimeInterval = -.infinity

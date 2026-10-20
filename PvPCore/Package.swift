@@ -9,6 +9,8 @@ let package = Package(
     ],
     targets: [
         .target(name: "PvPCore"),
+        // Dev tool: prints the text in a battle recording over time.
+        .executableTarget(name: "screen-log", dependencies: ["PvPCore"]),
         .testTarget(name: "PvPCoreTests", dependencies: ["PvPCore"]),
     ]
 )

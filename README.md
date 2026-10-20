@@ -28,7 +28,7 @@ timestamped events, so it doesn't care whether they come from taps or from compu
 ## Layout
 
     ManGo.xcodeproj       the iOS app project (open this)
-    App/ManGo/            SwiftUI app (manual tap mode); Xcode picks up new files automatically
+    App/ManGo/            SwiftUI app (display only); Xcode picks up new files automatically
     App/ManGo/Resources/  bundled PvPoke data. Refresh with scripts/update_pvpoke_data.sh
     PvPCore/              Swift package: GameData (PvPoke parsing), OpponentTracker (energy engine)
 

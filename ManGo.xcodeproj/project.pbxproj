@@ -338,8 +338,8 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extension/ManGoBroadcast.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = G4WLNLRTJZ;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = G4WLNLRTJZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Extension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "ManGo Screen Reader";
@@ -363,8 +363,8 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extension/ManGoBroadcast.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = G4WLNLRTJZ;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = G4WLNLRTJZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Extension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "ManGo Screen Reader";

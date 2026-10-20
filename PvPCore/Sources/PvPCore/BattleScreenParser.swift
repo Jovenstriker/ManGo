@@ -1,0 +1,144 @@
+import Foundation
+
+/// Something that happened on the battle screen.
+public enum BattleEvent: Equatable, Sendable {
+    /// The normal battle UI disappeared: a charged move, a faint, or a menu. No turns pass.
+    case stopped
+    /// The battle UI is back. `freeSwitch` is true unless the stop was only your own
+    /// charged move: right after the opponent's charged move or a faint, their switch
+    /// takes 0 turns.
+    case resumed(freeSwitch: Bool)
+    /// The opponent's Pokémon, read from the name box in the top-right. `since` is when
+    /// the name was first read, before it was confirmed by the following reads.
+    case opponentAppeared(NameMatcher.Match, since: TimeInterval)
+    /// The opponent threw a charged move, read from the "X used Y!" banner.
+    case opponentChargedMove(moveName: String)
+}
+
+/// Turns screen reads of a Pokémon GO battle into `BattleEvent`s.
+///
+/// Worked out from a real battle recording:
+/// - Your charged move buttons ("FLAMETHROWER", "SKY ATTACK") sit at the bottom of the
+///   screen exactly while the battle is running. They vanish the moment either side's
+///   charged move starts, or a Pokémon faints, and return when the battle resumes.
+/// - The opponent's Pokémon is named in the top-right box ("CP 1498 Stunfisk").
+/// - Charged moves end with a banner, "Stunfisk used Discharge!". Opponent charged
+///   moves start with "Attack incoming!"; yours with "Get Ready!".
+/// - "Go, X!" is shown for both sides' switches, so it's not used.
+public struct BattleScreenParser: Sendable {
+    /// Screen bands, normalized with a top-left origin.
+    static let nameBox = (minX: 0.55, minY: 0.08, maxY: 0.2)
+    static let bannerBand = (minY: 0.15, maxY: 0.5)
+    static let buttonBand = (minY: 0.8, maxY: 1.0)
+
+    public let matcher: NameMatcher
+    private let chargedMoveNames: Set<String>
+    /// Reads in a row a name must appear in before it counts.
+    public var requiredReads = 2
+
+    public private(set) var opponentKey: String?
+    private var pending: (key: String, count: Int, since: TimeInterval)?
+    private var running: Bool?
+
+    // Within the current stop.
+    private var sawAttackIncoming = false
+    private var sawGetReady = false
+    private var opponentThrew = false
+    private var bannersSeen: Set<String> = []
+
+    public init(data: GameData) {
+        matcher = NameMatcher(data: data)
+        chargedMoveNames = Set(data.moves.values.filter { !$0.isFast && $0.energy > 0 }.map { NameMatcher.normalize($0.name) })
+    }
+
+    public mutating func process(_ read: ScreenRead) -> [BattleEvent] {
+        var events: [BattleEvent] = []
+        let lines = read.lines
+
+        // Running or stopped, from the charged move buttons.
+        let isRunning = lines.contains { line in
+            line.box.midY >= Self.buttonBand.minY && chargedMoveNames.contains(NameMatcher.normalize(line.text))
+        }
+        if isRunning != running {
+            if isRunning {
+                if running == false {
+                    events.append(.resumed(freeSwitch: opponentThrew || !sawGetReady))
+                }
+                sawAttackIncoming = false
+                sawGetReady = false
+                opponentThrew = false
+                bannersSeen = []
+            } else if running == true {
+                events.append(.stopped)
+            }
+            running = isRunning
+        }
+
+        // Charged move cues and banners.
+        for line in lines {
+            let key = NameMatcher.normalize(line.text)
+            if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
+            if key.contains("getready") { sawGetReady = true }
+        }
+        for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
+            guard let banner = Self.parseBanner(line.text) else { continue }
+            let moveKey = NameMatcher.normalize(banner.move)
+            // The banner stays up for ~2s and OCR varies ("Discharge!", "Dischargel"): count it once.
+            let seen = bannersSeen.contains { NameMatcher.editDistance($0, moveKey, limit: 2) <= 2 }
+            guard moveKey.count >= 3, !seen else { continue }
+            let byOpponent: Bool
+            if let user = banner.user.flatMap({ matcher.match($0)?.key }) {
+                // In a mirror match the name can't tell sides apart; use the cue that started the stop.
+                byOpponent = user == opponentKey && !(sawGetReady && !sawAttackIncoming)
+            } else {
+                // Banner read without its name: decide only if exactly one side's cue was seen.
+                guard sawAttackIncoming != sawGetReady else { continue }
+                byOpponent = sawAttackIncoming
+            }
+            bannersSeen.insert(moveKey)
+            if byOpponent {
+                opponentThrew = true
+                events.append(.opponentChargedMove(moveName: banner.move))
+            }
+        }
+
+        // The opponent's Pokémon.
+        let nameLines = lines.filter {
+            $0.box.minX >= Self.nameBox.minX && (Self.nameBox.minY...Self.nameBox.maxY).contains($0.box.midY)
+        }
+        if let match = nameLines.compactMap({ matcher.match($0.text) }).min(by: { $0.distance < $1.distance }) {
+            let same = pending?.key == match.key
+            let count = same ? pending!.count + 1 : 1
+            let since = same ? pending!.since : read.time
+            pending = (match.key, count, since)
+            if count >= requiredReads, match.key != opponentKey {
+                opponentKey = match.key
+                events.append(.opponentAppeared(match, since: since))
+            }
+        } else {
+            pending = nil
+        }
+        return events
+    }
+
+    public mutating func reset() {
+        self = BattleScreenParser(matcher: matcher, chargedMoveNames: chargedMoveNames, requiredReads: requiredReads)
+    }
+
+    private init(matcher: NameMatcher, chargedMoveNames: Set<String>, requiredReads: Int) {
+        self.matcher = matcher
+        self.chargedMoveNames = chargedMoveNames
+        self.requiredReads = requiredReads
+    }
+
+    /// "Stunfisk used Discharge!" -> ("Stunfisk", "Discharge"). OCR sometimes drops the
+    /// space ("Stunfiskused") or the name ("used Discharge!").
+    static func parseBanner(_ text: String) -> (user: String?, move: String)? {
+        let text = text.folding(options: .diacriticInsensitive, locale: nil)  // "úsed"
+        guard let range = text.range(of: "used", options: .caseInsensitive) else { return nil }
+        let user = text[..<range.lowerBound].trimmingCharacters(in: .whitespaces.union(.punctuationCharacters))
+        let move = text[range.upperBound...].trimmingCharacters(in: .whitespaces.union(.punctuationCharacters).union(.symbols))
+        guard !move.isEmpty else { return nil }
+        return (user.isEmpty ? nil : user, move)
+    }
+}

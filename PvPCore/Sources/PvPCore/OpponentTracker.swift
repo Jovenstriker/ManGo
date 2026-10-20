@@ -77,14 +77,17 @@ public struct OpponentTracker: Sendable {
     ///
     /// `assumeFastMove` fills in a fast move that hasn't been seen yet (e.g. PvPoke's
     /// recommended one), so counting starts without a tap. `identifyFastMove` corrects it.
-    public mutating func setActive(speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil) {
+    /// `freeSwitch` makes the switch take 0 turns, e.g. right after a faint.
+    public mutating func setActive(
+        speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false
+    ) {
         let afterFaint = awaitingOpponent
         if afterFaint {
             awaitingOpponent = false
             resume(at: now)
         }
         let t = battleTime(at: now)
-        let switchTurns = activeIndex == nil || afterFaint || justThrewChargedMove(atBattleTime: t) ? 0 : 1
+        let switchTurns = activeIndex == nil || afterFaint || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
         if let i = activeIndex {
             team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)

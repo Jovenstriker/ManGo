@@ -60,3 +60,15 @@ public enum ScreenTextReader {
         }
     }
 }
+
+/// Everything read from one screen frame, and when it was captured
+/// (`CACurrentMediaTime()` in the extension, or seconds into a recording).
+public struct ScreenRead: Codable, Sendable, Equatable {
+    public let time: TimeInterval
+    public let lines: [RecognizedText]
+
+    public init(time: TimeInterval, lines: [RecognizedText]) {
+        self.time = time
+        self.lines = lines
+    }
+}

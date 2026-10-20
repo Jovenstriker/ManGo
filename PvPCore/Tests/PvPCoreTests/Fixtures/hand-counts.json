@@ -2,16 +2,32 @@
   "gbl-battle-2026-10-20": {
     "video": "ScreenRecording_10-20-2026 00-33-51_1.MP4",
     "description": "First battle, recorded without ManGo. You: Altaria, Mimikyu, Melmetal. Opponent: Stunfisk, Cramorant, Fearow.",
-    "counts": [6, 7, 1, 5, 5, 5, 6],
+    "counts": [
+      6,
+      7,
+      1,
+      5,
+      5,
+      5,
+      6
+    ],
     "notes": {
       "1": "Rounding to the nearest fast move had given 7; only finished fast moves count when they throw.",
-      "7": "Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run."
+      "7": "Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run. Fearow had shielded your Double Iron Bash, and your buttons came back late; since Drill Run can only start as a Peck finishes, ManGo works out that the battle restarted 0.6s before them."
     }
   },
   "gbl-battle-2026-10-20-mango": {
     "video": "Test Videos/TestWithMangoV1.mov",
     "description": "Second battle, with ManGo's overlay on screen (dragged to the bottom partway through). You: Altaria, Melmetal, Mimikyu. Opponent: Marowak, Sableye (Shadow), Talonflame.",
-    "counts": [5, 4, 5, 5, 7, 3, 4],
+    "counts": [
+      5,
+      4,
+      5,
+      5,
+      7,
+      3,
+      4
+    ],
     "notes": {
       "1": "The countdown's GO read as \"CO\"; ManGo on the phone started late and showed 30 instead of 50.",
       "5": "ManGo said 8 before freezing at your buttons vanishing rather than at \"Get Ready!\"."
@@ -20,9 +36,17 @@
   "gbl-battle-2026-10-20-v2": {
     "video": "Test Videos/testV2.mov",
     "description": "Third battle, with ManGo's overlay on screen. You: Altaria, Melmetal, Mimikyu. Opponent: Melmetal, Ninetales (Shadow), Altaria (swapping Ninetales and Altaria).",
-    "counts": [6, 6, 0, 6, 2, null, null],
+    "counts": [
+      6,
+      6,
+      0,
+      6,
+      2,
+      null,
+      null
+    ],
     "notes": {
-      "3": "Thrown straight away with leftover energy. Melmetal then threw 3 Thunder Shocks and fainted to a fast move.",
+      "3": "Thrown straight away with leftover energy. Melmetal then threw 3 Thunder Shocks and fainted to a fast move. Thrown as soon as the battle restarted, about when your buttons came back.",
       "4": "Ninetales threw 2 Embers, you threw Dynamic Punch (both 2-turn moves, lined up) so 1 more slipped in, then 3 more with a 1-turn break between the 5th and 6th. ManGo can't see breaks, so it counts 7.",
       "6": "Dragon Breath is too fast to count by eye.",
       "7": "Dragon Breath is too fast to count by eye."

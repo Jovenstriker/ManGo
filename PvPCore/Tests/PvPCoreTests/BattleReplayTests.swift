@@ -18,6 +18,16 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
     return (data, reads)
 }
 
+
+/// Energy before each opponent charged move, from ManGo's log ("… used Drill Run (48 → 8)").
+private func energiesAtThrows(_ log: [String]) -> [Int] {
+    log.filter { $0.contains(" used ") }.compactMap { line in
+        guard let open = line.range(of: "(", options: .backwards),
+              let arrow = line.range(of: " → ", range: open.upperBound..<line.endIndex) else { return nil }
+        return Int(line[open.upperBound..<arrow.lowerBound])
+    }
+}
+
 @Test func replayTracksTheWholeBattle() throws {
     let (data, reads) = try loadBattle()
     var automation = BattleAutomation(data: data)
@@ -27,14 +37,10 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
 
     for read in reads {
         let wasPaused = tracker.isPaused
-        let energyBefore = tracker.snapshot(at: read.time).energy
-        let usedBefore = automation.log.filter { $0.contains(" used ") }.count
         automation.process(read, tracker: &tracker)
         if tracker.isPaused && !wasPaused { stops += 1 }
-        if automation.log.filter({ $0.contains(" used ") }).count > usedBefore {
-            energyAtThrows.append(energyBefore)
-        }
     }
+    energyAtThrows = energiesAtThrows(automation.log)
 
     // Every pause in the recording: 7 opponent charged moves, 6 of yours (one back-to-back
     // with theirs), 3 faints, and the end screen.
@@ -57,10 +63,10 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
     // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
     // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
     // Matches the fast moves counted by watching the recording: Stunfisk 6, 7 and 1 Thunder
-    // Shocks, Cramorant 5 Pecks each time. Fearow: 6 Pecks; ManGo gets its first two
-    // stretches right (2, then 3, around your two charged moves) but misses the last Peck
-    // before Drill Run: the battle resumed about one read earlier than ManGo assumes.
-    #expect(energyAtThrows == [54, 77, 46, 40, 40, 40, 40])
+    // Shocks, Cramorant 5 Pecks each time, Fearow 6 Pecks. Fearow's last Peck comes after
+    // it shielded your Double Iron Bash, when your buttons came back late: Drill Run can
+    // only start as a Peck finishes, which puts the restart 0.6s before the buttons.
+    #expect(energyAtThrows == [54, 77, 46, 40, 40, 40, 48])
     for energy in energyAtThrows {
         #expect(energy >= 40)
     }
@@ -152,13 +158,9 @@ private struct Screen {
     var tracker = OpponentTracker(data: data)
     var energyAtThrows: [Int] = []
     for read in reads {
-        let energyBefore = tracker.snapshot(at: read.time).energy
-        let usedBefore = automation.log.filter { $0.contains(" used ") }.count
         automation.process(read, tracker: &tracker)
-        if automation.log.filter({ $0.contains(" used ") }).count > usedBefore {
-            energyAtThrows.append(energyBefore)
-        }
     }
+    energyAtThrows = energiesAtThrows(automation.log)
     #expect(tracker.team.map(\.speciesId) == ["marowak", "sableye_shadow", "talonflame"])
     #expect(tracker.team.map(\.isFainted) == [false, false, true])
 

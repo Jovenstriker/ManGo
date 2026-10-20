@@ -37,16 +37,17 @@ var throwsSeen: [Throw] = []
 var logCount = 0
 var wasPaused = false
 for read in reads {
-    let before = tracker.snapshot(at: read.time).energy
-    let activeBefore = tracker.active
     automation.process(read, tracker: &tracker)
     let snap = tracker.snapshot(at: read.time)
     for line in automation.log.dropFirst(min(logCount, automation.log.count)) {
         timeline.append("\(clock(read.time))  \(line)")
-        if line.contains(" used "), let p = tracker.active,
-           let move = p.revealedChargedMoves.last {
-            throwsSeen.append(Throw(time: read.time, speciesId: p.speciesId, move: move, fast: p.fastMove,
-                                    before: activeBefore?.speciesId == p.speciesId ? before : before, after: snap.energy))
+        // Energy from the log line itself ("(48 → 8)"): it includes corrections made at the throw.
+        if line.contains(" used "), let p = tracker.active, let move = p.revealedChargedMoves.last,
+           let open = line.range(of: "(", options: .backwards),
+           let arrow = line.range(of: " → ", range: open.upperBound..<line.endIndex),
+           let close = line.range(of: ")", range: arrow.upperBound..<line.endIndex),
+           let b = Int(line[open.upperBound..<arrow.lowerBound]), let e = Int(line[arrow.upperBound..<close.lowerBound]) {
+            throwsSeen.append(Throw(time: read.time, speciesId: p.speciesId, move: move, fast: p.fastMove, before: b, after: e))
         }
     }
     logCount = automation.log.count

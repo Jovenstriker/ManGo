@@ -196,6 +196,30 @@ public struct OpponentTracker: Sendable {
         pause(at: now)
     }
 
+    /// The opponent's charged move can only start as a fast move's animation finishes. If
+    /// the stretch of battle since the last restart (from `stretchStart` to the stop at
+    /// `stop`, both wall times, no stops in between) ends partway through a fast move, the
+    /// restart guess was off: pick the whole number of fast moves whose implied restart
+    /// lies in `restartWindow`. Only adds one when that's the only fit (counting finished
+    /// moves already covers the other case). Returns whether it added one.
+    @discardableResult
+    public mutating func alignToChargedMove(stretchStart: TimeInterval, stop: TimeInterval,
+                                            restartWindow: ClosedRange<TimeInterval>) -> Bool {
+        guard isPaused, let i = activeIndex, let fast = team[i].fastMove, let start = team[i].chainStart else { return false }
+        let frozen = battleTime(at: stop)
+        let duration = Double(fast.turns) * turnDuration
+        let elapsed = frozen - start
+        // Only when their fast moves started at that restart, not partway through the stretch.
+        guard elapsed > 0, abs(elapsed - (stop - stretchStart)) < 0.05 else { return false }
+        let finished = (elapsed / duration + 1e-9).rounded(.down)
+        guard elapsed - finished * duration > 0.05 * duration else { return false }  // already on a boundary
+        let restartIfFinished = stop - finished * duration
+        let restartIfOneMore = stop - (finished + 1) * duration
+        guard !restartWindow.contains(restartIfFinished), restartWindow.contains(restartIfOneMore) else { return false }
+        team[i].chainStart = frozen - (finished + 1) * duration
+        return true
+    }
+
     /// Marks the active Pokémon fainted without touching the clock, for when the screen
     /// reader has already stopped it and will restart it when the battle resumes. Its
     /// energy is kept in case it was really a switch and it comes back.

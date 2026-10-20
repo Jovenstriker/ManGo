@@ -43,12 +43,12 @@ OPPONENT CHARGED MOVES
        calc: 40 = 0 left before + 5 × 8 (Peck); after: 40 − 40 = 0
   6  2:49.75  Cramorant             Dive (40)                 40 → 0        5           5     ✓
        calc: 40 = 0 left before + 5 × 8 (Peck); after: 40 − 40 = 0
-  7  3:36.50  Fearow                Drill Run (40)            40 → 0        5           6     ✗ (-1)
-       calc: 40 = 0 left before + 5 × 8 (Peck); after: 40 − 40 = 0
-       note: Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run.
+  7  3:36.50  Fearow                Drill Run (40)            48 → 8        6           6     ✓
+       calc: 48 = 0 left before + 6 × 8 (Peck); after: 48 − 40 = 8
+       note: Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run. Fearow had shielded your Double Iron Bash, and your buttons came back late; since Drill Run can only start as a Peck finishes, ManGo works out that the battle restarted 0.6s before them.
 
 SUMMARY
-  6 of 7 hand-counted charged moves match ManGo's fast move count exactly.
+  7 of 7 hand-counted charged moves match ManGo's fast move count exactly.
 
 TIMELINE (what the screen reader saw and did)
   0:40.50  Opponent: Stunfisk
@@ -93,8 +93,9 @@ TIMELINE (what the screen reader saw and did)
   3:18.25  You threw a charged move: Fearow 32 → 40 (its fast move in progress counts)
   3:28.00    running  Fearow at 40
   3:28.50    stopped  Fearow at 40
-  3:36.50  Fearow used Drill Run (40 → 0)
-  3:39.75  You threw a charged move: Fearow 0 → 0 (its fast move in progress counts)
+  3:36.50  Fearow had finished one more fast move: the battle restarted before your buttons came back
+  3:36.50  Fearow used Drill Run (48 → 8)
+  3:39.75  You threw a charged move: Fearow 8 → 8 (its fast move in progress counts)
   3:50.25  Opponent: Stunfisk
   3:51.25    running  Stunfisk at 6
   3:55.00    stopped  Stunfisk at 42

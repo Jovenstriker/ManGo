@@ -29,6 +29,18 @@ public struct BattleAutomation: Sendable {
     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
     /// your buttons come back.)
     public var faintResumeLead: TimeInterval = 0.25
+    /// Where the battle restarts relative to your buttons coming back, used with "a charged
+    /// move starts as a fast move finishes" to correct the restart guess when the opponent
+    /// throws. When the opponent shields your charged move ("BLOCKED!") the buttons come
+    /// back late (Fearow restarted 0.6s before them); otherwise, including when you shield
+    /// theirs, the restart is around them (Melmetal's straight-away Double Iron Bash
+    /// restarted about when they came back, Ninetales about 0.4s after).
+    public var restartWindowAfterShield: ClosedRange<TimeInterval> = -0.8 ... -0.2
+    public var restartWindow: ClosedRange<TimeInterval> = -0.5 ... 0.4
+    private var buttonsBackAt: TimeInterval?
+    private var shieldedThisStop = false
+    private var playerChargedThisStop = false
+    private var lastResumeAfterShield = false
     private var chargedMoveThisStop = false
 
     private var lastTime: TimeInterval = -.infinity
@@ -93,11 +105,18 @@ public struct BattleAutomation: Sendable {
             case .opponentChargeStarted:
                 break
 
+            case .shielded:
+                shieldedThisStop = true
+
             case .resumed(let free):
                 stopped = false
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
                 let resume = max(t - lead, lastStopAt)
                 resumedAt = resume
+                buttonsBackAt = t
+                lastResumeAfterShield = shieldedThisStop && playerChargedThisStop  // they blocked yours
+                shieldedThisStop = false
+                playerChargedThisStop = false
                 if free { freeSwitchUntil = resume + Self.afterStopWindow }
                 tracker.resume(at: resume)
 
@@ -107,6 +126,12 @@ public struct BattleAutomation: Sendable {
                 if speciesId != tracker.active?.speciesId {
                     tracker.changeForm(to: speciesId)
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
+                }
+                let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
+                if let back = buttonsBackAt, lastStopAt > resumedAt,
+                   tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
+                                              restartWindow: (back + window.lowerBound)...(back + window.upperBound)) {
+                    note("\(name(tracker.active?.speciesId)) had finished one more fast move: the battle restarted before your buttons came back")
                 }
                 let before = tracker.snapshot(at: t).energy
                 tracker.opponentThrewChargedMove(move.moveId, at: t)
@@ -124,6 +149,7 @@ public struct BattleAutomation: Sendable {
                     tracker.pause(at: lastStopAt)
                 }
                 chargedMoveThisStop = true
+                playerChargedThisStop = true
                 let energyBefore = tracker.snapshot(at: t).energy
                 tracker.playerThrewChargedMove(at: t)
                 if tracker.active != nil {
@@ -143,6 +169,7 @@ public struct BattleAutomation: Sendable {
         goAt = nil
         stopped = false
         lastStopAt = -.infinity
+        buttonsBackAt = nil
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
         guard !tracker.team.isEmpty else { return }

@@ -27,6 +27,8 @@ public enum BattleEvent: Equatable, Sendable {
     case battleEnded
     /// "Finding opponent…": matchmaking for the next battle.
     case searching
+    /// "BLOCKED!": a charged move was shielded.
+    case shielded
 }
 
 /// Turns screen reads of a Pokémon GO battle into `BattleEvent`s.
@@ -132,6 +134,9 @@ public struct BattleScreenParser: Sendable {
         }
 
         // Charged move cues and banners.
+        if running == false, lines.contains(where: { NameMatcher.normalize($0.text).hasPrefix("blocked") }) {
+            events.append(.shielded)
+        }
         for line in lines {
             let key = NameMatcher.normalize(line.text)
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }

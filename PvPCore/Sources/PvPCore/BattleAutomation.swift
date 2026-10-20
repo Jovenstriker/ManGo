@@ -170,7 +170,7 @@ public struct BattleAutomation: Sendable {
             // The clock stays as the screen says: if the battle is still stopped, the new
             // Pokémon's first fast move starts when it resumes, so it comes in at 0.
             note("\(name(tracker.active?.speciesId)) fainted")
-            tracker.markActiveFainted()
+            tracker.markActiveFainted(at: time)
         }
         // A name change during a stop is a faint replacement or a switch right after their
         // charged move: both take 0 turns.
@@ -183,13 +183,17 @@ public struct BattleAutomation: Sendable {
     /// same on-screen name (e.g. Discharge means Stunfisk, not Galarian Stunfisk).
     private func resolve(chargedMove name: String, tracker: OpponentTracker) -> (String, Move)? {
         guard let active = tracker.active?.speciesId, let s = data.species[active] else { return nil }
+        // The banner says "Weather Ball"; PvPoke calls it "Weather Ball (Fire)".
         let key = NameMatcher.normalize(name)
+        func moveKey(_ m: Move) -> String {
+            NameMatcher.normalize(m.name.split(separator: "(").first.map(String.init) ?? m.name)
+        }
         let base = s.speciesName.split(separator: "(").first.map(String.init) ?? s.speciesName
         let forms = [active] + (parser.matcher.match(base)?.candidates.map(\.speciesId).filter { $0 != active } ?? [])
         for id in forms {
             let moves = data.chargedMoves(for: id)
-            if let move = moves.first(where: { NameMatcher.normalize($0.name) == key })
-                ?? moves.first(where: { NameMatcher.editDistance(NameMatcher.normalize($0.name), key, limit: 2) <= 2 }) {
+            if let move = moves.first(where: { moveKey($0) == key })
+                ?? moves.first(where: { NameMatcher.editDistance(moveKey($0), key, limit: 2) <= 2 }) {
                 return (id, move)
             }
         }

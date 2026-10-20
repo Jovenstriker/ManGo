@@ -96,6 +96,7 @@ public struct OpponentTracker: Sendable {
 
         if let i = team.firstIndex(where: { $0.speciesId == speciesId }) {
             activeIndex = i
+            team[i].isFainted = false  // back in, so it was a switch after all
         } else {
             var p = Pokemon(speciesId: speciesId)
             let fast = data.fastMoves(for: speciesId)
@@ -196,9 +197,11 @@ public struct OpponentTracker: Sendable {
     }
 
     /// Marks the active Pokémon fainted without touching the clock, for when the screen
-    /// reader has already stopped it and will restart it when the battle resumes.
-    public mutating func markActiveFainted() {
+    /// reader has already stopped it and will restart it when the battle resumes. Its
+    /// energy is kept in case it was really a switch and it comes back.
+    public mutating func markActiveFainted(at now: TimeInterval) {
         guard let i = activeIndex else { return }
+        team[i].bankedEnergy = energy(of: team[i], atBattleTime: battleTime(at: now))
         team[i].isFainted = true
         team[i].chainStart = nil
     }

@@ -15,7 +15,7 @@ guard a.count == 5 else {
 let res = URL(fileURLWithPath: a[2])
 let data = try GameData(
     gamemasterJSON: Data(contentsOf: res.appending(path: "gamemaster.json")),
-    rankingsJSON: Data(contentsOf: res.appending(path: "rankings-1500.json")), topRanked: 500)
+    rankingsJSON: Data(contentsOf: res.appending(path: "rankings-1500.json")))
 let reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: a[1])))
 
 struct HandCounts: Decodable {

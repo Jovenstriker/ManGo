@@ -56,8 +56,7 @@ final class TrackerModel {
             else { throw CocoaError(.fileNoSuchFile) }
             let data = try GameData(
                 gamemasterJSON: Data(contentsOf: gm),
-                rankingsJSON: Data(contentsOf: rankings),
-                topRanked: 500
+                rankingsJSON: Data(contentsOf: rankings)
             )
             tracker = OpponentTracker(data: data)
             automation = BattleAutomation(data: data)

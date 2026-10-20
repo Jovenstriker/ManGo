@@ -10,8 +10,7 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
         .deletingLastPathComponent().appending(path: "App/ManGo/Resources")
     let data = try GameData(
         gamemasterJSON: Data(contentsOf: resources.appending(path: "gamemaster.json")),
-        rankingsJSON: Data(contentsOf: resources.appending(path: "rankings-1500.json")),
-        topRanked: 500
+        rankingsJSON: Data(contentsOf: resources.appending(path: "rankings-1500.json"))
     )
     let url = try #require(Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures"))
     let reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: url))

@@ -195,7 +195,8 @@ public struct BattleAutomation: Sendable {
         }
 
         let speciesId = seen?.speciesId ?? best.speciesId
-        let assumed = data.species[speciesId]?.recommendedMoveset.first
+        // PvPoke's recommended fast move, or for a Pokémon it doesn't rank, its first one.
+        let assumed = data.species[speciesId]?.recommendedMoveset.first ?? data.species[speciesId]?.fastMoves.first
         let duringStop = stopped || t - resumedAt < Self.afterStopWindow
         if tracker.active != nil, duringStop, !opponentThrewThisStop {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.

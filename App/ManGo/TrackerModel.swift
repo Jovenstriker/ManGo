@@ -28,6 +28,8 @@ final class TrackerModel {
 
     init() {
         load()
+        // Reads left over from a previous session belong to an old battle.
+        lastReadTime = now()
         #if DEBUG
         // Launch with `-demoBattle` to start mid-battle against Medicham, for checking the UI.
         if ProcessInfo.processInfo.arguments.contains("-demoBattle") {
@@ -66,6 +68,14 @@ final class TrackerModel {
     }
 
     // MARK: Screen reading
+
+    /// Starts over: forgets the opponent's team and energy. The screen reader keeps running.
+    func reset() {
+        guard let data else { return }
+        tracker = OpponentTracker(data: data)
+        automation?.reset()
+        lastReadTime = now()
+    }
 
     /// New reads from the broadcast extension, in order. The automation stops and starts
     /// the clock, subtracts the opponent's charged moves, and follows their switches.

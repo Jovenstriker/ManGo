@@ -40,9 +40,9 @@ public struct BattleAutomation: Sendable {
         parser = BattleScreenParser(data: data)
     }
 
+    /// Forgets everything, as if the screen reader had just started.
     public mutating func reset() {
-        parser.reset()
-        log = []
+        self = BattleAutomation(data: data)
     }
 
     public mutating func process(_ read: ScreenRead, tracker: inout OpponentTracker) {

@@ -27,6 +27,10 @@ struct TrackerView: View {
                     // Starts screen recording with ManGo's screen reader.
                     BroadcastPickerButton().frame(width: 44, height: 44)
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    // For between battles; it also resets on its own when the next battle starts.
+                    Button("Reset", systemImage: "arrow.counterclockwise") { model.reset() }
+                }
             }
             .task { overlay.attach(model) }
         }

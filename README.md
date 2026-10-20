@@ -67,6 +67,18 @@ The replay test checks every pause, charged move and faint. To analyze a new rec
 
     cd PvPCore && swift run --scratch-path ~/Library/Caches/ManGo-PvPCore screen-log <video.mp4>
 
+### Battle reports
+
+Each recorded battle has a report next to its video, `Test Videos/<video>.log`. It covers how
+ManGo counts and the timing settings, then each opponent charged move with the energy math
+(`54 = 0 left before + 6 × 9 (Thunder Shock)`), ManGo's fast move count next to the count from
+watching the recording, and a timeline of everything the screen reader saw and did. Hand counts and
+notes live in `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Regenerate the reports with
+`scripts/battle_reports.sh` after changing either. The videos themselves aren't committed.
+
+To add a battle: put the video in `Test Videos/`, run `screen-log <video> 0.25 --json` to get its
+screen text, trim it into a fixture like the others, add its hand counts, and add it to the script.
+
 The screen only shows the base name, so the app picks the highest-ranked form until a move reveals
 it. Nicknamed Pokémon won't match. The app has no manual controls: start the reader with the record
 button, and everything else comes from the screen.

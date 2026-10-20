@@ -102,10 +102,8 @@ public struct BattleAutomation: Sendable {
                 tracker.resume(at: resume)
 
             case .opponentChargedMove(let moveName):
-                guard let (speciesId, move) = resolve(chargedMove: moveName, tracker: tracker) else {
-                    note("Couldn't match move “\(moveName)”")
-                    continue
-                }
+                // Unmatched is usually a half-read banner; the next read has the whole name.
+                guard let (speciesId, move) = resolve(chargedMove: moveName, tracker: tracker) else { continue }
                 if speciesId != tracker.active?.speciesId {
                     tracker.changeForm(to: speciesId)
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
@@ -126,7 +124,11 @@ public struct BattleAutomation: Sendable {
                     tracker.pause(at: lastStopAt)
                 }
                 chargedMoveThisStop = true
+                let energyBefore = tracker.snapshot(at: t).energy
                 tracker.playerThrewChargedMove(at: t)
+                if tracker.active != nil {
+                    note("You threw a charged move: \(name(tracker.active?.speciesId)) \(energyBefore) → \(tracker.snapshot(at: t).energy) (its fast move in progress counts)")
+                }
 
             case .opponentAppeared(let match, let since):
                 appear(match, at: since, now: t, tracker: &tracker)
@@ -172,7 +174,7 @@ public struct BattleAutomation: Sendable {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.
             // The clock stays as the screen says: if the battle is still stopped, the new
             // Pokémon's first fast move starts when it resumes, so it comes in at 0.
-            note("\(name(tracker.active?.speciesId)) fainted")
+            note("\(name(tracker.active?.speciesId)) fainted or switched out")
             tracker.markActiveFainted(at: time)
         }
         // A name change during a stop is a faint replacement or a switch right after their

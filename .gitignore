@@ -4,7 +4,6 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 .DS_Store
-Test Videos/
 *.mov
 *.MOV
 *.mp4

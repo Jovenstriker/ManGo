@@ -56,7 +56,7 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
     // move's cost (40 for all three moves). Fearow's Drill Run and Cramorant's first Dive
     // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
     // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
-    #expect(energyAtThrows == [63, 95, 73, 40, 48, 48, 56])
+    #expect(energyAtThrows == [63, 95, 73, 40, 40, 48, 48])
     for energy in energyAtThrows {
         #expect(energy >= 40)
     }
@@ -128,14 +128,15 @@ private struct Screen {
     play(Screen(opponent: "Azumarill", buttons: false, banner: "Altaria used Flamethrower!"), from: 12, to: 14)
     play(Screen(opponent: "Corviknight", buttons: false), from: 14, to: 20)
     #expect(tracker.active?.speciesId == "corviknight")
-    #expect(tracker.snapshot(at: 19.9).energy == 0)  // nothing counted during the stop
+    #expect(tracker.snapshot(at: 19.4).energy == 0)  // nothing counted during the stop
     #expect(tracker.team.first?.isFainted == true)
 
-    // The battle resumes at 20s. Sand Attack: 4 energy per turn, no switch turn after a faint.
+    // The buttons are back at 20s; the battle resumed half a second before that.
+    // Sand Attack: 4 energy per turn, no switch turn after a faint.
     play(Screen(opponent: "Corviknight"), from: 20, to: 22)
-    #expect(tracker.snapshot(at: 20).energy == 0)
-    #expect(tracker.snapshot(at: 20.5).energy == 4)
-    #expect(tracker.snapshot(at: 22).energy == 16)
+    #expect(tracker.snapshot(at: 19.4).energy == 0)
+    #expect(tracker.snapshot(at: 20).energy == 4)
+    #expect(tracker.snapshot(at: 22).energy == 20)
 }
 
 /// A second real battle (Altaria/Melmetal/Mimikyu vs Marowak/Sableye (Shadow)/Talonflame),
@@ -174,6 +175,9 @@ private struct Screen {
     // Every throw is at or above its cost: Rock Slide 45, Drain Punch and Foul Play 40,
     // Bone Club 35.
     #expect(energyAtThrows.prefix(2) == [50, 55])
+    // Sableye: Drain Punch at 40 (left 0), then 7 Shadow Claws (counted by watching the
+    // recording) for 56 at its first Foul Play.
+    #expect(energyAtThrows == [50, 55, 40, 40, 56, 40, 60])
     #expect(energyAtThrows.count == 7)
     #expect(zip(energyAtThrows, [45, 45, 40, 40, 40, 40, 35]).allSatisfy { $0 >= $1 })
 }

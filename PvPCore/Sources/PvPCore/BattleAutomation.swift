@@ -12,17 +12,19 @@ public struct BattleAutomation: Sendable {
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
-    /// How long before your buttons reappear the battle actually resumes. Measured on two
-    /// recorded battles: 0.25s makes every opponent charged move land at or above its cost,
-    /// several exactly on it (with 0 some were impossible, like Rock Slide at 35 energy).
-    public var resumeLead: TimeInterval = 0.25
+    /// How long before your buttons are read again the battle actually resumes.
+    ///
+    /// Fitted on two recorded battles: with the clock frozen when the buttons vanish and
+    /// resumed 0.5s before they're back, every opponent charged move lands at or above
+    /// its cost (five exactly on it), and the fast move counts match the ones counted by
+    /// watching the recordings (Marowak 5 Mud Slaps, Sableye 7 Shadow Claws) and the hits
+    /// on your HP bar. Freezing at "Get Ready!" instead overcounted Sableye by one; less
+    /// lead made some throws impossible (Dive at 32 energy).
+    public var resumeLead: TimeInterval = 0.5
 
     private var lastTime: TimeInterval = -.infinity
-    /// The charged move buttons are hidden.
+    /// The charged move buttons are hidden, and the clock is stopped.
     private var stopped = false
-    /// When they disappeared, if the clock hasn't been stopped yet: it stops at the
-    /// charged move's cue, or here after `cueWait` with no cue (a faint).
-    private var buttonsHiddenAt: TimeInterval?
     private var lastStopAt: TimeInterval = -.infinity
     private var resumedAt: TimeInterval = -.infinity
     private var freeSwitchUntil: TimeInterval = -.infinity
@@ -32,10 +34,6 @@ public struct BattleAutomation: Sendable {
 
     /// A switch this soon after the battle resumes counts as part of that stop.
     static let afterStopWindow: TimeInterval = 1.5
-    /// When you tap a charged move your buttons vanish at once, but the move waits for your
-    /// fast move to finish, and the battle runs until "Get Ready!" (0.25-1.25s later in the
-    /// recorded battle). With no cue by this time, it's a faint.
-    static let cueWait: TimeInterval = 1.5
 
     public init(data: GameData) {
         self.data = data
@@ -51,9 +49,6 @@ public struct BattleAutomation: Sendable {
         guard read.time > lastTime else { return }
         lastTime = read.time
         let t = read.time
-        if let hidden = buttonsHiddenAt, t - hidden >= Self.cueWait {
-            stopClock(at: hidden, &tracker)  // no charged move cue: a faint, stopped when the buttons went
-        }
         for event in parser.process(read) {
             switch event {
             case .searching:
@@ -76,17 +71,16 @@ public struct BattleAutomation: Sendable {
                 }
 
             case .stopped:
+                // Either side's charged move or a faint: no turns pass from here.
                 stopped = true
                 opponentThrewThisStop = false
-                buttonsHiddenAt = t
+                lastStopAt = t
+                tracker.pause(at: t)
 
             case .opponentChargeStarted:
-                // Your buttons vanish the moment their charged move starts (their wait for
-                // a fast move to finish is invisible to you), so the battle stopped then.
-                if let hidden = buttonsHiddenAt { stopClock(at: hidden, &tracker) }
+                break
 
             case .resumed(let free):
-                if let hidden = buttonsHiddenAt { stopClock(at: hidden, &tracker) }  // a short stop with no cue
                 stopped = false
                 let resume = max(t - resumeLead, lastStopAt)
                 resumedAt = resume
@@ -102,16 +96,14 @@ public struct BattleAutomation: Sendable {
                     tracker.changeForm(to: speciesId)
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
-                if let hidden = buttonsHiddenAt { stopClock(at: hidden, &tracker) }  // its cue was missed
                 let before = tracker.snapshot(at: t).energy
                 tracker.opponentThrewChargedMove(move.moveId, at: t)
                 opponentThrewThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
 
             case .playerChargedMove:
-                // The battle stops now. Their fast move in progress pays out; they start
-                // fresh after your move.
-                stopClock(at: t, &tracker)
+                // The clock froze when your buttons vanished. Their fast move in progress
+                // pays out; they start fresh after your move.
                 tracker.playerThrewChargedMove(at: t)
 
             case .opponentAppeared(let match, let since):
@@ -122,18 +114,11 @@ public struct BattleAutomation: Sendable {
 
     // MARK: Helpers
 
-    private mutating func stopClock(at time: TimeInterval, _ tracker: inout OpponentTracker) {
-        guard buttonsHiddenAt != nil else { return }
-        buttonsHiddenAt = nil
-        lastStopAt = time
-        tracker.pause(at: time)
-    }
-
     private mutating func newBattle(_ tracker: inout OpponentTracker) {
         isBattleOver = false
         goAt = nil
         stopped = false
-        buttonsHiddenAt = nil
+        lastStopAt = -.infinity
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
         guard !tracker.team.isEmpty else { return }

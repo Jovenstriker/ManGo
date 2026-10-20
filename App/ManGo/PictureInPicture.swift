@@ -162,7 +162,9 @@ enum OverlayRenderer {
 
         // Header: opponent and status.
         let status = battleOver ? "BATTLE OVER" : snap.awaitingOpponent ? "NEXT POKÉMON…" : snap.isPaused ? "PAUSED" : nil
-        text(name ?? "Waiting for opponent", at: CGPoint(x: pad, y: pad), size: 34, width: 380)
+        // "vs " keeps the screen reader, which also sees this card, from taking it for the
+        // opponent's name box.
+        text(name.map { "vs \($0)" } ?? "Waiting for opponent", at: CGPoint(x: pad, y: pad), size: 34, width: 380)
         if let status {
             text(status, at: CGPoint(x: size.width - pad, y: pad + 4), size: 26, weight: .bold, color: .systemOrange, alignRight: true, width: 200)
         }

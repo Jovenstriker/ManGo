@@ -21,6 +21,8 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentChargeStarted
     /// The countdown's "GO": turn 0 of the battle.
     case battleStarted
+    /// The countdown's "2": "GO" should follow in about this long. A fallback if GO is missed.
+    case countdown(goExpectedIn: TimeInterval)
     /// "YOU WIN!" / "YOU LOSE" / a draw.
     case battleEnded
     /// "Finding opponent…": matchmaking for the next battle.
@@ -54,6 +56,7 @@ public struct BattleScreenParser: Sendable {
     private var pending: (key: String, count: Int, since: TimeInterval)?
     private var running: Bool?
     private var started = false
+    private var countdownSeen = false
     private var ended = false
     private var searching = false
 
@@ -83,23 +86,33 @@ public struct BattleScreenParser: Sendable {
                 endOfBattle()
                 return events
             }
-            if line.box.height > 0.04, key.contains("youwin") || key.contains("youlose") || key.contains("youlost") || key == "draw" {
+            // Win: "YOU WIN!". Loss: "GOOD EFFORT!".
+            if line.box.height > 0.04, key.contains("youwin") || key.contains("goodeffort") || key.contains("youlose")
+                || key.contains("youlost") || key == "draw" {
                 if !ended { events.append(.battleEnded) }
                 ended = true
                 endOfBattle()
                 return events
             }
-            if line.box.height > 0.08, key == "go", !started {
+            // The stylized "GO" often reads as "CO". The countdown's "2" comes ~1.6s before it.
+            if line.box.height > 0.08, key == "go" || key == "co", !started {
                 started = true
                 events.append(.battleStarted)
+            }
+            if line.box.height > 0.12, line.text.trimmingCharacters(in: .whitespaces) == "2", !started, !countdownSeen {
+                countdownSeen = true
+                events.append(.countdown(goExpectedIn: 1.6))
             }
         }
         searching = false
         ended = false
 
         // Running or stopped, from the charged move buttons.
+        // The game's buttons are ALL CAPS with no numbers ("SHADOW SNEAK"); ManGo's own
+        // overlay card, which the screen recording also sees, says "Drain Punch • 40".
         let isRunning = lines.contains { line in
-            line.box.midY >= Self.buttonBand.minY && chargedMoveNames.contains(NameMatcher.normalize(line.text))
+            line.box.midY >= Self.buttonBand.minY && Self.isButtonLabel(line.text)
+                && chargedMoveNames.contains(NameMatcher.normalize(line.text))
         }
         if isRunning != running {
             if isRunning {
@@ -160,6 +173,7 @@ public struct BattleScreenParser: Sendable {
         // The opponent's Pokémon.
         let nameLines = lines.filter {
             $0.box.minX >= Self.nameBox.minX && (Self.nameBox.minY...Self.nameBox.maxY).contains($0.box.midY)
+                && !Self.isOverlayText($0.text)
         }
         if let match = nameLines.compactMap({ matcher.match($0.text) }).min(by: { $0.distance < $1.distance }) {
             let same = pending?.key == match.key
@@ -183,6 +197,19 @@ public struct BattleScreenParser: Sendable {
         pending = nil
         running = nil
         started = false
+        countdownSeen = false
+    }
+
+    static func isButtonLabel(_ text: String) -> Bool {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        return t == t.uppercased() && !t.contains(where: \.isNumber) && !t.contains("•") && !t.contains("·")
+    }
+
+    /// Text from ManGo's own overlay card: "vs Sableye (Shadow)", "Bench: …", "★ Foul Play · 40".
+    static func isOverlayText(_ text: String) -> Bool {
+        let t = text.trimmingCharacters(in: .whitespaces).lowercased()
+        return t.hasPrefix("vs ") || t.hasPrefix("bench") || t.contains("•") || t.contains("·") || t.contains("★")
+            || t == "paused" || t == "ready" || t == "battle over"
     }
 
     public mutating func reset() {

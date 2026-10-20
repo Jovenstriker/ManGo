@@ -12,6 +12,10 @@ public struct BattleAutomation: Sendable {
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
+    /// How long before your buttons reappear the battle actually resumes. Measured on two
+    /// recorded battles: 0.25s makes every opponent charged move land at or above its cost,
+    /// several exactly on it (with 0 some were impossible, like Rock Slide at 35 energy).
+    public var resumeLead: TimeInterval = 0.25
 
     private var lastTime: TimeInterval = -.infinity
     /// The charged move buttons are hidden.
@@ -19,14 +23,12 @@ public struct BattleAutomation: Sendable {
     /// When they disappeared, if the clock hasn't been stopped yet: it stops at the
     /// charged move's cue, or here after `cueWait` with no cue (a faint).
     private var buttonsHiddenAt: TimeInterval?
+    private var lastStopAt: TimeInterval = -.infinity
     private var resumedAt: TimeInterval = -.infinity
     private var freeSwitchUntil: TimeInterval = -.infinity
     private var opponentThrewThisStop = false
     private var goAt: TimeInterval?
 
-    /// The lead's name box appears about 2s before the countdown's "GO" (measured in a
-    /// recorded battle). Used if the "GO" itself is missed.
-    static let leadToGo: TimeInterval = 2.0
 
     /// A switch this soon after the battle resumes counts as part of that stop.
     static let afterStopWindow: TimeInterval = 1.5
@@ -63,6 +65,9 @@ public struct BattleAutomation: Sendable {
                 tracker.pause(at: t)
                 note("Battle over")
 
+            case .countdown(let goIn):
+                if goAt == nil { goAt = t + goIn }
+
             case .battleStarted:
                 // Turn 0. The lead was probably read during the countdown: restart its clock now.
                 goAt = t
@@ -83,9 +88,10 @@ public struct BattleAutomation: Sendable {
             case .resumed(let free):
                 if let hidden = buttonsHiddenAt { stopClock(at: hidden, &tracker) }  // a short stop with no cue
                 stopped = false
-                resumedAt = t
-                if free { freeSwitchUntil = t + Self.afterStopWindow }
-                tracker.resume(at: t)
+                let resume = max(t - resumeLead, lastStopAt)
+                resumedAt = resume
+                if free { freeSwitchUntil = resume + Self.afterStopWindow }
+                tracker.resume(at: resume)
 
             case .opponentChargedMove(let moveName):
                 guard let (speciesId, move) = resolve(chargedMove: moveName, tracker: tracker) else {
@@ -119,6 +125,7 @@ public struct BattleAutomation: Sendable {
     private mutating func stopClock(at time: TimeInterval, _ tracker: inout OpponentTracker) {
         guard buttonsHiddenAt != nil else { return }
         buttonsHiddenAt = nil
+        lastStopAt = time
         tracker.pause(at: time)
     }
 
@@ -146,8 +153,9 @@ public struct BattleAutomation: Sendable {
         }
         var time = max(since, resumedAt)  // never before the latest resume
         if tracker.active == nil {
-            // The lead: counting starts at "GO", or about 2s after its name appears.
-            time = goAt ?? since + Self.leadToGo
+            // The lead: counting starts at "GO" (or when the countdown says it will be).
+            // Its name can appear before or after GO, so without either, use the name.
+            time = goAt ?? since
         }
 
         let speciesId = seen?.speciesId ?? best.speciesId

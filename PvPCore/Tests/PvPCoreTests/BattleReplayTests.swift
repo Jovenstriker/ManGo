@@ -4,7 +4,7 @@ import Testing
 
 /// Replays a real Great League battle (Altaria/Mimikyu/Melmetal vs Stunfisk/Cramorant/Fearow),
 /// read frame by frame from a screen recording every 0.25s.
-private func loadBattle() throws -> (GameData, [ScreenRead]) {
+private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (GameData, [ScreenRead]) {
     let resources = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         .deletingLastPathComponent().appending(path: "App/ManGo/Resources")
@@ -13,7 +13,7 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
         rankingsJSON: Data(contentsOf: resources.appending(path: "rankings-1500.json")),
         topRanked: 500
     )
-    let url = try #require(Bundle.module.url(forResource: "gbl-battle-2026-10-20", withExtension: "json", subdirectory: "Fixtures"))
+    let url = try #require(Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures"))
     let reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: url))
     return (data, reads)
 }
@@ -45,7 +45,7 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
     #expect(tracker.team.map(\.isFainted) == [false, true, false])
 
     // Their charged moves, each counted once, from the "X used Y!" banners.
-    let used = automation.log.filter { $0.contains(" used ") }.map { $0.components(separatedBy: " (").first! }
+    let used = automation.log.filter { $0.contains(" used ") }.map { $0.components(separatedBy: " (").dropLast().joined(separator: " (") }
     #expect(used == [
         "Stunfisk used Discharge", "Stunfisk used Discharge", "Stunfisk used Discharge",
         "Cramorant used Dive", "Cramorant used Dive", "Cramorant used Dive",
@@ -56,7 +56,7 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
     // move's cost (40 for all three moves). Fearow's Drill Run and Cramorant's first Dive
     // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
     // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
-    #expect(energyAtThrows == [63, 86, 55, 40, 48, 48, 40])
+    #expect(energyAtThrows == [63, 86, 64, 40, 48, 56, 48])
     for energy in energyAtThrows {
         #expect(energy >= 40)
     }
@@ -136,4 +136,62 @@ private struct Screen {
     #expect(tracker.snapshot(at: 20).energy == 0)
     #expect(tracker.snapshot(at: 20.5).energy == 4)
     #expect(tracker.snapshot(at: 22).energy == 16)
+}
+
+/// A second real battle (Altaria/Melmetal/Mimikyu vs Marowak/Sableye (Shadow)/Talonflame),
+/// recorded with ManGo's overlay card on screen. Partway through, the card was dragged to
+/// the bottom of the screen, over the game's charged move buttons.
+@Test func replaySecondBattleWithOverlayOnScreen() throws {
+    let (data, reads) = try loadBattle("gbl-battle-2026-10-20-mango")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var energyAtThrows: [Int] = []
+    for read in reads {
+        let energyBefore = tracker.snapshot(at: read.time).energy
+        let usedBefore = automation.log.filter { $0.contains(" used ") }.count
+        automation.process(read, tracker: &tracker)
+        if automation.log.filter({ $0.contains(" used ") }).count > usedBefore {
+            energyAtThrows.append(energyBefore)
+        }
+    }
+    #expect(tracker.team.map(\.speciesId) == ["marowak", "sableye_shadow", "talonflame"])
+    #expect(tracker.team.map(\.isFainted) == [false, false, true])
+
+    // Each charged move once: the overlay's "Drain Punch • 40" isn't mistaken for your
+    // move buttons, so the battle doesn't look like it resumed mid-stop.
+    let used = automation.log.filter { $0.contains(" used ") }.map { $0.components(separatedBy: " (").dropLast().joined(separator: " (") }
+    #expect(used == [
+        "Marowak used Rock Slide", "Marowak used Rock Slide",
+        "Sableye (Shadow) used Drain Punch", "Sableye (Shadow) used Drain Punch",
+        "Sableye (Shadow) used Foul Play", "Sableye (Shadow) used Foul Play",
+        "Marowak used Bone Club",
+    ])
+
+    // The "GO" read as "CO" still starts Marowak's clock: 5 Mud Slaps (counted from your
+    // HP bar in the recording) before its first Rock Slide. Every throw is at or above
+    // its cost: Rock Slide 45, Drain Punch and Foul Play 40, Bone Club 35.
+    #expect(energyAtThrows.first == 50)
+    #expect(energyAtThrows.count == 7)
+    #expect(zip(energyAtThrows, [45, 45, 40, 40, 40, 40, 35]).allSatisfy { $0 >= $1 })
+}
+
+@Test func overlayTextIsIgnored() {
+    #expect(BattleScreenParser.isButtonLabel("SHADOW SNEAK"))
+    #expect(!BattleScreenParser.isButtonLabel("Drain Punch • 40"))
+    #expect(!BattleScreenParser.isButtonLabel("Foul Play"))
+    #expect(BattleScreenParser.isOverlayText("vs Sableye (Shadow)"))
+    #expect(BattleScreenParser.isOverlayText("Bench: Marowak 0"))
+    #expect(BattleScreenParser.isOverlayText("PAUSED"))
+    #expect(!BattleScreenParser.isOverlayText("Sableye"))
+}
+
+@Test func lossScreenEndsTheBattle() throws {
+    let (data, _) = try loadBattle()
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    for i in 0..<8 { automation.process(Screen(opponent: "Azumarill").read(at: Double(i) * 0.25), tracker: &tracker) }
+    #expect(tracker.active?.speciesId == "azumarill")
+    let loss = ScreenRead(time: 3, lines: [RecognizedText(text: "GOOD EFFORT!", box: CGRect(x: 0.2, y: 0.47, width: 0.6, height: 0.07))])
+    automation.process(loss, tracker: &tracker)
+    #expect(automation.isBattleOver)
 }

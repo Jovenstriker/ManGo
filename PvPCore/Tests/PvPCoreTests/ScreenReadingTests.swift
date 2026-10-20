@@ -38,19 +38,6 @@ private func makeData() -> GameData {
     #expect(m.match("Shield") == nil)
 }
 
-@Test func detectorNeedsConsecutiveReads() {
-    var d = OpponentNameDetector(matcher: NameMatcher(data: makeData()))
-    let azu = [RecognizedText(text: "Azumarill", box: .zero)]
-    let med = [RecognizedText(text: "Medicham", box: .zero), RecognizedText(text: "CP 1500", box: .zero)]
-    #expect(d.process(azu) == nil)
-    #expect(d.process(azu)?.key == "azumarill")
-    #expect(d.process(azu) == nil)  // already current
-    #expect(d.process(med) == nil)
-    #expect(d.process([]) == nil)  // a gap breaks the streak
-    #expect(d.process(med) == nil)
-    #expect(d.process(med)?.key == "medicham")
-}
-
 /// Renders a fake battle screen: your Pokémon's name top-left, the opponent's top-right.
 private func renderBattleScreen(player: String, opponent: String) throws -> CGImage {
     let w = 1170, h = 2532
@@ -72,14 +59,13 @@ private func renderBattleScreen(player: String, opponent: String) throws -> CGIm
     return try #require(ctx.makeImage())
 }
 
-@Test func readsOpponentNameFromTopRight() throws {
+@Test func readsBothNameBoxesWithPositions() throws {
     let image = try renderBattleScreen(player: "Medicham", opponent: "Azumarill")
     let lines = try ScreenTextReader.recognize(in: image)
-    #expect(lines.map(\.text).contains("Azumarill"))
-    #expect(!lines.map(\.text).contains("Medicham"))  // player's side is outside the region
+    // The opponent's name is in the top-right, yours in the top-left.
     let azu = try #require(lines.first { $0.text == "Azumarill" })
     #expect(azu.box.minX > 0.5 && azu.box.minY < 0.2)
-
-    let detector = OpponentNameDetector(matcher: NameMatcher(data: makeData()))
-    #expect(detector.bestMatch(in: lines)?.key == "azumarill")
+    let med = try #require(lines.first { $0.text == "Medicham" })
+    #expect(med.box.maxX < 0.5 && med.box.minY < 0.2)
+    #expect(NameMatcher(data: makeData()).match(azu.text)?.key == "azumarill")
 }

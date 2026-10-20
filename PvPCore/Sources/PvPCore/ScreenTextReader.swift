@@ -17,14 +17,11 @@ public struct RecognizedText: Codable, Sendable, Equatable {
 
 /// Reads text from battle screenshots or screen recording frames with Vision.
 public enum ScreenTextReader {
-    /// Where the opponent's name sits: the top-right of the battle screen.
-    /// Normalized, top-left origin. Your own Pokémon's name is top-left, so it's excluded.
-    public static let opponentNameRegion = CGRect(x: 0.5, y: 0, width: 0.5, height: 0.3)
     public static let fullScreen = CGRect(x: 0, y: 0, width: 1, height: 1)
 
     public static func recognize(
         in image: CGImage,
-        region: CGRect = opponentNameRegion
+        region: CGRect = fullScreen
     ) throws -> [RecognizedText] {
         try perform(VNImageRequestHandler(cgImage: image, orientation: .up), region: region)
     }
@@ -32,7 +29,7 @@ public enum ScreenTextReader {
     public static func recognize(
         in pixelBuffer: CVPixelBuffer,
         orientation: CGImagePropertyOrientation = .up,
-        region: CGRect = opponentNameRegion
+        region: CGRect = fullScreen
     ) throws -> [RecognizedText] {
         try perform(VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: orientation), region: region)
     }

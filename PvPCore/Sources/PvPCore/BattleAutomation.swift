@@ -113,9 +113,6 @@ public struct BattleAutomation: Sendable {
                 lastStopAt = stop
                 tracker.pause(at: stop)
 
-            case .opponentChargeStarted:
-                break
-
             case .shielded:
                 shieldedThisStop = true
 

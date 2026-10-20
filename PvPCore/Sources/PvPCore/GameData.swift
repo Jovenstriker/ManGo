@@ -54,8 +54,7 @@ public struct GameData: Sendable {
         self.moves = Dictionary(moves.map { ($0.moveId, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
-    /// With `topRanked`, only the top N species in the rankings are kept.
-    public init(gamemasterJSON: Data, rankingsJSON: Data? = nil, topRanked: Int? = nil) throws {
+    public init(gamemasterJSON: Data, rankingsJSON: Data? = nil) throws {
         struct Gamemaster: Decodable {
             let pokemon: [Species]
             let moves: [Move]
@@ -77,9 +76,6 @@ public struct GameData: Sendable {
                 guard let r = byId[species[i].speciesId] else { continue }
                 species[i].rank = r.rank
                 species[i].recommendedMoveset = r.moveset
-            }
-            if let topRanked {
-                species = species.filter { ($0.rank ?? .max) <= topRanked }
             }
         }
         self.init(species: species, moves: gm.moves)
@@ -103,20 +99,5 @@ public struct GameData: Sendable {
         guard let s = species[speciesId], let first = s.recommendedMoveset.first else { return (nil, []) }
         let charged = s.recommendedMoveset.dropFirst().filter { s.chargedMoves.contains($0) }
         return (s.fastMoves.contains(first) ? moves[first] : nil, charged.compactMap { moves[$0] })
-    }
-
-    /// Species whose name matches `query`: name-prefix matches first, then by rank.
-    public func search(_ query: String, limit: Int = 20) -> [Species] {
-        let q = query.lowercased()
-        return species.values
-            .filter { q.isEmpty || $0.speciesName.lowercased().contains(q) }
-            .sorted { a, b in
-                let aPrefix = a.speciesName.lowercased().hasPrefix(q), bPrefix = b.speciesName.lowercased().hasPrefix(q)
-                if aPrefix != bPrefix { return aPrefix }
-                if a.rank != b.rank { return (a.rank ?? .max) < (b.rank ?? .max) }
-                return a.speciesName < b.speciesName
-            }
-            .prefix(limit)
-            .map { $0 }
     }
 }

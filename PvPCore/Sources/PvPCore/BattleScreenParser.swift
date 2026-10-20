@@ -17,8 +17,6 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentChargedMove(moveName: String)
     /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
     case playerChargedMove
-    /// The opponent's charged move is starting ("Attack incoming!").
-    case opponentChargeStarted
     /// The countdown's "GO": turn 0 of the battle.
     case battleStarted
     /// The countdown's "2": "GO" should follow in about this long. A fallback if GO is missed.
@@ -93,7 +91,6 @@ public struct BattleScreenParser: Sendable {
     private var sawGetReady = false
     private var opponentThrew = false
     private var playerThrew = false
-    private var opponentCharging = false
     private var bannersSeen: Set<String> = []
 
     public init(data: GameData) {
@@ -153,7 +150,6 @@ public struct BattleScreenParser: Sendable {
                 sawGetReady = false
                 opponentThrew = false
                 playerThrew = false
-                opponentCharging = false
                 bannersSeen = []
             } else if running == true {
                 events.append(.stopped)
@@ -175,7 +171,6 @@ public struct BattleScreenParser: Sendable {
             bannersSeen = []
             sawAttackIncoming = false
             sawGetReady = false
-            opponentCharging = false
             playerThrew = false
         }
         for line in lines {
@@ -183,10 +178,6 @@ public struct BattleScreenParser: Sendable {
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
             if key.contains("getready") { sawGetReady = true }
             if key.contains("switchinanewpokemon") { switchPromptAt = read.time }
-        }
-        if sawAttackIncoming, running == false, !opponentCharging {
-            opponentCharging = true
-            events.append(.opponentChargeStarted)
         }
         if sawGetReady, running == false, !playerThrew {
             playerThrew = true

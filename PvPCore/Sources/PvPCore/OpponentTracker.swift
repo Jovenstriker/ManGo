@@ -43,8 +43,6 @@ public struct OpponentTracker: Sendable {
         public let pokemon: Pokemon?
         public let energy: Int
         public let isPaused: Bool
-        /// The opponent's Pokémon fainted; the clock is stopped until their next one comes out.
-        public let awaitingOpponent: Bool
         /// Turns into the fast move currently being performed (0-based).
         public let turnIntoFastMove: Int?
         public let chargedMoves: [ChargedMoveStatus]
@@ -58,7 +56,6 @@ public struct OpponentTracker: Sendable {
     private var pausedTotal: TimeInterval = 0
     /// Battle time of the opponent's last charged move; a switch right after it is free.
     private var lastChargedMoveAt: TimeInterval?
-    public private(set) var awaitingOpponent = false
 
     public init(data: GameData) {
         self.data = data
@@ -73,7 +70,7 @@ public struct OpponentTracker: Sendable {
     /// The outgoing Pokémon keeps its energy. If the incoming fast move is already
     /// known (seen before, or the species has only one), its chain starts once the
     /// switch completes: 1 turn, or 0 for the lead, a switch right after the
-    /// opponent's charged move, or a replacement after a faint (which also resumes the clock).
+    /// opponent's charged move, or `freeSwitch`.
     ///
     /// `assumeFastMove` fills in a fast move that hasn't been seen yet (e.g. PvPoke's
     /// recommended one), so counting starts without a tap. `identifyFastMove` corrects it.
@@ -81,13 +78,8 @@ public struct OpponentTracker: Sendable {
     public mutating func setActive(
         speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false
     ) {
-        let afterFaint = awaitingOpponent
-        if afterFaint {
-            awaitingOpponent = false
-            resume(at: now)
-        }
         let t = battleTime(at: now)
-        let switchTurns = activeIndex == nil || afterFaint || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
+        let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
         if let i = activeIndex {
             team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
@@ -186,16 +178,6 @@ public struct OpponentTracker: Sendable {
         team[i].chainStart = max(t, start)
     }
 
-    /// The opponent's active Pokémon fainted. Both sides stop attacking until
-    /// their next Pokémon comes out (`setActive`), which then starts with no switch turn.
-    public mutating func opponentFainted(at now: TimeInterval) {
-        guard let i = activeIndex else { return }
-        team[i].isFainted = true
-        team[i].chainStart = nil
-        awaitingOpponent = true
-        pause(at: now)
-    }
-
     /// The opponent's charged move can only start as a fast move's animation finishes. If
     /// the stretch of battle since the last restart (from `stretchStart` to the stop at
     /// `stop`, both wall times, no stops in between) ends partway through a fast move, the
@@ -230,18 +212,6 @@ public struct OpponentTracker: Sendable {
         team[i].chainStart = nil
     }
 
-    /// Your Pokémon fainted. Both sides stop attacking until your next one comes
-    /// out (`resume(at:)`). Fainting happens when an attack lands, i.e. at the end of
-    /// the opponent's fast move, so their chain is snapped to that boundary.
-    public mutating func playerFainted(at now: TimeInterval) {
-        if let i = activeIndex, team[i].chainStart != nil {
-            let t = battleTime(at: now)
-            team[i].bankedEnergy = energy(of: team[i], atBattleTime: t, rounding: .toNearestOrAwayFromZero)
-            team[i].chainStart = t
-        }
-        pause(at: now)
-    }
-
     /// Stops the battle clock. No turns pass while either side's charged move plays out.
     public mutating func pause(at now: TimeInterval) {
         if pausedAt == nil { pausedAt = now }
@@ -265,7 +235,7 @@ public struct OpponentTracker: Sendable {
     public func snapshot(at now: TimeInterval) -> Snapshot {
         let t = battleTime(at: now)
         guard let p = active else {
-            return Snapshot(pokemon: nil, energy: 0, isPaused: isPaused, awaitingOpponent: false, turnIntoFastMove: nil, chargedMoves: [])
+            return Snapshot(pokemon: nil, energy: 0, isPaused: isPaused, turnIntoFastMove: nil, chargedMoves: [])
         }
         let e = energy(of: p, atBattleTime: t)
 
@@ -310,7 +280,7 @@ public struct OpponentTracker: Sendable {
         }
 
         return Snapshot(
-            pokemon: p, energy: e, isPaused: isPaused, awaitingOpponent: awaitingOpponent,
+            pokemon: p, energy: e, isPaused: isPaused,
             turnIntoFastMove: turnInto, chargedMoves: statuses
         )
     }
@@ -328,16 +298,12 @@ public struct OpponentTracker: Sendable {
         return t - c < turnDuration
     }
 
-    private func energy(
-        of p: Pokemon,
-        atBattleTime t: TimeInterval,
-        rounding: FloatingPointRoundingRule = .down
-    ) -> Int {
+    private func energy(of p: Pokemon, atBattleTime t: TimeInterval) -> Int {
         guard let fast = p.fastMove, let start = p.chainStart else { return p.bankedEnergy }
         let moveDuration = Double(fast.turns) * turnDuration
         let moves = max(0, t - start) / moveDuration
         // Small epsilon so a time landing exactly on a boundary counts that move as finished.
-        let completed = rounding == .down ? Int((moves + 1e-9).rounded(.down)) : Int(moves.rounded(rounding))
+        let completed = Int((moves + 1e-9).rounded(.down))
         return min(maxEnergy, p.bankedEnergy + completed * fast.energyGain)
     }
 }

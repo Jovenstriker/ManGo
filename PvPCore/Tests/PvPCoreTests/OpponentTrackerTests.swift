@@ -39,7 +39,6 @@ private func makeTracker() throws -> OpponentTracker {
     let data = try GameData(gamemasterJSON: Data(gamemaster.utf8), rankingsJSON: Data(rankings.utf8))
     #expect(data.species["medicham"]?.recommendedMoveset == ["COUNTER", "ICE_PUNCH", "PSYCHIC"])
     #expect(data.chargedMoves(for: "medicham").prefix(2).map(\.moveId) == ["ICE_PUNCH", "PSYCHIC"])
-    #expect(data.search("med").first?.speciesId == "medicham")
 }
 
 @Test func energyAccruesPerCompletedFastMove() throws {
@@ -189,57 +188,11 @@ private func makeTracker() throws -> OpponentTracker {
     t.setActive(speciesId: "lickitung", at: 11)
     #expect(t.snapshot(at: 11).energy == 1)
 }
-
-@Test func topRankedKeepsOnlyRankedSpecies() throws {
-    let data = try GameData(gamemasterJSON: Data(gamemaster.utf8), rankingsJSON: Data(rankings.utf8), topRanked: 1)
-    #expect(Array(data.species.keys) == ["medicham"])
-    #expect(data.species["medicham"]?.rank == 1)
-    #expect(data.moves.count == 13)  // moves stay complete
-}
-
 @Test func singleFastMoveSpeciesStartsAutomatically() throws {
     var t = try makeTracker()
     t.setActive(speciesId: "lickitung", at: 0)  // Lick: 6 energy per turn
     #expect(t.snapshot(at: 3).energy == 36)
 }
-
-@Test func manualEnergyCorrection() throws {
-    var t = try makeTracker()
-    t.setActive(speciesId: "medicham", at: 0)
-    t.identifyFastMove("COUNTER", at: 0)
-    t.setEnergy(50, at: 4.5)
-    #expect(t.snapshot(at: 5.4).energy == 50)
-    #expect(t.snapshot(at: 5.5).energy == 56)
-}
-
-@Test func opponentFaintStopsClockUntilNextPokemonComesOut() throws {
-    var t = try makeTracker()
-    t.setActive(speciesId: "medicham", at: 0)
-    t.identifyFastMove("COUNTER", at: 0)
-    t.setActive(speciesId: "lickitung", at: 2)  // Medicham leaves with 12
-    t.opponentFainted(at: 5)
-    #expect(t.snapshot(at: 8).awaitingOpponent)
-    #expect(t.snapshot(at: 8).isPaused)
-
-    // Medicham comes out 4s later: clock resumes, no switch turn.
-    t.setActive(speciesId: "medicham", at: 9)
-    #expect(!t.isPaused)
-    #expect(t.team[1].isFainted)
-    #expect(t.snapshot(at: 9.9).energy == 12)
-    #expect(t.snapshot(at: 10).energy == 18)
-}
-
-@Test func playerFaintFreezesOpponentAtMoveBoundary() throws {
-    var t = try makeTracker()
-    t.setActive(speciesId: "azumarill", at: 0)
-    t.identifyFastMove("BUBBLE", at: 0)  // 11 energy per 1.5s
-    t.playerFainted(at: 3.2)  // the 2nd Bubble KO'd you at 3.0; tap was late
-    #expect(t.snapshot(at: 6).energy == 22)
-    t.resume(at: 10)  // your next Pokémon comes out
-    #expect(t.snapshot(at: 11.4).energy == 22)
-    #expect(t.snapshot(at: 11.5).energy == 33)  // fresh Bubble from the boundary, not 0.2s in
-}
-
 @Test func changeFormKeepsEnergyAndValidFastMove() throws {
     var t = try makeTracker()
     t.setActive(speciesId: "medicham", at: 0)

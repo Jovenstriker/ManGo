@@ -161,17 +161,26 @@ public struct OpponentTracker: Sendable {
 
     /// You threw a charged move. The clock stops until `resume(at:)`.
     ///
-    /// A fast move the opponent has already started still counts: they get its energy
-    /// even though your charged move interrupts it, then start a fresh fast move when
-    /// the battle resumes. (That's why throwing two 2-turn moves before a charged move
-    /// beats one against a 3-turn move: either way their move in progress pays out.)
+    /// The opponent gets every fast move they've finished plus the one they've started:
+    /// your charged move interrupts it, but its energy still counts. That includes when
+    /// your moves line up (both ending on the same turn): your charged move takes the
+    /// next turn, and they start a new fast move on it, so they get that one too. After
+    /// your charged move they start fresh.
+    ///
+    /// So against a 3-turn move, two of your 2-turn moves then a charged move give them
+    /// the same as one (their 2nd move is in progress either way), while three 2-turn
+    /// moves line up with two 3-turn ones and hand them a third.
+    ///
     /// Safe to call after `pause(at:)`: the clock is frozen at the pause.
     public mutating func playerThrewChargedMove(at now: TimeInterval) {
         pause(at: now)
-        guard let i = activeIndex, team[i].chainStart != nil else { return }
+        guard let i = activeIndex, let fast = team[i].fastMove, let start = team[i].chainStart else { return }
         let t = battleTime(at: now)
-        team[i].bankedEnergy = energy(of: team[i], atBattleTime: t, rounding: .up)
-        team[i].chainStart = max(t, team[i].chainStart!)
+        if t >= start - 1e-9 {
+            let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
+            team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain)
+        }
+        team[i].chainStart = max(t, start)
     }
 
     /// The opponent's active Pokémon fainted. Both sides stop attacking until
@@ -298,14 +307,8 @@ public struct OpponentTracker: Sendable {
         guard let fast = p.fastMove, let start = p.chainStart else { return p.bankedEnergy }
         let moveDuration = Double(fast.turns) * turnDuration
         let moves = max(0, t - start) / moveDuration
-        // Small epsilon so a time landing exactly on a boundary isn't counted as the
-        // next move already started (.up) or not yet finished (.down).
-        let completed: Int
-        switch rounding {
-        case .up: completed = Int((moves - 1e-9).rounded(.up))
-        case .down: completed = Int((moves + 1e-9).rounded(.down))
-        default: completed = Int(moves.rounded(rounding))
-        }
+        // Small epsilon so a time landing exactly on a boundary counts that move as finished.
+        let completed = rounding == .down ? Int((moves + 1e-9).rounded(.down)) : Int(moves.rounded(rounding))
         return min(maxEnergy, p.bankedEnergy + completed * fast.energyGain)
     }
 }

@@ -115,12 +115,26 @@ private func makeTracker() throws -> OpponentTracker {
     two.playerThrewChargedMove(at: 2)
     #expect(two.snapshot(at: 2).energy == 22)
 
-    // Exactly on a boundary nothing new has started yet.
-    var boundary = try makeTracker()
-    boundary.setActive(speciesId: "azumarill", at: 0)
-    boundary.identifyFastMove("BUBBLE", at: 0)
-    boundary.playerThrewChargedMove(at: 3)
-    #expect(boundary.snapshot(at: 3).energy == 22)
+}
+
+@Test func alignedMovesHandThemAnotherFastMove() throws {
+    // Three of your 2-turn moves end at 3s, the same turn as their two 3-turn Bubbles.
+    // Your charged move takes the next turn, on which they start a third Bubble: it counts.
+    var t = try makeTracker()
+    t.setActive(speciesId: "azumarill", at: 0)
+    t.identifyFastMove("BUBBLE", at: 0)
+    t.playerThrewChargedMove(at: 3)
+    #expect(t.snapshot(at: 3).energy == 33)
+    t.resume(at: 10)
+    #expect(t.snapshot(at: 11.4).energy == 33)  // they start fresh after your charged move
+    #expect(t.snapshot(at: 11.5).energy == 44)
+
+    // Both on 2-turn moves: aligned on every move, so they always get one more.
+    var mirror = try makeTracker()
+    mirror.setActive(speciesId: "medicham", at: 0)
+    mirror.identifyFastMove("COUNTER", at: 0)  // 6 energy per 2 turns
+    mirror.playerThrewChargedMove(at: 2)       // after your 2nd move: their 3rd counts
+    #expect(mirror.snapshot(at: 2).energy == 18)
 }
 
 @Test func switchingKeepsEnergyPerPokemon() throws {

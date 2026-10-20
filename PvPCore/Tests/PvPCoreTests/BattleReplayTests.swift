@@ -53,12 +53,12 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
     ])
 
     // The time-based model holds up: every throw came when the app counted at least the
-    // move's cost (40 for all three moves), give or take one fast move. Cramorant threw
-    // all three Dives at exactly 40, once your charged moves pay out its Peck in progress.
-    // Stunfisk's clock starts at the countdown's "GO" (42.25s), not when its name appeared.
-    #expect(energyAtThrows == [63, 86, 55, 40, 40, 40, 32])
+    // move's cost (40 for all three moves). Fearow's Drill Run and Cramorant's first Dive
+    // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
+    // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
+    #expect(energyAtThrows == [63, 86, 55, 40, 48, 48, 40])
     for energy in energyAtThrows {
-        #expect(energy >= 40 - 9)
+        #expect(energy >= 40)
     }
 
     // "YOU WIN!" ends it: counting stops and the last battle stays on screen.
@@ -88,4 +88,52 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
     #expect(BattleScreenParser.parseBanner("Altaria úsed Flamethrower!")! == ("Altaria", "Flamethrower"))
     #expect(BattleScreenParser.parseBanner("used Double Iron Bash!*")! == (nil, "Double Iron Bash"))
     #expect(BattleScreenParser.parseBanner("Attack incoming!") == nil)
+}
+
+/// Builds screen reads for scripted scenarios, with text in the same places as the real battle.
+private struct Screen {
+    var opponent: String?
+    var buttons = true
+    var banner: String?
+
+    func read(at time: TimeInterval) -> ScreenRead {
+        var lines: [RecognizedText] = []
+        if let opponent { lines.append(.init(text: opponent, box: CGRect(x: 0.82, y: 0.097, width: 0.12, height: 0.0105))) }
+        if let banner { lines.append(.init(text: banner, box: CGRect(x: 0.2, y: 0.31, width: 0.6, height: 0.022))) }
+        if buttons {
+            lines.append(.init(text: "FLAMETHROWER", box: CGRect(x: 0.13, y: 0.94, width: 0.25, height: 0.013)))
+            lines.append(.init(text: "SKY ATTACK", box: CGRect(x: 0.6, y: 0.94, width: 0.2, height: 0.013)))
+        }
+        return ScreenRead(time: time, lines: lines)
+    }
+}
+
+@Test func pokemonThatComesInDuringAStopStartsAtZeroWhenTheBattleResumes() throws {
+    let (data, _) = try loadBattle()
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    func play(_ screen: Screen, from start: TimeInterval, to end: TimeInterval) {
+        var t = start
+        while t < end - 1e-9 {
+            automation.process(screen.read(at: t), tracker: &tracker)
+            t += 0.25
+        }
+    }
+
+    // Azumarill leads and fights until you throw a charged move at 10s.
+    play(Screen(opponent: "Azumarill"), from: 0, to: 10)
+    // Your charged move: "Get Ready!", then the banner. It knocks Azumarill out, and
+    // Corviknight's name appears while the battle is still stopped (14s to 20s).
+    play(Screen(opponent: "Azumarill", buttons: false, banner: "Get Ready!"), from: 10, to: 12)
+    play(Screen(opponent: "Azumarill", buttons: false, banner: "Altaria used Flamethrower!"), from: 12, to: 14)
+    play(Screen(opponent: "Corviknight", buttons: false), from: 14, to: 20)
+    #expect(tracker.active?.speciesId == "corviknight")
+    #expect(tracker.snapshot(at: 19.9).energy == 0)  // nothing counted during the stop
+    #expect(tracker.team.first?.isFainted == true)
+
+    // The battle resumes at 20s. Sand Attack: 4 energy per turn, no switch turn after a faint.
+    play(Screen(opponent: "Corviknight"), from: 20, to: 22)
+    #expect(tracker.snapshot(at: 20).energy == 0)
+    #expect(tracker.snapshot(at: 20.5).energy == 4)
+    #expect(tracker.snapshot(at: 22).energy == 16)
 }

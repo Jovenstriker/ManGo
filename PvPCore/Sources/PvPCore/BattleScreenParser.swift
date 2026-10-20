@@ -2,7 +2,9 @@ import Foundation
 
 /// Something that happened on the battle screen.
 public enum BattleEvent: Equatable, Sendable {
-    /// The normal battle UI disappeared: a charged move, a faint, or a menu. No turns pass.
+    /// The charged move buttons disappeared: a charged move is coming, or a faint. The
+    /// battle itself may run a moment longer, while a queued charged move waits for the
+    /// thrower's fast move to finish.
     case stopped
     /// The battle UI is back. `freeSwitch` is true unless the stop was only your own
     /// charged move: right after the opponent's charged move or a faint, their switch
@@ -15,6 +17,8 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentChargedMove(moveName: String)
     /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
     case playerChargedMove
+    /// The opponent's charged move is starting ("Attack incoming!").
+    case opponentChargeStarted
     /// The countdown's "GO": turn 0 of the battle.
     case battleStarted
     /// "YOU WIN!" / "YOU LOSE" / a draw.
@@ -58,6 +62,7 @@ public struct BattleScreenParser: Sendable {
     private var sawGetReady = false
     private var opponentThrew = false
     private var playerThrew = false
+    private var opponentCharging = false
     private var bannersSeen: Set<String> = []
 
     public init(data: GameData) {
@@ -105,6 +110,7 @@ public struct BattleScreenParser: Sendable {
                 sawGetReady = false
                 opponentThrew = false
                 playerThrew = false
+                opponentCharging = false
                 bannersSeen = []
             } else if running == true {
                 events.append(.stopped)
@@ -117,6 +123,10 @@ public struct BattleScreenParser: Sendable {
             let key = NameMatcher.normalize(line.text)
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
             if key.contains("getready") { sawGetReady = true }
+        }
+        if sawAttackIncoming, running == false, !opponentCharging {
+            opponentCharging = true
+            events.append(.opponentChargeStarted)
         }
         if sawGetReady, running == false, !playerThrew {
             playerThrew = true

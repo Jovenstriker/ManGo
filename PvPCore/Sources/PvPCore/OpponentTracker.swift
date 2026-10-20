@@ -185,6 +185,14 @@ public struct OpponentTracker: Sendable {
         pause(at: now)
     }
 
+    /// Marks the active Pokémon fainted without touching the clock, for when the screen
+    /// reader has already stopped it and will restart it when the battle resumes.
+    public mutating func markActiveFainted() {
+        guard let i = activeIndex else { return }
+        team[i].isFainted = true
+        team[i].chainStart = nil
+    }
+
     /// Your Pokémon fainted. Both sides stop attacking until your next one comes
     /// out (`resume(at:)`). Fainting happens when an attack lands, i.e. at the end of
     /// the opponent's fast move, so their chain is snapped to that boundary.

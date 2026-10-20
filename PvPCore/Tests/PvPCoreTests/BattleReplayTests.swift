@@ -56,7 +56,7 @@ private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (Gam
     // move's cost (40 for all three moves). Fearow's Drill Run and Cramorant's first Dive
     // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
     // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
-    #expect(energyAtThrows == [63, 86, 64, 40, 48, 56, 48])
+    #expect(energyAtThrows == [63, 86, 55, 40, 40, 40, 48])
     for energy in energyAtThrows {
         #expect(energy >= 40)
     }
@@ -167,10 +167,11 @@ private struct Screen {
         "Marowak used Bone Club",
     ])
 
-    // The "GO" read as "CO" still starts Marowak's clock: 5 Mud Slaps (counted from your
-    // HP bar in the recording) before its first Rock Slide. Every throw is at or above
-    // its cost: Rock Slide 45, Drain Punch and Foul Play 40, Bone Club 35.
-    #expect(energyAtThrows.first == 50)
+    // The "GO" read as "CO" still starts Marowak's clock: it threw 5 Mud Slaps (50) before
+    // its first Rock Slide (45), keeping 5, then reached exactly 45 for the second.
+    // Every throw is at or above its cost: Rock Slide 45, Drain Punch and Foul Play 40,
+    // Bone Club 35.
+    #expect(energyAtThrows.prefix(2) == [50, 45])
     #expect(energyAtThrows.count == 7)
     #expect(zip(energyAtThrows, [45, 45, 40, 40, 40, 40, 35]).allSatisfy { $0 >= $1 })
 }

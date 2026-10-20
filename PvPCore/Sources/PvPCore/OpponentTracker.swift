@@ -144,13 +144,12 @@ public struct OpponentTracker: Sendable {
     /// The opponent threw a charged move. Pauses the clock for the cinematic;
     /// call `resume(at:)` when the battle continues.
     ///
-    /// A charged move can only be thrown when a fast move finishes, so the
-    /// completed fast move count is rounded to the nearest boundary to absorb
-    /// detection latency.
+    /// Only finished fast moves count. (Rounding to the nearest one gave Marowak a 6th
+    /// Mud Slap in a recorded battle where it had thrown 5.)
     public mutating func opponentThrewChargedMove(_ moveId: String, at now: TimeInterval) {
         guard let i = activeIndex, let move = data.moves[moveId] else { return }
         let t = battleTime(at: now)
-        let current = energy(of: team[i], atBattleTime: t, rounding: .toNearestOrAwayFromZero)
+        let current = energy(of: team[i], atBattleTime: t)
         team[i].bankedEnergy = max(0, current - move.energy)
         if team[i].chainStart != nil { team[i].chainStart = t }
         lastChargedMoveAt = t

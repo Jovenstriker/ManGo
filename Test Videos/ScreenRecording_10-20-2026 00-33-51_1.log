@@ -20,8 +20,8 @@ HOW MANGO COUNTS
 
 SETTINGS (fitted on the hand counts of all recorded battles)
   Battle stops 0.125s before your buttons are first read as gone.
-  Your charged move freezes the battle 0.625s before "Get Ready!" is read.
-  Battle resumes 0.375s before your buttons are read again (0.250s after a faint).
+  Your charged move freezes the battle 0.750s before "Get Ready!" is read.
+  Battle resumes 0.250s before your buttons are read again (0.250s after a faint).
 
 OPPONENT FAST MOVES ASSUMED (PvPoke recommended)
   Stunfisk               Thunder Shock: +9 energy every 2 turns (1.0s)
@@ -79,12 +79,12 @@ TIMELINE (what the screen reader saw and did)
   2:22.75    stopped  Cramorant at 40
   2:30.00  Cramorant used Dive (40 → 0)
   2:33.00    running  Cramorant at 0
-  2:34.75    stopped  Cramorant at 16
+  2:34.75    stopped  Cramorant at 8
   2:38.50    running  Cramorant at 16
   2:41.75    stopped  Cramorant at 40
   2:49.75  Cramorant used Dive (40 → 0)
   2:54.50    running  Cramorant at 0
-  2:59.25    stopped  Cramorant at 40
+  2:59.25    stopped  Cramorant at 32
   3:03.00  Cramorant fainted or switched out
   3:03.00  Opponent: Fearow
   3:03.75    running  Fearow at 0
@@ -100,5 +100,5 @@ TIMELINE (what the screen reader saw and did)
   3:39.75  You threw a charged move: Fearow 8 → 8 (its fast move in progress counts)
   3:50.25  Opponent: Stunfisk
   3:51.25    running  Stunfisk at 6
-  3:55.00    stopped  Stunfisk at 42
+  3:55.00    stopped  Stunfisk at 33
   4:01.25  Battle over

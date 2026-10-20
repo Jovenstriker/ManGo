@@ -20,8 +20,8 @@ HOW MANGO COUNTS
 
 SETTINGS (fitted on the hand counts of all recorded battles)
   Battle stops 0.125s before your buttons are first read as gone.
-  Your charged move freezes the battle 0.625s before "Get Ready!" is read.
-  Battle resumes 0.375s before your buttons are read again (0.250s after a faint).
+  Your charged move freezes the battle 0.750s before "Get Ready!" is read.
+  Battle resumes 0.250s before your buttons are read again (0.250s after a faint).
 
 OPPONENT FAST MOVES ASSUMED (PvPoke recommended)
   Marowak                Mud Slap: +10 energy every 3 turns (1.5s)
@@ -58,7 +58,8 @@ TIMELINE (what the screen reader saw and did)
   0:56.50    stopped  Marowak at 5
   0:56.75  You threw a charged move: Marowak 5 → 15 (its fast move in progress counts)
   1:07.00    running  Marowak at 15
-  1:11.25    stopped  Marowak at 45
+  1:11.25    stopped  Marowak at 35
+  1:19.00  Marowak had finished one more fast move: the battle restarted before your buttons came back
   1:19.00  Marowak used Rock Slide (45 → 0)
   1:22.25  You threw a charged move: Marowak 0 → 0 (its fast move in progress counts)
   1:32.00    running  Marowak at 0
@@ -66,10 +67,11 @@ TIMELINE (what the screen reader saw and did)
   1:37.25    stopped  Sableye (Shadow) at 40
   1:44.50  Sableye (Shadow) used Drain Punch (40 → 0)
   1:47.50    running  Sableye (Shadow) at 0
-  1:48.25    stopped  Sableye (Shadow) at 8
+  1:48.25    stopped  Sableye (Shadow) at 0
   1:49.25  You threw a charged move: Sableye (Shadow) 8 → 16 (its fast move in progress counts)
   1:59.00    running  Sableye (Shadow) at 16
-  2:01.75    stopped  Sableye (Shadow) at 40
+  2:01.75    stopped  Sableye (Shadow) at 32
+  2:09.50  Sableye (Shadow) had finished one more fast move: the battle restarted before your buttons came back
   2:09.50  Sableye (Shadow) used Drain Punch (40 → 0)
   2:20.00    running  Sableye (Shadow) at 0
   2:24.25    stopped  Sableye (Shadow) at 32
@@ -90,7 +92,7 @@ TIMELINE (what the screen reader saw and did)
   3:34.00  Talonflame fainted or switched out
   3:34.00  Opponent: Marowak
   3:35.00    running  Marowak at 0
-  3:40.75    stopped  Marowak at 40
+  3:40.75    stopped  Marowak at 30
   3:43.50    running  Marowak at 40
   3:43.75    stopped  Marowak at 40
   3:51.00  Marowak used Bone Club (40 → 5)

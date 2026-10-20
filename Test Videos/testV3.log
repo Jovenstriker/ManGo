@@ -20,8 +20,8 @@ HOW MANGO COUNTS
 
 SETTINGS (fitted on the hand counts of all recorded battles)
   Battle stops 0.125s before your buttons are first read as gone.
-  Your charged move freezes the battle 0.625s before "Get Ready!" is read.
-  Battle resumes 0.375s before your buttons are read again (0.250s after a faint).
+  Your charged move freezes the battle 0.750s before "Get Ready!" is read.
+  Battle resumes 0.250s before your buttons are read again (0.250s after a faint).
 
 OPPONENT FAST MOVES ASSUMED (PvPoke recommended)
   Mimikyu                Shadow Claw: +8 energy every 2 turns (1.0s)
@@ -30,19 +30,18 @@ OPPONENT FAST MOVES ASSUMED (PvPoke recommended)
 
 OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
-  1  1:10.00  Turtonator            Dragon Claw (50)          100 → 50      5           ?     -
+  1  1:10.00  Turtonator            Dragon Claw (50)          100 → 50      5           5     ✓
        calc: 100 = 0 left before + 5 × 20 (Incinerate); after: 100 − 50 = 50
-       note: Mimikyu led (named from the start's "Go, Mimikyu!") and threw 2 Shadow Claws before switching to Turtonator. Turtonator uses Incinerate.
+       note: Mimikyu led (named from the start's "Go, Mimikyu!") and threw 2 Shadow Claws before switching to Turtonator. Turtonator threw 5 Incinerates.
   2  1:20.50  Turtonator            Dragon Claw (50)          50 → 0        0           0     ✓
        calc: 50 = 50 left before + 0 × 20 (Incinerate); after: 50 − 50 = 0
        note: Thrown straight after the first Dragon Claw, in the same stop. Turtonator then switched out to Granbull.
-  3  1:41.75  Granbull (Shadow)     Crunch (45)               48 → 3        6           ?     -
-       calc: 48 = 0 left before + 6 × 8 (Charm); after: 48 − 45 = 3
-       note: Granbull threw 8 Charms in all (6 before Crunch by ManGo's count, then 2 more).
+  3  1:41.75  Granbull (Shadow)     Crunch (45)               56 → 11       7           7     ✓
+       calc: 56 = 0 left before + 7 × 8 (Charm); after: 56 − 45 = 11
+       note: Granbull switched in during the stop after Turtonator's Dragon Claws, so it starts as the battle restarts. 7 Charms before Crunch, then 1 that counted when your charged move interrupted it, then 5 that knocked out your Mimikyu and Altaria.
 
 SUMMARY
-  1 of 1 hand-counted charged moves match ManGo's fast move count exactly.
-  2 not hand-counted.
+  3 of 3 hand-counted charged moves match ManGo's fast move count exactly.
 
 TIMELINE (what the screen reader saw and did)
   0:21.25  Opponent: Mimikyu
@@ -55,19 +54,19 @@ TIMELINE (what the screen reader saw and did)
   0:45.25    stopped  Turtonator at 60
   0:46.00  You threw a charged move: Turtonator 60 → 80 (its fast move in progress counts)
   0:56.00    running  Turtonator at 80
-  0:58.25    stopped  Turtonator at 100
+  0:58.25    stopped  Turtonator at 80
   1:02.50    running  Turtonator at 100
   1:02.75    stopped  Turtonator at 100
   1:10.00  Turtonator used Dragon Claw (100 → 50)
   1:20.50  Turtonator used Dragon Claw (50 → 0)
   1:23.50    running  Turtonator at 0
   1:24.50  Opponent: Granbull (Shadow)
-  1:34.25    stopped  Granbull (Shadow) at 48
-  1:41.75  Granbull (Shadow) used Crunch (48 → 3)
-  1:48.00    running  Granbull (Shadow) at 3
-  1:48.75    stopped  Granbull (Shadow) at 3
+  1:34.25    stopped  Granbull (Shadow) at 56
+  1:41.75  Granbull (Shadow) used Crunch (56 → 11)
+  1:48.00    running  Granbull (Shadow) at 11
+  1:48.75    stopped  Granbull (Shadow) at 11
   1:49.75  You threw a charged move: Granbull (Shadow) 11 → 19 (its fast move in progress counts)
   1:59.50    running  Granbull (Shadow) at 19
-  2:05.25    stopped  Granbull (Shadow) at 51
+  2:05.25    stopped  Granbull (Shadow) at 43
   2:08.00    running  Granbull (Shadow) at 51
   2:10.00    stopped  Granbull (Shadow) at 59

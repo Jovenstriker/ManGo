@@ -141,11 +141,11 @@ private struct Screen {
     #expect(tracker.snapshot(at: 19.4).energy == 0)  // nothing counted during the stop
     #expect(tracker.team.first?.isFainted == true)
 
-    // The buttons are back at 20s; the battle resumed 0.375s before that, at 19.625s.
+    // The buttons are back at 20s; the battle resumed 0.25s before that, at 19.75s.
     // Sand Attack: 4 energy per turn, no switch turn after a faint.
     play(Screen(opponent: "Corviknight"), from: 20, to: 22)
-    #expect(tracker.snapshot(at: 20).energy == 0)
-    #expect(tracker.snapshot(at: 20.125).energy == 4)
+    #expect(tracker.snapshot(at: 20.125).energy == 0)
+    #expect(tracker.snapshot(at: 20.25).energy == 4)
     #expect(tracker.snapshot(at: 22).energy == 16)
 }
 
@@ -232,15 +232,12 @@ private struct Screen {
         "Altaria used Moonblast", "Altaria used Flamethrower",
     ])
 
-    // Counted by watching the recording: Melmetal 6, 6, then 0 Thunder Shocks (9 each).
-    #expect(throwsSeen[0].before == 54)
-    #expect(throwsSeen[1].before - throwsSeen[0].after == 54)
-    #expect(throwsSeen[2].before == throwsSeen[1].after)
-    // Ninetales: 3 Embers before your Dynamic Punch (2 thrown, 1 slipped in as the moves
-    // lined up) and 3 after, around a 1-turn pause ManGo can't see; then 2. ManGo counts
-    // 7: exactly right apart from the pause.
-    #expect(throwsSeen[3].before == 63)
-    #expect(throwsSeen[4].before - throwsSeen[3].after == 18)
+    // Counted by watching the recording: Melmetal 6, 6, then 0 Thunder Shocks (9 each):
+    // 54 → 19, 73 → 38, 38 → 3. Ninetales: 3 Embers before your Dynamic Punch (2 thrown, 1
+    // slipped in as the moves lined up) and 3 after, around a 1-turn pause ManGo can't see,
+    // so it counts 7 (63); then 2 (63 → 28, + 18).
+    let energies = energiesAtThrows(automation.log)
+    #expect(Array(energies.prefix(5)) == [54, 73, 38, 63, 46])
 
     // Altaria swapped out and came back: it keeps its energy rather than being written off.
     #expect(tracker.team.first { $0.speciesId == "altaria" }?.isFainted == false)
@@ -270,5 +267,9 @@ private struct Screen {
     // in the name box.
     let used = automation.log.filter { $0.contains(" used ") }.map { $0.components(separatedBy: " (").dropLast().joined(separator: " (") }
     #expect(used == ["Turtonator used Dragon Claw", "Turtonator used Dragon Claw", "Granbull (Shadow) used Crunch"])
-    #expect(energiesAtThrows(automation.log) == [100, 50, 48])
+    // Turtonator: 5 Incinerates, then both Dragon Claws. Granbull: switched in during the
+    // stop after them, so it starts as the battle restarts: 7 Charms before Crunch, then 1
+    // that counts when your charged move interrupts it.
+    #expect(energiesAtThrows(automation.log) == [100, 50, 56])
+    #expect(automation.log.contains { $0.hasPrefix("You threw a charged move: Granbull (Shadow) 11 → 19") })
 }

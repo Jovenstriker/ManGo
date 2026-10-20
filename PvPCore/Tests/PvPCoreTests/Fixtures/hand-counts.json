@@ -56,14 +56,14 @@
     "video": "Test Videos/testV3.mov",
     "description": "Fourth battle, a Fantasy Cup with ManGo's overlay on screen (covering the opponent's name box much of the time). You: Altaria, Melmetal, Mimikyu. Opponent: Mimikyu, Turtonator, Granbull.",
     "counts": [
-      null,
+      5,
       0,
-      null
+      7
     ],
     "notes": {
-      "1": "Mimikyu led (named from the start's \"Go, Mimikyu!\") and threw 2 Shadow Claws before switching to Turtonator. Turtonator uses Incinerate.",
+      "1": "Mimikyu led (named from the start's \"Go, Mimikyu!\") and threw 2 Shadow Claws before switching to Turtonator. Turtonator threw 5 Incinerates.",
       "2": "Thrown straight after the first Dragon Claw, in the same stop. Turtonator then switched out to Granbull.",
-      "3": "Granbull threw 8 Charms in all (6 before Crunch by ManGo's count, then 2 more)."
+      "3": "Granbull switched in during the stop after Turtonator's Dragon Claws, so it starts as the battle restarts. 7 Charms before Crunch, then 1 that counted when your charged move interrupted it, then 5 that knocked out your Mimikyu and Altaria."
     }
   }
 }

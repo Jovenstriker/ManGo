@@ -12,19 +12,18 @@ public struct BattleAutomation: Sendable {
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
-    // Timing, fitted on three recorded battles against the opponent's fast move counts
-    // counted by watching the recordings (see "Test Videos/*.log"): these values get 20 of
-    // 21 counts and checkpoints exactly, and nearby values do as well. The miss is a single
-    // fast move (Fearow's last stretch in the first battle), about one read of jitter.
+    // Timing, fitted on four recorded battles against the opponent's fast move counts
+    // counted by watching the recordings (see "Test Videos/*.log"): these values get all 26
+    // counts and checkpoints exactly, as do several neighbors.
     // Reads come 4 times a second, so the screen changed up to 0.25s before it's seen.
 
     /// The battle stops this long before your buttons are first read as gone.
     public var stopLead: TimeInterval = 0.125
     /// For your charged moves, the battle runs on while your fast move finishes and
     /// freezes this long before "Get Ready!" is read (if that's after the buttons vanish).
-    public var playerFreezeBeforeCue: TimeInterval = 0.625
+    public var playerFreezeBeforeCue: TimeInterval = 0.75
     /// The battle resumes this long before your buttons are read again after a charged move...
-    public var resumeLead: TimeInterval = 0.375
+    public var resumeLead: TimeInterval = 0.25
     /// ...and this long after a faint, when the next Pokémon comes in. (Fearow after
     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
     /// your buttons come back.)
@@ -201,6 +200,13 @@ public struct BattleAutomation: Sendable {
             seen = nil
         }
         var time = max(since, resumedAt)  // never before the latest resume
+        // Switched in during the stop straight after their charged move (a free switch):
+        // it starts as the battle restarts, when your buttons come back (Granbull after
+        // Turtonator's Dragon Claws: 7 Charms before Crunch; Cramorant after Stunfisk's
+        // Discharge: 5 Pecks before Dive), not when its "Go" or name shows.
+        if opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
+            time = max(resumedAt, min(time, back))
+        }
         if tracker.active == nil {
             // The lead: counting starts at "GO" (or when the countdown says it will be).
             // Its name can appear before or after GO, so without either, use the name.

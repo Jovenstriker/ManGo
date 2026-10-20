@@ -42,13 +42,17 @@ public enum BattleEvent: Equatable, Sendable {
 ///   moves start with "Attack incoming!"; yours with "Get Ready!".
 /// - "Go, X!" is shown for both sides' Pokémon. At the start it's always yours first, then
 ///   the opponent's lead: the second one names their lead even if the name box is covered
-///   (by ManGo's own overlay, say) or it's the same species as yours. Mid-battle it isn't
-///   used, since it can't tell whose Pokémon it is.
+///   (by ManGo's own overlay, say) or it's the same species as yours. Mid-battle, your team
+///   is learned (your first "Go", your own charged moves, "Switch in a new Pokémon?"), and a
+///   "Go" for a Pokémon that isn't yours is the opponent switching; it's timed from the
+///   banner, which shows up about half a second after the switch.
 /// - After both leads appear there's a 3-2-1 countdown; the battle starts at a big "GO".
 /// - It ends with a big "YOU WIN!" (or lose/draw); the next one starts with "Finding opponent...".
 public struct BattleScreenParser: Sendable {
     /// Screen bands, normalized with a top-left origin.
     static let nameBox = (minX: 0.55, minY: 0.08, maxY: 0.2)
+    /// Your Pokémon's name box, top-left.
+    static let yourNameBox = (maxX: 0.45, minY: 0.08, maxY: 0.2)
     static let bannerBand = (minY: 0.15, maxY: 0.5)
     static let buttonBand = (minY: 0.8, maxY: 1.0)
 
@@ -63,6 +67,23 @@ public struct BattleScreenParser: Sendable {
     private var started = false
     /// "Go, X!" names seen this battle before the opponent's lead was known.
     private var goNames: [String] = []
+    /// Your Pokémon this battle, as learned from the screen.
+    public private(set) var myTeam: Set<String> = []
+    /// When "Go, X!" was first seen for each Pokémon, recently.
+    private var recentGo: [String: TimeInterval] = [:]
+    /// A mid-battle "Go" for a Pokémon not known to be yours: theirs unless the name box
+    /// keeps showing their current Pokémon (then it was yours).
+    private var pendingGo: (match: NameMatcher.Match, time: TimeInterval)?
+    private var switchPromptAt: TimeInterval?
+    /// What your name box last showed, and when.
+    private var yourCurrent: (key: String, time: TimeInterval)?
+    /// When the battle last started running (your buttons appeared), and whether the stop
+    /// before it had a charged move in it.
+    private var runningSince: TimeInterval?
+    private var resumedAfterChargedMove = false
+    private var bannerConsumed = false
+    /// The switch happens about this long before its "Go, X!" banner shows.
+    static let goBannerLead: TimeInterval = 0.5
     private var countdownSeen = false
     private var ended = false
     private var searching = false
@@ -122,7 +143,9 @@ public struct BattleScreenParser: Sendable {
                 && chargedMoveNames.contains(NameMatcher.normalize(line.text))
         }
         if isRunning != running {
+            runningSince = isRunning ? read.time : nil
             if isRunning {
+                resumedAfterChargedMove = running == false && (sawAttackIncoming || sawGetReady || bannerConsumed || opponentThrew || playerThrew)
                 if running == false {
                     events.append(.resumed(freeSwitch: opponentThrew || !sawGetReady))
                 }
@@ -142,10 +165,24 @@ public struct BattleScreenParser: Sendable {
         if running == false, lines.contains(where: { NameMatcher.normalize($0.text).hasPrefix("blocked") }) {
             events.append(.shielded)
         }
+        let cueNow = lines.contains { line in
+            let key = NameMatcher.normalize(line.text)
+            return key.contains("attackincoming") || key.contains("protectshield") || key.contains("getready")
+        }
+        if cueNow, bannerConsumed, running == false {
+            // A new charged move in the same stop (back-to-back, possibly the same move again).
+            bannerConsumed = false
+            bannersSeen = []
+            sawAttackIncoming = false
+            sawGetReady = false
+            opponentCharging = false
+            playerThrew = false
+        }
         for line in lines {
             let key = NameMatcher.normalize(line.text)
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
             if key.contains("getready") { sawGetReady = true }
+            if key.contains("switchinanewpokemon") { switchPromptAt = read.time }
         }
         if sawAttackIncoming, running == false, !opponentCharging {
             opponentCharging = true
@@ -162,15 +199,28 @@ public struct BattleScreenParser: Sendable {
             let seen = bannersSeen.contains { NameMatcher.editDistance($0, moveKey, limit: 2) <= 2 }
             guard moveKey.count >= 3, !seen else { continue }
             let byOpponent: Bool
-            if let user = banner.user.flatMap({ matcher.match($0)?.key }) {
-                // In a mirror match the name can't tell sides apart; use the cue that started the stop.
-                byOpponent = user == opponentKey && !(sawGetReady && !sawAttackIncoming)
+            if let userMatch = banner.user.flatMap({ matcher.match($0) }) {
+                let user = userMatch.key
+                if user == opponentKey {
+                    // In a mirror match the name can't tell sides apart; use the cue that started the stop.
+                    byOpponent = !(sawGetReady && !sawAttackIncoming)
+                } else if !myTeam.contains(user), sawAttackIncoming, !sawGetReady {
+                    // Their charged move, from a Pokémon whose switch-in was missed (name box covered).
+                    byOpponent = true
+                    opponentKey = user
+                    pending = nil
+                    events.append(.opponentAppeared(userMatch, since: read.time))
+                } else {
+                    byOpponent = false
+                }
+                if !byOpponent { myTeam.insert(user) }
             } else {
                 // Banner read without its name: decide only if exactly one side's cue was seen.
                 guard sawAttackIncoming != sawGetReady else { continue }
                 byOpponent = sawAttackIncoming
             }
             bannersSeen.insert(moveKey)
+            bannerConsumed = true
             if byOpponent {
                 opponentThrew = true
                 events.append(.opponentChargedMove(moveName: banner.move))
@@ -180,17 +230,37 @@ public struct BattleScreenParser: Sendable {
             }
         }
 
-        // The opponent's lead from the start's "Go, X!" messages: yours, then theirs.
-        if opponentKey == nil {
-            for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
-                let text = line.text.trimmingCharacters(in: .whitespaces)
-                guard text.lowercased().hasPrefix("go,"),
-                      let match = matcher.match(String(text.dropFirst(3))) else { continue }
+        // Your Pokémon, from your name box: tells your "Go, X!" from theirs.
+        let yourLines = lines.filter {
+            $0.box.maxX <= 0.5 && $0.box.minX < Self.yourNameBox.maxX
+                && (Self.yourNameBox.minY...Self.yourNameBox.maxY).contains($0.box.midY) && !Self.isOverlayText($0.text)
+        }
+        if let mine = yourLines.compactMap({ matcher.match($0.text) }).min(by: { $0.distance < $1.distance }), mine.distance == 0 {
+            yourCurrent = (mine.key, read.time)
+            myTeam.insert(mine.key)
+        }
+
+        // "Go, X!" messages: at the start yours then theirs; mid-battle a switch.
+        for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
+            let text = line.text.trimmingCharacters(in: .whitespaces)
+            guard text.lowercased().hasPrefix("go,"),
+                  let match = matcher.match(String(text.dropFirst(3))) else { continue }
+            if let seen = recentGo[match.key], read.time - seen < 3 {} else { recentGo[match.key] = read.time }
+            if opponentKey == nil {
                 if goNames.last != match.key { goNames.append(match.key) }
+                if goNames.count == 1 { myTeam.insert(match.key) }
                 if goNames.count == 2 {
                     opponentKey = match.key
                     pending = nil
                     events.append(.opponentAppeared(match, since: read.time))
+                }
+            } else if match.key != opponentKey, pendingGo?.match.key != match.key, !myTeam.contains(match.key),
+                      !(yourCurrent?.key == match.key && read.time - yourCurrent!.time < 1.5) {
+                if let prompt = switchPromptAt, read.time - prompt < 20 {
+                    myTeam.insert(match.key)  // your replacement after your Pokémon fainted
+                    switchPromptAt = nil
+                } else {
+                    pendingGo = (match, recentGo[match.key] ?? read.time)
                 }
             }
         }
@@ -200,17 +270,43 @@ public struct BattleScreenParser: Sendable {
             $0.box.minX >= Self.nameBox.minX && (Self.nameBox.minY...Self.nameBox.maxY).contains($0.box.midY)
                 && !Self.isOverlayText($0.text)
         }
-        if let match = nameLines.compactMap({ matcher.match($0.text) }).min(by: { $0.distance < $1.distance }) {
+        let shown = nameLines.compactMap({ matcher.match($0.text) }).min(by: { $0.distance < $1.distance })
+        if let match = shown {
             let same = pending?.key == match.key
             let count = same ? pending!.count + 1 : 1
-            let since = same ? pending!.since : read.time
+            var since = same ? pending!.since : read.time
             pending = (match.key, count, since)
             if count >= requiredReads, match.key != opponentKey {
+                // A "Go, X!" for it just before marks when a switch made mid-battle happened
+                // (not one made during a stop, like straight after their charged move).
+                if let go = recentGo[match.key], since - go < 3, !(resumedAfterChargedMove && runningSince.map { go - $0 < 1.5 } ?? false) {
+                    since = min(since, go - Self.goBannerLead)
+                }
                 opponentKey = match.key
+                if pendingGo?.match.key == match.key { pendingGo = nil }
                 events.append(.opponentAppeared(match, since: since))
             }
         } else {
             pending = nil
+        }
+
+        // A mid-battle "Go" not yet known to be yours, resolved after 0.75s: yours if your
+        // name box shows it; theirs if your box shows something else, or (your box covered)
+        // if their box doesn't still show their current Pokémon.
+        if let go = pendingGo, yourCurrent?.key == go.match.key, read.time - yourCurrent!.time < 1.5 {
+            pendingGo = nil
+        }
+        if let go = pendingGo, read.time - go.time >= 0.75 {
+            pendingGo = nil
+            let yourBoxReadable = yourCurrent.map { read.time - $0.time < 1.0 } ?? false
+            if !yourBoxReadable, let shown, shown.key == opponentKey {
+                myTeam.insert(go.match.key)
+            } else if go.match.key != opponentKey {
+                opponentKey = go.match.key
+                pending = nil
+                let midBattle = !(resumedAfterChargedMove && runningSince.map { go.time - $0 < 1.5 } ?? false)
+                events.append(.opponentAppeared(go.match, since: midBattle ? go.time - Self.goBannerLead : go.time))
+            }
         }
         return events
     }
@@ -223,6 +319,11 @@ public struct BattleScreenParser: Sendable {
         running = nil
         started = false
         goNames = []
+        myTeam = []
+        yourCurrent = nil
+        recentGo = [:]
+        pendingGo = nil
+        switchPromptAt = nil
         countdownSeen = false
     }
 

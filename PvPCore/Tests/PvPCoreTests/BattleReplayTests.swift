@@ -245,3 +245,30 @@ private struct Screen {
     // Altaria swapped out and came back: it keeps its energy rather than being written off.
     #expect(tracker.team.first { $0.speciesId == "altaria" }?.isFainted == false)
 }
+
+/// A fourth real battle, a Fantasy Cup (vs Mimikyu, Turtonator, Granbull), with ManGo's card
+/// covering the opponent's name box for much of it. Not used to fit the timing.
+@Test func replayFourthBattleWithNameBoxCovered() throws {
+    let (data, reads) = try loadBattle("gbl-battle-2026-10-20-v3")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+    }
+    // The lead comes from the start's "Go, Mimikyu!" (yours first, then theirs), though the
+    // name box was covered and you have a Mimikyu too. Granbull (#1014 in Great League, so
+    // outside the top 500) comes from its "Go, Granbull!", told apart from your own "Go"s
+    // by your name box.
+    #expect(tracker.team.map(\.speciesId) == ["mimikyu", "turtonator", "granbull_shadow"])
+
+    // Counted by watching the recording: Mimikyu 2 Shadow Claws (8 each) before switching
+    // out, timed from "Go, Turtonator!" rather than when its name showed.
+    #expect(tracker.team[0].bankedEnergy == 16)
+
+    // Turtonator threw Dragon Claw, then straight away another (same stop, a fresh
+    // "Attack incoming!"); Granbull's Crunch is theirs though its switch-in wasn't seen
+    // in the name box.
+    let used = automation.log.filter { $0.contains(" used ") }.map { $0.components(separatedBy: " (").dropLast().joined(separator: " (") }
+    #expect(used == ["Turtonator used Dragon Claw", "Turtonator used Dragon Claw", "Granbull (Shadow) used Crunch"])
+    #expect(energiesAtThrows(automation.log) == [100, 50, 48])
+}

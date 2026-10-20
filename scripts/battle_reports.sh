@@ -14,3 +14,4 @@ mkdir -p "Test Videos"
 report gbl-battle-2026-10-20 "ScreenRecording_10-20-2026 00-33-51_1"
 report gbl-battle-2026-10-20-mango TestWithMangoV1
 report gbl-battle-2026-10-20-v2 testV2
+report gbl-battle-2026-10-20-v3 testV3

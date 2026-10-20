@@ -6,6 +6,7 @@ import SwiftUI
 struct TrackerView: View {
     let model: TrackerModel
     @State private var overlay = OverlayController()
+    @State private var showingMechanics = false
 
     var body: some View {
         NavigationStack {
@@ -31,8 +32,16 @@ struct TrackerView: View {
                     // For between battles; it also resets on its own when the next battle starts.
                     Button("Reset", systemImage: "arrow.counterclockwise") { model.reset() }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("How PvP works", systemImage: "info.circle") { showingMechanics = true }
+                }
             }
             .task { overlay.attach(model) }
+            .sheet(isPresented: $showingMechanics) { MechanicsView() }
+            #if DEBUG
+            // Launch with `-showMechanics` to open the mechanics page, for checking it.
+            .onAppear { if ProcessInfo.processInfo.arguments.contains("-showMechanics") { showingMechanics = true } }
+            #endif
         }
     }
 

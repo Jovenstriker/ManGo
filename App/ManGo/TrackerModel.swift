@@ -11,10 +11,12 @@ final class TrackerModel {
     private(set) var tracker: OpponentTracker?
     private(set) var loadError: String?
 
-    /// Screen reading: the name last read from the screen, and when a read last arrived.
-    private var detector: OpponentNameDetector?
-    private(set) var lastReadName: String?
+    /// Screen reading: turns reads from the broadcast extension into battle events.
+    private var automation: BattleAutomation?
+    private var lastReadTime: TimeInterval = 0
     private(set) var lastReadAt: Date?
+    /// The latest thing the screen reader noticed, e.g. "Stunfisk used Discharge (81 → 41)".
+    var lastEvent: String? { automation?.log.last }
 
     var data: GameData? { tracker?.data }
     var isPaused: Bool { tracker?.isPaused ?? false }
@@ -30,7 +32,7 @@ final class TrackerModel {
         }
         #endif
         ScreenTextObserver.start { [weak self] in
-            self?.handleScreenText(BroadcastChannel.latest())
+            self?.handleScreenReads()
         }
     }
 
@@ -51,7 +53,7 @@ final class TrackerModel {
                 topRanked: 500
             )
             tracker = OpponentTracker(data: data)
-            detector = OpponentNameDetector(matcher: NameMatcher(data: data))
+            automation = BattleAutomation(data: data)
             loadError = nil
         } catch {
             loadError = "Couldn't load PvPoke data: \(error.localizedDescription)"
@@ -61,35 +63,45 @@ final class TrackerModel {
     func newBattle() {
         guard let data else { return }
         tracker = OpponentTracker(data: data)
-        detector?.reset()
+        automation?.reset()
     }
 
     // MARK: Screen reading
 
-    /// A read from the broadcast extension. Once a name is read twice in a row it
-    /// becomes the active opponent: a name already on their team is a switch, a new
-    /// one is added, and a 4th new name means a new battle.
-    func handleScreenText(_ lines: [RecognizedText]) {
+    /// New reads from the broadcast extension, in order. The automation stops and starts
+    /// the clock, subtracts the opponent's charged moves, and follows their switches.
+    func handleScreenReads() {
+        guard var automation, var tracker else { return }
+        let reads = BroadcastChannel.reads(after: lastReadTime)
+        guard !reads.isEmpty else { return }
+        for read in reads {
+            automation.process(read, tracker: &tracker)
+            lastReadTime = read.time
+        }
+        self.automation = automation
+        self.tracker = tracker
         lastReadAt = .now
-        guard let match = detector?.process(lines) else { return }
-        apply(match)
     }
 
-    /// Reads a battle screenshot, for checking the name reader without a live battle.
+    /// Reads a battle screenshot, for checking the screen reader without a live battle.
     func testScreenshot(_ image: CGImage) async -> String {
-        let lines = await Task.detached { (try? ScreenTextReader.recognize(in: image)) ?? [] }.value
-        let read = lines.map(\.text).joined(separator: ", ")
-        guard let match = detector?.bestMatch(in: lines) else {
-            return read.isEmpty ? "No text found in the top-right of the screenshot." : "Read “\(read)” but it didn't match a top-500 Pokémon."
+        let lines = await Task.detached {
+            (try? ScreenTextReader.recognize(in: image, region: ScreenTextReader.fullScreen)) ?? []
+        }.value
+        guard let data else { return "No PvPoke data." }
+        var parser = BattleScreenParser(data: data)
+        parser.requiredReads = 1
+        for event in parser.process(ScreenRead(time: now(), lines: lines)) {
+            if case .opponentAppeared(let match, _) = event {
+                apply(match)
+                return "Opponent: \(match.candidates.first?.speciesName ?? match.key)"
+            }
         }
-        apply(match)
-        let name = match.candidates.first?.speciesName ?? match.key
-        return "Read “\(read)” → \(name)"
+        return lines.isEmpty ? "No text found in the screenshot." : "Found text, but no opponent name in the top-right box."
     }
 
     private func apply(_ match: NameMatcher.Match) {
         guard let tracker, let best = match.candidates.first else { return }
-        lastReadName = best.speciesName
         let team = tracker.team
         if let seen = team.first(where: { p in match.candidates.contains { $0.speciesId == p.speciesId } }) {
             if seen.speciesId != tracker.active?.speciesId, !seen.isFainted {

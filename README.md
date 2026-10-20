@@ -47,23 +47,29 @@ With a free Apple ID the app stops working after 7 days; press ▶ again to rein
 Tests: `cd PvPCore && swift test --scratch-path ~/Library/Caches/ManGo-PvPCore`. The build folder
 has to live outside Documents, because iCloud's file metadata makes code signing fail there.
 
-## Reading the opponent's name
+## Reading the battle screen
 
 `Extension/ManGoBroadcast` is a ReplayKit Broadcast Upload Extension ("ManGo Screen Reader").
-While it's recording, it reads the top-right of the screen twice a second with Vision and passes
-the text to the app through the App Group `group.com.jovenstriker.mango`. The app matches the text
-against the top 500 names, allowing for small OCR errors. Once a name has been read twice in a row,
-it becomes the active opponent:
+While it's recording, it reads all the text on screen 4 times a second with Vision and passes it to
+the app through the App Group `group.com.jovenstriker.mango`. `BattleScreenParser` and
+`BattleAutomation` (in `PvPCore`) turn the reads into tracker events. These rules come from a
+recorded Great League battle:
 
-- a name already on their team counts as a switch, or as the replacement after a faint
-- a new name is added to their team
-- a 4th new name starts a new battle
+| On screen | Meaning |
+|---|---|
+| Your charged move buttons at the bottom ("FLAMETHROWER") | The battle is running. When they disappear (either side's charged move, a faint), the clock stops |
+| Name in the top-right box ("CP 1498 Stunfisk") | The opponent's active Pokémon: a switch, a faint replacement, or a new battle |
+| "Stunfisk used Discharge!" banner | The opponent's charged move: subtract its cost. A move only one form learns fixes the form |
+| "Attack incoming!" / "Get Ready!" | Whose charged move it is, when the banner alone can't tell (mirror matches) |
 
-The screen shows only the base name, so the app picks the highest-ranked form (e.g. Shadow
-Ninetales). Use **Form** to correct it. Nicknamed Pokémon won't match.
+`PvPCore/Tests/PvPCoreTests/Fixtures/gbl-battle-2026-10-20.json` is that battle's screen text.
+The replay test checks every pause, charged move and faint. To analyze a new recording:
 
-Start it with the record button in the app, or from Control Center (long-press Screen Recording →
-ManGo Screen Reader). **⋯ → Test with screenshot** runs the reader on a saved battle screenshot.
+    cd PvPCore && swift run --scratch-path ~/Library/Caches/ManGo-PvPCore screen-log <video.mp4>
+
+The screen only shows the base name, so the app picks the highest-ranked form until a move reveals
+it. Use **Form** to correct it. Nicknamed Pokémon won't match. Start the reader with the record
+button in the app; **⋯ → Test with screenshot** checks the name reading on a saved screenshot.
 
 ## Overlay on top of Pokémon GO
 
@@ -74,12 +80,3 @@ arriving. You can't tap through a PiP window, so a newly detected Pokémon start
 PvPoke's recommended fast move. PiP needs a real iPhone; the simulator doesn't support it.
 
 Debug builds take a `-demoBattle` launch argument that starts mid-battle against Medicham.
-
-## Computer vision: next steps
-
-| Event | Signal on screen |
-|---|---|
-| `identifyFastMove` | First fast move animation or damage tick |
-| `opponentThrewChargedMove` | Charged move banner. Read the move name from the banner text |
-| `pause` / `resume` | Cinematic starts and ends (screen layout changes) |
-

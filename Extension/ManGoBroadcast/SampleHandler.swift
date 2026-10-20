@@ -3,12 +3,12 @@ import PvPCore
 import QuartzCore
 import ReplayKit
 
-/// Runs while you screen-record with "ManGo Screen Reader". Twice a second it reads
-/// the top-right of the screen (the opponent's name) and hands the text to the app.
-/// Broadcast extensions are limited to ~50 MB, so frames are processed one at a
-/// time on the delivery queue and never retained.
+/// Runs while you screen-record with "ManGo Screen Reader". Four times a second it
+/// reads the text on screen and hands it to the app, stamped with when the frame
+/// arrived. Broadcast extensions are limited to ~50 MB, so frames are processed one
+/// at a time on the delivery queue and never retained.
 final class SampleHandler: RPBroadcastSampleHandler {
-    private let interval: CFTimeInterval = 0.5
+    private let interval: CFTimeInterval = 0.25
     private var lastRead: CFTimeInterval = 0
 
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with type: RPSampleBufferType) {
@@ -18,9 +18,11 @@ final class SampleHandler: RPBroadcastSampleHandler {
         lastRead = now
 
         let lines = autoreleasepool {
-            (try? ScreenTextReader.recognize(in: pixels, orientation: orientation(of: sampleBuffer))) ?? []
+            (try? ScreenTextReader.recognize(
+                in: pixels, orientation: orientation(of: sampleBuffer), region: ScreenTextReader.fullScreen
+            )) ?? []
         }
-        BroadcastChannel.send(lines)
+        BroadcastChannel.send(ScreenRead(time: now, lines: lines))
     }
 
     private func orientation(of sampleBuffer: CMSampleBuffer) -> CGImagePropertyOrientation {

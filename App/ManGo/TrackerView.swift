@@ -139,8 +139,8 @@ struct TrackerView: View {
         let forms = model.formOptions
         HStack {
             if let at = model.lastReadAt, Date.now.timeIntervalSince(at) < 3 {
-                Label(model.lastReadName.map { "Reading screen · \($0)" } ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
-                    .font(.caption).foregroundStyle(.green)
+                Label(model.lastEvent ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
+                    .font(.caption).foregroundStyle(.green).lineLimit(1)
             }
             Spacer()
             if forms.count > 1, let active = snap.pokemon {

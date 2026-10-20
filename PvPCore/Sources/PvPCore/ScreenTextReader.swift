@@ -20,6 +20,7 @@ public enum ScreenTextReader {
     /// Where the opponent's name sits: the top-right of the battle screen.
     /// Normalized, top-left origin. Your own Pokémon's name is top-left, so it's excluded.
     public static let opponentNameRegion = CGRect(x: 0.5, y: 0, width: 0.5, height: 0.3)
+    public static let fullScreen = CGRect(x: 0, y: 0, width: 1, height: 1)
 
     public static func recognize(
         in image: CGImage,
@@ -40,6 +41,7 @@ public enum ScreenTextReader {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false  // Pokémon names aren't dictionary words
+        request.minimumTextHeight = 0.007  // battle text is ≥1% of the screen height; skip smaller
         // Vision's region of interest has a bottom-left origin.
         request.regionOfInterest = CGRect(
             x: region.minX, y: 1 - region.maxY, width: region.width, height: region.height

@@ -13,6 +13,8 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentAppeared(NameMatcher.Match, since: TimeInterval)
     /// The opponent threw a charged move, read from the "X used Y!" banner.
     case opponentChargedMove(moveName: String)
+    /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
+    case playerChargedMove
 }
 
 /// Turns screen reads of a Pokémon GO battle into `BattleEvent`s.
@@ -44,6 +46,7 @@ public struct BattleScreenParser: Sendable {
     private var sawAttackIncoming = false
     private var sawGetReady = false
     private var opponentThrew = false
+    private var playerThrew = false
     private var bannersSeen: Set<String> = []
 
     public init(data: GameData) {
@@ -67,6 +70,7 @@ public struct BattleScreenParser: Sendable {
                 sawAttackIncoming = false
                 sawGetReady = false
                 opponentThrew = false
+                playerThrew = false
                 bannersSeen = []
             } else if running == true {
                 events.append(.stopped)
@@ -79,6 +83,10 @@ public struct BattleScreenParser: Sendable {
             let key = NameMatcher.normalize(line.text)
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
             if key.contains("getready") { sawGetReady = true }
+        }
+        if sawGetReady, running == false, !playerThrew {
+            playerThrew = true
+            events.append(.playerChargedMove)
         }
         for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
             guard let banner = Self.parseBanner(line.text) else { continue }
@@ -99,6 +107,9 @@ public struct BattleScreenParser: Sendable {
             if byOpponent {
                 opponentThrew = true
                 events.append(.opponentChargedMove(moveName: banner.move))
+            } else if !playerThrew, running == false {
+                playerThrew = true
+                events.append(.playerChargedMove)
             }
         }
 

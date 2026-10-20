@@ -88,16 +88,39 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(t.snapshot(at: 16.2).chargedMoves.first?.move.moveId == "ICE_PUNCH")  // revealed sorts first
 }
 
-@Test func playerChargedMoveFreezesOpponentMidFastMove() throws {
+@Test func playerChargedMoveStillPaysOutTheirFastMoveInProgress() throws {
     var t = try makeTracker()
     t.setActive(speciesId: "azumarill", at: 0)
     t.identifyFastMove("BUBBLE", at: 0)  // 11 energy per 3 turns (1.5s)
-    t.playerThrewChargedMove(at: 2)  // 1 Bubble done, 1 turn into the second
-    #expect(t.snapshot(at: 9).energy == 11)
-    #expect(t.snapshot(at: 9).turnIntoFastMove == 1)
+    // You throw at 2s: 1 Bubble done, the 2nd started.
+    t.playerThrewChargedMove(at: 2)
+    #expect(t.snapshot(at: 9).energy == 22)  // the started Bubble counts
     t.resume(at: 10)
-    #expect(t.snapshot(at: 10.9).energy == 11)
-    #expect(t.snapshot(at: 11).energy == 22)  // second Bubble finishes after the remaining 2 turns
+    #expect(t.snapshot(at: 11.4).energy == 22)
+    #expect(t.snapshot(at: 11.5).energy == 33)  // a fresh Bubble after the charged move
+}
+
+@Test func twoTwoTurnMovesBeatOneAgainstAThreeTurnMove() throws {
+    // Their Bubble takes 3 turns. Throwing after one of your 2-turn moves (1s) or two (2s),
+    // they get one or two Bubbles' energy respectively, since a started Bubble pays out.
+    var one = try makeTracker()
+    one.setActive(speciesId: "azumarill", at: 0)
+    one.identifyFastMove("BUBBLE", at: 0)
+    one.playerThrewChargedMove(at: 1)
+    #expect(one.snapshot(at: 1).energy == 11)
+
+    var two = try makeTracker()
+    two.setActive(speciesId: "azumarill", at: 0)
+    two.identifyFastMove("BUBBLE", at: 0)
+    two.playerThrewChargedMove(at: 2)
+    #expect(two.snapshot(at: 2).energy == 22)
+
+    // Exactly on a boundary nothing new has started yet.
+    var boundary = try makeTracker()
+    boundary.setActive(speciesId: "azumarill", at: 0)
+    boundary.identifyFastMove("BUBBLE", at: 0)
+    boundary.playerThrewChargedMove(at: 3)
+    #expect(boundary.snapshot(at: 3).energy == 22)
 }
 
 @Test func switchingKeepsEnergyPerPokemon() throws {

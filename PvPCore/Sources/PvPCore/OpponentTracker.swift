@@ -160,10 +160,19 @@ public struct OpponentTracker: Sendable {
         pause(at: now)
     }
 
-    /// You threw a charged move. The opponent's fast move freezes mid-animation
-    /// until `resume(at:)`; their energy is unchanged.
+    /// You threw a charged move. The clock stops until `resume(at:)`.
+    ///
+    /// A fast move the opponent has already started still counts: they get its energy
+    /// even though your charged move interrupts it, then start a fresh fast move when
+    /// the battle resumes. (That's why throwing two 2-turn moves before a charged move
+    /// beats one against a 3-turn move: either way their move in progress pays out.)
+    /// Safe to call after `pause(at:)`: the clock is frozen at the pause.
     public mutating func playerThrewChargedMove(at now: TimeInterval) {
         pause(at: now)
+        guard let i = activeIndex, team[i].chainStart != nil else { return }
+        let t = battleTime(at: now)
+        team[i].bankedEnergy = energy(of: team[i], atBattleTime: t, rounding: .up)
+        team[i].chainStart = max(t, team[i].chainStart!)
     }
 
     /// The opponent's active Pokémon fainted. Both sides stop attacking until
@@ -281,8 +290,15 @@ public struct OpponentTracker: Sendable {
     ) -> Int {
         guard let fast = p.fastMove, let start = p.chainStart else { return p.bankedEnergy }
         let moveDuration = Double(fast.turns) * turnDuration
-        // Small epsilon so a sample landing exactly on a boundary counts that move.
-        let completed = Int((max(0, t - start) / moveDuration + 1e-9).rounded(rounding))
+        let moves = max(0, t - start) / moveDuration
+        // Small epsilon so a time landing exactly on a boundary isn't counted as the
+        // next move already started (.up) or not yet finished (.down).
+        let completed: Int
+        switch rounding {
+        case .up: completed = Int((moves - 1e-9).rounded(.up))
+        case .down: completed = Int((moves + 1e-9).rounded(.down))
+        default: completed = Int(moves.rounded(rounding))
+        }
         return min(maxEnergy, p.bankedEnergy + completed * fast.energyGain)
     }
 }

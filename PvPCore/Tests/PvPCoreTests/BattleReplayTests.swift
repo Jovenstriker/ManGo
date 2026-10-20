@@ -52,9 +52,10 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
         "Fearow used Drill Run",
     ])
 
-    // The time-based model holds up: every throw came when the app counted the move's
-    // cost (40 for all three moves), give or take one fast move.
-    #expect(energyAtThrows.count == 7)
+    // The time-based model holds up: every throw came when the app counted at least the
+    // move's cost (40 for all three moves), give or take one fast move. Cramorant threw
+    // all three Dives at exactly 40, once your charged moves pay out its Peck in progress.
+    #expect(energyAtThrows == [81, 100, 69, 40, 40, 40, 32])
     for energy in energyAtThrows {
         #expect(energy >= 40 - 9)
     }

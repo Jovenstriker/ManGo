@@ -60,6 +60,10 @@ public struct BattleAutomation: Sendable {
                 opponentThrewThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
 
+            case .playerChargedMove:
+                // Their fast move in progress pays out; they start fresh after your move.
+                tracker.playerThrewChargedMove(at: t)
+
             case .opponentAppeared(let match, let since):
                 appear(match, at: since, now: t, tracker: &tracker)
             }

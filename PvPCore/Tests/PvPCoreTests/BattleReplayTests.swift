@@ -200,3 +200,45 @@ private struct Screen {
     automation.process(loss, tracker: &tracker)
     #expect(automation.isBattleOver)
 }
+
+/// A third real battle (vs Melmetal, Ninetales (Shadow), Altaria), with the opponent
+/// swapping Ninetales and Altaria back and forth. Not used to fit the timing.
+@Test func replayThirdBattle() throws {
+    let (data, reads) = try loadBattle("gbl-battle-2026-10-20-v2")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var throwsSeen: [(move: String, before: Int, after: Int)] = []
+    for read in reads {
+        let before = tracker.snapshot(at: read.time).energy
+        let usedBefore = automation.log.filter { $0.contains(" used ") }.count
+        automation.process(read, tracker: &tracker)
+        if let last = automation.log.last, automation.log.filter({ $0.contains(" used ") }).count > usedBefore {
+            throwsSeen.append((last, before, tracker.snapshot(at: read.time).energy))
+        }
+    }
+    #expect(tracker.team.map(\.speciesId) == ["melmetal", "ninetales_shadow", "altaria"])
+    #expect(automation.isBattleOver)
+
+    // "Ninetales used Weather Ball!" matches PvPoke's "Weather Ball (Fire)".
+    // Log lines end with the energy, e.g. " (72 → 37)".
+    let moves = throwsSeen.map { $0.move.components(separatedBy: " (").dropLast().joined(separator: " (") }
+    #expect(moves == [
+        "Melmetal used Double Iron Bash", "Melmetal used Double Iron Bash", "Melmetal used Double Iron Bash",
+        "Ninetales (Shadow) used Weather Ball (Fire)", "Ninetales (Shadow) used Weather Ball (Fire)",
+        "Altaria used Moonblast", "Altaria used Flamethrower",
+    ])
+
+    // Counted by watching the recording: Melmetal 6, 6, then 0 Thunder Shocks (9 each).
+    #expect(throwsSeen[0].before == 54)
+    #expect(throwsSeen[1].before - throwsSeen[0].after == 54)
+    #expect(throwsSeen[2].before == throwsSeen[1].after)
+    // Ninetales: 3 Embers before your Dynamic Punch (2 thrown, 1 slipped in as the moves
+    // lined up) and 3 after, around a 1-turn pause ManGo can't see; then 2. ManGo gets
+    // one extra before (the restart after a faint is the least certain timing; no single
+    // setting fits this and Fearow in the first battle) and one for the pause.
+    #expect(throwsSeen[3].before == 72)
+    #expect(throwsSeen[4].before - throwsSeen[3].after == 18)
+
+    // Altaria swapped out and came back: it keeps its energy rather than being written off.
+    #expect(tracker.team.first { $0.speciesId == "altaria" }?.isFainted == false)
+}

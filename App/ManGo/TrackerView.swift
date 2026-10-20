@@ -113,7 +113,9 @@ struct TrackerView: View {
                 .monospacedDigit()
                 .contentTransition(.numericText())
             ProgressView(value: Double(snap.energy), total: Double(maxEnergy))
-            if snap.isPaused {
+            if model.isBattleOver {
+                Text("Battle over · resets when the next battle starts").font(.caption).foregroundStyle(.secondary)
+            } else if snap.isPaused {
                 Text("Paused").font(.caption).foregroundStyle(.orange)
             }
         }

@@ -55,7 +55,9 @@ final class OverlayController: NSObject {
         guard let model, let snap = model.tracker?.snapshot(at: model.now()) else { return }
         let name = snap.pokemon.flatMap { model.data?.species[$0.speciesId]?.speciesName }
         let bench = model.bench.map { "\($0.name) \($0.energy)" }.joined(separator: "  ·  ")
-        guard let buffer = OverlayRenderer.sampleBuffer(snap: snap, name: name, bench: bench, size: Self.size) else { return }
+        guard let buffer = OverlayRenderer.sampleBuffer(
+            snap: snap, name: name, bench: bench, battleOver: model.isBattleOver, size: Self.size
+        ) else { return }
         if displayLayer.status == .failed { displayLayer.flush() }
         displayLayer.enqueue(buffer)
     }
@@ -94,7 +96,9 @@ extension OverlayController: AVPictureInPictureSampleBufferPlaybackDelegate {
 
 /// Draws the overlay card into a video frame.
 enum OverlayRenderer {
-    static func sampleBuffer(snap: OpponentTracker.Snapshot, name: String?, bench: String, size: CGSize) -> CMSampleBuffer? {
+    static func sampleBuffer(
+        snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, size: CGSize
+    ) -> CMSampleBuffer? {
         var pixelBuffer: CVPixelBuffer?
         let attrs = [kCVPixelBufferIOSurfacePropertiesKey: [:]] as CFDictionary
         CVPixelBufferCreate(nil, Int(size.width), Int(size.height), kCVPixelFormatType_32BGRA, attrs, &pixelBuffer)
@@ -114,7 +118,7 @@ enum OverlayRenderer {
         ctx.translateBy(x: 0, y: size.height)
         ctx.scaleBy(x: 1, y: -1)
         UIGraphicsPushContext(ctx)
-        draw(snap: snap, name: name, bench: bench, size: size)
+        draw(snap: snap, name: name, bench: bench, battleOver: battleOver, size: size)
         UIGraphicsPopContext()
 
         var format: CMVideoFormatDescription?
@@ -138,7 +142,7 @@ enum OverlayRenderer {
         return sample
     }
 
-    private static func draw(snap: OpponentTracker.Snapshot, name: String?, bench: String, size: CGSize) {
+    private static func draw(snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, size: CGSize) {
         let pad: CGFloat = 24
         UIColor(white: 0.08, alpha: 1).setFill()
         UIRectFill(CGRect(origin: .zero, size: size))
@@ -157,7 +161,7 @@ enum OverlayRenderer {
         }
 
         // Header: opponent and status.
-        let status = snap.awaitingOpponent ? "NEXT POKÉMON…" : snap.isPaused ? "PAUSED" : nil
+        let status = battleOver ? "BATTLE OVER" : snap.awaitingOpponent ? "NEXT POKÉMON…" : snap.isPaused ? "PAUSED" : nil
         text(name ?? "Waiting for opponent", at: CGPoint(x: pad, y: pad), size: 34, width: 380)
         if let status {
             text(status, at: CGPoint(x: size.width - pad, y: pad + 4), size: 26, weight: .bold, color: .systemOrange, alignRight: true, width: 200)

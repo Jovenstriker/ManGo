@@ -15,6 +15,12 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentChargedMove(moveName: String)
     /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
     case playerChargedMove
+    /// The countdown's "GO": turn 0 of the battle.
+    case battleStarted
+    /// "YOU WIN!" / "YOU LOSE" / a draw.
+    case battleEnded
+    /// "Finding opponent…": matchmaking for the next battle.
+    case searching
 }
 
 /// Turns screen reads of a Pokémon GO battle into `BattleEvent`s.
@@ -27,6 +33,8 @@ public enum BattleEvent: Equatable, Sendable {
 /// - Charged moves end with a banner, "Stunfisk used Discharge!". Opponent charged
 ///   moves start with "Attack incoming!"; yours with "Get Ready!".
 /// - "Go, X!" is shown for both sides' switches, so it's not used.
+/// - After both leads appear there's a 3-2-1 countdown; the battle starts at a big "GO".
+/// - It ends with a big "YOU WIN!" (or lose/draw); the next one starts with "Finding opponent...".
 public struct BattleScreenParser: Sendable {
     /// Screen bands, normalized with a top-left origin.
     static let nameBox = (minX: 0.55, minY: 0.08, maxY: 0.2)
@@ -41,6 +49,9 @@ public struct BattleScreenParser: Sendable {
     public private(set) var opponentKey: String?
     private var pending: (key: String, count: Int, since: TimeInterval)?
     private var running: Bool?
+    private var started = false
+    private var ended = false
+    private var searching = false
 
     // Within the current stop.
     private var sawAttackIncoming = false
@@ -57,6 +68,29 @@ public struct BattleScreenParser: Sendable {
     public mutating func process(_ read: ScreenRead) -> [BattleEvent] {
         var events: [BattleEvent] = []
         let lines = read.lines
+
+        // Start and end of a battle: big text in the middle of the screen.
+        for line in lines where (0.35...0.65).contains(line.box.midY) {
+            let key = NameMatcher.normalize(line.text)
+            if key.contains("findingopponent") {
+                if !searching { events.append(.searching) }
+                searching = true
+                endOfBattle()
+                return events
+            }
+            if line.box.height > 0.04, key.contains("youwin") || key.contains("youlose") || key.contains("youlost") || key == "draw" {
+                if !ended { events.append(.battleEnded) }
+                ended = true
+                endOfBattle()
+                return events
+            }
+            if line.box.height > 0.08, key == "go", !started {
+                started = true
+                events.append(.battleStarted)
+            }
+        }
+        searching = false
+        ended = false
 
         // Running or stopped, from the charged move buttons.
         let isRunning = lines.contains { line in
@@ -130,6 +164,15 @@ public struct BattleScreenParser: Sendable {
             pending = nil
         }
         return events
+    }
+
+    /// Between battles: forget the opponent so the next battle's lead is reported even if
+    /// it's the same species.
+    private mutating func endOfBattle() {
+        opponentKey = nil
+        pending = nil
+        running = nil
+        started = false
     }
 
     public mutating func reset() {

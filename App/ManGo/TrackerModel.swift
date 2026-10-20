@@ -18,6 +18,8 @@ final class TrackerModel {
     /// session, in MB. iOS stops a broadcast extension that goes over about 50 MB.
     private(set) var readerMemoryMB: Double?
     private(set) var readerPeakMemoryMB: Double?
+    /// The battle ended ("YOU WIN!"/"YOU LOSE"). It resets on its own when the next starts.
+    var isBattleOver: Bool { automation?.isBattleOver ?? false }
     /// The latest thing the screen reader noticed, e.g. "Stunfisk used Discharge (81 → 41)".
     var lastEvent: String? { automation?.log.last }
 

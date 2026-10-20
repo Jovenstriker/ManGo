@@ -55,10 +55,31 @@ private func loadBattle() throws -> (GameData, [ScreenRead]) {
     // The time-based model holds up: every throw came when the app counted at least the
     // move's cost (40 for all three moves), give or take one fast move. Cramorant threw
     // all three Dives at exactly 40, once your charged moves pay out its Peck in progress.
-    #expect(energyAtThrows == [81, 100, 69, 40, 40, 40, 32])
+    // Stunfisk's clock starts at the countdown's "GO" (42.25s), not when its name appeared.
+    #expect(energyAtThrows == [63, 86, 55, 40, 40, 40, 32])
     for energy in energyAtThrows {
         #expect(energy >= 40 - 9)
     }
+
+    // "YOU WIN!" ends it: counting stops and the last battle stays on screen.
+    #expect(automation.isBattleOver)
+    #expect(tracker.isPaused)
+    #expect(automation.log.last == "Battle over")
+}
+
+@Test func nextBattleStartsFresh() throws {
+    let (data, reads) = try loadBattle()
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    // The same battle twice in a row: the second has the same lead, Stunfisk, which
+    // must start a new battle rather than continue the old one.
+    let second = reads.map { ScreenRead(time: $0.time + 300, lines: $0.lines) }
+    for read in reads + second {
+        automation.process(read, tracker: &tracker)
+    }
+    #expect(automation.log.first == "New battle")
+    #expect(tracker.team.map(\.speciesId) == ["stunfisk", "cramorant", "fearow"])
+    #expect(automation.log.filter { $0.contains(" used ") }.count == 7)
 }
 
 @Test func parsesBanners() {

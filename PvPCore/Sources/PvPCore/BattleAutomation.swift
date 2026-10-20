@@ -9,12 +9,20 @@ public struct BattleAutomation: Sendable {
     public let data: GameData
     /// What happened, newest last, for showing in the app.
     public private(set) var log: [String] = []
+    /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
+    /// the next one starts.
+    public private(set) var isBattleOver = false
 
     private var lastTime: TimeInterval = -.infinity
     private var stopped = false
     private var resumedAt: TimeInterval = -.infinity
     private var freeSwitchUntil: TimeInterval = -.infinity
     private var opponentThrewThisStop = false
+    private var goAt: TimeInterval?
+
+    /// The lead's name box appears about 2s before the countdown's "GO" (measured in a
+    /// recorded battle). Used if the "GO" itself is missed.
+    static let leadToGo: TimeInterval = 2.0
 
     /// A switch this soon after the battle resumes counts as part of that stop.
     static let afterStopWindow: TimeInterval = 1.5
@@ -35,6 +43,22 @@ public struct BattleAutomation: Sendable {
         let t = read.time
         for event in parser.process(read) {
             switch event {
+            case .searching:
+                newBattle(&tracker)
+
+            case .battleEnded:
+                guard !isBattleOver else { continue }
+                isBattleOver = true
+                tracker.pause(at: t)
+                note("Battle over")
+
+            case .battleStarted:
+                // Turn 0. The lead was probably read during the countdown: restart its clock now.
+                goAt = t
+                if tracker.team.count == 1, tracker.active?.fastMove != nil {
+                    tracker.setEnergy(0, at: t)
+                }
+
             case .stopped:
                 stopped = true
                 opponentThrewThisStop = false
@@ -72,16 +96,31 @@ public struct BattleAutomation: Sendable {
 
     // MARK: Helpers
 
+    private mutating func newBattle(_ tracker: inout OpponentTracker) {
+        isBattleOver = false
+        goAt = nil
+        stopped = false
+        resumedAt = -.infinity
+        freeSwitchUntil = -.infinity
+        guard !tracker.team.isEmpty else { return }
+        tracker = OpponentTracker(data: data)
+        log = []
+        note("New battle")
+    }
+
     private mutating func appear(_ match: NameMatcher.Match, at since: TimeInterval, now t: TimeInterval, tracker: inout OpponentTracker) {
         guard let best = match.candidates.first else { return }
-        let time = max(since, resumedAt)  // never before the latest resume
-        let team = tracker.team
-        let seen = team.first { p in match.candidates.contains { $0.speciesId == p.speciesId } }
+        if isBattleOver { newBattle(&tracker) }
+        var seen = tracker.team.first { p in match.candidates.contains { $0.speciesId == p.speciesId } }
         if let seen, seen.speciesId == tracker.active?.speciesId { return }
-        if seen == nil, team.count >= 3 {
-            tracker = OpponentTracker(data: data)  // a 4th Pokémon: new battle
-            log = []
-            note("New battle")
+        if seen == nil, tracker.team.count >= 3 {
+            newBattle(&tracker)  // a 4th Pokémon: a new battle we missed the start of
+            seen = nil
+        }
+        var time = max(since, resumedAt)  // never before the latest resume
+        if tracker.active == nil {
+            // The lead: counting starts at "GO", or about 2s after its name appears.
+            time = goAt ?? since + Self.leadToGo
         }
 
         let speciesId = seen?.speciesId ?? best.speciesId

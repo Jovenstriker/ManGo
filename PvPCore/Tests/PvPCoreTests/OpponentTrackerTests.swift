@@ -200,6 +200,8 @@ private func makeTracker() throws -> OpponentTracker {
     t.changeForm(to: "lickitung")  // stand-in for a different form: Counter isn't in its moveset
     #expect(t.active?.speciesId == "lickitung")
     #expect(t.active?.fastMove?.moveId == "LICK")  // its only fast move
+    #expect(t.active?.chainStart != nil)  // and it keeps counting
+    #expect(t.snapshot(at: 2).energy > 0)
     #expect(t.team.count == 1)
 }
 

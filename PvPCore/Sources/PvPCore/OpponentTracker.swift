@@ -25,6 +25,25 @@ public struct OpponentTracker: Sendable {
         /// Battle-clock time when the current uninterrupted fast move chain began.
         public var chainStart: TimeInterval?
         public var isFainted = false
+        /// Its finished stretches of fast moves and charged moves, so its energy can be
+        /// replayed with a different fast move (see `reconsiderFastMove`).
+        public var history: [Stretch] = []
+        public var chargedMovesThrown: [Thrown] = []
+        /// Energy the history starts from (0, or what `setEnergy` set).
+        public var historyBase = 0
+    }
+
+    /// A stretch of back-to-back fast moves, ended by a charged move or a switch.
+    public struct Stretch: Sendable, Hashable {
+        public var length: TimeInterval
+        /// Ended by your charged move, so the fast move in progress counted too.
+        public var interrupted: Bool
+    }
+
+    /// A charged move thrown after `afterStretch` stretches.
+    public struct Thrown: Sendable, Hashable {
+        public var afterStretch: Int
+        public var cost: Int
     }
 
     public struct ChargedMoveStatus: Sendable, Hashable, Identifiable {
@@ -83,6 +102,7 @@ public struct OpponentTracker: Sendable {
         lastChargedMoveAt = nil
         if let i = activeIndex {
             team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
+            closeStretch(i, at: t)
             team[i].chainStart = nil
         }
 
@@ -113,12 +133,12 @@ public struct OpponentTracker: Sendable {
         else { return }
         let fast = data.fastMoves(for: speciesId)
         team[i].speciesId = speciesId
-        if let current = team[i].fastMove, !fast.contains(current) {
-            team[i].fastMove = nil
-            team[i].chainStart = nil
-        }
-        if team[i].fastMove == nil, fast.count == 1 {
-            team[i].fastMove = fast[0]
+        // An assumed move the new form can't learn becomes the form's own likeliest one.
+        // The battle went on the whole time, so the count is redone with it.
+        if let current = team[i].fastMove, !fast.contains(current),
+           let move = data.recommendedMoves(for: speciesId).fast ?? fast.first {
+            team[i].fastMove = move
+            team[i].bankedEnergy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
         }
         let learnable = data.chargedMoves(for: speciesId)
         team[i].revealedChargedMoves.removeAll { !learnable.contains($0) }
@@ -130,6 +150,7 @@ public struct OpponentTracker: Sendable {
         guard let i = activeIndex, let move = data.moves[moveId], move.isFast else { return }
         let t = battleTime(at: now)
         team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
+        closeStretch(i, at: t)
         team[i].fastMove = move
         team[i].chainStart = t
     }
@@ -144,6 +165,8 @@ public struct OpponentTracker: Sendable {
         let t = battleTime(at: now)
         let current = energy(of: team[i], atBattleTime: t)
         team[i].bankedEnergy = max(0, current - move.energy)
+        closeStretch(i, at: t)
+        team[i].chargedMovesThrown.append(Thrown(afterStretch: team[i].history.count, cost: move.energy))
         if team[i].chainStart != nil { team[i].chainStart = t }
         lastChargedMoveAt = t
         if !team[i].revealedChargedMoves.contains(move) {
@@ -174,6 +197,7 @@ public struct OpponentTracker: Sendable {
         if t > start + 1e-6 {
             let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
             team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain)
+            closeStretch(i, at: t, interrupted: true)
         }
         team[i].chainStart = max(t, start)
     }
@@ -208,6 +232,7 @@ public struct OpponentTracker: Sendable {
     public mutating func markActiveFainted(at now: TimeInterval) {
         guard let i = activeIndex else { return }
         team[i].bankedEnergy = energy(of: team[i], atBattleTime: battleTime(at: now))
+        closeStretch(i, at: battleTime(at: now))
         team[i].isFainted = true
         team[i].chainStart = nil
     }
@@ -227,7 +252,71 @@ public struct OpponentTracker: Sendable {
     public mutating func setEnergy(_ energy: Int, at now: TimeInterval) {
         guard let i = activeIndex else { return }
         team[i].bankedEnergy = min(maxEnergy, max(0, energy))
+        team[i].history = []
+        team[i].chargedMovesThrown = []
+        team[i].historyBase = team[i].bankedEnergy
         if team[i].chainStart != nil { team[i].chainStart = battleTime(at: now) }
+    }
+
+    /// The opponent is about to throw a charged move costing `cost`. If the fast move
+    /// ManGo assumed couldn't have given enough energy for it (and every earlier one) but
+    /// another fast move the Pokémon learns could, switch to that one, the closest fit if
+    /// several do, and recount its energy. Returns the change, if any.
+    ///
+    /// It can only catch a guess that gives too little energy: one that gives too much
+    /// still makes every throw look possible.
+    public mutating func reconsiderFastMove(throwing cost: Int, at now: TimeInterval) -> (from: Move, to: Move)? {
+        guard let i = activeIndex, let current = team[i].fastMove, let start = team[i].chainStart else { return nil }
+        let open = max(0, battleTime(at: now) - start)
+        let p = team[i]
+        guard !Self.replay(p, with: current, openStretch: open, throwing: cost).possible else { return nil }
+        let best = data.fastMoves(for: p.speciesId)
+            .filter { $0 != current }
+            .map { ($0, Self.replay(p, with: $0, openStretch: open, throwing: cost)) }
+            .filter { $0.1.possible }
+            .min { $0.1.slack < $1.1.slack }
+        guard let (move, _) = best else { return nil }
+        team[i].fastMove = move
+        team[i].bankedEnergy = Self.replay(p, with: move, openStretch: nil, throwing: nil).energy
+        return (current, move)
+    }
+
+    /// Replays a Pokémon's energy with `move` as its fast move: each finished stretch
+    /// gives its finished fast moves (plus the one in progress if your charged move
+    /// interrupted it), capped at 100, and each charged move must have had enough.
+    /// `energy` is after the history; `slack` is how much more than needed it had in all.
+    static func replay(_ p: Pokemon, with move: Move, openStretch: TimeInterval?, throwing cost: Int?)
+        -> (possible: Bool, energy: Int, slack: Int) {
+        let duration = Double(move.turns) * turnDuration
+        var energy = p.historyBase, possible = true, slack = 0, next = 0
+        func spend(after stretches: Int) {
+            while next < p.chargedMovesThrown.count, p.chargedMovesThrown[next].afterStretch == stretches {
+                let c = p.chargedMovesThrown[next].cost
+                if energy < c { possible = false }
+                slack += max(0, energy - c)
+                energy = max(0, energy - c)
+                next += 1
+            }
+        }
+        spend(after: 0)
+        for (k, s) in p.history.enumerated() {
+            let finished = Int((s.length / duration + 1e-9).rounded(.down))
+            energy = min(maxEnergy, energy + (finished + (s.interrupted ? 1 : 0)) * move.energyGain)
+            spend(after: k + 1)
+        }
+        let afterHistory = energy
+        if let open = openStretch, let cost {
+            let atThrow = min(maxEnergy, energy + Int((open / duration + 1e-9).rounded(.down)) * move.energyGain)
+            if atThrow < cost { possible = false }
+            slack += max(0, atThrow - cost)
+        }
+        return (possible, afterHistory, slack)
+    }
+
+    /// Ends the active stretch of fast moves at battle time `t`, for the history.
+    private mutating func closeStretch(_ i: Int, at t: TimeInterval, interrupted: Bool = false) {
+        guard let start = team[i].chainStart, t > start else { return }
+        team[i].history.append(Stretch(length: t - start, interrupted: interrupted))
     }
 
     // MARK: Queries

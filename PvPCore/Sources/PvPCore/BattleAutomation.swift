@@ -36,6 +36,8 @@ public struct BattleAutomation: Sendable {
     /// restarted about when they came back, Ninetales about 0.4s after).
     public var restartWindowAfterShield: ClosedRange<TimeInterval> = -0.8 ... -0.2
     public var restartWindow: ClosedRange<TimeInterval> = -0.5 ... 0.4
+    /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
+    public var assumedFastMoves: [String: String] = [:]
     private var buttonsBackAt: TimeInterval?
     private var shieldedThisStop = false
     private var playerChargedThisStop = false
@@ -135,6 +137,10 @@ public struct BattleAutomation: Sendable {
                     tracker.changeForm(to: speciesId)
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
+                // A throw the assumed fast move couldn't have afforded means it's another one.
+                if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
+                    note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
+                }
                 let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
                 if let back = buttonsBackAt, lastStopAt > resumedAt,
                    tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
@@ -212,7 +218,8 @@ public struct BattleAutomation: Sendable {
 
         let speciesId = seen?.speciesId ?? best.speciesId
         // PvPoke's recommended fast move, or for a Pokémon it doesn't rank, its first one.
-        let assumed = data.species[speciesId]?.recommendedMoveset.first ?? data.species[speciesId]?.fastMoves.first
+        let assumed = assumedFastMoves[speciesId]
+            ?? data.species[speciesId]?.recommendedMoveset.first ?? data.species[speciesId]?.fastMoves.first
         let duringStop = stopped || t - resumedAt < Self.afterStopWindow
         if tracker.active != nil, duringStop, !opponentThrewThisStop {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.

@@ -55,6 +55,7 @@ TIMELINE (what the screen reader saw and did)
   0:38.50  You threw a charged move: Lucario 50 → 60 (its fast move in progress counts)
   0:48.25    running  Lucario at 60
   0:49.50    stopped  Lucario at 60
+  0:51.00  Your Pokémon fainted: Lucario 60 → 70 (the fast move that knocked it out landed)
   0:53.00    running  Lucario at 70
   0:55.00    stopped  Lucario at 80
   1:02.25  Lucario used Power-Up Punch (80 → 45)

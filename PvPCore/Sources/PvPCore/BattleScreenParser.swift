@@ -17,6 +17,8 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentChargedMove(moveName: String)
     /// "Attack incoming!": the opponent is throwing a charged move, before its banner.
     case attackIncoming
+    /// Your Pokémon fainted ("Switch in a new Pokémon?" while the battle is stopped).
+    case yourPokemonFainted
     /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
     case playerChargedMove
     /// The countdown's "GO": turn 0 of the battle.
@@ -91,6 +93,7 @@ public struct BattleScreenParser: Sendable {
     // Within the current stop.
     private var sawAttackIncoming = false
     private var announcedAttackIncoming = false
+    private var announcedFaint = false
     private var sawGetReady = false
     private var opponentThrew = false
     private var playerThrew = false
@@ -151,6 +154,7 @@ public struct BattleScreenParser: Sendable {
                 }
                 sawAttackIncoming = false
                 announcedAttackIncoming = false
+                announcedFaint = false
                 sawGetReady = false
                 opponentThrew = false
                 playerThrew = false
@@ -182,7 +186,13 @@ public struct BattleScreenParser: Sendable {
             let key = NameMatcher.normalize(line.text)
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
             if key.contains("getready") { sawGetReady = true }
-            if key.contains("switchinanewpokemon") { switchPromptAt = read.time }
+            if key.contains("switchinanewpokemon") {
+                switchPromptAt = read.time
+                if running == false, !announcedFaint {
+                    announcedFaint = true
+                    events.append(.yourPokemonFainted)
+                }
+            }
         }
         if sawAttackIncoming, !sawGetReady, running == false, !announcedAttackIncoming {
             announcedAttackIncoming = true
@@ -254,9 +264,13 @@ public struct BattleScreenParser: Sendable {
                     pending = nil
                     events.append(.opponentAppeared(match, since: read.time))
                 }
-            } else if match.key != opponentKey, pendingGo?.match.key != match.key, !myTeam.contains(match.key),
+            } else if match.key != opponentKey, pendingGo?.match.key != match.key,
                       !(yourCurrent?.key == match.key && read.time - yourCurrent!.time < 1.5) {
-                if let prompt = switchPromptAt, read.time - prompt < 20 {
+                // A species you have too is theirs only while your box shows something else.
+                let yourBoxShowsAnother = yourCurrent.map { $0.key != match.key && read.time - $0.time < 1.0 } ?? false
+                if myTeam.contains(match.key) {
+                    if yourBoxShowsAnother { pendingGo = (match, recentGo[match.key] ?? read.time) }
+                } else if let prompt = switchPromptAt, read.time - prompt < 20 {
                     myTeam.insert(match.key)  // your replacement after your Pokémon fainted
                     switchPromptAt = nil
                 } else {

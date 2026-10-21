@@ -69,7 +69,7 @@ The replay test checks every pause, charged move and faint. To analyze a new rec
 
 ### Battle reports
 
-Each recorded battle has a report next to its video, `Test Videos/<video>.log`. It covers how
+Each recorded battle has a report in `Battle Logs/<video>.log`. It covers how
 ManGo counts and the timing settings, then each opponent charged move with the energy math
 (`54 = 0 left before + 6 × 9 (Thunder Shock)`), ManGo's fast move count next to the count from
 watching the recording, and a timeline of everything the screen reader saw and did. Hand counts and

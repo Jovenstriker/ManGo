@@ -15,7 +15,7 @@ public struct BattleAutomation: Sendable {
     /// When "YOU WIN!" / "GOOD EFFORT!" was read.
     public private(set) var battleEndedAt: TimeInterval?
     // Timing, fitted on four recorded battles against the opponent's fast move counts
-    // counted by watching the recordings (see "Test Videos/*.log"): these values get all 26
+    // counted by watching the recordings (see "Battle Logs/*.log"): these values get all 26
     // counts and checkpoints exactly, as do several neighbors.
     // Reads come 4 times a second, so the screen changed up to 0.25s before it's seen.
 
@@ -169,6 +169,12 @@ public struct BattleAutomation: Sendable {
                 tracker.opponentIsThrowing()
                 // Corrects the count as the battle freezes, not only once the banner names the move.
                 alignToOpponentChargedMove(&tracker)
+
+            case .yourPokemonFainted:
+                guard !opponentThrewThisStop, !playerChargedThisStop else { continue }
+                let before = tracker.snapshot(at: t).shownEnergy
+                tracker.yourPokemonFainted()
+                note("Your Pokémon fainted: \(name(tracker.active?.speciesId)) \(before) → \(tracker.snapshot(at: t).shownEnergy) (the fast move that knocked it out landed)")
 
             case .playerChargedMove:
                 // Their fast move in progress pays out; they start fresh after your move.

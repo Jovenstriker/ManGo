@@ -93,6 +93,9 @@ public struct OpponentTracker: Sendable {
 
     // MARK: Events
 
+    /// How much earlier than a fast move's end a switch-out can be seen and still count it.
+    static let switchTolerance: TimeInterval = 0.2
+
     /// The opponent's lead appeared, they switched, or their next Pokémon came out after a faint.
     /// The outgoing Pokémon keeps its energy. If the incoming fast move is already
     /// known (seen before, or the species has only one), its chain starts once the
@@ -109,8 +112,18 @@ public struct OpponentTracker: Sendable {
         let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
         if let i = activeIndex {
-            team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
-            closeStretch(i, at: t)
+            // The switch is only seen to within a read: a fast move that would have finished
+            // just after it counts. (Forretress switched as its Volt Switch finished, and the
+            // phone placed the switch a moment early. Mimikyu's 3rd Shadow Claw, 75% done,
+            // didn't count.)
+            var out = t
+            if let fast = team[i].fastMove, let start = team[i].chainStart, t > start {
+                let duration = Double(fast.turns) * turnDuration
+                let finished = ((t - start + Self.switchTolerance) / duration).rounded(.down)
+                out = max(t, start + finished * duration)
+            }
+            team[i].bankedEnergy = energy(of: team[i], atBattleTime: out)
+            closeStretch(i, at: out)
             team[i].chainStart = nil
         }
 
@@ -208,6 +221,21 @@ public struct OpponentTracker: Sendable {
             closeStretch(i, at: t, interrupted: true)
         }
         team[i].chainStart = max(t, start)
+    }
+
+    /// Your Pokémon fainted to their fast move: it landed as the battle stopped, so the stop
+    /// is on a fast move's end. Counts their fast moves to the nearest end (the stop is only
+    /// seen to within a read), and they start fresh when the battle resumes. Call while
+    /// paused at the stop.
+    public mutating func yourPokemonFainted() {
+        guard let p = pausedAt, let i = activeIndex, let fast = team[i].fastMove, let start = team[i].chainStart else { return }
+        let t = battleTime(at: p)
+        guard t > start + 1e-6 else { return }  // fresh since their charged move
+        let duration = Double(fast.turns) * turnDuration
+        let landed = max(1, ((t - start) / duration).rounded())
+        team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + Int(landed) * fast.energyGain)
+        closeStretch(i, at: start + landed * duration)
+        team[i].chainStart = t
     }
 
     /// The opponent's charged move can only start as a fast move's animation finishes. If

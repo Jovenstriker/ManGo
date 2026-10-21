@@ -313,3 +313,26 @@ private struct Screen {
     #expect(t8.team.map(\.speciesId) == ["azumarill", "lucario", "mawile"])
     #expect(energiesAtThrows(a8.log) == [80, 55, 66, 61, 45])
 }
+
+/// v9 (vs Turtonator, Forretress (Shadow), Mimikyu), with the corrections from watching it.
+@Test func replayNinthBattle() throws {
+    let (data, reads) = try loadBattle("gbl-battle-2026-10-20-v9")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var shown: [TimeInterval: (String?, Int)] = [:]
+    var benchAt96: Int?
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        shown[read.time] = (tracker.active?.speciesId, tracker.snapshot(at: read.time).shownEnergy)
+        if read.time == 97 { benchAt96 = tracker.team.first { $0.speciesId == "forretress_shadow" }?.bankedEnergy }
+    }
+    // Turtonator's Incinerate knocked out Melmetal: its 20 shows at the faint (the switch
+    // prompt at 57.5s), not only once Altaria is in.
+    #expect(shown[58]! == ("turtonator", 100))
+    // Forretress threw 1 Volt Switch, then switched to Mimikyu just as it finished.
+    #expect(benchAt96 == 16)
+    // Back in at 2:33: 16 + 2 more Volt Switches by 2:41.
+    #expect(shown[161]! == ("forretress_shadow", 48))
+    // Their "Go, Mimikyu!" at 3:01.75, though you have a Mimikyu too: your box showed Altaria.
+    #expect(tracker.active?.speciesId == "mimikyu")
+}

@@ -12,6 +12,8 @@ public struct BattleAutomation: Sendable {
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
+    /// When "YOU WIN!" / "GOOD EFFORT!" was read.
+    public private(set) var battleEndedAt: TimeInterval?
     // Timing, fitted on four recorded battles against the opponent's fast move counts
     // counted by watching the recordings (see "Test Videos/*.log"): these values get all 26
     // counts and checkpoints exactly, as do several neighbors.
@@ -98,8 +100,10 @@ public struct BattleAutomation: Sendable {
                 newBattle(&tracker)
 
             case .battleEnded:
-                guard !isBattleOver else { continue }
+                // The results screen keeps showing it, also after the count is cleared.
+                guard !isBattleOver, tracker.active != nil else { continue }
                 isBattleOver = true
+                battleEndedAt = t
                 tracker.pause(at: t)
                 note("Battle over")
 
@@ -204,6 +208,7 @@ public struct BattleAutomation: Sendable {
 
     private mutating func newBattle(_ tracker: inout OpponentTracker) {
         isBattleOver = false
+        battleEndedAt = nil
         goAt = nil
         awaitingGo = false
         stopped = false

@@ -18,7 +18,9 @@ final class TrackerModel {
     /// session, in MB. iOS stops a broadcast extension that goes over about 50 MB.
     private(set) var readerMemoryMB: Double?
     private(set) var readerPeakMemoryMB: Double?
-    /// The battle ended ("YOU WIN!"/"YOU LOSE"). It resets on its own when the next starts.
+    /// The battle ended ("YOU WIN!"/"GOOD EFFORT!"). The final count stays up this long,
+    /// then ManGo clears it for the next battle.
+    static let clearAfterBattle: TimeInterval = 5
     var isBattleOver: Bool { automation?.isBattleOver ?? false }
     /// The latest thing the screen reader noticed, e.g. "Stunfisk used Discharge (81 → 41)".
     var lastEvent: String? { automation?.log.last }
@@ -83,6 +85,10 @@ final class TrackerModel {
         let reads = BroadcastChannel.reads(after: lastReadTime)
         guard !reads.isEmpty else { return }
         for read in reads {
+            if let ended = automation.battleEndedAt, read.time >= ended + Self.clearAfterBattle, let data {
+                tracker = OpponentTracker(data: data)
+                automation.reset()
+            }
             automation.process(read, tracker: &tracker)
             lastReadTime = read.time
             if let now = read.memoryMB { readerMemoryMB = now }

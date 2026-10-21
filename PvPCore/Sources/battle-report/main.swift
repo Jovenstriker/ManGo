@@ -42,7 +42,8 @@ for read in reads {
     for line in automation.log.dropFirst(min(logCount, automation.log.count)) {
         timeline.append("\(clock(read.time))  \(line)")
         // Energy from the log line itself ("(48 → 8)"): it includes corrections made at the throw.
-        if line.contains(" used "), let p = tracker.active, let move = p.revealedChargedMoves.last,
+        if line.contains(" used "), let p = tracker.active,
+           let move = p.revealedChargedMoves.first(where: { line.contains(" used \($0.name) (") }),
            let open = line.range(of: "(", options: .backwards),
            let arrow = line.range(of: " → ", range: open.upperBound..<line.endIndex),
            let close = line.range(of: ")", range: arrow.upperBound..<line.endIndex),

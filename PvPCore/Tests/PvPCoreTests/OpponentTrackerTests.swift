@@ -242,5 +242,12 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(t.snapshot(at: 0.5).shownEnergy == 6)  // shown as the move starts
     #expect(t.snapshot(at: 1).shownEnergy == 12)
     t.pause(at: 1.5)
-    #expect(t.snapshot(at: 2).shownEnergy == 6)  // frozen: only what's landed
+    #expect(t.snapshot(at: 2).shownEnergy == 12)  // frozen: still shown, yours would pay it out
+    t.playerThrewChargedMove(at: 2)
+    #expect(t.snapshot(at: 2.5).shownEnergy == 12)  // and it did
+    t.resume(at: 3)
+    #expect(t.snapshot(at: 4.5).shownEnergy == 24)
+    t.pause(at: 4.5)
+    t.opponentIsThrowing()
+    #expect(t.snapshot(at: 5).shownEnergy == 18)  // theirs: the move in progress never started
 }

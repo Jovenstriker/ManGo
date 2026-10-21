@@ -55,6 +55,12 @@ public struct BattleAutomation: Sendable {
     private var goAt: TimeInterval?
     /// The lead is known but the countdown hasn't reached GO: its clock waits.
     private var awaitingGo = false
+    /// When the lead was named while waiting for GO, and when the battle seemed to resume
+    /// meanwhile: the buttons show during the countdown.
+    private var leadNamedAt: TimeInterval = 0
+    private var resumedBeforeGo: TimeInterval?
+    /// Longest the lead waits for a GO that isn't read, from when it's named.
+    static let goWait: TimeInterval = 4
 
 
     /// A switch this soon after the battle resumes counts as part of that stop.
@@ -80,6 +86,11 @@ public struct BattleAutomation: Sendable {
             awaitingGo = false
             tracker.resume(at: go)
             tracker.setEnergy(0, at: go)
+        }
+        if awaitingGo, goAt == nil, t >= leadNamedAt + Self.goWait {
+            // No countdown at all: go by the buttons.
+            awaitingGo = false
+            tracker.resume(at: resumedBeforeGo ?? t)
         }
         for event in parser.process(read) {
             switch event {
@@ -128,7 +139,8 @@ public struct BattleAutomation: Sendable {
                 shieldedThisStop = false
                 playerChargedThisStop = false
                 if free { freeSwitchUntil = resume + Self.afterStopWindow }
-                tracker.resume(at: resume)
+                // The buttons show during the countdown: the lead's clock waits for GO.
+                if awaitingGo { resumedBeforeGo = resume } else { tracker.resume(at: resume) }
 
             case .opponentChargedMove(let moveName):
                 // Unmatched is usually a half-read banner; the next read has the whole name.
@@ -138,6 +150,7 @@ public struct BattleAutomation: Sendable {
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
                 // A throw the assumed fast move couldn't have afforded means it's another one.
+                tracker.opponentIsThrowing()
                 if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
                 }
@@ -149,6 +162,7 @@ public struct BattleAutomation: Sendable {
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
 
             case .attackIncoming:
+                tracker.opponentIsThrowing()
                 // Corrects the count as the battle freezes, not only once the banner names the move.
                 alignToOpponentChargedMove(&tracker)
 
@@ -247,6 +261,8 @@ public struct BattleAutomation: Sendable {
             // Named before the countdown's GO (from "Go, X!"): nothing happens until then.
             tracker.pause(at: time)
             awaitingGo = true
+            leadNamedAt = time
+            resumedBeforeGo = nil
         }
         note("Opponent: \(name(speciesId))")
     }

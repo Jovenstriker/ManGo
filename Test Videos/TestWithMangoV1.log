@@ -55,7 +55,7 @@ TIMELINE (what the screen reader saw and did)
   0:44.75    stopped  Marowak at 50
   0:53.75  Marowak used Rock Slide (50 → 5)
   0:55.50    running  Marowak at 15
-  0:56.50    stopped  Marowak at 5
+  0:56.50    stopped  Marowak at 15
   0:56.75  You threw a charged move: Marowak 5 → 15 (its fast move in progress counts)
   1:07.00    running  Marowak at 25
   1:11.25    stopped  Marowak at 35
@@ -67,16 +67,16 @@ TIMELINE (what the screen reader saw and did)
   1:37.25    stopped  Sableye (Shadow) at 40
   1:44.50  Sableye (Shadow) used Drain Punch (40 → 0)
   1:47.50    running  Sableye (Shadow) at 8
-  1:48.25    stopped  Sableye (Shadow) at 0
+  1:48.25    stopped  Sableye (Shadow) at 8
   1:49.25  You threw a charged move: Sableye (Shadow) 8 → 16 (its fast move in progress counts)
   1:59.00    running  Sableye (Shadow) at 24
-  2:01.75    stopped  Sableye (Shadow) at 32
+  2:01.75    stopped  Sableye (Shadow) at 40
   2:02.25  Sableye (Shadow) had finished one more fast move: the battle restarted before your buttons came back
   2:09.50  Sableye (Shadow) used Drain Punch (40 → 0)
   2:20.00    running  Sableye (Shadow) at 8
-  2:24.25    stopped  Sableye (Shadow) at 32
+  2:24.25    stopped  Sableye (Shadow) at 40
   2:25.00  You threw a charged move: Sableye (Shadow) 32 → 40 (its fast move in progress counts)
-  2:35.00    running  Sableye (Shadow) at 48
+  2:35.00    running  Sableye (Shadow) at 40
   2:37.25    stopped  Sableye (Shadow) at 56
   2:44.50  Sableye (Shadow) used Foul Play (56 → 16)
   2:47.50    running  Sableye (Shadow) at 24
@@ -84,15 +84,15 @@ TIMELINE (what the screen reader saw and did)
   2:57.75  Sableye (Shadow) used Foul Play (40 → 0)
   3:04.50  Opponent: Talonflame
   3:04.50    running  Talonflame at 20
-  3:08.25    stopped  Talonflame at 20
+  3:08.25    stopped  Talonflame at 40
   3:09.50  You threw a charged move: Talonflame 20 → 40 (its fast move in progress counts)
   3:19.00    running  Talonflame at 60
-  3:20.75    stopped  Talonflame at 40
+  3:20.75    stopped  Talonflame at 60
   3:21.25  You threw a charged move: Talonflame 40 → 60 (its fast move in progress counts)
   3:34.00  Talonflame fainted or switched out
   3:34.00  Opponent: Marowak
   3:35.00    running  Marowak at 10
-  3:40.75    stopped  Marowak at 30
-  3:43.50    running  Marowak at 50
+  3:40.75    stopped  Marowak at 40
+  3:43.50    running  Marowak at 40
   3:43.75    stopped  Marowak at 40
   3:51.00  Marowak used Bone Club (40 → 5)

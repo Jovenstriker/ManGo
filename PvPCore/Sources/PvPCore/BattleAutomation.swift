@@ -141,17 +141,16 @@ public struct BattleAutomation: Sendable {
                 if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
                 }
-                let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
-                if let back = buttonsBackAt, lastStopAt > resumedAt,
-                   tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
-                                              restartWindow: (back + window.lowerBound)...(back + window.upperBound)) {
-                    note("\(name(tracker.active?.speciesId)) had finished one more fast move: the battle restarted before your buttons came back")
-                }
+                alignToOpponentChargedMove(&tracker)
                 let before = tracker.snapshot(at: t).energy
                 tracker.opponentThrewChargedMove(move.moveId, at: t)
                 opponentThrewThisStop = true
                 chargedMoveThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
+
+            case .attackIncoming:
+                // Corrects the count as the battle freezes, not only once the banner names the move.
+                alignToOpponentChargedMove(&tracker)
 
             case .playerChargedMove:
                 // Their fast move in progress pays out; they start fresh after your move.
@@ -177,6 +176,17 @@ public struct BattleAutomation: Sendable {
     }
 
     // MARK: Helpers
+
+    /// Their charged move started as a fast move finished: the stretch since the battle
+    /// restarted holds a whole number of fast moves.
+    private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
+        let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
+        if let back = buttonsBackAt, lastStopAt > resumedAt,
+           tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
+                                      restartWindow: (back + window.lowerBound)...(back + window.upperBound)) {
+            note("\(name(tracker.active?.speciesId)) had finished one more fast move: the battle restarted before your buttons came back")
+        }
+    }
 
     private mutating func newBattle(_ tracker: inout OpponentTracker) {
         isBattleOver = false

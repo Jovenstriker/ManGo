@@ -273,3 +273,22 @@ private struct Screen {
     #expect(energiesAtThrows(automation.log) == [100, 50, 56])
     #expect(automation.log.contains { $0.hasPrefix("You threw a charged move: Granbull (Shadow) 11 → 19") })
 }
+
+@Test func attackIncomingIsAnnouncedOncePerChargedMove() throws {
+    let (data, _) = try loadBattle()
+    var parser = BattleScreenParser(data: data)
+    var events: [BattleEvent] = []
+    var t: TimeInterval = 0
+    func play(_ screen: Screen, for seconds: TimeInterval) {
+        for _ in 0..<Int(seconds / 0.25) {
+            events += parser.process(screen.read(at: t))
+            t += 0.25
+        }
+    }
+    play(Screen(opponent: "Altaria"), for: 2)
+    play(Screen(opponent: "Altaria", buttons: false, banner: "Attack incoming!"), for: 2)
+    play(Screen(opponent: "Altaria", buttons: false, banner: "Altaria used Flamethrower!"), for: 1)
+    #expect(events.filter { $0 == .attackIncoming }.count == 1)
+    let incoming = try #require(events.firstIndex(of: .attackIncoming))
+    #expect(incoming < events.firstIndex(of: .opponentChargedMove(moveName: "Flamethrower"))!)
+}

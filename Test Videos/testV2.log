@@ -57,54 +57,54 @@ TIMELINE (what the screen reader saw and did)
   0:19.25  Opponent: Melmetal
   0:28.00    stopped  Melmetal at 54
   0:35.25  Melmetal used Double Iron Bash (54 → 19)
-  0:38.00    running  Melmetal at 19
+  0:38.00    running  Melmetal at 28
   0:39.00    stopped  Melmetal at 28
   0:40.00  You threw a charged move: Melmetal 28 → 37 (its fast move in progress counts)
-  0:49.75    running  Melmetal at 37
+  0:49.75    running  Melmetal at 46
   0:54.00    stopped  Melmetal at 73
   1:01.25  Melmetal used Double Iron Bash (73 → 38)
-  1:04.00    running  Melmetal at 38
+  1:04.00    running  Melmetal at 47
   1:04.50    stopped  Melmetal at 38
   1:11.75  Melmetal used Double Iron Bash (38 → 3)
-  1:17.25    running  Melmetal at 3
+  1:17.25    running  Melmetal at 12
   1:20.00    stopped  Melmetal at 21
   1:23.50  Melmetal fainted or switched out
   1:23.50  Opponent: Ninetales (Shadow)
-  1:24.25    running  Ninetales (Shadow) at 0
+  1:24.25    running  Ninetales (Shadow) at 9
   1:26.00    stopped  Ninetales (Shadow) at 9
   1:27.25  You threw a charged move: Ninetales (Shadow) 18 → 27 (its fast move in progress counts)
-  1:36.75    running  Ninetales (Shadow) at 27
+  1:36.75    running  Ninetales (Shadow) at 36
   1:40.50    stopped  Ninetales (Shadow) at 54
-  1:48.75  Ninetales (Shadow) had finished one more fast move: the battle restarted before your buttons came back
+  1:41.00  Ninetales (Shadow) had finished one more fast move: the battle restarted before your buttons came back
   1:48.75  Ninetales (Shadow) used Weather Ball (Fire) (63 → 28)
-  1:54.50    running  Ninetales (Shadow) at 28
+  1:54.50    running  Ninetales (Shadow) at 37
   1:57.00    stopped  Ninetales (Shadow) at 46
   2:04.25  Ninetales (Shadow) used Weather Ball (Fire) (46 → 11)
-  2:07.25    running  Ninetales (Shadow) at 11
+  2:07.25    running  Ninetales (Shadow) at 20
   2:07.50  Opponent: Altaria
   2:09.00    stopped  Altaria at 12
   2:09.75  You threw a charged move: Altaria 12 → 16 (its fast move in progress counts)
-  2:19.75    running  Altaria at 16
+  2:19.75    running  Altaria at 20
   2:24.00    stopped  Altaria at 48
-  2:31.25  Altaria had finished one more fast move: the battle restarted before your buttons came back
+  2:24.50  Altaria had finished one more fast move: the battle restarted before your buttons came back
   2:31.25  Altaria used Moonblast (52 → 2)
-  2:34.25    running  Altaria at 2
+  2:34.25    running  Altaria at 6
   2:36.00    stopped  Altaria at 14
   2:36.50  You threw a charged move: Altaria 14 → 18 (its fast move in progress counts)
-  2:46.75    running  Altaria at 18
+  2:46.75    running  Altaria at 22
   2:49.50    stopped  Altaria at 38
   2:50.00  You threw a charged move: Altaria 38 → 42 (its fast move in progress counts)
-  3:00.25    running  Altaria at 42
+  3:00.25    running  Altaria at 46
   3:00.50  Altaria fainted or switched out
   3:00.50  Opponent: Ninetales (Shadow)
   3:04.00    stopped  Ninetales (Shadow) at 38
   3:04.50  You threw a charged move: Ninetales (Shadow) 38 → 47 (its fast move in progress counts)
   3:15.50  Ninetales (Shadow) fainted or switched out
   3:15.50  Opponent: Altaria
-  3:16.50    running  Altaria at 42
+  3:16.50    running  Altaria at 46
   3:18.00    stopped  Altaria at 54
   3:26.00  Altaria used Flamethrower (54 → 0)
-  3:28.50    running  Altaria at 0
+  3:28.50    running  Altaria at 4
   3:30.50    stopped  Altaria at 16
   3:31.00  You threw a charged move: Altaria 16 → 20 (its fast move in progress counts)
   3:45.50  Battle over

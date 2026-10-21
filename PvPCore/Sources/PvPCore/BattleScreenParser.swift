@@ -15,6 +15,8 @@ public enum BattleEvent: Equatable, Sendable {
     case opponentAppeared(NameMatcher.Match, since: TimeInterval)
     /// The opponent threw a charged move, read from the "X used Y!" banner.
     case opponentChargedMove(moveName: String)
+    /// "Attack incoming!": the opponent is throwing a charged move, before its banner.
+    case attackIncoming
     /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
     case playerChargedMove
     /// The countdown's "GO": turn 0 of the battle.
@@ -88,6 +90,7 @@ public struct BattleScreenParser: Sendable {
 
     // Within the current stop.
     private var sawAttackIncoming = false
+    private var announcedAttackIncoming = false
     private var sawGetReady = false
     private var opponentThrew = false
     private var playerThrew = false
@@ -147,6 +150,7 @@ public struct BattleScreenParser: Sendable {
                     events.append(.resumed(freeSwitch: opponentThrew || !sawGetReady))
                 }
                 sawAttackIncoming = false
+                announcedAttackIncoming = false
                 sawGetReady = false
                 opponentThrew = false
                 playerThrew = false
@@ -170,6 +174,7 @@ public struct BattleScreenParser: Sendable {
             bannerConsumed = false
             bannersSeen = []
             sawAttackIncoming = false
+            announcedAttackIncoming = false
             sawGetReady = false
             playerThrew = false
         }
@@ -178,6 +183,10 @@ public struct BattleScreenParser: Sendable {
             if key.contains("attackincoming") || key.contains("protectshield") { sawAttackIncoming = true }
             if key.contains("getready") { sawGetReady = true }
             if key.contains("switchinanewpokemon") { switchPromptAt = read.time }
+        }
+        if sawAttackIncoming, !sawGetReady, running == false, !announcedAttackIncoming {
+            announcedAttackIncoming = true
+            events.append(.attackIncoming)
         }
         if sawGetReady, running == false, !playerThrew {
             playerThrew = true

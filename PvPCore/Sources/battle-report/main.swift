@@ -52,7 +52,7 @@ for read in reads {
     }
     logCount = automation.log.count
     if tracker.isPaused != wasPaused, let p = snap.pokemon {
-        timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.energy)")
+        timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.shownEnergy)")
         wasPaused = tracker.isPaused
     }
 }

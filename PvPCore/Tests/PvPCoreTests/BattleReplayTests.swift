@@ -292,3 +292,24 @@ private struct Screen {
     let incoming = try #require(events.firstIndex(of: .attackIncoming))
     #expect(incoming < events.firstIndex(of: .opponentChargedMove(moveName: "Flamethrower"))!)
 }
+
+/// Two more battles with ManGo on screen, hand-counted. Not used to fit the timing.
+@Test func replaySeventhAndEighthBattles() throws {
+    func replay(_ name: String) throws -> (BattleAutomation, OpponentTracker) {
+        let (data, reads) = try loadBattle(name)
+        var automation = BattleAutomation(data: data)
+        var tracker = OpponentTracker(data: data)
+        for read in reads { automation.process(read, tracker: &tracker) }
+        return (automation, tracker)
+    }
+    // v7: Azumarill leads, throws 1 Bubble and switches out; it brings those 11 back.
+    // Empoleon used Waterfall rather than PvPoke's Metal Sound, so its 56 is an overcount.
+    let (a7, t7) = try replay("gbl-battle-2026-10-20-v7")
+    #expect(t7.team.map(\.speciesId) == ["azumarill", "empoleon", "magnezone"])
+    #expect(energiesAtThrows(a7.log) == [56, 64, 100, 56])
+
+    // v8: the same 1-Bubble Azumarill lead; Lucario throws Power-Up Punch and Shadow Ball.
+    let (a8, t8) = try replay("gbl-battle-2026-10-20-v8")
+    #expect(t8.team.map(\.speciesId) == ["azumarill", "lucario", "mawile"])
+    #expect(energiesAtThrows(a8.log) == [80, 55, 66, 61, 45])
+}

@@ -65,5 +65,33 @@
       "2": "Thrown straight after the first Dragon Claw, in the same stop. Turtonator then switched out to Granbull.",
       "3": "Granbull switched in during the stop after Turtonator's Dragon Claws, so it starts as the battle restarts. 7 Charms before Crunch, then 1 that counted when your charged move interrupted it, then 5 that knocked out your Mimikyu and Altaria."
     }
+  },
+  "gbl-battle-2026-10-20-v7": {
+    "video": "Test Videos/v7.mov",
+    "description": "Seventh battle, with ManGo on screen. Opponent: Azumarill, Empoleon, Magnezone.",
+    "counts": [
+      null,
+      4,
+      9,
+      1
+    ],
+    "notes": {
+      "1": "Empoleon used Waterfall (+10 every 3 turns), not PvPoke's Metal Sound, so ManGo overcounted it; not hand-counted.",
+      "3": "Includes Azumarill's 1 Bubble as the lead before switching out."
+    }
+  },
+  "gbl-battle-2026-10-20-v8": {
+    "video": "Test Videos/v8.mov",
+    "description": "Eighth battle, with ManGo on screen. Opponent: Azumarill, Lucario, Mawile.",
+    "counts": [
+      8,
+      1,
+      6,
+      5,
+      4
+    ],
+    "notes": {
+      "3": "Includes Azumarill's 1 Bubble as the lead before switching out."
+    }
   }
 }

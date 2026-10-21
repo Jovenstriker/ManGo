@@ -176,13 +176,13 @@ enum OverlayRenderer {
         guard snap.pokemon != nil else { return }
 
         // Energy number and bar.
-        text("\(snap.energy)", at: CGPoint(x: pad, y: 78), size: 110, weight: .heavy)
+        text("\(snap.shownEnergy)", at: CGPoint(x: pad, y: 78), size: 110, weight: .heavy)
         let bar = CGRect(x: pad, y: size.height - pad - 22, width: size.width - pad * 2, height: 22)
         UIColor(white: 0.25, alpha: 1).setFill()
         UIBezierPath(roundedRect: bar, cornerRadius: 11).fill()
         UIColor.systemBlue.setFill()
         var fill = bar
-        fill.size.width *= CGFloat(snap.energy) / CGFloat(maxEnergy)
+        fill.size.width *= CGFloat(snap.shownEnergy) / CGFloat(maxEnergy)
         UIBezierPath(roundedRect: fill, cornerRadius: 11).fill()
 
         // Up to two charged moves: revealed or recommended first.

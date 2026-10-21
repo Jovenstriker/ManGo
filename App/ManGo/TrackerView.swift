@@ -121,11 +121,11 @@ struct TrackerView: View {
 
     private func energyGauge(_ snap: OpponentTracker.Snapshot) -> some View {
         VStack(spacing: 6) {
-            Text("\(snap.energy)")
+            Text("\(snap.shownEnergy)")
                 .font(.system(size: 64, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
-            ProgressView(value: Double(snap.energy), total: Double(maxEnergy))
+            ProgressView(value: Double(snap.shownEnergy), total: Double(maxEnergy))
             if model.isBattleOver {
                 Text("Battle over · resets when the next battle starts").font(.caption).foregroundStyle(.secondary)
             } else if snap.isPaused {

@@ -63,7 +63,7 @@ private func makeTracker() throws -> OpponentTracker {
     let ice = try #require(t.snapshot(at: 2.5).chargedMoves.first { $0.move.moveId == "ICE_PUNCH" })
     #expect(ice.isRecommended)
     #expect(!ice.ready)
-    #expect(ice.fastMovesNeeded == 5)  // 28 more energy / 6
+    #expect(ice.fastMovesNeeded == 4)  // 28 more energy / 6 = 5, the 1st already shown (18)
     #expect(ice.turnsUntilReady == 9)  // 5 Counters = 10 turns, 1 already in progress
 
     let ready = try #require(t.snapshot(at: 7).chargedMoves.first { $0.move.moveId == "ICE_PUNCH" })
@@ -232,4 +232,15 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(rec.fast?.moveId == "COUNTER")
     #expect(rec.charged.map(\.moveId) == ["CROSS_CHOP"])
     #expect(rec.charged.map(\.energy) == [35])
+}
+
+@Test func shownEnergyIncludesTheFastMoveInProgress() throws {
+    var t = try makeTracker()
+    t.setActive(speciesId: "medicham", at: 0)
+    t.identifyFastMove("COUNTER", at: 0)  // +6 every second
+    #expect(t.snapshot(at: 0.5).energy == 0)
+    #expect(t.snapshot(at: 0.5).shownEnergy == 6)  // shown as the move starts
+    #expect(t.snapshot(at: 1).shownEnergy == 12)
+    t.pause(at: 1.5)
+    #expect(t.snapshot(at: 2).shownEnergy == 6)  // frozen: only what's landed
 }

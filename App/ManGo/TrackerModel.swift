@@ -18,6 +18,32 @@ final class TrackerModel {
     /// session, in MB. iOS stops a broadcast extension that goes over about 50 MB.
     private(set) var readerMemoryMB: Double?
     private(set) var readerPeakMemoryMB: Double?
+    /// How long the screen reader takes per read, and how often reads arrive, this session.
+    private(set) var readTimes = ReadTimes()
+
+    struct ReadTimes {
+        var count = 0
+        var totalSeconds = 0.0
+        var longestSeconds = 0.0
+        var firstReadAt: TimeInterval?
+        var lastReadAt: TimeInterval?
+
+        var averageSeconds: Double? { count > 0 ? totalSeconds / Double(count) : nil }
+        /// Reads per second actually received (a read is skipped while the last is running).
+        var perSecond: Double? {
+            guard let first = firstReadAt, let last = lastReadAt, last > first, count > 1 else { return nil }
+            return Double(count - 1) / (last - first)
+        }
+
+        mutating func add(_ read: ScreenRead) {
+            guard let s = read.readSeconds else { return }
+            count += 1
+            totalSeconds += s
+            longestSeconds = max(longestSeconds, s)
+            if firstReadAt == nil { firstReadAt = read.time }
+            lastReadAt = read.time
+        }
+    }
     /// The battle ended ("YOU WIN!"/"GOOD EFFORT!"). The final count stays up this long,
     /// then ManGo clears it for the next battle.
     static let clearAfterBattle: TimeInterval = 5
@@ -93,6 +119,7 @@ final class TrackerModel {
             lastReadTime = read.time
             if let now = read.memoryMB { readerMemoryMB = now }
             if let peak = read.peakMemoryMB { readerPeakMemoryMB = max(readerPeakMemoryMB ?? 0, peak) }
+            readTimes.add(read)
         }
         self.automation = automation
         self.tracker = tracker

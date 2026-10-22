@@ -154,7 +154,6 @@ public struct BattleAutomation: Sendable {
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
                 // A throw the assumed fast move couldn't have afforded means it's another one.
-                tracker.opponentIsThrowing()
                 if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
                 }
@@ -166,15 +165,14 @@ public struct BattleAutomation: Sendable {
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
 
             case .attackIncoming:
-                tracker.opponentIsThrowing()
                 // Corrects the count as the battle freezes, not only once the banner names the move.
                 alignToOpponentChargedMove(&tracker)
 
             case .yourPokemonFainted:
                 guard !opponentThrewThisStop, !playerChargedThisStop else { continue }
-                let before = tracker.snapshot(at: t).shownEnergy
+                let before = tracker.snapshot(at: t).energy
                 tracker.yourPokemonFainted()
-                note("Your Pokémon fainted: \(name(tracker.active?.speciesId)) \(before) → \(tracker.snapshot(at: t).shownEnergy) (the fast move that knocked it out landed)")
+                note("Your Pokémon fainted: \(name(tracker.active?.speciesId)) \(before) → \(tracker.snapshot(at: t).energy) (the fast move that knocked it out landed)")
 
             case .playerChargedMove:
                 // Their fast move in progress pays out; they start fresh after your move.

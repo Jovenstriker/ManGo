@@ -39,10 +39,12 @@ final class SampleHandler: RPBroadcastSampleHandler {
                 self?.lock.unlock()
             }
             guard let pixels = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+            let started = CACurrentMediaTime()
             let lines = autoreleasepool {
                 (try? ScreenTextReader.recognize(in: pixels, orientation: orientation, region: ScreenTextReader.fullScreen)) ?? []
             }
             var read = ScreenRead(time: now, lines: lines)
+            read.readSeconds = CACurrentMediaTime() - started
             if let memory = MemoryUsage.current() {
                 read.memoryMB = memory.now
                 read.peakMemoryMB = memory.peak

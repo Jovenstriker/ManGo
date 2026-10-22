@@ -48,7 +48,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:15.25  Opponent: Azumarill
   0:19.25  Opponent: Lucario
-  0:24.75    stopped  Lucario at 40
+  0:24.75    stopped  Lucario at 30
   0:25.50  You threw a charged move: Lucario 30 → 40 (its fast move in progress counts)
   0:35.75    running  Lucario at 40
   0:37.25    stopped  Lucario at 50
@@ -62,31 +62,31 @@ TIMELINE (what the screen reader saw and did)
   1:05.25    running  Lucario at 45
   1:07.00    stopped  Lucario at 55
   1:14.00  Lucario used Shadow Ball (55 → 5)
-  1:17.00    running  Lucario at 15
+  1:17.00    running  Lucario at 5
   1:20.25  Opponent: Azumarill
   1:28.50    stopped  Azumarill at 66
   1:35.75  Azumarill used Play Rough (66 → 6)
-  1:38.50    running  Azumarill at 17
-  1:42.25    stopped  Azumarill at 39
+  1:38.50    running  Azumarill at 6
+  1:42.25    stopped  Azumarill at 28
   1:43.00  You threw a charged move: Azumarill 28 → 39 (its fast move in progress counts)
-  1:53.25    running  Azumarill at 50
+  1:53.25    running  Azumarill at 39
   1:56.50    stopped  Azumarill at 61
   2:03.50  Azumarill used Play Rough (61 → 1)
-  2:06.50    running  Azumarill at 12
+  2:06.50    running  Azumarill at 1
   2:08.25  Opponent: Mawile
-  2:10.25    stopped  Mawile at 18
+  2:10.25    stopped  Mawile at 9
   2:11.50  You threw a charged move: Mawile 18 → 27 (its fast move in progress counts)
   2:22.00  You threw a charged move: Mawile 27 → 27 (its fast move in progress counts)
   2:44.75  Mawile fainted or switched out
   2:44.75  Opponent: Lucario
-  2:45.50    running  Lucario at 35
+  2:45.50    running  Lucario at 25
   2:49.00    stopped  Lucario at 45
   2:56.25  Lucario used Power-Up Punch (45 → 10)
-  3:02.50    running  Lucario at 20
-  3:05.50    stopped  Lucario at 40
+  3:02.50    running  Lucario at 10
+  3:05.50    stopped  Lucario at 30
   3:06.50  Lucario fainted or switched out
   3:06.50  Opponent: Azumarill
-  3:08.25    running  Azumarill at 23
-  3:08.75    stopped  Azumarill at 23
+  3:08.25    running  Azumarill at 12
+  3:08.75    stopped  Azumarill at 12
   3:09.50  You threw a charged move: Azumarill 12 → 23 (its fast move in progress counts)
   3:24.00  Battle over

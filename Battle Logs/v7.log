@@ -48,28 +48,28 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:15.00  Opponent: Azumarill
   0:15.00    stopped  Azumarill at 0
-  0:17.00    running  Azumarill at 11
+  0:17.00    running  Azumarill at 0
   0:21.00  Opponent: Empoleon
-  0:25.25    stopped  Empoleon at 40
+  0:25.25    stopped  Empoleon at 32
   0:25.75  You threw a charged move: Empoleon 32 → 40 (its fast move in progress counts)
   0:36.00    running  Empoleon at 40
   0:37.75  Empoleon had finished one more fast move: the battle restarted before your buttons came back
   0:37.75    stopped  Empoleon at 56
   0:45.00  Empoleon used Hydro Cannon (56 → 16)
-  0:48.00    running  Empoleon at 24
+  0:48.00    running  Empoleon at 16
   0:51.75    stopped  Empoleon at 40
   0:52.25  You threw a charged move: Empoleon 40 → 48 (its fast move in progress counts)
   1:04.25  Empoleon fainted or switched out
   1:04.25  Opponent: Magnezone
-  1:05.00    running  Magnezone at 16
-  1:07.50    stopped  Magnezone at 32
+  1:05.00    running  Magnezone at 0
+  1:07.50    stopped  Magnezone at 16
   1:08.75  You threw a charged move: Magnezone 16 → 32 (its fast move in progress counts)
-  1:18.50    running  Magnezone at 48
+  1:18.50    running  Magnezone at 32
   1:22.75    stopped  Magnezone at 64
   1:30.00  Magnezone used Wild Charge (64 → 19)
-  1:32.75    running  Magnezone at 35
+  1:32.75    running  Magnezone at 19
   1:35.75  Opponent: Azumarill
-  1:40.75    stopped  Azumarill at 55
+  1:40.75    stopped  Azumarill at 44
   1:41.50  You threw a charged move: Azumarill 44 → 55 (its fast move in progress counts)
   1:51.50    running  Azumarill at 55
   1:55.25    stopped  Azumarill at 77
@@ -77,11 +77,11 @@ TIMELINE (what the screen reader saw and did)
   2:06.00    running  Azumarill at 88
   2:09.25    stopped  Azumarill at 100
   2:16.25  Azumarill used Ice Beam (100 → 45)
-  2:22.75    running  Azumarill at 56
+  2:22.75    running  Azumarill at 45
   2:24.75    stopped  Azumarill at 56
   2:32.00  Azumarill used Ice Beam (56 → 1)
-  2:35.00    running  Azumarill at 12
-  2:41.75    stopped  Azumarill at 56
+  2:35.00    running  Azumarill at 1
+  2:41.75    stopped  Azumarill at 45
   2:42.25  You threw a charged move: Azumarill 45 → 56 (its fast move in progress counts)
   2:53.25  Azumarill fainted or switched out
   2:53.25  Opponent: Magnezone

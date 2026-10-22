@@ -323,7 +323,7 @@ private struct Screen {
     var benchAt96: Int?
     for read in reads {
         automation.process(read, tracker: &tracker)
-        shown[read.time] = (tracker.active?.speciesId, tracker.snapshot(at: read.time).shownEnergy)
+        shown[read.time] = (tracker.active?.speciesId, tracker.snapshot(at: read.time).energy)
         if read.time == 97 { benchAt96 = tracker.team.first { $0.speciesId == "forretress_shadow" }?.bankedEnergy }
     }
     // Turtonator's Incinerate knocked out Melmetal: its 20 shows at the faint (the switch

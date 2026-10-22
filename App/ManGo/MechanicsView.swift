@@ -52,7 +52,6 @@ struct MechanicsView: View {
                 Section {
                     bullet("Opponent's name, from the box in the top-right.")
                     bullet("Their fast move: assumed to be PvPoke's recommended one, thrown nonstop.")
-                    bullet("Energy goes up as each fast move starts, while they can't afford a charged move yet, so the number shows what they'll have once it lands. Once they can, it goes up as each move lands: they might throw instead, and the number never has to go back down.")
                     bullet("Battle running or frozen: your charged move buttons at the bottom are on screen while it runs.")
                     bullet("Their charged moves: the \"X used Y!\" banner. Yours: \"Get Ready!\" or your Pokémon's banner.")
                     bullet("Start and end: the countdown's \"GO\", and \"YOU WIN!\" / \"GOOD EFFORT!\".")

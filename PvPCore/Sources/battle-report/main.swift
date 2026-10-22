@@ -30,6 +30,12 @@ func clock(_ t: TimeInterval) -> String { String(format: "%d:%05.2f", Int(t) / 6
 func name(_ id: String?) -> String { id.flatMap { data.species[$0]?.speciesName } ?? "?" }
 
 var automation = BattleAutomation(data: data)
+// Trying other timing: e.g. STOP_LEAD=0.05 RESUME_LEAD=0.1 battle-report …
+let env = ProcessInfo.processInfo.environment
+if let v = env["STOP_LEAD"].flatMap(Double.init) { automation.stopLead = v }
+if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
+if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
+if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
 var tracker = OpponentTracker(data: data)
 var timeline: [String] = []
 struct Throw { let time: TimeInterval; let speciesId: String; let move: Move; let fast: Move?; let before: Int; let after: Int }
@@ -53,7 +59,7 @@ for read in reads {
     }
     logCount = automation.log.count
     if tracker.isPaused != wasPaused, let p = snap.pokemon {
-        timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.shownEnergy)")
+        timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.energy)")
         wasPaused = tracker.isPaused
     }
 }

@@ -61,12 +61,6 @@ public struct OpponentTracker: Sendable {
     public struct Snapshot: Sendable {
         public let pokemon: Pokemon?
         public let energy: Int
-        /// What ManGo shows: `energy` plus the fast move in progress, so each fast move's
-        /// energy appears when it starts, while they can't afford a charged move yet (so the
-        /// next move must be a fast one). Once they can, only landed energy: they may throw
-        /// instead, and the number never has to go back down. Charged move readiness goes by
-        /// this too.
-        public let shownEnergy: Int
         public let isPaused: Bool
         /// Turns into the fast move currently being performed (0-based).
         public let turnIntoFastMove: Int?
@@ -79,8 +73,6 @@ public struct OpponentTracker: Sendable {
 
     private var pausedAt: TimeInterval?
     private var pausedTotal: TimeInterval = 0
-    /// The current stop is the opponent's charged move ("Attack incoming!").
-    private var opponentThrowing = false
     /// Battle time of the opponent's last charged move; a switch right after it is free.
     private var lastChargedMoveAt: TimeInterval?
 
@@ -273,12 +265,6 @@ public struct OpponentTracker: Sendable {
         team[i].chainStart = nil
     }
 
-    /// The stop is the opponent's charged move: it started as their last fast move
-    /// finished, so the one that seemed to be in progress never was.
-    public mutating func opponentIsThrowing() {
-        if isPaused { opponentThrowing = true }
-    }
-
     /// Stops the battle clock. No turns pass while either side's charged move plays out.
     public mutating func pause(at now: TimeInterval) {
         if pausedAt == nil { pausedAt = now }
@@ -288,7 +274,6 @@ public struct OpponentTracker: Sendable {
         guard let p = pausedAt else { return }
         pausedTotal += now - p
         pausedAt = nil
-        opponentThrowing = false
     }
 
     /// Manually corrects the active opponent's energy (e.g. after a missed event).
@@ -367,7 +352,7 @@ public struct OpponentTracker: Sendable {
     public func snapshot(at now: TimeInterval) -> Snapshot {
         let t = battleTime(at: now)
         guard let p = active else {
-            return Snapshot(pokemon: nil, energy: 0, shownEnergy: 0, isPaused: isPaused, turnIntoFastMove: nil, chargedMoves: [])
+            return Snapshot(pokemon: nil, energy: 0, isPaused: isPaused, turnIntoFastMove: nil, chargedMoves: [])
         }
         let e = energy(of: p, atBattleTime: t)
 
@@ -384,14 +369,6 @@ public struct OpponentTracker: Sendable {
                 turnInto = Int(progress! / turnDuration)
             }
         }
-        // Their two charged moves once both are seen; until then, anything it learns.
-        let possible = p.revealedChargedMoves.count >= 2 ? p.revealedChargedMoves : data.chargedMoves(for: p.speciesId)
-        var shown = e
-        if let fast = p.fastMove, let progress, e < possible.map(\.energy).min() ?? .max,
-           isPaused ? progress > 1e-6 && !opponentThrowing : progress >= 0 {
-            shown = min(maxEnergy, e + fast.energyGain)
-        }
-
         let recommended = Set(data.species[p.speciesId]?.recommendedMoveset.dropFirst() ?? [])
         let revealed = Set(p.revealedChargedMoves.map(\.moveId))
         let statuses = data.chargedMoves(for: p.speciesId).map { move -> ChargedMoveStatus in
@@ -402,13 +379,12 @@ public struct OpponentTracker: Sendable {
                 needed = Int((Double(missing) / Double(fast.energyGain)).rounded(.up))
                 let seconds = Double(needed * fast.turns) * turnDuration - (progress ?? 0)
                 turns = Int((seconds / turnDuration).rounded(.up))
-                if shown > e { needed -= 1 }  // the one in progress is already shown
             }
             return ChargedMoveStatus(
                 move: move,
                 isRevealed: revealed.contains(move.moveId),
                 isRecommended: recommended.contains(move.moveId),
-                ready: shown >= move.energy,
+                ready: missing == 0,
                 fastMovesNeeded: needed,
                 turnsUntilReady: turns
             )
@@ -420,7 +396,7 @@ public struct OpponentTracker: Sendable {
         }
 
         return Snapshot(
-            pokemon: p, energy: e, shownEnergy: shown, isPaused: isPaused,
+            pokemon: p, energy: e, isPaused: isPaused,
             turnIntoFastMove: turnInto, chargedMoves: statuses
         )
     }

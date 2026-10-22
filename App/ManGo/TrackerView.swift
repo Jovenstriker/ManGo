@@ -101,6 +101,13 @@ struct TrackerView: View {
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(peak > 45 ? .red : .secondary)
             }
+            // Whether reading more often than 4 times a second would keep up.
+            if let average = model.readTimes.averageSeconds {
+                let rate = model.readTimes.perSecond.map { String(format: " · %.1f reads/s", $0) } ?? ""
+                Text(String(format: "Read %.0f ms avg · %.0f ms longest", average * 1000, model.readTimes.longestSeconds * 1000) + rate)
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -121,11 +128,11 @@ struct TrackerView: View {
 
     private func energyGauge(_ snap: OpponentTracker.Snapshot) -> some View {
         VStack(spacing: 6) {
-            Text("\(snap.shownEnergy)")
+            Text("\(snap.energy)")
                 .font(.system(size: 64, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
-            ProgressView(value: Double(snap.shownEnergy), total: Double(maxEnergy))
+            ProgressView(value: Double(snap.energy), total: Double(maxEnergy))
             if model.isBattleOver {
                 Text("Battle over · resets when the next battle starts").font(.caption).foregroundStyle(.secondary)
             } else if snap.isPaused {

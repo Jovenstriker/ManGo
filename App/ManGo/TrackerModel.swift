@@ -20,6 +20,9 @@ final class TrackerModel {
     private(set) var readerPeakMemoryMB: Double?
     /// How long the screen reader takes per read, and how often reads arrive, this session.
     private(set) var readTimes = ReadTimes()
+    /// Screen reads handled this session. Shown on the card, so a recording shows whether
+    /// reads were arriving and the app was keeping up.
+    private(set) var readCount = 0
 
     struct ReadTimes {
         var count = 0
@@ -120,6 +123,7 @@ final class TrackerModel {
             if let now = read.memoryMB { readerMemoryMB = now }
             if let peak = read.peakMemoryMB { readerPeakMemoryMB = max(readerPeakMemoryMB ?? 0, peak) }
             readTimes.add(read)
+            readCount += 1
         }
         self.automation = automation
         self.tracker = tracker

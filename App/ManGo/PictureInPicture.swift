@@ -55,8 +55,10 @@ final class OverlayController: NSObject {
         guard let model, let snap = model.tracker?.snapshot(at: model.now()) else { return }
         let name = snap.pokemon.flatMap { model.data?.species[$0.speciesId]?.speciesName }
         let bench = model.bench.map { "\($0.name) \($0.energy)" }.joined(separator: "  ·  ")
+        let stale = model.lastReadAt.map { Date.now.timeIntervalSince($0) > 2 } ?? true
+        let reader = stale ? "• no screen reads" : "• \(model.readCount) reads"
         guard let buffer = OverlayRenderer.sampleBuffer(
-            snap: snap, name: name, bench: bench, battleOver: model.isBattleOver, size: Self.size
+            snap: snap, name: name, bench: bench, battleOver: model.isBattleOver, reader: reader, size: Self.size
         ) else { return }
         if displayLayer.status == .failed { displayLayer.flush() }
         displayLayer.enqueue(buffer)
@@ -97,7 +99,7 @@ extension OverlayController: AVPictureInPictureSampleBufferPlaybackDelegate {
 /// Draws the overlay card into a video frame.
 enum OverlayRenderer {
     static func sampleBuffer(
-        snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, size: CGSize
+        snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, reader: String, size: CGSize
     ) -> CMSampleBuffer? {
         var pixelBuffer: CVPixelBuffer?
         let attrs = [kCVPixelBufferIOSurfacePropertiesKey: [:]] as CFDictionary
@@ -118,7 +120,7 @@ enum OverlayRenderer {
         ctx.translateBy(x: 0, y: size.height)
         ctx.scaleBy(x: 1, y: -1)
         UIGraphicsPushContext(ctx)
-        draw(snap: snap, name: name, bench: bench, battleOver: battleOver, size: size)
+        draw(snap: snap, name: name, bench: bench, battleOver: battleOver, reader: reader, size: size)
         UIGraphicsPopContext()
 
         var format: CMVideoFormatDescription?
@@ -142,7 +144,7 @@ enum OverlayRenderer {
         return sample
     }
 
-    private static func draw(snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, size: CGSize) {
+    private static func draw(snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, reader: String, size: CGSize) {
         let pad: CGFloat = 24
         UIColor(white: 0.08, alpha: 1).setFill()
         UIRectFill(CGRect(origin: .zero, size: size))
@@ -168,6 +170,9 @@ enum OverlayRenderer {
         if let status {
             text(status, at: CGPoint(x: size.width - pad, y: pad + 4), size: 26, weight: .bold, color: .systemOrange, alignRight: true, width: 200)
         }
+        // Whether screen reads are coming in ("•" keeps the screen reader from reading it).
+        text(reader, at: CGPoint(x: size.width - pad, y: pad + 38), size: 20, weight: .medium,
+             color: reader.contains("no") ? .systemOrange : UIColor(white: 0.45, alpha: 1), alignRight: true, width: 170)
         // Benched Pokémon keep their energy for when they switch back in.
         if !bench.isEmpty {
             text("Bench: \(bench)", at: CGPoint(x: pad, y: size.height - pad - 64), size: 24, weight: .medium,

@@ -34,7 +34,7 @@ OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
   1  0:35.30  Doublade              Iron Head (50)            56 → 6        7           7     ✓
        calc: 56 = 0 left before + 7 × 8 (Shadow Claw); after: 56 − 50 = 6
-       note: Your Altaria's HP bar drops 7 times, a second apart (20.7s to 26.7s), and not again before the stop. Your buttons only vanished at about 28.0s, roughly 0.8-1s after Iron Head started, so ManGo's clock (from GO at 19.89s) counted an 8th Shadow Claw. The screen text can't tell this from 8 with the usual delay.
+       note: ManGo used to start the lead's clock at GO's first read (19.89s) and counted 8 Shadow Claws. GO stays on screen a moment before the first turn; starting 0.2s after it gives 7. Your Altaria's HP bar drops 7 times before the stop.
   2  1:01.82  Doublade              Sacred Sword (35)         54 → 19       6           ?     -
        calc: 54 = 6 left before + 6 × 8 (Shadow Claw); after: 54 − 35 = 19
   3  1:26.07  Doublade              Sacred Sword (35)         43 → 8        3           ?     -

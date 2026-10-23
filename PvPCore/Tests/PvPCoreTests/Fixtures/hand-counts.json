@@ -117,7 +117,7 @@
       7
     ],
     "notes": {
-      "1": "Your Altaria's HP bar drops 7 times, a second apart (20.7s to 26.7s), and not again before the stop. Your buttons only vanished at about 28.0s, roughly 0.8-1s after Iron Head started, so ManGo's clock (from GO at 19.89s) counted an 8th Shadow Claw. The screen text can't tell this from 8 with the usual delay."
+      "1": "ManGo used to start the lead's clock at GO's first read (19.89s) and counted 8 Shadow Claws. GO stays on screen a moment before the first turn; starting 0.2s after it gives 7. Your Altaria's HP bar drops 7 times before the stop."
     }
   }
 }

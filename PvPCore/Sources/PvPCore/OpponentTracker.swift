@@ -198,9 +198,9 @@ public struct OpponentTracker: Sendable {
     /// next turn, and they start a new fast move on it, so they get that one too. After
     /// your charged move they start fresh.
     ///
-    /// So against a 3-turn move, two of your 2-turn moves then a charged move give them
-    /// the same as one (their 2nd move is in progress either way), while three 2-turn
-    /// moves line up with two 3-turn ones and hand them a third.
+    /// So against a 3-turn move, three of your 2-turn moves line up with two 3-turn ones
+    /// and hand them a third, and four give them the same 3 (their 3rd is in progress):
+    /// throwing after 1, 4, 7 or 10 fast moves gives them nothing extra.
     ///
     /// Safe to call after `pause(at:)`: the clock is frozen at the pause.
     public mutating func playerThrewChargedMove(at now: TimeInterval) {

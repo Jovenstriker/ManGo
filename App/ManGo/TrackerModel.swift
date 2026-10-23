@@ -26,6 +26,10 @@ final class TrackerModel {
     /// Between battles: the screen reader slows down until the next one starts, and stops
     /// after a few minutes without one.
     private(set) var readerIdle = false
+    #if DEBUG
+    /// Battles the screen reader saved (video and reads), in Files → On My iPhone → ManGo.
+    private(set) var savedRecordings = 0
+    #endif
 
     struct ReadTimes {
         var count = 0
@@ -66,6 +70,7 @@ final class TrackerModel {
         lastReadTime = now()
         BroadcastChannel.idleSince = nil
         #if DEBUG
+        savedRecordings = BattleRecordings.collect()
         // Launch with `-demoBattle` to start mid-battle against Medicham, for checking the UI.
         if ProcessInfo.processInfo.arguments.contains("-demoBattle") {
             setActive("azumarill")
@@ -141,6 +146,7 @@ final class TrackerModel {
         if !readerIdle, let ended = automation.battleEndedAt {
             readerIdle = true
             BroadcastChannel.idleSince = ended
+            collectRecordings()
         } else if readerIdle {
             let starting = read.lines.contains {
                 let key = $0.text.lowercased().filter(\.isLetter)
@@ -149,8 +155,17 @@ final class TrackerModel {
             if starting || (automation.battleEndedAt == nil && tracker.active != nil) {
                 readerIdle = false
                 BroadcastChannel.idleSince = nil
+                collectRecordings()
             }
         }
+    }
+
+    /// The reader finishes a battle's recording once it sees it's idle, so the one that just
+    /// ended is collected a little later: when the next battle starts, or on the next launch.
+    private func collectRecordings() {
+        #if DEBUG
+        savedRecordings = BattleRecordings.collect()
+        #endif
     }
 
     /// The opponent's other Pokémon that haven't fainted, with the energy they'll bring back in.

@@ -94,6 +94,10 @@ struct TrackerView: View {
                 Label(model.lastEvent ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
                     .font(.caption).foregroundStyle(.green).lineLimit(1)
             }
+            #if DEBUG
+            Text("Debug build: each battle is saved as a video and its reads (\(model.savedRecordings) saved) in Files → On My iPhone → ManGo")
+                .font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            #endif
             if model.readerIdle {
                 Text("Between battles: reading every 2s, stops after 3 min without a battle")
                     .font(.caption2).foregroundStyle(.secondary)

@@ -14,7 +14,7 @@ import ReplayKit
 ///
 /// Between battles (the app sets `BroadcastChannel.idleSince` when one ends) it reads only
 /// every 2 seconds, enough to see the next one start, and after 3 minutes with no new
-/// battle it ends the broadcast.
+/// battle it ends the broadcast. Debug builds also save each battle (`BattleRecorder`).
 final class SampleHandler: RPBroadcastSampleHandler {
     private let interval: CFTimeInterval = 0.25
     private let queue = DispatchQueue(label: "com.jovenstriker.mango.read", qos: .userInitiated)
@@ -22,6 +22,12 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private var lastRead: CFTimeInterval = 0
     private var busy = false
     private var finished = false
+    /// `BroadcastChannel.idleSince`, checked at most 4 times a second.
+    private var idleSince: TimeInterval?
+    private var idleCheckedAt: CFTimeInterval = -.infinity
+    #if DEBUG
+    private let recorder = BattleRecorder()
+    #endif
 
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
         // A new broadcast reads at full speed, even if the last one ended idle.
@@ -32,14 +38,28 @@ final class SampleHandler: RPBroadcastSampleHandler {
         guard type == .video else { return }
         let now = CACurrentMediaTime()
         lock.lock()
+        if now - idleCheckedAt >= interval {
+            idleSince = BroadcastChannel.idleSince
+            idleCheckedAt = now
+        }
+        #if DEBUG
+        let record = !finished
+        let idle = idleSince != nil
+        lock.unlock()
+        if record { recorder.append(sampleBuffer, at: now, idle: idle) }
+        lock.lock()
+        #endif
         guard !busy, !finished, now - lastRead >= interval else {
             lock.unlock()
             return
         }
-        if let idle = BroadcastChannel.idleSince {
+        if let idle = idleSince {
             if now - idle > BroadcastChannel.idleStopAfter {
                 finished = true
                 lock.unlock()
+                #if DEBUG
+                recorder.finish()
+                #endif
                 finishBroadcastWithError(NSError(domain: "ManGo", code: 1, userInfo: [
                     NSLocalizedDescriptionKey: "No new battle for 3 minutes, so ManGo stopped reading the screen. Tap Screen reader in ManGo to start again.",
                 ]))
@@ -73,6 +93,9 @@ final class SampleHandler: RPBroadcastSampleHandler {
                 read.peakMemoryMB = memory.peak
             }
             BroadcastChannel.send(read)
+            #if DEBUG
+            self?.recorder.log(read)
+            #endif
         }
     }
 
@@ -80,6 +103,9 @@ final class SampleHandler: RPBroadcastSampleHandler {
         lock.lock()
         finished = true
         lock.unlock()
+        #if DEBUG
+        recorder.finish()
+        #endif
     }
 
     private func orientation(of sampleBuffer: CMSampleBuffer) -> CGImagePropertyOrientation {

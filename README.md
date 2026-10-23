@@ -67,6 +67,14 @@ The replay test checks every pause, charged move and faint. To analyze a new rec
 
     cd PvPCore && swift run --scratch-path ~/Library/Caches/ManGo-PvPCore screen-log <video.mp4>
 
+### Recording battles (debug builds)
+
+Debug builds (pressing ▶ in Xcode) save each battle on the phone: a half-size video, with
+ManGo's card in it, plus every read the screen reader made, timed to that video. Release builds
+don't. The newest 10 battles are kept in Files → On My iPhone → ManGo. With the phone plugged in,
+`scripts/pull_battles.sh` copies them into `Test Videos/` and turns each one's reads into a
+fixture, so the battle replays exactly as the card counted it.
+
 ### Battle reports
 
 Each recorded battle has a report in `Battle Logs/<video>.log`. It covers how

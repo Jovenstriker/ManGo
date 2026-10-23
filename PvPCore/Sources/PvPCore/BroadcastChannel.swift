@@ -18,6 +18,13 @@ public enum BroadcastChannel {
     /// ...and stops the broadcast after this long with no new battle.
     public static let idleStopAfter: TimeInterval = 180
 
+    /// Debug builds: where the screen reader saves each battle's video and reads (finished
+    /// ones at the top level, the current one in "in progress"), for the app to collect.
+    public static var recordingsFolder: URL? {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)?
+            .appendingPathComponent("Battle Recordings", isDirectory: true)
+    }
+
     /// Set by the app when a battle ends (`CACurrentMediaTime()`), cleared when the next one
     /// starts, so the reader slows down in between.
     public static var idleSince: TimeInterval? {

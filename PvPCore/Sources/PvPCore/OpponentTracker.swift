@@ -205,6 +205,8 @@ public struct OpponentTracker: Sendable {
     /// Safe to call after `pause(at:)`: the clock is frozen at the pause.
     public mutating func playerThrewChargedMove(at now: TimeInterval) {
         pause(at: now)
+        // Their switch right after is free only if their charged move came last.
+        lastChargedMoveAt = nil
         guard let i = activeIndex, let fast = team[i].fastMove, let start = team[i].chainStart else { return }
         let t = battleTime(at: now)
         // Only if they've had a turn since their chain began: not when you throw straight

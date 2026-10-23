@@ -370,3 +370,21 @@ private struct Screen {
     }
     #expect(florgesAfterYourThrow == 45)
 }
+
+/// Saved by the phone (vs Turtonator, Mimikyu, Stunfisk): Mimikyu threw Shadow Sneak, then
+/// blocked your charged move, and the opponent switched to Turtonator a second into play.
+/// Your move came last, so the switch cost a turn.
+@Test func replayPhoneBattleWithSwitchAfterYourMove() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-23-140441")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var turtonatorAtYourThrow: Int?
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        if turtonatorAtYourThrow == nil, read.time >= 82, tracker.active?.speciesId == "turtonator" {
+            turtonatorAtYourThrow = tracker.snapshot(at: read.time).energy
+        }
+    }
+    // 3 Incinerates plus the one in progress.
+    #expect(turtonatorAtYourThrow == 80)
+}

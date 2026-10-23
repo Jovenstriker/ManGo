@@ -127,5 +127,14 @@
     "notes": {
       "cmp": "At 1:01 you threw after 4 two-turn moves: Florges matched them and sneaked a 5th Fairy Wind (45), as ManGo counts. At 1:10.5 you threw again on the first turn back, on the same turn as Florges's charged move. You won charged move priority and Double Iron Bash knocked it out, so its move never showed and ManGo counted a sneaked Fairy Wind (54). Harmless: Florges was out."
     }
+  },
+  "battle-2026-10-23-140441": {
+    "video": "Test Videos/battle-2026-10-23-140441.mp4",
+    "description": "Phone-saved battle. You: Melmetal, Altaria, Mimikyu. Opponent: Turtonator, Mimikyu, Stunfisk.",
+    "counts": [],
+    "notes": {
+      "switch": "At 1:09.5 Mimikyu blocked your charged move after throwing Shadow Sneak, and the opponent switched to Turtonator about a second into play: a turn, so Turtonator had 3 Incinerates plus the one in progress (80) at your throw, not 100.",
+      "open": "Mimikyu's second time in: 54 at your throw by hand, ManGo 62. Its second Shadow Claw would finish within a read of your buttons vanishing; not resolved."
+    }
   }
 }

@@ -72,6 +72,9 @@ public struct BattleAutomation: Sendable {
     static let goWait: TimeInterval = 4
 
 
+    /// A switch shown this soon after your buttons come back was chosen during the stop.
+    static let quickSwitchWindow: TimeInterval = 0.5
+
     /// A switch this soon after the battle resumes counts as part of that stop.
     static let afterStopWindow: TimeInterval = 1.5
 
@@ -266,7 +269,10 @@ public struct BattleAutomation: Sendable {
         // Switched in during the stop straight after their charged move (a free switch):
         // it starts as the battle restarts, when your buttons come back (Granbull after
         // Turtonator's Dragon Claws: 7 Charms before Crunch; Cramorant after Stunfisk's
-        // Discharge: 5 Pecks before Dive), not when its "Go" or name shows.
+        // Discharge: 5 Pecks before Dive), not when its "Go" or name shows. If your charged
+        // move came after theirs, the switch is still timed from the restart but costs a
+        // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
+        // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
         if opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
             time = max(resumedAt, min(time, back))
         }
@@ -289,8 +295,13 @@ public struct BattleAutomation: Sendable {
             tracker.markActiveFainted(at: time)
         }
         // A name change during a stop is a faint replacement or a switch right after their
-        // charged move: both take 0 turns.
-        let free = stopped || time < freeSwitchUntil
+        // charged move: both take 0 turns. So is one that shows as the battle restarts after
+        // a stop they threw in, even if your charged move came last: it was chosen as the
+        // charged moves ended (Sableye after Marowak's Rock Slide and yours, 0.25s after
+        // the buttons). One that shows later was made in play and costs a turn (Turtonator,
+        // 1.1s after: 3 Incinerates plus the one in progress, not 4 plus one).
+        let quick = opponentThrewThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
+        let free = stopped || time < freeSwitchUntil || quick
         let isLead = tracker.active == nil
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free)
         if isLead, goAt == nil {

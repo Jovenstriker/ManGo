@@ -6,9 +6,9 @@ public enum BattleEvent: Equatable, Sendable {
     /// battle itself may run a moment longer, while a queued charged move waits for the
     /// thrower's fast move to finish.
     case stopped
-    /// The battle UI is back. `freeSwitch` is true unless the stop was only your own
-    /// charged move: right after the opponent's charged move or a faint, their switch
-    /// takes 0 turns.
+    /// The battle UI is back. `freeSwitch`: their switch right after takes 0 turns. That's
+    /// after a faint, or when the stop's last charged move was theirs; after yours (even
+    /// one they threw before), it costs them a turn.
     case resumed(freeSwitch: Bool)
     /// The opponent's Pokémon, read from the name box in the top-right. `since` is when
     /// the name was first read, before it was confirmed by the following reads.
@@ -97,6 +97,9 @@ public struct BattleScreenParser: Sendable {
     private var sawGetReady = false
     private var opponentThrew = false
     private var playerThrew = false
+    /// Whose charged move came last in this stop (nil: none). A switch right after it is
+    /// free only for the side that threw it.
+    private var lastThrowWasTheirs: Bool?
     private var bannersSeen: Set<String> = []
 
     public init(data: GameData) {
@@ -150,7 +153,7 @@ public struct BattleScreenParser: Sendable {
             if isRunning {
                 resumedAfterChargedMove = running == false && (sawAttackIncoming || sawGetReady || bannerConsumed || opponentThrew || playerThrew)
                 if running == false {
-                    events.append(.resumed(freeSwitch: opponentThrew || !sawGetReady))
+                    events.append(.resumed(freeSwitch: lastThrowWasTheirs ?? true))
                 }
                 sawAttackIncoming = false
                 announcedAttackIncoming = false
@@ -158,6 +161,7 @@ public struct BattleScreenParser: Sendable {
                 sawGetReady = false
                 opponentThrew = false
                 playerThrew = false
+                lastThrowWasTheirs = nil
                 bannersSeen = []
             } else if running == true {
                 events.append(.stopped)
@@ -200,6 +204,7 @@ public struct BattleScreenParser: Sendable {
         }
         if sawGetReady, running == false, !playerThrew {
             playerThrew = true
+            lastThrowWasTheirs = false
             events.append(.playerChargedMove)
         }
         for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
@@ -233,9 +238,11 @@ public struct BattleScreenParser: Sendable {
             bannerConsumed = true
             if byOpponent {
                 opponentThrew = true
+                lastThrowWasTheirs = true
                 events.append(.opponentChargedMove(moveName: banner.move))
             } else if !playerThrew, running == false {
                 playerThrew = true
+                lastThrowWasTheirs = false
                 events.append(.playerChargedMove)
             }
         }

@@ -23,6 +23,9 @@ final class TrackerModel {
     /// Screen reads handled this session. Shown on the card, so a recording shows whether
     /// reads were arriving and the app was keeping up.
     private(set) var readCount = 0
+    /// Between battles: the screen reader slows down until the next one starts, and stops
+    /// after a few minutes without one.
+    private(set) var readerIdle = false
 
     struct ReadTimes {
         var count = 0
@@ -61,6 +64,7 @@ final class TrackerModel {
         load()
         // Reads left over from a previous session belong to an old battle.
         lastReadTime = now()
+        BroadcastChannel.idleSince = nil
         #if DEBUG
         // Launch with `-demoBattle` to start mid-battle against Medicham, for checking the UI.
         if ProcessInfo.processInfo.arguments.contains("-demoBattle") {
@@ -119,6 +123,7 @@ final class TrackerModel {
                 automation.reset()
             }
             automation.process(read, tracker: &tracker)
+            updateReaderIdle(read, automation: automation, tracker: tracker)
             lastReadTime = read.time
             if let now = read.memoryMB { readerMemoryMB = now }
             if let peak = read.peakMemoryMB { readerPeakMemoryMB = max(readerPeakMemoryMB ?? 0, peak) }
@@ -128,6 +133,24 @@ final class TrackerModel {
         self.automation = automation
         self.tracker = tracker
         lastReadAt = .now
+    }
+
+    /// Idle from the end of a battle until the next one shows signs of starting: matchmaking,
+    /// "Battle starting…", or a new opponent named after the count was cleared.
+    private func updateReaderIdle(_ read: ScreenRead, automation: BattleAutomation, tracker: OpponentTracker) {
+        if !readerIdle, let ended = automation.battleEndedAt {
+            readerIdle = true
+            BroadcastChannel.idleSince = ended
+        } else if readerIdle {
+            let starting = read.lines.contains {
+                let key = $0.text.lowercased().filter(\.isLetter)
+                return key.contains("findingopponent") || key.contains("battlestarting")
+            }
+            if starting || (automation.battleEndedAt == nil && tracker.active != nil) {
+                readerIdle = false
+                BroadcastChannel.idleSince = nil
+            }
+        }
     }
 
     /// The opponent's other Pokémon that haven't fainted, with the energy they'll bring back in.

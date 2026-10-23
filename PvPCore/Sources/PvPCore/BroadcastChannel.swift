@@ -10,7 +10,26 @@ public enum BroadcastChannel {
     public static let extensionBundleID = "com.jovenstriker.mango.broadcast"
 
     private static let readsKey = "screenReads"
+    private static let idleKey = "readerIdleSince"
     private static let keep = 12
+
+    /// Between battles the reader reads this often instead of every 0.25s...
+    public static let idleInterval: TimeInterval = 2
+    /// ...and stops the broadcast after this long with no new battle.
+    public static let idleStopAfter: TimeInterval = 180
+
+    /// Set by the app when a battle ends (`CACurrentMediaTime()`), cleared when the next one
+    /// starts, so the reader slows down in between.
+    public static var idleSince: TimeInterval? {
+        get {
+            let t = UserDefaults(suiteName: appGroup)?.double(forKey: idleKey) ?? 0
+            return t > 0 ? t : nil
+        }
+        set {
+            if let newValue { UserDefaults(suiteName: appGroup)?.set(newValue, forKey: idleKey) }
+            else { UserDefaults(suiteName: appGroup)?.removeObject(forKey: idleKey) }
+        }
+    }
 
     public static func send(_ read: ScreenRead) {
         guard let defaults = UserDefaults(suiteName: appGroup) else { return }

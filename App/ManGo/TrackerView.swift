@@ -94,6 +94,10 @@ struct TrackerView: View {
                 Label(model.lastEvent ?? "Reading screen…", systemImage: "dot.radiowaves.left.and.right")
                     .font(.caption).foregroundStyle(.green).lineLimit(1)
             }
+            if model.readerIdle {
+                Text("Between battles: reading every 2s, stops after 3 min without a battle")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
             // Stays up after the battle so you can check the peak afterwards.
             if let peak = model.readerPeakMemoryMB {
                 let now = model.readerMemoryMB.map { String(format: "%.1f MB now · ", $0) } ?? ""

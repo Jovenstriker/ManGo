@@ -55,8 +55,9 @@ final class OverlayController: NSObject {
         guard let model, let snap = model.tracker?.snapshot(at: model.now()) else { return }
         let name = snap.pokemon.flatMap { model.data?.species[$0.speciesId]?.speciesName }
         let bench = model.bench.map { "\($0.name) \($0.energy)" }.joined(separator: "  ·  ")
-        let stale = model.lastReadAt.map { Date.now.timeIntervalSince($0) > 2 } ?? true
-        let reader = stale ? "• no screen reads" : "• \(model.readCount) reads"
+        // Between battles reads come every 2s.
+        let stale = model.lastReadAt.map { Date.now.timeIntervalSince($0) > (model.readerIdle ? 4 : 2) } ?? true
+        let reader = stale ? "• no screen reads" : model.readerIdle ? "• idle" : "• \(model.readCount) reads"
         guard let buffer = OverlayRenderer.sampleBuffer(
             snap: snap, name: name, bench: bench, battleOver: model.isBattleOver, reader: reader, size: Self.size
         ) else { return }

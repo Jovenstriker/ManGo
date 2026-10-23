@@ -11,6 +11,10 @@ import ReplayKit
 /// delivers frames (and Stop Broadcast) on returns immediately; frames that arrive
 /// while a read is in progress are skipped. Broadcast extensions are limited to
 /// ~50 MB, so at most one frame is held at a time.
+///
+/// Between battles (the app sets `BroadcastChannel.idleSince` when one ends) it reads only
+/// every 2 seconds, enough to see the next one start, and after 3 minutes with no new
+/// battle it ends the broadcast.
 final class SampleHandler: RPBroadcastSampleHandler {
     private let interval: CFTimeInterval = 0.25
     private let queue = DispatchQueue(label: "com.jovenstriker.mango.read", qos: .userInitiated)
@@ -19,6 +23,11 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private var busy = false
     private var finished = false
 
+    override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
+        // A new broadcast reads at full speed, even if the last one ended idle.
+        BroadcastChannel.idleSince = nil
+    }
+
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with type: RPSampleBufferType) {
         guard type == .video else { return }
         let now = CACurrentMediaTime()
@@ -26,6 +35,20 @@ final class SampleHandler: RPBroadcastSampleHandler {
         guard !busy, !finished, now - lastRead >= interval else {
             lock.unlock()
             return
+        }
+        if let idle = BroadcastChannel.idleSince {
+            if now - idle > BroadcastChannel.idleStopAfter {
+                finished = true
+                lock.unlock()
+                finishBroadcastWithError(NSError(domain: "ManGo", code: 1, userInfo: [
+                    NSLocalizedDescriptionKey: "No new battle for 3 minutes, so ManGo stopped reading the screen. Tap Screen reader in ManGo to start again.",
+                ]))
+                return
+            }
+            if now - lastRead < BroadcastChannel.idleInterval {
+                lock.unlock()
+                return
+            }
         }
         busy = true
         lastRead = now

@@ -134,7 +134,7 @@
     "counts": [],
     "notes": {
       "switch": "At 1:09.5 Mimikyu blocked your charged move after throwing Shadow Sneak, and the opponent switched to Turtonator about a second into play: a turn, so Turtonator had 3 Incinerates plus the one in progress (80) at your throw, not 100.",
-      "open": "Mimikyu's second time in: 54 at your throw by hand, ManGo 62. Its second Shadow Claw would finish within a read of your buttons vanishing; not resolved."
+      "faint": "Mimikyu's second time in: Turtonator's Dragon Claw knocked yours out, then they switched to Mimikyu. Your faint makes that a choice, so it costs a turn: 2 Shadow Claws by your throw after 2 Thunder Shocks (38 + 16 = 54). ManGo had made it free (62)."
     }
   }
 }

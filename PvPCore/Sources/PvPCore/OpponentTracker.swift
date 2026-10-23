@@ -235,6 +235,12 @@ public struct OpponentTracker: Sendable {
         }
     }
 
+    /// Your Pokémon fainted in this stop: their next switch is a choice and costs a turn,
+    /// even if their charged move came just before.
+    public mutating func opponentsNextSwitchCostsATurn() {
+        lastChargedMoveAt = nil
+    }
+
     /// Your Pokémon fainted to their fast move: it landed as the battle stopped, so the stop
     /// is on a fast move's end. Counts their fast moves to the nearest end (the stop is only
     /// seen to within a read), and they start fresh when the battle resumes. Call while

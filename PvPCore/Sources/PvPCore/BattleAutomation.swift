@@ -61,6 +61,8 @@ public struct BattleAutomation: Sendable {
     private var resumedAt: TimeInterval = -.infinity
     private var freeSwitchUntil: TimeInterval = -.infinity
     private var opponentThrewThisStop = false
+    /// Your Pokémon fainted in this stop ("Switch in a new Pokémon?").
+    private var yourFaintThisStop = false
     private var goAt: TimeInterval?
     /// The lead is known but the countdown hasn't reached GO: its clock waits.
     private var awaitingGo = false
@@ -137,6 +139,7 @@ public struct BattleAutomation: Sendable {
                 // Either side's charged move or a faint: no turns pass from here.
                 stopped = true
                 opponentThrewThisStop = false
+                yourFaintThisStop = false
                 chargedMoveThisStop = false
                 let stop = max(t - stopLead, previousReadTime, resumedAt)
                 lastStopAt = stop
@@ -187,6 +190,8 @@ public struct BattleAutomation: Sendable {
                 alignToOpponentChargedMove(&tracker)
 
             case .yourPokemonFainted:
+                yourFaintThisStop = true
+                tracker.opponentsNextSwitchCostsATurn()
                 guard !opponentThrewThisStop, !playerChargedThisStop else { continue }
                 let before = tracker.snapshot(at: t).energy
                 tracker.yourPokemonFainted()
@@ -287,7 +292,8 @@ public struct BattleAutomation: Sendable {
         let assumed = assumedFastMoves[speciesId]
             ?? data.species[speciesId]?.recommendedMoveset.first ?? data.species[speciesId]?.fastMoves.first
         let duringStop = stopped || t - resumedAt < Self.afterStopWindow
-        if tracker.active != nil, duringStop, !opponentThrewThisStop {
+        let theirsFainted = tracker.active != nil && duringStop && !opponentThrewThisStop
+        if theirsFainted {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.
             // The clock stays as the screen says: if the battle is still stopped, the new
             // Pokémon's first fast move starts when it resumes, so it comes in at 0.
@@ -301,7 +307,11 @@ public struct BattleAutomation: Sendable {
         // the buttons). One that shows later was made in play and costs a turn (Turtonator,
         // 1.1s after: 3 Incinerates plus the one in progress, not 4 plus one).
         let quick = opponentThrewThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
-        let free = stopped || time < freeSwitchUntil || quick
+        var free = stopped || time < freeSwitchUntil || quick
+        // After your Pokémon fainted, their switch (theirs still in) is a choice and costs a
+        // turn, even straight after their charged move: Mimikyu for Turtonator after its
+        // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
+        if yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free)
         if isLead, goAt == nil {

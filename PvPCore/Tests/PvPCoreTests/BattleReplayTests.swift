@@ -379,12 +379,19 @@ private struct Screen {
     var automation = BattleAutomation(data: data)
     var tracker = OpponentTracker(data: data)
     var turtonatorAtYourThrow: Int?
+    var mimikyuAtYourThrow: Int?
     for read in reads {
         automation.process(read, tracker: &tracker)
         if turtonatorAtYourThrow == nil, read.time >= 82, tracker.active?.speciesId == "turtonator" {
             turtonatorAtYourThrow = tracker.snapshot(at: read.time).energy
         }
+        if mimikyuAtYourThrow == nil, read.time >= 120, tracker.active?.speciesId == "mimikyu" {
+            mimikyuAtYourThrow = tracker.snapshot(at: read.time).energy
+        }
     }
     // 3 Incinerates plus the one in progress.
     #expect(turtonatorAtYourThrow == 80)
+    // Back in for Turtonator after its Dragon Claw knocked yours out: a choice, so a turn.
+    // 38 + 2 Shadow Claws by your throw after 2 Thunder Shocks.
+    #expect(mimikyuAtYourThrow == 54)
 }

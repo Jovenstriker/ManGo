@@ -1,7 +1,8 @@
 #!/bin/bash
 # Copies the battles a debug build saved on the phone (Files → On My iPhone → ManGo) into
 # "Test Videos/", and turns each one's reads into a fixture: the phone's own screen reads,
-# timed to its video, so the battle replays exactly as the card counted it.
+# timed to its video, so the battle replays exactly as the card counted it. ManGo deletes
+# the pulled battles from the phone the next time it's opened.
 #   scripts/pull_battles.sh [device id]   (default: the first connected iPhone)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -12,12 +13,21 @@ xcrun devicectl device copy from --device "$DEVICE" --domain-type appDataContain
   --domain-identifier com.jovenstriker.mango --source Documents --destination "$TMP" >/dev/null
 F=PvPCore/Tests/PvPCoreTests/Fixtures
 shopt -s nullglob
+: > "$TMP/pulled.txt"
 for reads in "$TMP"/*.reads.jsonl; do
   name=$(basename "$reads" .reads.jsonl)
+  echo "$name" >> "$TMP/pulled.txt"
   [ -e "$F/$name.json" ] && continue
   cp "$TMP/$name.mp4" "Test Videos/$name.mp4"
   # One read per line -> the JSON array the replay tests and battle-report read.
   python3 -c 'import json,sys; print(json.dumps([json.loads(l) for l in open(sys.argv[1]) if l.strip()], separators=(",",":")))' "$reads" > "$F/$name.json"
   echo "Test Videos/$name.mp4 and $F/$name.json"
 done
+if [ -s "$TMP/pulled.txt" ]; then
+  xcrun devicectl device copy to --device "$DEVICE" --domain-type appDataContainer \
+    --domain-identifier com.jovenstriker.mango --source "$TMP/pulled.txt" --destination Documents/pulled.txt >/dev/null
+  echo "Pulled $(wc -l < "$TMP/pulled.txt" | tr -d ' ') battle(s); ManGo deletes them from the phone when it's next opened."
+else
+  echo "No battles on the phone."
+fi
 rm -rf "$TMP"

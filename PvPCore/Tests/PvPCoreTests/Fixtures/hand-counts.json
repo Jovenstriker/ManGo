@@ -93,5 +93,15 @@
     "notes": {
       "3": "Includes Azumarill's 1 Bubble as the lead before switching out."
     }
+  },
+  "gbl-battle-2026-10-23-v11": {
+    "video": "Test Videos/v11.mov",
+    "description": "Eleventh battle, with ManGo on screen. You: Altaria, Mimikyu, Melmetal. Opponent: Altaria, Mimikyu, Empoleon.",
+    "counts": [
+      13
+    ],
+    "notes": {
+      "1": "You both threw on the same turn (Sky Attack, then Moonblast on charged move priority), so Altaria had no fast move in progress: 13 Dragon Breaths, which your Altaria's HP bar also shows (13 drops)."
+    }
   }
 }

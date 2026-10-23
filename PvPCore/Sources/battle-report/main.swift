@@ -83,6 +83,7 @@ out.append("    because the screen is read 4 times a second and changed up to 0.
 out.append("  - Your charged move waits for your fast move to finish; the battle runs on until then.")
 out.append("  - When you throw, they get their finished fast moves plus the one in progress, including")
 out.append("    when your moves line up (they start one on the turn your charged move takes).")
+out.append("    Not when they throw on the same turn (their charged move in the same stop as yours).")
 out.append("  - When they throw, only finished fast moves count; then they start fresh.")
 out.append("  - A switch takes 1 turn; 0 after a faint or straight after their charged move.")
 out.append("  - Benched Pokémon keep their energy.")

@@ -28,6 +28,7 @@ struct MechanicsView: View {
                     "The opponent keeps the energy from a fast move they'd already started. Your charged move interrupts it, but it still lands (unless your charged move knocks them out), and they start fresh afterwards.",
                     "If your fast moves end on the same turn as theirs (they're \"aligned\"), your charged move takes the next turn, and they start a new fast move on it. It counts too.",
                     "Example against a 3-turn move: two 2-turn moves then a charged move give them the same as one, since their 2nd move is in progress either way. Three 2-turn moves line up with two 3-turn ones and hand them a third.",
+                    "If they throw a charged move on the same turn as yours, they weren't in a fast move, so none is in progress to count. Charge Move Priority decides whose goes first.",
                 ])
 
                 topic("Shields", "shield", [

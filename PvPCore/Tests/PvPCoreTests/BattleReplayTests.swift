@@ -336,3 +336,18 @@ private struct Screen {
     // Their "Go, Mimikyu!" at 3:01.75, though you have a Mimikyu too: your box showed Altaria.
     #expect(tracker.active?.speciesId == "mimikyu")
 }
+
+/// v11 (vs Altaria, Mimikyu, Empoleon): their Moonblast came on the same turn as your
+/// Sky Attack, so Altaria had no fast move in progress to count.
+@Test func replayEleventhBattle() throws {
+    let (data, reads) = try loadBattle("gbl-battle-2026-10-23-v11")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var shown: [TimeInterval: (String?, Int)] = [:]
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        shown[read.time] = (tracker.active?.speciesId, tracker.snapshot(at: read.time).energy)
+    }
+    // 13 Dragon Breaths by your Sky Attack at 0:33, shown from "Attack incoming!" on.
+    #expect(shown[46]! == ("altaria", 52))
+}

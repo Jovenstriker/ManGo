@@ -14,6 +14,7 @@ HOW MANGO COUNTS
   - Your charged move waits for your fast move to finish; the battle runs on until then.
   - When you throw, they get their finished fast moves plus the one in progress, including
     when your moves line up (they start one on the turn your charged move takes).
+    Not when they throw on the same turn (their charged move in the same stop as yours).
   - When they throw, only finished fast moves count; then they start fresh.
   - A switch takes 1 turn; 0 after a faint or straight after their charged move.
   - Benched Pokémon keep their energy.

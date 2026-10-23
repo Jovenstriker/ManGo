@@ -17,3 +17,4 @@ report gbl-battle-2026-10-20-v2 testV2
 report gbl-battle-2026-10-20-v3 testV3
 report gbl-battle-2026-10-20-v7 v7
 report gbl-battle-2026-10-20-v8 v8
+report gbl-battle-2026-10-23-v11 v11

@@ -75,6 +75,8 @@ public struct OpponentTracker: Sendable {
     private var pausedTotal: TimeInterval = 0
     /// Battle time of the opponent's last charged move; a switch right after it is free.
     private var lastChargedMoveAt: TimeInterval?
+    /// What your charged move this stop added for their fast move in progress, and to whom.
+    private var inProgressBonus: (index: Int, energy: Int)?
 
     public init(data: GameData) {
         self.data = data
@@ -209,10 +211,26 @@ public struct OpponentTracker: Sendable {
         // after their own charged move, or as they come in.
         if t > start + 1e-6 {
             let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
+            let withFinished = min(maxEnergy, team[i].bankedEnergy + finished * fast.energyGain)
             team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain)
+            inProgressBonus = (i, team[i].bankedEnergy - withFinished)
             closeStretch(i, at: t, interrupted: true)
         }
         team[i].chainStart = max(t, start)
+    }
+
+    /// The opponent threw a charged move on the same turn as yours (charged move priority
+    /// decided who went first), so they weren't partway through a fast move: takes back
+    /// the one `playerThrewChargedMove` counted in progress. (v11: Altaria's Moonblast came
+    /// right after your blocked Sky Attack, on 13 Dragon Breaths, not 14.) Call before
+    /// `opponentThrewChargedMove`, in the same stop.
+    public mutating func opponentThrewOnSameTurn() {
+        guard let (i, bonus) = inProgressBonus, i == activeIndex else { return }
+        inProgressBonus = nil
+        team[i].bankedEnergy = max(0, team[i].bankedEnergy - bonus)
+        if let last = team[i].history.indices.last, team[i].history[last].interrupted {
+            team[i].history[last].interrupted = false
+        }
     }
 
     /// Your Pokémon fainted to their fast move: it landed as the battle stopped, so the stop
@@ -274,6 +292,7 @@ public struct OpponentTracker: Sendable {
         guard let p = pausedAt else { return }
         pausedTotal += now - p
         pausedAt = nil
+        inProgressBonus = nil
     }
 
     /// Manually corrects the active opponent's energy (e.g. after a missed event).

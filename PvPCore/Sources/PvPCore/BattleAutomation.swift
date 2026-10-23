@@ -153,6 +153,7 @@ public struct BattleAutomation: Sendable {
                     tracker.changeForm(to: speciesId)
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
+                sameTurnAsYours(&tracker)
                 // A throw the assumed fast move couldn't have afforded means it's another one.
                 if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
@@ -166,6 +167,7 @@ public struct BattleAutomation: Sendable {
 
             case .attackIncoming:
                 // Corrects the count as the battle freezes, not only once the banner names the move.
+                sameTurnAsYours(&tracker)
                 alignToOpponentChargedMove(&tracker)
 
             case .yourPokemonFainted:
@@ -207,6 +209,18 @@ public struct BattleAutomation: Sendable {
            tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
                                       restartWindow: (back + window.lowerBound)...(back + window.upperBound)) {
             note("\(name(tracker.active?.speciesId)) had finished one more fast move: the battle restarted before your buttons came back")
+        }
+    }
+
+    /// Their charged move came in the same stop as yours, with no restart between: you
+    /// both threw on the same turn, so they had no fast move in progress to count.
+    private mutating func sameTurnAsYours(_ tracker: inout OpponentTracker) {
+        guard playerChargedThisStop, !opponentThrewThisStop else { return }
+        let before = tracker.snapshot(at: lastTime).energy
+        tracker.opponentThrewOnSameTurn()
+        let after = tracker.snapshot(at: lastTime).energy
+        if after != before {
+            note("\(name(tracker.active?.speciesId)) threw on the same turn as you: no fast move in progress (\(before) → \(after))")
         }
     }
 

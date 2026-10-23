@@ -161,8 +161,8 @@ final class TrackerModel {
     }
 
     /// The reader finishes a battle's recording once it sees it's idle, so the one that just
-    /// ended is collected a little later: when the next battle starts, or on the next launch.
-    private func collectRecordings() {
+    /// ended is collected a little later: when ManGo is opened, or the next battle starts.
+    func collectRecordings() {
         #if DEBUG
         savedRecordings = BattleRecordings.collect()
         #endif

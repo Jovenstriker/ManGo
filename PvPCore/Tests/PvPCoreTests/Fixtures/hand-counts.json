@@ -98,10 +98,16 @@
     "video": "Test Videos/v11.mov",
     "description": "Eleventh battle, with ManGo on screen. You: Altaria, Mimikyu, Melmetal. Opponent: Altaria, Mimikyu, Empoleon.",
     "counts": [
-      13
+      13,
+      7,
+      null,
+      5,
+      5
     ],
     "notes": {
-      "1": "You both threw on the same turn (Sky Attack, then Moonblast on charged move priority), so Altaria had no fast move in progress: 13 Dragon Breaths, which your Altaria's HP bar also shows (13 drops)."
+      "1": "You both threw on the same turn (Sky Attack, then Moonblast on charged move priority), so Altaria had no fast move in progress: 13 Dragon Breaths, which your Altaria's HP bar also shows (13 drops).",
+      "4": "Empoleon threw Hydro Cannon on the same turn as your charged move, which it had shielded.",
+      "5": "Empoleon's buttons-back restart wasn't late: its own Hydro Cannon, not its shield of yours, ended the stop before."
     }
   }
 }

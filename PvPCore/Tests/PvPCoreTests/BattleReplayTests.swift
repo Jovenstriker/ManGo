@@ -350,4 +350,7 @@ private struct Screen {
     }
     // 13 Dragon Breaths by your Sky Attack at 0:33, shown from "Attack incoming!" on.
     #expect(shown[46]! == ("altaria", 52))
+    // 5 Metal Sounds before its second Hydro Cannon: the stop before ended on its own
+    // Hydro Cannon, so the buttons weren't late as after a shield of yours.
+    #expect(shown[179]! == ("empoleon", 40))
 }

@@ -43,6 +43,8 @@ public struct BattleAutomation: Sendable {
     private var buttonsBackAt: TimeInterval?
     private var shieldedThisStop = false
     private var playerChargedThisStop = false
+    /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
+    private var opponentThrewAfterYours = false
     private var lastResumeAfterShield = false
     private var chargedMoveThisStop = false
 
@@ -139,7 +141,10 @@ public struct BattleAutomation: Sendable {
                 let resume = max(t - lead, lastStopAt)
                 resumedAt = resume
                 buttonsBackAt = t
-                lastResumeAfterShield = shieldedThisStop && playerChargedThisStop  // they blocked yours
+                // They blocked yours, and didn't throw their own after (v11's Empoleon did: its
+                // next stretch restarted with the buttons, as after any charged move of theirs).
+                lastResumeAfterShield = shieldedThisStop && playerChargedThisStop && !opponentThrewAfterYours
+                opponentThrewAfterYours = false
                 shieldedThisStop = false
                 playerChargedThisStop = false
                 if free { freeSwitchUntil = resume + Self.afterStopWindow }
@@ -154,6 +159,7 @@ public struct BattleAutomation: Sendable {
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
                 sameTurnAsYours(&tracker)
+                if playerChargedThisStop { opponentThrewAfterYours = true }
                 // A throw the assumed fast move couldn't have afforded means it's another one.
                 if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")

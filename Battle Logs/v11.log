@@ -34,20 +34,22 @@ OPPONENT CHARGED MOVES
   1  0:50.75  Altaria               Moonblast (50)            52 → 2        13          13    ✓
        calc: 52 = 0 left before + 13 × 4 (Dragon Breath); after: 52 − 50 = 2
        note: You both threw on the same turn (Sky Attack, then Moonblast on charged move priority), so Altaria had no fast move in progress: 13 Dragon Breaths, which your Altaria's HP bar also shows (13 drops).
-  2  1:24.00  Mimikyu               Shadow Sneak (50)         56 → 6        7           ?     -
+  2  1:24.00  Mimikyu               Shadow Sneak (50)         56 → 6        7           7     ✓
        calc: 56 = 0 left before + 7 × 8 (Shadow Claw); after: 56 − 50 = 6
   3  2:03.75  Altaria               Flamethrower (55)         62 → 7        15          ?     -
        calc: 62 = 2 left before + 15 × 4 (Dragon Breath); after: 62 − 55 = 7
-  4  2:41.25  Empoleon              Hydro Cannon (40)         40 → 0        5           ?     -
+  4  2:41.25  Empoleon              Hydro Cannon (40)         40 → 0        5           5     ✓
        calc: 40 = 0 left before + 5 × 8 (Metal Sound); after: 40 − 40 = 0
-  5  3:00.50  Empoleon              Hydro Cannon (40)         48 → 8        6           ?     -
-       calc: 48 = 0 left before + 6 × 8 (Metal Sound); after: 48 − 40 = 8
+       note: Empoleon threw Hydro Cannon on the same turn as your charged move, which it had shielded.
+  5  3:00.50  Empoleon              Hydro Cannon (40)         40 → 0        5           5     ✓
+       calc: 40 = 0 left before + 5 × 8 (Metal Sound); after: 40 − 40 = 0
+       note: Empoleon's buttons-back restart wasn't late: its own Hydro Cannon, not its shield of yours, ended the stop before.
   6  3:24.00  Altaria               Flamethrower (55)         59 → 4        13          ?     -
        calc: 59 = 7 left before + 13 × 4 (Dragon Breath); after: 59 − 55 = 4
 
 SUMMARY
-  1 of 1 hand-counted charged moves match ManGo's fast move count exactly.
-  5 not hand-counted.
+  4 of 4 hand-counted charged moves match ManGo's fast move count exactly.
+  2 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:25.25  Opponent: Altaria
@@ -82,9 +84,8 @@ TIMELINE (what the screen reader saw and did)
   2:41.25  Empoleon used Hydro Cannon (40 → 0)
   2:47.75    running  Empoleon at 0
   2:53.25    stopped  Empoleon at 40
-  2:53.75  Empoleon had finished one more fast move: the battle restarted before your buttons came back
-  3:00.50  Empoleon used Hydro Cannon (48 → 8)
-  3:03.25    running  Empoleon at 8
+  3:00.50  Empoleon used Hydro Cannon (40 → 0)
+  3:03.25    running  Empoleon at 0
   3:03.50  Opponent: Altaria
   3:06.00    stopped  Altaria at 55
   3:07.00  You threw a charged move: Altaria 59 → 63 (its fast move in progress counts)
@@ -92,6 +93,6 @@ TIMELINE (what the screen reader saw and did)
   3:24.00  Altaria used Flamethrower (59 → 4)
   3:29.50  You threw a charged move: Altaria 4 → 4 (its fast move in progress counts)
   3:41.00  Opponent: Empoleon
-  3:41.25    running  Empoleon at 8
-  3:42.75    stopped  Empoleon at 16
+  3:41.25    running  Empoleon at 0
+  3:42.75    stopped  Empoleon at 8
   3:47.00  Battle over

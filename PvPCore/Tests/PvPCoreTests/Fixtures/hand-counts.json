@@ -136,5 +136,14 @@
       "switch": "At 1:09.5 Mimikyu blocked your charged move after throwing Shadow Sneak, and the opponent switched to Turtonator about a second into play: a turn, so Turtonator had 3 Incinerates plus the one in progress (80) at your throw, not 100.",
       "faint": "Mimikyu's second time in: Turtonator's Dragon Claw knocked yours out, then they switched to Mimikyu. Your faint makes that a choice, so it costs a turn: 2 Shadow Claws by your throw after 2 Thunder Shocks (38 + 16 = 54). ManGo had made it free (62)."
     }
+  },
+  "battle-2026-10-23-155712": {
+    "video": "Test Videos/battle-2026-10-23-155712.mp4",
+    "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Flygon, Corviknight, Azumarill.",
+    "counts": [],
+    "notes": {
+      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short.",
+      "4": "Azumarill threw Ice Beam (55) when ManGo had 44 (4 Bubbles): at least 5. Your Mimikyu's HP bar shows 2 Bubbles after it came in (2:23.5, 2:24.97), as ManGo counts, so the missing one is in the two short stretches after Azumarill replaced the fainted Corviknight. Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33)."
+    }
   }
 }

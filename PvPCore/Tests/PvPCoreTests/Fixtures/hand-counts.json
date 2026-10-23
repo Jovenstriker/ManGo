@@ -109,5 +109,15 @@
       "4": "Empoleon threw Hydro Cannon on the same turn as your charged move, which it had shielded.",
       "5": "Empoleon's buttons-back restart wasn't late: its own Hydro Cannon, not its shield of yours, ended the stop before."
     }
+  },
+  "battle-2026-10-23-132243": {
+    "video": "Test Videos/battle-2026-10-23-132243.mp4",
+    "description": "First battle saved by the phone (its own reads, timed to its video). You: Altaria, Melmetal, Mimikyu. Opponent: Doublade, Togetic, Stunfisk.",
+    "counts": [
+      7
+    ],
+    "notes": {
+      "1": "Your Altaria's HP bar drops 7 times, a second apart (20.7s to 26.7s), and not again before the stop. Your buttons only vanished at about 28.0s, roughly 0.8-1s after Iron Head started, so ManGo's clock (from GO at 19.89s) counted an 8th Shadow Claw. The screen text can't tell this from 8 with the usual delay."
+    }
   }
 }

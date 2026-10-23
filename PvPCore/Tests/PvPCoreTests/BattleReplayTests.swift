@@ -354,3 +354,19 @@ private struct Screen {
     // Hydro Cannon, so the buttons weren't late as after a shield of yours.
     #expect(shown[179]! == ("empoleon", 40))
 }
+
+/// Saved by the phone (vs Turtonator, Florges, Tinkaton): your 4 two-turn moves, then a
+/// charged move, let Florges sneak in a 5th Fairy Wind.
+@Test func replayPhoneBattleWithFlorgesSneak() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-23-135548")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var florgesAfterYourThrow: Int?
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        if florgesAfterYourThrow == nil, read.time >= 65, tracker.active?.speciesId == "florges" {
+            florgesAfterYourThrow = tracker.snapshot(at: read.time).energy
+        }
+    }
+    #expect(florgesAfterYourThrow == 45)
+}

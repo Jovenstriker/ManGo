@@ -44,8 +44,7 @@ struct MechanicsView: View {
 
                 topic("Switching", "arrow.left.arrow.right", [
                     "A switch costs **1 turn** before the new Pokémon starts its fast moves.",
-                    "It costs **0 turns** for the side whose charged move came last in the stop, if they pick the switch as the charged moves end. A switch made once play is back costs the usual turn.",
-                    "If your charged move came after theirs, their switch costs a turn, even though they threw in that stop.",
+                    "After any charged move, **both** sides can switch for **0 turns**, whoever threw and whether or not there was a priority tie, as long as they pick the switch as the charged move ends. A switch made once play is back costs the usual turn.",
                     "Replacing a Pokémon that fainted costs **0 turns**. But if **your** Pokémon fainted and theirs is still in, switching is their choice, and it costs them a turn, even right after their charged move.",
                     "Switches go before damage: switch on the turn a fast move lands, and the incoming Pokémon takes the hit.",
                     "After a faint, nobody attacks until the next Pokémon is out.",
@@ -64,7 +63,7 @@ struct MechanicsView: View {
                     bullet("Running or frozen: your charged move buttons are on screen while the battle runs.")
                     bullet("Charged moves: \"Attack incoming!\" and the \"X used Y!\" banner for theirs, \"Get Ready!\" for yours.")
                     bullet("Start and end: the countdown's \"GO\" (the first turn begins a moment after it appears), and \"YOU WIN!\" / \"GOOD EFFORT!\". If lag skips the countdown, it starts when your buttons appear.")
-                    bullet("Switches: a new name in the top-right box. ManGo works out whether it cost a turn from who threw last in the stop, whether your Pokémon fainted, and how soon after the restart the name showed.")
+                    bullet("Switches: a new name in the top-right box. ManGo works out whether it cost a turn from whether there was a charged move or a faint in the stop, and how soon after the restart the name showed.")
                     bullet("The screen is read 4 times a second, so ManGo back-dates when the battle stopped and restarted. Their charged moves always start as a fast move finishes, which it uses to correct its timing.")
                     bullet("Between battles it reads every 2 seconds, and stops after 3 minutes without a new battle.")
                 } header: {

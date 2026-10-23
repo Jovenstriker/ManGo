@@ -293,6 +293,13 @@ public struct BattleAutomation: Sendable {
             ?? data.species[speciesId]?.recommendedMoveset.first ?? data.species[speciesId]?.fastMoves.first
         let duringStop = stopped || t - resumedAt < Self.afterStopWindow
         let theirsFainted = tracker.active != nil && duringStop && !opponentThrewThisStop
+        // A switch that shows as the battle restarts after a charged move (anyone's, tie or
+        // not) was chosen as it ended: it's free and starts at the restart (Sableye after
+        // Marowak's Rock Slide and yours, 0.25s after the buttons). One that shows later was
+        // made in play and costs a turn (Turtonator, 1.1s after: 3 Incinerates plus the one
+        // in progress, not 4 plus one).
+        let quick = chargedMoveThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
+        if quick, let back = buttonsBackAt { time = max(resumedAt, min(time, back)) }
         if theirsFainted {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.
             // The clock stays as the screen says: if the battle is still stopped, the new
@@ -301,12 +308,7 @@ public struct BattleAutomation: Sendable {
             tracker.markActiveFainted(at: time)
         }
         // A name change during a stop is a faint replacement or a switch right after their
-        // charged move: both take 0 turns. So is one that shows as the battle restarts after
-        // a stop they threw in, even if your charged move came last: it was chosen as the
-        // charged moves ended (Sableye after Marowak's Rock Slide and yours, 0.25s after
-        // the buttons). One that shows later was made in play and costs a turn (Turtonator,
-        // 1.1s after: 3 Incinerates plus the one in progress, not 4 plus one).
-        let quick = opponentThrewThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
+        // charged move: both take 0 turns, as does a quick switch (above).
         var free = stopped || time < freeSwitchUntil || quick
         // After your Pokémon fainted, their switch (theirs still in) is a choice and costs a
         // turn, even straight after their charged move: Mimikyu for Turtonator after its

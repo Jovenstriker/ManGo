@@ -8,63 +8,69 @@ struct MechanicsView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("GO Battle League looks real-time, but it runs in fixed **turns of 0.5 seconds**. Everything ManGo counts follows from that.")
+                    Text("GO Battle League looks real-time, but it runs in fixed **turns of 0.5 seconds**. Every move takes a whole number of turns, which is what makes the opponent's energy countable.")
                 }
 
                 topic("Fast moves", "bolt", [
-                    "Each fast move takes a set number of turns and gives a set amount of energy. Counter: 2 turns, +6. Mud Slap: 3 turns, +10. Dragon Breath: 1 turn, +4.",
-                    "Fast moves go back-to-back, so energy builds at a steady rate: Counter gives 6 energy every second.",
-                    "Energy caps at 100.",
+                    "Each fast move takes **1 to 5 turns** and gives a set amount of energy when it finishes.",
+                    "1 turn: Dragon Breath +4, Lick +3. 2 turns: Counter +6, Shadow Claw +8. 3 turns: Charm +8, Bubble +11. 4 turns: Volt Switch +16. 5 turns: Incinerate +20.",
+                    "Its damage and energy both land at the end of its last turn, for both players at once.",
+                    "Thrown back-to-back, they build energy at a steady rate: Counter gives 6 energy a second.",
+                    "Energy caps at **100**.",
                 ])
 
                 topic("Charged moves", "flame", [
-                    "A charged move needs a set amount of energy, e.g. Ice Punch 40, Rock Slide 45, Flamethrower 55. Throwing it spends that energy.",
-                    "A charged move can only start once the current fast move's animation has finished. Tapping one mid-move queues it.",
-                    "While either side's charged move plays out, including the shield prompt and minigame, the battle is frozen and no turns pass.",
-                    "If both sides throw on the same turn, the Pokémon with higher Attack goes first (Charge Move Priority, CMP).",
+                    "A charged move costs a set amount of energy, e.g. Ice Punch 40, Rock Slide 45, Flamethrower 55.",
+                    "It can only be thrown once your current fast move has finished, and it starts on the next turn. Tapping one mid-move queues it.",
+                    "While any charged move plays out, including the shield prompt and the minigame, the battle is frozen: no turns pass.",
+                    "If both sides throw on the same turn, the Pokémon with higher Attack goes first (**Charge Move Priority**, CMP). The other's charged move follows.",
+                    "A charged move goes before fast-move damage on the same turn, so a Pokémon about to faint can still get its charged move off.",
                 ])
 
                 topic("When you throw a charged move", "arrow.triangle.branch", [
-                    "The opponent keeps the energy from a fast move they'd already started. Your charged move interrupts it, but it still lands (unless your charged move knocks them out), and they start fresh afterwards.",
-                    "If your fast moves end on the same turn as theirs (they're \"aligned\"), your charged move takes the next turn, and they start a new fast move on it. It counts too.",
-                    "Example against a 3-turn move: three 2-turn moves line up with two 3-turn ones and hand them a third. Four 2-turn moves give them the same 3, since their 3rd is in progress either way. So with a 2-turn move, throw after 1, 4, 7 or 10 fast moves.",
-                    "If they throw a charged move on the same turn as yours, they weren't in a fast move, so none is in progress to count. Charge Move Priority decides whose goes first.",
+                    "A fast move the opponent already started still counts. Its energy is added once your charged move is over, and then they start fresh.",
+                    "If your fast moves finish on the same turn as theirs (\"aligned\"), your charged move takes the next turn, and they start another fast move on it. That one counts too.",
+                    "So the opponent gets every fast move they finished, **plus one**.",
+                    "Example, your 2-turn move against their 3-turn move: after 3 of yours they get 3, and after 4 of yours they still get 3. Throwing after 1, 4, 7 or 10 fast moves gives them nothing extra.",
+                    "The exception: if they throw a charged move on the same turn as you, they weren't in a fast move, so there's no extra one.",
                 ])
 
                 topic("Shields", "shield", [
-                    "Each side has 2 shields. A shield blocks a charged move's damage, but the Pokémon still takes 1 damage.",
+                    "Each side has **2 shields**. A shield blocks a charged move, but the Pokémon still takes 1 damage.",
                     "Shields don't block fast moves.",
                     "Baiting: throw a cheap charged move to draw a shield, then follow with an expensive one.",
                 ])
 
                 topic("Switching", "arrow.left.arrow.right", [
-                    "A switch takes 1 turn before the new Pokémon starts its fast moves.",
-                    "It takes 0 turns right after the switching side threw a charged move, and after a faint.",
-                    "After a faint, both sides stop attacking until the next Pokémon comes out.",
-                    "A switched-out Pokémon keeps its energy for when it comes back.",
-                    "After a switch there's a switch timer before you can switch again.",
+                    "A switch costs **1 turn** before the new Pokémon starts its fast moves.",
+                    "It costs **0 turns** for the side that just threw a charged move, and after a faint.",
+                    "Switches go before damage: switch on the turn a fast move lands, and the incoming Pokémon takes the hit.",
+                    "After a faint, nobody attacks until the next Pokémon is out.",
+                    "A Pokémon keeps its energy while it's on the bench.",
+                    "After a switch, a timer has to run out before you can switch again.",
                 ])
 
                 topic("Counting fast moves", "number", [
-                    "Knowing their energy tells you when a charged move is coming. If Medicham needs 5 Psycho Cuts for Ice Punch, a shield decision comes after the 5th, not before.",
-                    "That's ManGo's job: it counts their energy so you don't have to.",
+                    "Their energy tells you when a charged move can come. Medicham needs 5 Psycho Cuts (+9 each) for Ice Punch (40), so the shield decision comes after the 5th.",
+                    "That's ManGo's job: it counts their energy so you can play.",
                 ])
 
                 Section {
-                    bullet("Opponent's name, from the box in the top-right.")
-                    bullet("Their fast move: assumed to be PvPoke's recommended one, thrown nonstop.")
-                    bullet("Battle running or frozen: your charged move buttons at the bottom are on screen while it runs.")
-                    bullet("Their charged moves: the \"X used Y!\" banner. Yours: \"Get Ready!\" or your Pokémon's banner.")
+                    bullet("Opponent's Pokémon: the name box in the top-right, and the \"Go, X!\" message when it comes out.")
+                    bullet("Their fast move: PvPoke's recommended one, thrown nonstop. A charged move it couldn't have afforded switches ManGo to another fast move the Pokémon learns.")
+                    bullet("Running or frozen: your charged move buttons are on screen while the battle runs.")
+                    bullet("Charged moves: \"Attack incoming!\" and the \"X used Y!\" banner for theirs, \"Get Ready!\" for yours.")
                     bullet("Start and end: the countdown's \"GO\", and \"YOU WIN!\" / \"GOOD EFFORT!\".")
-                    bullet("The screen is read 4 times a second, so ManGo back-dates when the battle stopped and restarted, and uses \"a charged move starts as a fast move finishes\" to correct its guess when they throw.")
+                    bullet("The screen is read 4 times a second, so ManGo back-dates when the battle stopped and restarted. Their charged moves always start as a fast move finishes, which it uses to correct its timing.")
+                    bullet("Between battles it reads every 2 seconds, and stops after 3 minutes without a new battle.")
                 } header: {
                     Label("How ManGo follows the battle", systemImage: "eye")
                 }
 
                 Section {
-                    bullet("If the opponent pauses between fast moves, ManGo counts one too many. It can't see pauses.")
-                    bullet("If they use a fast move other than PvPoke's recommended one, the count runs at the wrong rate.")
-                    bullet("Right after a charged move it can be off by one fast move when your buttons come back unusually early or late.")
+                    bullet("If the opponent pauses between fast moves, or lag delays them, ManGo counts too many. It can't see pauses.")
+                    bullet("If they use a fast move other than PvPoke's recommended one, the count runs at the wrong rate until a charged move gives it away.")
+                    bullet("Right after a charged move it can be off by one fast move if your buttons come back unusually early or late.")
                     bullet("Nicknamed opponent Pokémon aren't recognized.")
                 } header: {
                     Label("Where ManGo can be off", systemImage: "exclamationmark.triangle")

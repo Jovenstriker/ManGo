@@ -16,7 +16,9 @@ HOW MANGO COUNTS
     when your moves line up (they start one on the turn your charged move takes).
     Not when they throw on the same turn (their charged move in the same stop as yours).
   - When they throw, only finished fast moves count; then they start fresh.
-  - A switch takes 1 turn; 0 after a faint or straight after their charged move.
+  - A switch takes 1 turn. 0 for a fainted Pokémon's replacement, or when their charged
+    move came last in the stop and the switch shows as the battle restarts. After your
+    Pokémon faints, their switch (theirs still in) costs a turn.
   - Benched Pokémon keep their energy.
 
 SETTINGS (fitted on the hand counts of all recorded battles)

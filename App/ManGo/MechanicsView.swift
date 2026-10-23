@@ -25,6 +25,7 @@ struct MechanicsView: View {
                     "While any charged move plays out, including the shield prompt and the minigame, the battle is frozen: no turns pass.",
                     "If both sides throw on the same turn, the Pokémon with higher Attack goes first (**Charge Move Priority**, CMP). The other's charged move follows.",
                     "A charged move goes before fast-move damage on the same turn, so a Pokémon about to faint can still get its charged move off.",
+                    "If the first charged move in a tie knocks the other Pokémon out, the second one never happens.",
                 ])
 
                 topic("When you throw a charged move", "arrow.triangle.branch", [
@@ -43,7 +44,9 @@ struct MechanicsView: View {
 
                 topic("Switching", "arrow.left.arrow.right", [
                     "A switch costs **1 turn** before the new Pokémon starts its fast moves.",
-                    "It costs **0 turns** for the side that just threw a charged move, and after a faint.",
+                    "It costs **0 turns** for the side whose charged move came last in the stop, if they pick the switch as the charged moves end. A switch made once play is back costs the usual turn.",
+                    "If your charged move came after theirs, their switch costs a turn, even though they threw in that stop.",
+                    "Replacing a Pokémon that fainted costs **0 turns**. But if **your** Pokémon fainted and theirs is still in, switching is their choice, and it costs them a turn, even right after their charged move.",
                     "Switches go before damage: switch on the turn a fast move lands, and the incoming Pokémon takes the hit.",
                     "After a faint, nobody attacks until the next Pokémon is out.",
                     "A Pokémon keeps its energy while it's on the bench.",
@@ -60,7 +63,8 @@ struct MechanicsView: View {
                     bullet("Their fast move: PvPoke's recommended one, thrown nonstop. A charged move it couldn't have afforded switches ManGo to another fast move the Pokémon learns.")
                     bullet("Running or frozen: your charged move buttons are on screen while the battle runs.")
                     bullet("Charged moves: \"Attack incoming!\" and the \"X used Y!\" banner for theirs, \"Get Ready!\" for yours.")
-                    bullet("Start and end: the countdown's \"GO\", and \"YOU WIN!\" / \"GOOD EFFORT!\".")
+                    bullet("Start and end: the countdown's \"GO\" (the first turn begins a moment after it appears), and \"YOU WIN!\" / \"GOOD EFFORT!\". If lag skips the countdown, it starts when your buttons appear.")
+                    bullet("Switches: a new name in the top-right box. ManGo works out whether it cost a turn from who threw last in the stop, whether your Pokémon fainted, and how soon after the restart the name showed.")
                     bullet("The screen is read 4 times a second, so ManGo back-dates when the battle stopped and restarted. Their charged moves always start as a fast move finishes, which it uses to correct its timing.")
                     bullet("Between battles it reads every 2 seconds, and stops after 3 minutes without a new battle.")
                 } header: {
@@ -71,6 +75,7 @@ struct MechanicsView: View {
                     bullet("If the opponent pauses between fast moves, or lag delays them, ManGo counts too many. It can't see pauses.")
                     bullet("If they use a fast move other than PvPoke's recommended one, the count runs at the wrong rate until a charged move gives it away.")
                     bullet("Right after a charged move it can be off by one fast move if your buttons come back unusually early or late.")
+                    bullet("If you tie with their charged move and yours knocks them out, nothing shows they threw, so ManGo counts a fast move they didn't get. That Pokémon is out, so it doesn't matter.")
                     bullet("Nicknamed opponent Pokémon aren't recognized.")
                 } header: {
                     Label("Where ManGo can be off", systemImage: "exclamationmark.triangle")

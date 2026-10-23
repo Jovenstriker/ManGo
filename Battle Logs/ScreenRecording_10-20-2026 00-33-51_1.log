@@ -20,6 +20,7 @@ HOW MANGO COUNTS
   - Benched Pokémon keep their energy.
 
 SETTINGS (fitted on the hand counts of all recorded battles)
+  The battle starts 0.200s after "GO" is first read.
   Battle stops 0.125s before your buttons are first read as gone.
   Your charged move freezes the battle 0.750s before "Get Ready!" is read.
   Battle resumes 0.250s before your buttons are read again (0.250s after a faint).
@@ -54,7 +55,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:40.00  Opponent: Stunfisk
   0:40.00    stopped  Stunfisk at 0
-  0:42.25    running  Stunfisk at 0
+  0:42.50    running  Stunfisk at 0
   0:49.25    stopped  Stunfisk at 54
   0:56.50  Stunfisk used Discharge (54 → 14)
   0:59.50    running  Stunfisk at 14

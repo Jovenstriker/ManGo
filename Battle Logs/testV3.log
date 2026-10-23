@@ -20,6 +20,7 @@ HOW MANGO COUNTS
   - Benched Pokémon keep their energy.
 
 SETTINGS (fitted on the hand counts of all recorded battles)
+  The battle starts 0.200s after "GO" is first read.
   Battle stops 0.125s before your buttons are first read as gone.
   Your charged move freezes the battle 0.750s before "Get Ready!" is read.
   Battle resumes 0.250s before your buttons are read again (0.250s after a faint).
@@ -47,7 +48,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:21.25  Opponent: Mimikyu
   0:21.25    stopped  Mimikyu at 0
-  0:23.75    running  Mimikyu at 0
+  0:24.00    running  Mimikyu at 0
   0:27.75  Opponent: Turtonator
   0:33.00    stopped  Turtonator at 40
   0:33.75  You threw a charged move: Turtonator 40 → 60 (its fast move in progress counts)

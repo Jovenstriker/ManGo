@@ -20,6 +20,7 @@ HOW MANGO COUNTS
   - Benched Pokémon keep their energy.
 
 SETTINGS (fitted on the hand counts of all recorded battles)
+  The battle starts 0.200s after "GO" is first read.
   Battle stops 0.125s before your buttons are first read as gone.
   Your charged move freezes the battle 0.750s before "Get Ready!" is read.
   Battle resumes 0.250s before your buttons are read again (0.250s after a faint).
@@ -49,7 +50,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:15.00  Opponent: Azumarill
   0:15.00    stopped  Azumarill at 0
-  0:17.00    running  Azumarill at 0
+  0:17.25    running  Azumarill at 0
   0:21.00  Opponent: Empoleon
   0:25.25    stopped  Empoleon at 32
   0:25.75  You threw a charged move: Empoleon 32 → 40 (its fast move in progress counts)

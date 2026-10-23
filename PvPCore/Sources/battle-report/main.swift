@@ -36,6 +36,7 @@ if let v = env["STOP_LEAD"].flatMap(Double.init) { automation.stopLead = v }
 if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
 if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
 if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
+if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
 var tracker = OpponentTracker(data: data)
 var timeline: [String] = []
 struct Throw { let time: TimeInterval; let speciesId: String; let move: Move; let fast: Move?; let before: Int; let after: Int }
@@ -89,6 +90,7 @@ out.append("  - A switch takes 1 turn; 0 after a faint or straight after their c
 out.append("  - Benched Pokémon keep their energy.")
 out.append("")
 out.append("SETTINGS (fitted on the hand counts of all recorded battles)")
+out.append(String(format: "  The battle starts %.3fs after \"GO\" is first read.", automation.goDelay))
 out.append(String(format: "  Battle stops %.3fs before your buttons are first read as gone.", automation.stopLead))
 out.append(String(format: "  Your charged move freezes the battle %.3fs before \"Get Ready!\" is read.", automation.playerFreezeBeforeCue))
 out.append(String(format: "  Battle resumes %.3fs before your buttons are read again (%.3fs after a faint).", automation.resumeLead, automation.faintResumeLead))

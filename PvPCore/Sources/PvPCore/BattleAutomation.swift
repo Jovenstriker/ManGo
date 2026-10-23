@@ -36,6 +36,11 @@ public struct BattleAutomation: Sendable {
     /// back late (Fearow restarted 0.6s before them); otherwise, including when you shield
     /// theirs, the restart is around them (Melmetal's straight-away Double Iron Bash
     /// restarted about when they came back, Ninetales about 0.4s after).
+    /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
+    /// a moment before anyone can attack. (The phone-saved Doublade battle: 7 Shadow Claws,
+    /// not 8.) 0.15-0.25s all fit every hand count; with no countdown or GO at all, the
+    /// lead's clock starts with your buttons instead.
+    public var goDelay: TimeInterval = 0.2
     public var restartWindowAfterShield: ClosedRange<TimeInterval> = -0.8 ... -0.2
     public var restartWindow: ClosedRange<TimeInterval> = -0.5 ... 0.4
     /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
@@ -110,17 +115,19 @@ public struct BattleAutomation: Sendable {
                 note("Battle over")
 
             case .countdown(let goIn):
-                if goAt == nil { goAt = t + goIn }
+                if goAt == nil { goAt = t + goIn + goDelay }
 
             case .battleStarted:
-                // Turn 0. The lead was probably read during the countdown: restart its clock now.
-                goAt = t
-                if awaitingGo {
+                // Turn 0, `goDelay` after GO shows. The lead was probably read during the countdown:
+                // its clock restarts then (on the first read after, if that's later than now).
+                let start = t + goDelay
+                goAt = start
+                if awaitingGo, start <= t {
                     awaitingGo = false
                     tracker.resume(at: t)
                 }
-                if tracker.team.count == 1, tracker.active?.fastMove != nil {
-                    tracker.setEnergy(0, at: t)
+                if !awaitingGo, tracker.team.count == 1, tracker.active?.fastMove != nil {
+                    tracker.setEnergy(0, at: start)
                 }
 
             case .stopped:

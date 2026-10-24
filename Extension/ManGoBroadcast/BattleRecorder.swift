@@ -50,6 +50,7 @@ final class BattleRecorder {
         var shifted = ScreenRead(time: read.time - startedAt, lines: read.lines)
         shifted.readSeconds = read.readSeconds
         shifted.opponentAlive = read.opponentAlive
+        shifted.buttonFill = read.buttonFill
         guard var line = try? JSONEncoder().encode(shifted) else { return }
         line.append(0x0A)
         reads.write(line)

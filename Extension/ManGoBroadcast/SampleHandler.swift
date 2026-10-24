@@ -89,6 +89,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
             var read = ScreenRead(time: now, lines: lines)
             read.readSeconds = CACurrentMediaTime() - started
             read.opponentAlive = NameBoxBalls.alive(in: pixels)
+            read.buttonFill = ChargeButtons.fill(in: pixels)
             if let memory = MemoryUsage.current() {
                 read.memoryMB = memory.now
                 read.peakMemoryMB = memory.peak

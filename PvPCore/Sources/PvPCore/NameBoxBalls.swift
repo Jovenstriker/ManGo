@@ -45,61 +45,14 @@ public enum NameBoxBalls {
 
     /// From a screen frame as delivered to the broadcast extension (BGRA or 4:2:0 YCbCr).
     public static func alive(in pixels: CVPixelBuffer) -> Int? {
-        CVPixelBufferLockBaseAddress(pixels, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(pixels, .readOnly) }
-        let w = CVPixelBufferGetWidth(pixels), h = CVPixelBufferGetHeight(pixels)
-        let format = CVPixelBufferGetPixelFormatType(pixels)
-        let sample: Sampler
-        switch format {
-        case kCVPixelFormatType_32BGRA:
-            guard let base = CVPixelBufferGetBaseAddress(pixels) else { return nil }
-            let row = CVPixelBufferGetBytesPerRow(pixels)
-            let bytes = base.assumingMemoryBound(to: UInt8.self)
-            sample = { x, y in
-                let px = Int(x * Double(w)), py = Int(y * Double(h))
-                guard (0..<w).contains(px), (0..<h).contains(py) else { return nil }
-                let o = py * row + px * 4
-                return (Double(bytes[o + 2]), Double(bytes[o + 1]), Double(bytes[o]))
-            }
-        case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange, kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-            guard let yBase = CVPixelBufferGetBaseAddressOfPlane(pixels, 0),
-                  let cBase = CVPixelBufferGetBaseAddressOfPlane(pixels, 1) else { return nil }
-            let yRow = CVPixelBufferGetBytesPerRowOfPlane(pixels, 0), cRow = CVPixelBufferGetBytesPerRowOfPlane(pixels, 1)
-            let yBytes = yBase.assumingMemoryBound(to: UInt8.self), cBytes = cBase.assumingMemoryBound(to: UInt8.self)
-            let video = format == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
-            sample = { x, y in
-                let px = Int(x * Double(w)), py = Int(y * Double(h))
-                guard (0..<w).contains(px), (0..<h).contains(py) else { return nil }
-                var luma = Double(yBytes[py * yRow + px])
-                if video { luma = (luma - 16) * 255 / 219 }
-                let co = (py / 2) * cRow + (px / 2) * 2
-                let cb = Double(cBytes[co]) - 128, cr = Double(cBytes[co + 1]) - 128
-                func clamp(_ v: Double) -> Double { min(255, max(0, v)) }
-                return (clamp(luma + 1.402 * cr), clamp(luma - 0.344 * cb - 0.714 * cr), clamp(luma + 1.772 * cb))
-            }
-        default:
-            return nil
-        }
-        return alive(aspect: Double(h) / Double(w), sample: sample)
+        ScreenPixels.withSampler(pixels) { aspect, sample in alive(aspect: aspect, sample: sample) } ?? nil
     }
 
     /// From a decoded video frame (for screen-log).
     public static func alive(in image: CGImage) -> Int? {
-        let w = image.width, h = image.height
         // Only the name box's corner is drawn: x 0.8–1, y 0.1–0.15.
-        let crop = CGRect(x: Int(0.8 * Double(w)), y: Int(0.10 * Double(h)), width: w - Int(0.8 * Double(w)), height: Int(0.05 * Double(h)))
-        guard let part = image.cropping(to: crop) else { return nil }
-        let cw = part.width, ch = part.height
-        var bytes = [UInt8](repeating: 0, count: cw * ch * 4)
-        guard let ctx = CGContext(data: &bytes, width: cw, height: ch, bitsPerComponent: 8, bytesPerRow: cw * 4,
-                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        ctx.draw(part, in: CGRect(x: 0, y: 0, width: cw, height: ch))
-        return alive(aspect: Double(h) / Double(w)) { x, y in
-            let px = Int(x * Double(w)) - Int(crop.minX), py = Int(y * Double(h)) - Int(crop.minY)
-            guard (0..<cw).contains(px), (0..<ch).contains(py) else { return nil }
-            let o = py * cw * 4 + px * 4
-            return (Double(bytes[o]), Double(bytes[o + 1]), Double(bytes[o + 2]))
-        }
+        ScreenPixels.withSampler(image, region: CGRect(x: 0.8, y: 0.10, width: 0.2, height: 0.05)) { aspect, sample in
+            alive(aspect: aspect, sample: sample)
+        } ?? nil
     }
 }

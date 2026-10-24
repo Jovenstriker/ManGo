@@ -72,6 +72,8 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     public var readSeconds: Double?
     /// Red pokéballs in the opponent's name box (Pokémon they have left), when it's visible.
     public var opponentAlive: Int?
+    /// How full your charged move buttons are, left then right (0–1): see ChargeButtons.
+    public var buttonFill: [Double]?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

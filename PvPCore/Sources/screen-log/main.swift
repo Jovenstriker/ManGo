@@ -10,16 +10,17 @@ import PvPCore
 //
 // With --json, prints every frame as a JSON array of ScreenRead, for test fixtures.
 //
-//   swift run screen-log <video> --balls <fixture.json>
+//   swift run screen-log <video> --pixels <fixture.json>
 //
-// Adds the opponent's pokéball count (NameBoxBalls) to each read of an existing fixture,
-// from that read's frame of the video, and prints the fixture.
+// Adds what's read from pixels rather than text (the opponent's pokéballs, your charged
+// move buttons' fill) to each read of an existing fixture, from that read's frame of the
+// video, and prints the fixture. (--balls is the old name.)
 
 var args = CommandLine.arguments
 let json = args.contains("--json")
 args.removeAll { $0 == "--json" }
 var ballsFixture: String?
-if let i = args.firstIndex(of: "--balls"), i + 1 < args.count {
+if let i = args.firstIndex(where: { $0 == "--pixels" || $0 == "--balls" }), i + 1 < args.count {
     ballsFixture = args[i + 1]
     args.removeSubrange(i...(i + 1))
 }
@@ -47,6 +48,7 @@ if let ballsFixture {
     for i in reads.indices {
         let image = try await generator.image(at: CMTime(seconds: reads[i].time, preferredTimescale: 600)).image
         reads[i].opponentAlive = NameBoxBalls.alive(in: image)
+        reads[i].buttonFill = ChargeButtons.fill(in: image)
     }
     let encoder = JSONEncoder()
     encoder.outputFormatting = .sortedKeys
@@ -63,6 +65,7 @@ while t < duration {
     if json {
         var read = ScreenRead(time: t, lines: lines)
         read.opponentAlive = NameBoxBalls.alive(in: image)
+        read.buttonFill = ChargeButtons.fill(in: image)
         reads.append(read)
         t += interval
         continue

@@ -291,6 +291,13 @@ public struct OpponentTracker: Sendable {
         team[i].chainStart = nil
     }
 
+    /// A Pokémon marked fainted turned out to have only switched out (no pokéball went dark):
+    /// it's back on the bench with the energy it left with.
+    public mutating func markNotFainted(_ speciesId: String) {
+        guard let i = team.firstIndex(where: { $0.speciesId == speciesId }) else { return }
+        team[i].isFainted = false
+    }
+
     /// Stops the battle clock. No turns pass while either side's charged move plays out.
     public mutating func pause(at now: TimeInterval) {
         if pausedAt == nil { pausedAt = now }

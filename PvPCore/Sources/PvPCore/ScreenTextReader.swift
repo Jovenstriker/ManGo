@@ -70,6 +70,8 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     public var peakMemoryMB: Double?
     /// How long reading the text took, in seconds.
     public var readSeconds: Double?
+    /// Red pokéballs in the opponent's name box (Pokémon they have left), when it's visible.
+    public var opponentAlive: Int?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

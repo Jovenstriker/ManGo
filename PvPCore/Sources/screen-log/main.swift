@@ -9,10 +9,20 @@ import PvPCore
 //   swift run screen-log <video> [seconds between frames, default 0.25] [--json]
 //
 // With --json, prints every frame as a JSON array of ScreenRead, for test fixtures.
+//
+//   swift run screen-log <video> --balls <fixture.json>
+//
+// Adds the opponent's pokéball count (NameBoxBalls) to each read of an existing fixture,
+// from that read's frame of the video, and prints the fixture.
 
 var args = CommandLine.arguments
 let json = args.contains("--json")
 args.removeAll { $0 == "--json" }
+var ballsFixture: String?
+if let i = args.firstIndex(of: "--balls"), i + 1 < args.count {
+    ballsFixture = args[i + 1]
+    args.removeSubrange(i...(i + 1))
+}
 guard args.count >= 2 else {
     print("usage: screen-log <video> [interval] [--json]")
     exit(1)
@@ -32,6 +42,18 @@ func zone(_ box: CGRect) -> String {
     return v + "-" + h
 }
 
+if let ballsFixture {
+    var reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: ballsFixture)))
+    for i in reads.indices {
+        let image = try await generator.image(at: CMTime(seconds: reads[i].time, preferredTimescale: 600)).image
+        reads[i].opponentAlive = NameBoxBalls.alive(in: image)
+    }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    print(String(decoding: try encoder.encode(reads), as: UTF8.self))
+    exit(0)
+}
+
 var previous = ""
 var reads: [ScreenRead] = []
 var t = 0.0
@@ -39,7 +61,9 @@ while t < duration {
     let image = try await generator.image(at: CMTime(seconds: t, preferredTimescale: 600)).image
     let lines = try ScreenTextReader.recognize(in: image, region: CGRect(x: 0, y: 0, width: 1, height: 1))
     if json {
-        reads.append(ScreenRead(time: t, lines: lines))
+        var read = ScreenRead(time: t, lines: lines)
+        read.opponentAlive = NameBoxBalls.alive(in: image)
+        reads.append(read)
         t += interval
         continue
     }

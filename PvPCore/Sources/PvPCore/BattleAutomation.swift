@@ -63,6 +63,16 @@ public struct BattleAutomation: Sendable {
     private var opponentThrewThisStop = false
     /// Your Pokémon fainted in this stop ("Switch in a new Pokémon?").
     private var yourFaintThisStop = false
+    /// Red pokéballs in their name box (Pokémon left): the latest count, when it was read,
+    /// and when it last went down. A ball goes dark as the Pokémon faints, before the stop is
+    /// seen and its replacement named.
+    private var opponentAlive: Int?
+    private var opponentAliveAt: TimeInterval = -.infinity
+    private var aliveDroppedAt: TimeInterval = -.infinity
+    /// A drop this long before the stop still belongs to it.
+    static let faintBallLead: TimeInterval = 3
+    /// Marked fainted before the pokéballs could be read: checked against the next count.
+    private var unconfirmedFaint: (speciesId: String, stop: TimeInterval)?
     private var goAt: TimeInterval?
     /// The lead is known but the countdown hasn't reached GO: its clock waits.
     private var awaitingGo = false
@@ -95,6 +105,18 @@ public struct BattleAutomation: Sendable {
         previousReadTime = lastTime
         lastTime = read.time
         let t = read.time
+        if let n = read.opponentAlive {
+            if let before = opponentAlive, n < before { aliveDroppedAt = t }
+            opponentAlive = n
+            opponentAliveAt = t
+            if let f = unconfirmedFaint, !stopped {
+                unconfirmedFaint = nil
+                if aliveDroppedAt < f.stop - Self.faintBallLead {
+                    tracker.markNotFainted(f.speciesId)
+                    note("\(name(f.speciesId)) switched out, not fainted: \(n) pokéballs still red")
+                }
+            }
+        }
         if awaitingGo, let go = goAt, t >= go {
             // GO itself wasn't read, but the countdown said when it would be.
             awaitingGo = false
@@ -255,6 +277,10 @@ public struct BattleAutomation: Sendable {
         buttonsBackAt = nil
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
+        opponentAlive = nil
+        opponentAliveAt = -.infinity
+        aliveDroppedAt = -.infinity
+        unconfirmedFaint = nil
         guard !tracker.team.isEmpty else { return }
         tracker = OpponentTracker(data: data)
         log = []
@@ -292,7 +318,14 @@ public struct BattleAutomation: Sendable {
         let assumed = assumedFastMoves[speciesId]
             ?? data.species[speciesId]?.recommendedMoveset.first ?? data.species[speciesId]?.fastMoves.first
         let duringStop = stopped || t - resumedAt < Self.afterStopWindow
-        let theirsFainted = tracker.active != nil && duringStop && !opponentThrewThisStop
+        var theirsFainted = tracker.active != nil && duringStop && !opponentThrewThisStop
+        // Their pokéballs settle it when they're readable: a ball gone dark around the stop is
+        // a faint; none, with the balls read since, a switch (Corviknight for Turtonator 0.26s
+        // after your charged move: still 3 red, so it stays on the bench with its energy).
+        let ballFaint = aliveDroppedAt > lastStopAt - Self.faintBallLead
+        if tracker.active != nil, duringStop, ballFaint || opponentAliveAt > lastStopAt {
+            theirsFainted = ballFaint
+        }
         // A switch that shows as the battle restarts after a charged move (anyone's, tie or
         // not) was chosen as it ended: it's free and starts at the restart (Sableye after
         // Marowak's Rock Slide and yours, 0.25s after the buttons). One that shows later was
@@ -305,6 +338,9 @@ public struct BattleAutomation: Sendable {
             // The clock stays as the screen says: if the battle is still stopped, the new
             // Pokémon's first fast move starts when it resumes, so it comes in at 0.
             note("\(name(tracker.active?.speciesId)) fainted or switched out")
+            if let id = tracker.active?.speciesId, !ballFaint, opponentAlive != nil {
+                unconfirmedFaint = (id, lastStopAt)
+            }
             tracker.markActiveFainted(at: time)
         }
         // A name change during a stop is a faint replacement or a switch right after their

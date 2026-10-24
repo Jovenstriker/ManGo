@@ -395,3 +395,22 @@ private struct Screen {
     // 38 + 2 Shadow Claws by your throw after 2 Thunder Shocks.
     #expect(mimikyuAtYourThrow == 54)
 }
+
+/// Saved by the phone (vs Corviknight, Turtonator, Mimikyu): two quick switches that the
+/// screen text alone took for faints. Their pokéballs stayed red, so both stay on the
+/// bench with their energy; Corviknight's real faint at 2:19 darkens one.
+@Test func replayPhoneBattleBenchFromPokeballs() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-23-192858")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var benchAt: [Int: [String]] = [:]
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        for mark in [50, 115, 150] where benchAt[mark] == nil && read.time >= Double(mark) {
+            benchAt[mark] = tracker.team.filter { $0.speciesId != tracker.active?.speciesId && !$0.isFainted }.map(\.speciesId)
+        }
+    }
+    #expect(benchAt[50] == ["corviknight"])   // switched out for Turtonator at 0:45.7
+    #expect(benchAt[115] == ["turtonator"])   // switched back at 1:40.6
+    #expect(benchAt[150] == ["turtonator"])   // Corviknight fainted; Mimikyu in
+}

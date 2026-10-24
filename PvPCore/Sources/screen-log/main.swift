@@ -45,10 +45,25 @@ func zone(_ box: CGRect) -> String {
 
 if let ballsFixture {
     var reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: ballsFixture)))
+    // The buttons are checked between reads too, as the phone does on every frame: here
+    // 20 times a second (or at the video's own rate if lower).
+    let fps = Double(try await asset.loadTracks(withMediaType: .video).first?.load(.nominalFrameRate) ?? 20)
+    let step = 1 / min(20, max(1, fps))
+    var previous = 0.0
     for i in reads.indices {
         let image = try await generator.image(at: CMTime(seconds: reads[i].time, preferredTimescale: 600)).image
         reads[i].opponentAlive = NameBoxBalls.alive(in: image)
         reads[i].buttonFill = ChargeButtons.fill(in: image)
+        var trace: [[Double]] = []
+        var t = previous + step
+        while t < reads[i].time {
+            let frame = try await generator.image(at: CMTime(seconds: t, preferredTimescale: 600)).image
+            if let f = ChargeButtons.fill(in: frame) { trace.append([t, f[0], f[1]]) }
+            t += step
+        }
+        if let f = reads[i].buttonFill { trace.append([reads[i].time, f[0], f[1]]) }
+        reads[i].fillTrace = trace
+        previous = reads[i].time
     }
     let encoder = JSONEncoder()
     encoder.outputFormatting = .sortedKeys

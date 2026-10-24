@@ -25,6 +25,8 @@ final class SampleHandler: RPBroadcastSampleHandler {
     /// `BroadcastChannel.idleSince`, checked at most 4 times a second.
     private var idleSince: TimeInterval?
     private var idleCheckedAt: CFTimeInterval = -.infinity
+    /// Your buttons' fill on each frame since the last read: [time, left, right].
+    private var fillTrace: [[Double]] = []
     #if DEBUG
     private let recorder = BattleRecorder()
     #endif
@@ -42,13 +44,24 @@ final class SampleHandler: RPBroadcastSampleHandler {
             idleSince = BroadcastChannel.idleSince
             idleCheckedAt = now
         }
+        let idle = idleSince != nil
         #if DEBUG
         let record = !finished
-        let idle = idleSince != nil
         lock.unlock()
         if record { recorder.append(sampleBuffer, at: now, idle: idle) }
         lock.lock()
         #endif
+        // The buttons are checked on every frame during a battle: a few thousand pixels, no
+        // text reading, so your fast moves can be timed to the frame.
+        if !idle, !finished {
+            lock.unlock()
+            let fill = CMSampleBufferGetImageBuffer(sampleBuffer).flatMap { ChargeButtons.fill(in: $0) }
+            lock.lock()
+            if let fill {
+                fillTrace.append([now, fill[0], fill[1]])
+                if fillTrace.count > 240 { fillTrace.removeFirst(fillTrace.count - 240) }
+            }
+        }
         guard !busy, !finished, now - lastRead >= interval else {
             lock.unlock()
             return
@@ -90,6 +103,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
             read.readSeconds = CACurrentMediaTime() - started
             read.opponentAlive = NameBoxBalls.alive(in: pixels)
             read.buttonFill = ChargeButtons.fill(in: pixels)
+            self?.lock.lock()
+            read.fillTrace = self?.fillTrace
+            self?.fillTrace = []
+            self?.lock.unlock()
             if let memory = MemoryUsage.current() {
                 read.memoryMB = memory.now
                 read.peakMemoryMB = memory.peak

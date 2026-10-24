@@ -74,6 +74,9 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     public var opponentAlive: Int?
     /// How full your charged move buttons are, left then right (0–1): see ChargeButtons.
     public var buttonFill: [Double]?
+    /// The buttons' fill on every frame since the previous read, as [time, left, right]:
+    /// checking them needs no text reading, so it runs far more often than reads do.
+    public var fillTrace: [[Double]]?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

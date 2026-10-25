@@ -414,3 +414,20 @@ private struct Screen {
     #expect(benchAt[115] == ["turtonator"])   // switched back at 1:40.6
     #expect(benchAt[150] == ["turtonator"])   // Corviknight fainted; Mimikyu in
 }
+
+/// Saved by the phone: you threw Dynamic Punch, Galarian Stunfisk blocked it and threw
+/// Earthquake (65) in the same stop. Without its Mud Shot in progress it had 62, so it
+/// wasn't the same turn as yours: the Mud Shot counts.
+@Test func replayPhoneBattleThrowAfterYoursNotSameTurn() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-24-172648")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var beforeEarthquake: Int?
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        if beforeEarthquake == nil, read.time >= 110.5, let line = automation.log.last(where: { $0.contains("used Earthquake (") && $0.contains("→ 6") }) {
+            beforeEarthquake = line.contains("(71 → 6)") ? 71 : 0
+        }
+    }
+    #expect(beforeEarthquake == 71)
+}

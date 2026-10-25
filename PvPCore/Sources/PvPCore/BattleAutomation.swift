@@ -194,6 +194,10 @@ public struct BattleAutomation: Sendable {
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
                 sameTurnAsYours(&tracker)
+                let short = tracker.snapshot(at: t).energy
+                if tracker.restoreInProgress(ifShortOf: move.energy, at: t) {
+                    note("\(name(tracker.active?.speciesId)) couldn't afford \(move.name) without its fast move in progress: it threw after yours, not on the same turn (\(short) → \(tracker.snapshot(at: t).energy))")
+                }
                 if playerChargedThisStop { opponentThrewAfterYours = true }
                 // A throw the assumed fast move couldn't have afforded means it's another one.
                 if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {

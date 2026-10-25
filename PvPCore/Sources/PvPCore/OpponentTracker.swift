@@ -92,8 +92,10 @@ public struct OpponentTracker: Sendable {
     private var pausedTotal: TimeInterval = 0
     /// Battle time of the opponent's last charged move; a switch right after it is free.
     private var lastChargedMoveAt: TimeInterval?
-    /// What your charged move this stop added for their fast move in progress, and to whom.
+    /// What your charged move this stop added for their fast move in progress, and to whom;
+    /// and what `opponentThrewOnSameTurn` took back, in case their move shows it shouldn't.
     private var inProgressBonus: (index: Int, energy: Int)?
+    private var takenBack: (index: Int, energy: Int)?
 
     public init(data: GameData) {
         self.data = data
@@ -255,11 +257,28 @@ public struct OpponentTracker: Sendable {
     public mutating func opponentThrewOnSameTurn() {
         guard let (i, bonus) = inProgressBonus, i == activeIndex else { return }
         inProgressBonus = nil
+        takenBack = (i, bonus)
         if team[i].stint.map({ $0.yourChargedMoves > 0 }) == true { team[i].stint?.yourChargedMoves -= 1 }
         team[i].bankedEnergy = max(0, team[i].bankedEnergy - bonus)
         if let last = team[i].history.indices.last, team[i].history[last].interrupted {
             team[i].history[last].interrupted = false
         }
+    }
+
+    /// Their charged move turned out to cost more than they'd have without the fast move
+    /// `opponentThrewOnSameTurn` took back: so it wasn't the same turn as yours. They were
+    /// partway through a fast move when you threw, it landed, and they threw straight after
+    /// yours. Puts it back. (Galarian Stunfisk's Earthquake (65) after your blocked Dynamic
+    /// Punch: 62 without its Mud Shot in progress, 71 with it.) Returns whether it did.
+    @discardableResult
+    public mutating func restoreInProgress(ifShortOf cost: Int, at now: TimeInterval) -> Bool {
+        guard let (i, bonus) = takenBack, i == activeIndex else { return false }
+        takenBack = nil
+        guard energy(of: team[i], atBattleTime: battleTime(at: now)) < cost else { return false }
+        team[i].stint?.yourChargedMoves += 1
+        team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + bonus)
+        if let last = team[i].history.indices.last { team[i].history[last].interrupted = true }
+        return true
     }
 
     /// Your Pokémon fainted in this stop: their next switch is a choice and costs a turn,
@@ -335,6 +354,7 @@ public struct OpponentTracker: Sendable {
         pausedTotal += now - p
         pausedAt = nil
         inProgressBonus = nil
+        takenBack = nil
     }
 
     /// Manually corrects the active opponent's energy (e.g. after a missed event).

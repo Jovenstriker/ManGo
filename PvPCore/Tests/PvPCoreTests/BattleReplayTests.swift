@@ -431,3 +431,18 @@ private struct Screen {
     }
     #expect(beforeEarthquake == 71)
 }
+
+/// Saved by the phone: two Dynamic Punches back to back, both blocked, then Stunfisk's
+/// Earthquake tied with the second. The Mud Shot counted at the first stays: 70 all through
+/// the shield prompt, not 61.
+@Test func replayPhoneBattleTieWithYourSecondChargedMove() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-24-214129")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var lowest = Int.max
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        if read.time >= 89, read.time < 105 { lowest = min(lowest, tracker.snapshot(at: read.time).energy) }
+    }
+    #expect(lowest == 70)
+}

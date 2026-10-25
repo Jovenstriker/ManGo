@@ -231,6 +231,12 @@ public struct OpponentTracker: Sendable {
     /// Safe to call after `pause(at:)`: the clock is frozen at the pause.
     public mutating func playerThrewChargedMove(at now: TimeInterval) {
         pause(at: now)
+        // Only your latest charged move's fast move in progress can be taken back by a tie:
+        // a second one straight after (no time between) adds none, and ties with theirs on
+        // its own. (Two Dynamic Punches in a row, then Stunfisk's Earthquake tied with the
+        // second: the Mud Shot from the first stays.)
+        inProgressBonus = nil
+        takenBack = nil
         // Their switch right after is free only if their charged move came last.
         lastChargedMoveAt = nil
         guard let i = activeIndex, let fast = team[i].fastMove, let start = team[i].chainStart else { return }

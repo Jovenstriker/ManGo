@@ -18,10 +18,11 @@ for reads in "$TMP"/*.reads.jsonl; do
   name=$(basename "$reads" .reads.jsonl)
   echo "$name" >> "$TMP/pulled.txt"
   [ -e "$F/$name.json" ] && continue
-  cp "$TMP/$name.mp4" "Test Videos/$name.mp4"
+  # A battle cut off mid-recording has reads but no playable video.
+  [ -s "$TMP/$name.mp4" ] && cp "$TMP/$name.mp4" "Test Videos/$name.mp4" || echo "$name: no playable video (cut off mid-battle), reads only"
   # One read per line -> the JSON array the replay tests and battle-report read.
   python3 -c 'import json,sys; print(json.dumps([json.loads(l) for l in open(sys.argv[1]) if l.strip()], separators=(",",":")))' "$reads" > "$F/$name.json"
-  echo "Test Videos/$name.mp4 and $F/$name.json"
+  echo "$F/$name.json"
 done
 if [ -s "$TMP/pulled.txt" ]; then
   xcrun devicectl device copy to --device "$DEVICE" --domain-type appDataContainer \

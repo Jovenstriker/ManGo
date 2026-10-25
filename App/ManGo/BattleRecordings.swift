@@ -20,6 +20,16 @@ enum BattleRecordings {
             for f in items where !f.hasDirectoryPath {
                 try? fm.moveItem(at: f, to: folder.appendingPathComponent(f.lastPathComponent))
             }
+            // A recording still "in progress" but untouched for a minute was cut off (the
+            // broadcast stopped, or a new build was installed): its video can't play, but its
+            // reads are good up to the cut, so it's collected too.
+            let inProgress = shared.appendingPathComponent("in progress", isDirectory: true)
+            for f in (try? fm.contentsOfDirectory(at: inProgress, includingPropertiesForKeys: [.contentModificationDateKey])) ?? [] {
+                let modified = (try? f.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+                if Date.now.timeIntervalSince(modified) > 60 {
+                    try? fm.moveItem(at: f, to: folder.appendingPathComponent(f.lastPathComponent))
+                }
+            }
         }
         let pulled = folder.appendingPathComponent("pulled.txt")
         if let names = try? String(contentsOf: pulled, encoding: .utf8) {
@@ -30,14 +40,15 @@ enum BattleRecordings {
             try? fm.removeItem(at: pulled)
         }
         // Named by when they started, so newest sorts first.
-        let videos = ((try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? [])
-            .filter { $0.pathExtension == "mp4" }
-            .sorted { $0.lastPathComponent > $1.lastPathComponent }
-        for old in videos.dropFirst(keep) {
-            try? fm.removeItem(at: old)
-            try? fm.removeItem(at: old.deletingPathExtension().appendingPathExtension("reads.jsonl"))
+        let battles = ((try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? [])
+            .filter { $0.lastPathComponent.hasSuffix(".reads.jsonl") }
+            .map { String($0.lastPathComponent.dropLast(".reads.jsonl".count)) }
+            .sorted(by: >)
+        for old in battles.dropFirst(keep) {
+            try? fm.removeItem(at: folder.appendingPathComponent(old + ".mp4"))
+            try? fm.removeItem(at: folder.appendingPathComponent(old + ".reads.jsonl"))
         }
-        return min(videos.count, keep)
+        return min(battles.count, keep)
     }
 }
 #endif

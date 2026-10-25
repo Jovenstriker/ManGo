@@ -351,7 +351,7 @@ public struct BattleAutomation: Sendable {
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
         if yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
-        tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free)
+        tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free, seenAt: isLead ? nil : since)
         if isLead, goAt == nil {
             // Named before the countdown's GO (from "Go, X!"): nothing happens until then.
             tracker.pause(at: time)

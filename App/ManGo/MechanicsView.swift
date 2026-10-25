@@ -64,6 +64,7 @@ struct MechanicsView: View {
                     bullet("Charged moves: \"Attack incoming!\" and the \"X used Y!\" banner for theirs, \"Get Ready!\" for yours.")
                     bullet("Start and end: the countdown's \"GO\" (the first turn begins a moment after it appears), and \"YOU WIN!\" / \"GOOD EFFORT!\". If lag skips the countdown, it starts when your buttons appear.")
                     bullet("Switches: a new name in the top-right box. ManGo works out whether it cost a turn from whether there was a charged move or a faint in the stop, and how soon after the restart the name showed.")
+                    bullet("Their energy can never rise faster than their fast move allows: one move per move's length since ManGo saw that Pokémon come in, plus one for each of your charged moves, on top of what it came in with.")
                     bullet("The screen is read 4 times a second, so ManGo back-dates when the battle stopped and restarted. Their charged moves always start as a fast move finishes, which it uses to correct its timing.")
                     bullet("Between battles it reads every 2 seconds, and stops after 3 minutes without a new battle.")
                 } header: {

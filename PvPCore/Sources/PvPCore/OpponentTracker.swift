@@ -31,7 +31,24 @@ public struct OpponentTracker: Sendable {
         public var chargedMovesThrown: [Thrown] = []
         /// Energy the history starts from (0, or what `setEnergy` set).
         public var historyBase = 0
+        /// Since it last came in: for the cap on how fast its energy can rise.
+        public var stint: Stint?
     }
+
+    /// A Pokémon's time in since it last came in. Its energy can't rise faster than its
+    /// fast move allows: one move per move's length of play since it was seen coming in,
+    /// plus one for each of your charged moves (the move in progress, or one sneaked in on
+    /// it), on top of what it came in with and less what it has thrown.
+    public struct Stint: Sendable, Hashable {
+        /// Battle time it was seen coming in (less `seenSlack`), plus its switch turn.
+        public var start: TimeInterval
+        public var entryEnergy: Int
+        public var spent = 0
+        public var yourChargedMoves = 0
+    }
+
+    /// The cap starts this much before a switch is seen: the name shows a moment after.
+    static let seenSlack: TimeInterval = 0.25
 
     /// A stretch of back-to-back fast moves, ended by a charged move or a switch.
     public struct Stretch: Sendable, Hashable {
@@ -100,7 +117,8 @@ public struct OpponentTracker: Sendable {
     /// recommended one), so counting starts without a tap. `identifyFastMove` corrects it.
     /// `freeSwitch` makes the switch take 0 turns, e.g. right after a faint.
     public mutating func setActive(
-        speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false
+        speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false,
+        seenAt: TimeInterval? = nil
     ) {
         let t = battleTime(at: now)
         let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
@@ -137,6 +155,11 @@ public struct OpponentTracker: Sendable {
         }
         if let i = activeIndex, team[i].fastMove != nil {
             team[i].chainStart = t + Double(switchTurns) * turnDuration
+        }
+        if let i = activeIndex {
+            // Timed from when it was seen, so a clock started too early can't add energy.
+            let seen = seenAt.map { max(t, battleTime(at: $0) - Self.seenSlack) } ?? t
+            team[i].stint = Stint(start: seen + Double(switchTurns) * turnDuration, entryEnergy: team[i].bankedEnergy)
         }
     }
 
@@ -180,6 +203,7 @@ public struct OpponentTracker: Sendable {
         let t = battleTime(at: now)
         let current = energy(of: team[i], atBattleTime: t)
         team[i].bankedEnergy = max(0, current - move.energy)
+        team[i].stint?.spent += min(current, move.energy)
         closeStretch(i, at: t)
         team[i].chargedMovesThrown.append(Thrown(afterStretch: team[i].history.count, cost: move.energy))
         if team[i].chainStart != nil { team[i].chainStart = t }
@@ -214,8 +238,10 @@ public struct OpponentTracker: Sendable {
         if t > start + 1e-6 {
             let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
             let withFinished = min(maxEnergy, team[i].bankedEnergy + finished * fast.energyGain)
-            team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain)
-            inProgressBonus = (i, team[i].bankedEnergy - withFinished)
+            team[i].stint?.yourChargedMoves += 1
+            team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain,
+                                       Self.cap(team[i], atBattleTime: t) ?? maxEnergy)
+            inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished))
             closeStretch(i, at: t, interrupted: true)
         }
         team[i].chainStart = max(t, start)
@@ -229,6 +255,7 @@ public struct OpponentTracker: Sendable {
     public mutating func opponentThrewOnSameTurn() {
         guard let (i, bonus) = inProgressBonus, i == activeIndex else { return }
         inProgressBonus = nil
+        if team[i].stint.map({ $0.yourChargedMoves > 0 }) == true { team[i].stint?.yourChargedMoves -= 1 }
         team[i].bankedEnergy = max(0, team[i].bankedEnergy - bonus)
         if let last = team[i].history.indices.last, team[i].history[last].interrupted {
             team[i].history[last].interrupted = false
@@ -454,6 +481,14 @@ public struct OpponentTracker: Sendable {
         let moves = max(0, t - start) / moveDuration
         // Small epsilon so a time landing exactly on a boundary counts that move as finished.
         let completed = Int((moves + 1e-9).rounded(.down))
-        return min(maxEnergy, p.bankedEnergy + completed * fast.energyGain)
+        return min(maxEnergy, p.bankedEnergy + completed * fast.energyGain, Self.cap(p, atBattleTime: t) ?? maxEnergy)
+    }
+
+    /// The most energy `p` can physically have at battle time `t` this stint (see Stint).
+    static func cap(_ p: Pokemon, atBattleTime t: TimeInterval) -> Int? {
+        guard let s = p.stint, let fast = p.fastMove else { return nil }
+        let moveDuration = Double(fast.turns) * turnDuration
+        let moves = Int((max(0, t - s.start) / moveDuration + 1e-9).rounded(.down)) + s.yourChargedMoves
+        return max(0, s.entryEnergy - s.spent + moves * fast.energyGain)
     }
 }

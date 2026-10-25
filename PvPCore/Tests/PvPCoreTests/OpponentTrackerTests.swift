@@ -233,3 +233,18 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(rec.charged.map(\.moveId) == ["CROSS_CHOP"])
     #expect(rec.charged.map(\.energy) == [35])
 }
+
+@Test func energyCantRiseFasterThanTheFastMoveSinceItWasSeen() throws {
+    // Its clock was started 2s before it was seen coming in (a back-dated switch): Counter
+    // is 2 turns, so by 3s it can have finished one since it was seen (1.75s, with the
+    // slack), not three.
+    var t = try makeTracker()
+    t.setActive(speciesId: "medicham", at: 0)
+    t.identifyFastMove("COUNTER", at: 0)
+    t.setActive(speciesId: "azumarill", at: 1)
+    t.setActive(speciesId: "medicham", at: 1, freeSwitch: true, seenAt: 3)
+    #expect(t.snapshot(at: 4).energy == 6 + 6)   // 6 banked from before, + 1 Counter
+    // Your charged move allows the one in progress on top.
+    t.playerThrewChargedMove(at: 4)
+    #expect(t.snapshot(at: 4).energy == 6 + 12)
+}

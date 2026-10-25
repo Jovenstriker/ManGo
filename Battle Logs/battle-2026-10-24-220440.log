@@ -44,6 +44,7 @@ OPPONENT CHARGED MOVES
 
 SUMMARY
   1 of 1 hand-counted charged moves match ManGo's fast move count exactly.
+  0 thrown with less energy than they cost (by ManGo's count).
   2 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
@@ -79,4 +80,4 @@ TIMELINE (what the screen reader saw and did)
   2:18.56  Opponent: Melmetal
   2:19.36    running  Melmetal at 0
   2:26.22    stopped  Melmetal at 54
-  2:27.85  Your Pokémon fainted: Melmetal 54 → 54 (the fast move that knocked it out landed)
+  2:27.85  Your Pokémon fainted: Melmetal 54 → 63 (the fast move that knocked it out landed)

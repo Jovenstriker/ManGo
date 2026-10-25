@@ -37,6 +37,7 @@ if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
 if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
 if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
 if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
+if let off = env["RULES_OFF"] { Rules.disabled = Set(off.split(separator: ",").map(String.init)) }
 if env["HIT_TEXT"] == "0" { automation.useFirstHitText = false }
 if env["HIT_COUNT"] == "1" { automation.useHitCount = true }
 var tracker = OpponentTracker(data: data)
@@ -132,6 +133,7 @@ for (i, t) in throwsSeen.enumerated() {
 out.append("")
 out.append("SUMMARY")
 out.append("  \(matches) of \(checked) hand-counted charged moves match ManGo's fast move count exactly.")
+out.append("  \(throwsSeen.filter { $0.before < $0.move.energy }.count) thrown with less energy than they cost (by ManGo's count).")
 if throwsSeen.count > checked { out.append("  \(throwsSeen.count - checked) not hand-counted.") }
 out.append("")
 out.append("TIMELINE (what the screen reader saw and did)")

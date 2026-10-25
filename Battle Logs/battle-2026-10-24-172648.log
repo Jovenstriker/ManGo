@@ -38,11 +38,12 @@ OPPONENT CHARGED MOVES
        calc: 100 = 0 left before + 11 × 9 (Mud Shot) + 1 (capped/partial); after: 100 − 65 = 35
   3  1:50.59  Stunfisk (Galarian)   Earthquake (65)           71 → 6        4           ?     -
        calc: 71 = 35 left before + 4 × 9 (Mud Shot); after: 71 − 65 = 6
-  4  3:00.79  Hydreigon (Shadow)    Brutal Swing (35)         45 → 10       10          ?     -
-       calc: 45 = 5 left before + 10 × 4 (Dragon Breath); after: 45 − 35 = 10
+  4  3:00.79  Hydreigon (Shadow)    Brutal Swing (35)         41 → 6        9           ?     -
+       calc: 41 = 5 left before + 9 × 4 (Dragon Breath); after: 41 − 35 = 6
 
 SUMMARY
   0 of 0 hand-counted charged moves match ManGo's fast move count exactly.
+  0 thrown with less energy than they cost (by ManGo's count).
   4 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
@@ -79,13 +80,13 @@ TIMELINE (what the screen reader saw and did)
   2:26.27  You threw a charged move: Melmetal 27 → 36 (its fast move in progress counts)
   2:35.86    running  Melmetal at 36
   2:36.92  Opponent: Hydreigon (Shadow)
-  2:39.68    stopped  Hydreigon (Shadow) at 33
-  2:41.28  Your Pokémon fainted: Hydreigon (Shadow) 33 → 33 (the fast move that knocked it out landed)
-  2:52.23    running  Hydreigon (Shadow) at 37
-  2:53.60    stopped  Hydreigon (Shadow) at 45
-  3:00.79  Hydreigon (Shadow) used Brutal Swing (45 → 10)
-  3:05.85    running  Hydreigon (Shadow) at 10
-  3:09.64    stopped  Hydreigon (Shadow) at 38
+  2:39.68    stopped  Hydreigon (Shadow) at 29
+  2:41.28  Your Pokémon fainted: Hydreigon (Shadow) 29 → 33 (the fast move that knocked it out landed)
+  2:52.23    running  Hydreigon (Shadow) at 33
+  2:53.60    stopped  Hydreigon (Shadow) at 41
+  3:00.79  Hydreigon (Shadow) used Brutal Swing (41 → 6)
+  3:05.85    running  Hydreigon (Shadow) at 6
+  3:09.64    stopped  Hydreigon (Shadow) at 34
   3:10.69  Hydreigon (Shadow) fainted or switched out
   3:10.69  Opponent: Melmetal
   3:12.30    running  Melmetal at 45

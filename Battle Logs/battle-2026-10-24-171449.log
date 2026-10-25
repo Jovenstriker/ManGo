@@ -47,6 +47,7 @@ OPPONENT CHARGED MOVES
 
 SUMMARY
   0 of 0 hand-counted charged moves match ManGo's fast move count exactly.
+  0 thrown with less energy than they cost (by ManGo's count).
   6 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
@@ -84,12 +85,12 @@ TIMELINE (what the screen reader saw and did)
   2:27.75  You threw a charged move: Turtonator 0 → 20 (its fast move in progress counts)
   2:37.96    running  Turtonator at 20
   2:43.12  Opponent: Corviknight
-  2:46.12    stopped  Corviknight at 48
-  2:47.72  Your Pokémon fainted: Corviknight 48 → 48 (the fast move that knocked it out landed)
-  2:52.78  You threw a charged move: Corviknight 48 → 48 (its fast move in progress counts)
-  3:02.40    running  Corviknight at 48
-  3:02.93    stopped  Corviknight at 52
-  3:03.73  You threw a charged move: Corviknight 52 → 56 (its fast move in progress counts)
+  2:46.12    stopped  Corviknight at 44
+  2:47.72  Your Pokémon fainted: Corviknight 44 → 44 (the fast move that knocked it out landed)
+  2:52.78  You threw a charged move: Corviknight 44 → 44 (its fast move in progress counts)
+  3:02.40    running  Corviknight at 44
+  3:02.93    stopped  Corviknight at 48
+  3:03.73  You threw a charged move: Corviknight 48 → 52 (its fast move in progress counts)
   3:14.61  Corviknight fainted or switched out
   3:14.61  Opponent: Turtonator
   3:15.94    running  Turtonator at 40

@@ -127,7 +127,7 @@ public struct BattleAutomation: Sendable {
         lastTime = read.time
         let t = read.time
         if useHitCount { countLeadHits(read, tracker: tracker) }
-        if useFirstHitText { checkLeadStartFromHitText(read, tracker: &tracker) }
+        if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         if let n = read.opponentAlive {
             if let before = opponentAlive, n < before { aliveDroppedAt = t }
             opponentAlive = n
@@ -165,12 +165,12 @@ public struct BattleAutomation: Sendable {
                 note("Battle over")
 
             case .countdown(let goIn):
-                if goAt == nil { goAt = t + goIn + goDelay }
+                if goAt == nil { goAt = t + goIn + (Rules.off("goDelay") ? 0 : goDelay) }
 
             case .battleStarted:
                 // Turn 0, `goDelay` after GO shows. The lead was probably read during the countdown:
                 // its clock restarts then (on the first read after, if that's later than now).
-                let start = t + goDelay
+                let start = t + (Rules.off("goDelay") ? 0 : goDelay)
                 goAt = start
                 if awaitingGo, start <= t {
                     awaitingGo = false
@@ -217,14 +217,14 @@ public struct BattleAutomation: Sendable {
                     tracker.changeForm(to: speciesId)
                     note("Form: \(data.species[speciesId]?.speciesName ?? speciesId)")
                 }
-                sameTurnAsYours(&tracker)
+                if !Rules.off("sameTurn") { sameTurnAsYours(&tracker) }
                 let short = tracker.snapshot(at: t).energy
-                if tracker.restoreInProgress(ifShortOf: move.energy, at: t) {
+                if !Rules.off("restore"), tracker.restoreInProgress(ifShortOf: move.energy, at: t) {
                     note("\(name(tracker.active?.speciesId)) couldn't afford \(move.name) without its fast move in progress: it threw after yours, not on the same turn (\(short) → \(tracker.snapshot(at: t).energy))")
                 }
                 if playerChargedThisStop { opponentThrewAfterYours = true }
                 // A throw the assumed fast move couldn't have afforded means it's another one.
-                if let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
+                if !Rules.off("reconsider"), let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
                 }
                 alignToOpponentChargedMove(&tracker)
@@ -236,12 +236,12 @@ public struct BattleAutomation: Sendable {
 
             case .attackIncoming:
                 // Corrects the count as the battle freezes, not only once the banner names the move.
-                sameTurnAsYours(&tracker)
+                if !Rules.off("sameTurn") { sameTurnAsYours(&tracker) }
                 alignToOpponentChargedMove(&tracker)
 
             case .yourPokemonFainted:
                 yourFaintThisStop = true
-                tracker.opponentsNextSwitchCostsATurn()
+                if !Rules.off("yourFaintTurn") { tracker.opponentsNextSwitchCostsATurn() }
                 guard !opponentThrewThisStop, !playerChargedThisStop else { continue }
                 let before = tracker.snapshot(at: t).energy
                 tracker.yourPokemonFainted()
@@ -250,7 +250,7 @@ public struct BattleAutomation: Sendable {
             case .playerChargedMove:
                 // Their fast move in progress pays out; they start fresh after your move.
                 let before = playerFreezeBeforeCue
-                if t - before > lastStopAt, t - lastStopAt < 2.5, tracker.isPaused {
+                if !Rules.off("runOn"), t - before > lastStopAt, t - lastStopAt < 2.5, tracker.isPaused {
                     // The battle ran on while your fast move finished: move the freeze later.
                     tracker.resume(at: lastStopAt)
                     lastStopAt = t - before
@@ -346,6 +346,7 @@ public struct BattleAutomation: Sendable {
     /// Their charged move started as a fast move finished: the stretch since the battle
     /// restarted holds a whole number of fast moves.
     private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
+        guard !Rules.off("align") else { return }
         let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
         if let back = buttonsBackAt, lastStopAt > resumedAt,
            tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
@@ -409,7 +410,7 @@ public struct BattleAutomation: Sendable {
         // move came after theirs, the switch is still timed from the restart but costs a
         // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
         // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
-        if opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
+        if !Rules.off("freeSwitchBackdate"), opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
             time = max(resumedAt, min(time, back))
         }
         if tracker.active == nil {
@@ -428,7 +429,7 @@ public struct BattleAutomation: Sendable {
         // a faint; none, with the balls read since, a switch (Corviknight for Turtonator 0.26s
         // after your charged move: still 3 red, so it stays on the bench with its energy).
         let ballFaint = aliveDroppedAt > lastStopAt - Self.faintBallLead
-        if tracker.active != nil, duringStop, ballFaint || opponentAliveAt > lastStopAt {
+        if !Rules.off("balls"), tracker.active != nil, duringStop, ballFaint || opponentAliveAt > lastStopAt {
             theirsFainted = ballFaint
         }
         // A switch that shows as the battle restarts after a charged move (anyone's, tie or
@@ -436,7 +437,7 @@ public struct BattleAutomation: Sendable {
         // Marowak's Rock Slide and yours, 0.25s after the buttons). One that shows later was
         // made in play and costs a turn (Turtonator, 1.1s after: 3 Incinerates plus the one
         // in progress, not 4 plus one).
-        let quick = chargedMoveThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
+        let quick = !Rules.off("quickSwitch") && chargedMoveThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
         if quick, let back = buttonsBackAt { time = max(resumedAt, min(time, back)) }
         if theirsFainted {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.
@@ -454,7 +455,7 @@ public struct BattleAutomation: Sendable {
         // After your Pokémon fainted, their switch (theirs still in) is a choice and costs a
         // turn, even straight after their charged move: Mimikyu for Turtonator after its
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
-        if yourFaintThisStop, !theirsFainted { free = false }
+        if !Rules.off("yourFaintTurn"), yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free, seenAt: isLead ? nil : since)
         if isLead, goAt == nil {

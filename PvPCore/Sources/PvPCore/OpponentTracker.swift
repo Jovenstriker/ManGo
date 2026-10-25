@@ -45,6 +45,9 @@ public struct OpponentTracker: Sendable {
         public var entryEnergy: Int
         public var spent = 0
         public var yourChargedMoves = 0
+        /// Their charged moves: each can follow a fast move the screen showed late (the
+        /// "battle restarted before your buttons came back" correction adds it).
+        public var theirChargedMoves = 0
     }
 
     /// The cap starts this much before a switch is seen: the name shows a moment after.
@@ -106,8 +109,6 @@ public struct OpponentTracker: Sendable {
 
     // MARK: Events
 
-    /// How much earlier than a fast move's end a switch-out can be seen and still count it.
-    static let switchTolerance: TimeInterval = 0.2
 
     /// The opponent's lead appeared, they switched, or their next Pokémon came out after a faint.
     /// The outgoing Pokémon keeps its energy. If the incoming fast move is already
@@ -126,18 +127,8 @@ public struct OpponentTracker: Sendable {
         let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
         if let i = activeIndex {
-            // The switch is only seen to within a read: a fast move that would have finished
-            // just after it counts. (Forretress switched as its Volt Switch finished, and the
-            // phone placed the switch a moment early. Mimikyu's 3rd Shadow Claw, 75% done,
-            // didn't count.)
-            var out = t
-            if let fast = team[i].fastMove, let start = team[i].chainStart, t > start {
-                let duration = Double(fast.turns) * turnDuration
-                let finished = ((t - start + Self.switchTolerance) / duration).rounded(.down)
-                out = max(t, start + finished * duration)
-            }
-            team[i].bankedEnergy = energy(of: team[i], atBattleTime: out)
-            closeStretch(i, at: out)
+            team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
+            closeStretch(i, at: t)
             team[i].chainStart = nil
         }
 
@@ -206,6 +197,7 @@ public struct OpponentTracker: Sendable {
         let current = energy(of: team[i], atBattleTime: t)
         team[i].bankedEnergy = max(0, current - move.energy)
         team[i].stint?.spent += min(current, move.energy)
+        team[i].stint?.theirChargedMoves += 1
         closeStretch(i, at: t)
         team[i].chargedMovesThrown.append(Thrown(afterStretch: team[i].history.count, cost: move.energy))
         if team[i].chainStart != nil { team[i].chainStart = t }
@@ -247,7 +239,7 @@ public struct OpponentTracker: Sendable {
             let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
             let withFinished = min(maxEnergy, team[i].bankedEnergy + finished * fast.energyGain)
             team[i].stint?.yourChargedMoves += 1
-            team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + 1) * fast.energyGain,
+            team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + (Rules.off("inProgress") ? 0 : 1)) * fast.energyGain,
                                        Self.cap(team[i], atBattleTime: t) ?? maxEnergy)
             inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished))
             closeStretch(i, at: t, interrupted: true)
@@ -512,9 +504,10 @@ public struct OpponentTracker: Sendable {
 
     /// The most energy `p` can physically have at battle time `t` this stint (see Stint).
     static func cap(_ p: Pokemon, atBattleTime t: TimeInterval) -> Int? {
-        guard let s = p.stint, let fast = p.fastMove else { return nil }
+        guard !Rules.off("cap"), let s = p.stint, let fast = p.fastMove else { return nil }
         let moveDuration = Double(fast.turns) * turnDuration
         let moves = Int((max(0, t - s.start) / moveDuration + 1e-9).rounded(.down)) + s.yourChargedMoves
+            + s.theirChargedMoves + 1  // and the one being corrected for at their next throw
         return max(0, s.entryEnergy - s.spent + moves * fast.energyGain)
     }
 }

@@ -446,3 +446,18 @@ private struct Screen {
     }
     #expect(lowest == 70)
 }
+
+/// Saved by the phone: Galarian Stunfisk's lead started about 1s after GO. Its first Mud
+/// Shot shows as "NOT VERY EFFECTIVE..." over your Altaria, so 5 Mud Shots (45) by its
+/// Rock Slide, not 6.
+@Test func replayPhoneBattleLateLeadFromHitText() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-24-220440")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var beforeRockSlide: Int?
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        if beforeRockSlide == nil, read.time >= 31, read.time < 37 { beforeRockSlide = tracker.snapshot(at: read.time).energy }
+    }
+    #expect(beforeRockSlide == 45)
+}

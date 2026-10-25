@@ -42,6 +42,10 @@ public struct BattleAutomation: Sendable {
     /// (Mud Shot on Altaria, Sand Attack) is a pixel and most are missed. To be tried on
     /// phone-recorded battles, whose bar is measured at full size.
     public var useHitCount = false
+    /// Start the lead's clock later if its first hit on you ("…EFFECTIVE" over your Pokémon)
+    /// shows it began later than GO + `goDelay`.
+    public var useFirstHitText = true
+    private var leadStartChecked = false
     /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
     /// a moment before anyone can attack. (The phone-saved Doublade battle: 7 Shadow Claws,
     /// not 8.) 0.15-0.25s all fit every hand count; with no countdown or GO at all, the
@@ -123,6 +127,7 @@ public struct BattleAutomation: Sendable {
         lastTime = read.time
         let t = read.time
         if useHitCount { countLeadHits(read, tracker: tracker) }
+        if useFirstHitText { checkLeadStartFromHitText(read, tracker: &tracker) }
         if let n = read.opponentAlive {
             if let before = opponentAlive, n < before { aliveDroppedAt = t }
             opponentAlive = n
@@ -267,6 +272,33 @@ public struct BattleAutomation: Sendable {
 
     // MARK: Helpers
 
+    /// "NOT VERY EFFECTIVE..." or "SUPER EFFECTIVE!" over your Pokémon shows their fast move
+    /// landing (not a neutral one): the first after GO came between the last read and this
+    /// one, so their lead began one fast move before. Opponents start at different times:
+    /// Galarian Stunfisk began about 1s after GO (its first Mud Shot on your Altaria between
+    /// 25.96s and 26.24s), so 5 Mud Shots by its Rock Slide, not 6. Only ever starts the lead
+    /// later, and only if the text comes within two of its fast moves of GO.
+    private mutating func checkLeadStartFromHitText(_ read: ScreenRead, tracker: inout OpponentTracker) {
+        guard !leadStartChecked, let go = goAt, !awaitingGo else { return }
+        guard tracker.team.count == 1, lastStopAt < go, !stopped, let fast = tracker.active?.fastMove else {
+            if stopped || tracker.team.count > 1 { leadStartChecked = true }
+            return
+        }
+        let move = Double(fast.turns) * turnDuration
+        guard read.time < go + 2 * move else { leadStartChecked = true; return }
+        let overYou = read.lines.contains { line in
+            NameMatcher.normalize(line.text).contains("effective") && line.box.midX < 0.45
+                && (0.12...0.7).contains(line.box.midY)
+        }
+        guard overYou else { return }
+        leadStartChecked = true
+        let start = previousReadTime - move
+        guard start > go else { return }
+        tracker.setEnergy(0, at: start)
+        let shown = go - goDelay  // when GO appeared
+        note(String(format: "First hit on you %.2f-%.2fs after GO: \(name(tracker.active?.speciesId)) started %.2fs after GO, not %.2fs", previousReadTime - shown, read.time - shown, start - shown, goDelay))
+    }
+
     /// The opponent's fast moves landing on your HP bar in the opening stretch, GO to the
     /// first stop: each drop (held for two frames) is one. Their energy at the stop is then
     /// counted, not timed: the lead's start and the stop are each only seen to within a
@@ -344,6 +376,7 @@ public struct BattleAutomation: Sendable {
         buttonsBackAt = nil
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
+        leadStartChecked = false
         opponentAlive = nil
         opponentAliveAt = -.infinity
         hpRecent = []

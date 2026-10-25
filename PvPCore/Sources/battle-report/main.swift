@@ -37,6 +37,7 @@ if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
 if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
 if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
 if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
+if env["HIT_TEXT"] == "0" { automation.useFirstHitText = false }
 if env["HIT_COUNT"] == "1" { automation.useHitCount = true }
 var tracker = OpponentTracker(data: data)
 var timeline: [String] = []

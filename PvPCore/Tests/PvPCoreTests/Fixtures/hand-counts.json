@@ -161,7 +161,7 @@
       5
     ],
     "notes": {
-      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots: your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s. The stylized GO wasn't read; the countdown's 2 at 22.7s puts it at 24.3s, so Stunfisk started about 1.2s after GO (around when GO ended). Starting the lead at GO + 0.48s fixes this but makes v11's Altaria a Dragon Breath short at the shield prompt (it started about 0.2s after GO), so ManGo keeps 0.2s and this stays a known miss."
+      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that."
     }
   }
 }

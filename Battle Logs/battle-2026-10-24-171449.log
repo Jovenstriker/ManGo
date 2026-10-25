@@ -32,10 +32,10 @@ OPPONENT FAST MOVES ASSUMED (PvPoke recommended)
 
 OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
-  1  0:40.78  Corviknight           Air Cutter (40)           60 → 20       15          ?     -
-       calc: 60 = 0 left before + 15 × 4 (Sand Attack); after: 60 − 40 = 20
-  2  1:06.90  Corviknight           Payback (60)              68 → 8        12          ?     -
-       calc: 68 = 20 left before + 12 × 4 (Sand Attack); after: 68 − 60 = 8
+  1  0:40.78  Corviknight           Air Cutter (40)           56 → 16       14          ?     -
+       calc: 56 = 0 left before + 14 × 4 (Sand Attack); after: 56 − 40 = 16
+  2  1:06.90  Corviknight           Payback (60)              64 → 4        12          ?     -
+       calc: 64 = 16 left before + 12 × 4 (Sand Attack); after: 64 − 60 = 4
   3  2:01.02  Azumarill             Hydro Pump (75)           88 → 13       8           ?     -
        calc: 88 = 0 left before + 8 × 11 (Bubble); after: 88 − 75 = 13
   4  2:18.86  Azumarill             Ice Beam (55)             68 → 13       5           ?     -
@@ -51,17 +51,18 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:24.04  Opponent: Corviknight
-  0:33.59    stopped  Corviknight at 60
-  0:40.78  Corviknight used Air Cutter (60 → 20)
-  0:43.71    running  Corviknight at 20
-  0:45.30    stopped  Corviknight at 32
-  0:45.84  You threw a charged move: Corviknight 32 → 36 (its fast move in progress counts)
-  0:55.92    running  Corviknight at 36
+  0:26.85  First hit on you 0.85-1.13s after GO: Corviknight started 0.35s after GO, not 0.20s
+  0:33.59    stopped  Corviknight at 56
+  0:40.78  Corviknight used Air Cutter (56 → 16)
+  0:43.71    running  Corviknight at 16
+  0:45.30    stopped  Corviknight at 28
+  0:45.84  You threw a charged move: Corviknight 28 → 32 (its fast move in progress counts)
+  0:55.92    running  Corviknight at 32
   0:59.72  Corviknight had finished one more fast move: the battle restarted before your buttons came back
-  0:59.72    stopped  Corviknight at 68
-  1:06.90  Corviknight used Payback (68 → 8)
-  1:09.83    running  Corviknight at 8
-  1:12.03    stopped  Corviknight at 24
+  0:59.72    stopped  Corviknight at 64
+  1:06.90  Corviknight used Payback (64 → 4)
+  1:09.83    running  Corviknight at 4
+  1:12.03    stopped  Corviknight at 20
   1:12.56  Opponent: Azumarill
   1:13.36  You threw a charged move: Azumarill 0 → 11 (its fast move in progress counts)
   1:22.95    running  Azumarill at 11
@@ -83,12 +84,12 @@ TIMELINE (what the screen reader saw and did)
   2:27.75  You threw a charged move: Turtonator 0 → 20 (its fast move in progress counts)
   2:37.96    running  Turtonator at 20
   2:43.12  Opponent: Corviknight
-  2:46.12    stopped  Corviknight at 52
-  2:47.72  Your Pokémon fainted: Corviknight 52 → 52 (the fast move that knocked it out landed)
-  2:52.78  You threw a charged move: Corviknight 52 → 52 (its fast move in progress counts)
-  3:02.40    running  Corviknight at 52
-  3:02.93    stopped  Corviknight at 56
-  3:03.73  You threw a charged move: Corviknight 56 → 60 (its fast move in progress counts)
+  2:46.12    stopped  Corviknight at 48
+  2:47.72  Your Pokémon fainted: Corviknight 48 → 48 (the fast move that knocked it out landed)
+  2:52.78  You threw a charged move: Corviknight 48 → 48 (its fast move in progress counts)
+  3:02.40    running  Corviknight at 48
+  3:02.93    stopped  Corviknight at 52
+  3:03.73  You threw a charged move: Corviknight 52 → 56 (its fast move in progress counts)
   3:14.61  Corviknight fainted or switched out
   3:14.61  Opponent: Turtonator
   3:15.94    running  Turtonator at 40

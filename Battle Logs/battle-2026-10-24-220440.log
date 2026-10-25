@@ -36,7 +36,7 @@ OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
   1  0:37.97  Stunfisk (Galarian)   Rock Slide (45)           54 → 9        6           5     ✗ (+1)
        calc: 54 = 0 left before + 6 × 9 (Mud Shot); after: 54 − 45 = 9
-       note: Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots: your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s. Its first started about 1.2s after GO (the countdown's 2 at 22.7s puts GO at 24.3s; the stylized GO itself wasn't read), so GO + 0.2s gives ManGo a 6th.
+       note: Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots: your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s. The stylized GO wasn't read; the countdown's 2 at 22.7s puts it at 24.3s, so Stunfisk started about 1.2s after GO (around when GO ended). Starting the lead at GO + 0.48s fixes this but makes v11's Altaria a Dragon Breath short at the shield prompt (it started about 0.2s after GO), so ManGo keeps 0.2s and this stays a known miss.
   2  1:05.50  Stunfisk (Galarian)   Rock Slide (45)           81 → 36       8           ?     -
        calc: 81 = 9 left before + 8 × 9 (Mud Shot); after: 81 − 45 = 36
   3  1:49.46  Forretress (Shadow)   Sand Tomb (45)            64 → 19       4           ?     -

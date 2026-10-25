@@ -19,6 +19,11 @@ import PvPCore
 var args = CommandLine.arguments
 let json = args.contains("--json")
 args.removeAll { $0 == "--json" }
+var hpFixture: String?
+if let i = args.firstIndex(of: "--hp"), i + 1 < args.count {
+    hpFixture = args[i + 1]
+    args.removeSubrange(i...(i + 1))
+}
 var ballsFixture: String?
 if let i = args.firstIndex(where: { $0 == "--pixels" || $0 == "--balls" }), i + 1 < args.count {
     ballsFixture = args[i + 1]
@@ -41,6 +46,31 @@ func zone(_ box: CGRect) -> String {
     let v = box.midY < 0.33 ? "top" : box.midY < 0.66 ? "mid" : "bot"
     let h = box.midX < 0.33 ? "L" : box.midX < 0.66 ? "C" : "R"
     return v + "-" + h
+}
+
+if let hpFixture {
+    // Your HP bar on every frame (20 a second) for 15s from the countdown's "2", through the
+    // opening stretch to the first stop; added to each read as hpTrace.
+    var reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: hpFixture)))
+    let two = reads.first { r in r.lines.contains { $0.box.height > 0.12 && $0.text.trimmingCharacters(in: .whitespaces) == "2" } }?.time
+    if let two {
+        var previous = two - 0.05
+        for i in reads.indices where reads[i].time > two && reads[i].time < two + 15 {
+            var trace: [[Double]] = []
+            var t = previous + 0.05
+            while t <= reads[i].time {
+                let frame = try await generator.image(at: CMTime(seconds: t, preferredTimescale: 600)).image
+                if let hp = YourHPBar.measure(in: frame) { trace.append([t, hp.fill, Double(frame.width)]) }
+                t += 0.05
+            }
+            reads[i].hpTrace = trace
+            previous = t - 0.05
+        }
+    }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    print(String(decoding: try encoder.encode(reads), as: UTF8.self))
+    exit(0)
 }
 
 if let ballsFixture {

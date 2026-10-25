@@ -36,6 +36,12 @@ public struct BattleAutomation: Sendable {
     /// back late (Fearow restarted 0.6s before them); otherwise, including when you shield
     /// theirs, the restart is around them (Melmetal's straight-away Double Iron Bash
     /// restarted about when they came back, Ninetales about 0.4s after).
+    /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
+    /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
+    /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
+    /// (Mud Shot on Altaria, Sand Attack) is a pixel and most are missed. To be tried on
+    /// phone-recorded battles, whose bar is measured at full size.
+    public var useHitCount = false
     /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
     /// a moment before anyone can attack. (The phone-saved Doublade battle: 7 Shadow Claws,
     /// not 8.) 0.15-0.25s all fit every hand count; with no countdown or GO at all, the
@@ -90,6 +96,17 @@ public struct BattleAutomation: Sendable {
     /// A switch this soon after the battle resumes counts as part of that stop.
     static let afterStopWindow: TimeInterval = 1.5
 
+    // Your HP bar in the opening stretch: its smoothed level, the lowest it has settled at,
+    // a drop waiting for a second frame, and the time and size of each hit.
+    private var hpRecent: [Double] = []
+    private var hpLowest: Double?
+    private var hpDropSince: TimeInterval?
+    private var leadHits: [(t: TimeInterval, pixels: Double)] = []
+    private var openingDone = false
+    /// A hit counts if your bar drops at least this many pixels and holds for two frames
+    /// (a bar flickers by a pixel).
+    static let hitPixels = 1.5
+
     public init(data: GameData) {
         self.data = data
         parser = BattleScreenParser(data: data)
@@ -105,6 +122,7 @@ public struct BattleAutomation: Sendable {
         previousReadTime = lastTime
         lastTime = read.time
         let t = read.time
+        if useHitCount { countLeadHits(read, tracker: tracker) }
         if let n = read.opponentAlive {
             if let before = opponentAlive, n < before { aliveDroppedAt = t }
             opponentAlive = n
@@ -166,6 +184,7 @@ public struct BattleAutomation: Sendable {
                 let stop = max(t - stopLead, previousReadTime, resumedAt)
                 lastStopAt = stop
                 tracker.pause(at: stop)
+                if goAt != nil { settleLeadFromHits(at: t, tracker: &tracker) }
 
             case .shielded:
                 shieldedThisStop = true
@@ -248,6 +267,50 @@ public struct BattleAutomation: Sendable {
 
     // MARK: Helpers
 
+    /// The opponent's fast moves landing on your HP bar in the opening stretch, GO to the
+    /// first stop: each drop (held for two frames) is one. Their energy at the stop is then
+    /// counted, not timed: the lead's start and the stop are each only seen to within a
+    /// fraction of a second (testV2's Melmetal started right at GO and its Double Iron Bash
+    /// showed 0.8s late; the drops are exactly its 6 Thunder Shocks).
+    private mutating func countLeadHits(_ read: ScreenRead, tracker: OpponentTracker) {
+        guard let go = goAt, !openingDone, !awaitingGo else { return }
+        for sample in read.hpTrace ?? [] where sample.count == 3 {
+            let (t, fill, width) = (sample[0], sample[1], sample[2] > 0 ? sample[2] : 1)
+            guard t > go - 0.3 else { continue }
+            hpRecent.append(fill * width)
+            if hpRecent.count > 3 { hpRecent.removeFirst() }
+            let level = hpRecent.sorted()[hpRecent.count / 2]  // median of 3: no one-frame flicker
+            guard let lowest = hpLowest else { hpLowest = level; continue }
+            if lowest - level >= Self.hitPixels {
+                guard let since = hpDropSince else { hpDropSince = t; continue }
+                leadHits.append((since, lowest - level))
+                hpLowest = level
+                hpDropSince = nil
+            } else {
+                hpDropSince = nil
+                // The bar settling back up after a glint isn't a heal; a higher level only
+                // counts before the first hit (while the bar is still appearing).
+                if leadHits.isEmpty { hpLowest = max(lowest, level) }
+            }
+        }
+    }
+
+    /// At the first stop: the lead's energy from its hits, if they were clear. Their
+    /// rhythm runs from the last hit, so a fast move in progress still counts if you throw.
+    private mutating func settleLeadFromHits(at stop: TimeInterval, tracker: inout OpponentTracker) {
+        guard useHitCount, !openingDone else { return }
+        openingDone = true
+        let hits = leadHits.filter { $0.t <= stop + 0.1 }
+        guard let last = hits.last, tracker.team.count == 1, let fast = tracker.active?.fastMove,
+              let go = goAt, hits.first!.t > go else { return }
+        let before = tracker.snapshot(at: stop).energy
+        // No move finished after the last hit, however late the stop was seen: the clock
+        // restarts within one move of the stop, so one in progress still counts if you threw.
+        let move = Double(fast.turns) * turnDuration
+        tracker.setEnergy(hits.count * fast.energyGain, at: max(last.t, lastStopAt - 0.9 * move))
+        note("\(hits.count) hits on your HP bar: \(name(tracker.active?.speciesId)) had \(before) by the clock, \(tracker.snapshot(at: stop).energy) by its hits")
+    }
+
     /// Their charged move started as a fast move finished: the stretch since the battle
     /// restarted holds a whole number of fast moves.
     private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
@@ -283,6 +346,11 @@ public struct BattleAutomation: Sendable {
         freeSwitchUntil = -.infinity
         opponentAlive = nil
         opponentAliveAt = -.infinity
+        hpRecent = []
+        hpLowest = nil
+        hpDropSince = nil
+        leadHits = []
+        openingDone = false
         aliveDroppedAt = -.infinity
         unconfirmedFaint = nil
         guard !tracker.team.isEmpty else { return }

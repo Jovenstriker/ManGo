@@ -52,6 +52,7 @@ final class BattleRecorder {
         shifted.opponentAlive = read.opponentAlive
         shifted.buttonFill = read.buttonFill
         shifted.fillTrace = read.fillTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }
+        shifted.hpTrace = read.hpTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }
         guard var line = try? JSONEncoder().encode(shifted) else { return }
         line.append(0x0A)
         reads.write(line)

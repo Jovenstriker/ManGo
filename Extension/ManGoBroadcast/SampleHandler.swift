@@ -27,6 +27,11 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private var idleCheckedAt: CFTimeInterval = -.infinity
     /// Your buttons' fill on each frame since the last read: [time, left, right].
     private var fillTrace: [[Double]] = []
+    /// Your HP bar on each frame since the last read: [time, fill]. Its row is found twice
+    /// a second (it moves with your Pokémon); measuring it is cheap.
+    private var hpTrace: [[Double]] = []
+    private var hpBarY: Double?
+    private var hpBarFoundAt: CFTimeInterval = -.infinity
     #if DEBUG
     private let recorder = BattleRecorder()
     #endif
@@ -55,11 +60,20 @@ final class SampleHandler: RPBroadcastSampleHandler {
         // text reading, so your fast moves can be timed to the frame.
         if !idle, !finished {
             lock.unlock()
-            let fill = CMSampleBufferGetImageBuffer(sampleBuffer).flatMap { ChargeButtons.fill(in: $0) }
+            let pixels = CMSampleBufferGetImageBuffer(sampleBuffer)
+            let fill = pixels.flatMap { ChargeButtons.fill(in: $0) }
+            let relocate = now - hpBarFoundAt > 0.5
+            let hp = pixels.flatMap { YourHPBar.measure(in: $0, atY: relocate ? nil : hpBarY) }
+            let width = pixels.map { Double(CVPixelBufferGetWidth($0)) } ?? 0
             lock.lock()
             if let fill {
                 fillTrace.append([now, fill[0], fill[1]])
                 if fillTrace.count > 240 { fillTrace.removeFirst(fillTrace.count - 240) }
+            }
+            if relocate { hpBarFoundAt = now; hpBarY = hp?.y }
+            if let hp {
+                hpTrace.append([now, hp.fill, width])
+                if hpTrace.count > 240 { hpTrace.removeFirst(hpTrace.count - 240) }
             }
         }
         guard !busy, !finished, now - lastRead >= interval else {
@@ -106,6 +120,8 @@ final class SampleHandler: RPBroadcastSampleHandler {
             self?.lock.lock()
             read.fillTrace = self?.fillTrace
             self?.fillTrace = []
+            read.hpTrace = self?.hpTrace
+            self?.hpTrace = []
             self?.lock.unlock()
             if let memory = MemoryUsage.current() {
                 read.memoryMB = memory.now

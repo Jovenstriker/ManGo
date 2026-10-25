@@ -77,6 +77,10 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     /// The buttons' fill on every frame since the previous read, as [time, left, right]:
     /// checking them needs no text reading, so it runs far more often than reads do.
     public var fillTrace: [[Double]]?
+    /// Your HP bar's fill on frames since the previous read, as [time, fill, frame width
+    /// in pixels]: fill is a fraction of the width. Its first drop after GO is the
+    /// opponent's first fast move landing.
+    public var hpTrace: [[Double]]?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

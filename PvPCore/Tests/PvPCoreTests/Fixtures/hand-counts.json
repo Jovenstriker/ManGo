@@ -153,5 +153,15 @@
     "notes": {
       "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pokéballs stayed red (opponentAlive added from the video with screen-log --balls)."
     }
+  },
+  "battle-2026-10-24-220440": {
+    "video": "Test Videos/battle-2026-10-24-220440.mp4",
+    "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Stunfisk (Galarian), Forretress (Shadow), Melmetal.",
+    "counts": [
+      5
+    ],
+    "notes": {
+      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots: your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s. Its first started about 1.2s after GO (the countdown's 2 at 22.7s puts GO at 24.3s; the stylized GO itself wasn't read), so GO + 0.2s gives ManGo a 6th."
+    }
   }
 }

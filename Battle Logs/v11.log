@@ -69,7 +69,7 @@ TIMELINE (what the screen reader saw and did)
   1:16.00    stopped  Mimikyu at 48
   1:16.50  Mimikyu had finished one more fast move: the battle restarted before your buttons came back
   1:24.00  Mimikyu used Shadow Sneak (56 → 6)
-  1:27.00  You threw a charged move: Mimikyu 6 → 6 (its fast move in progress counts)
+  1:27.00  You threw a charged move: Mimikyu 6 → 14 (its fast move in progress counts)
   1:39.25  Mimikyu fainted or switched out
   1:39.25  Opponent: Altaria
   1:39.75    running  Altaria at 18
@@ -96,7 +96,7 @@ TIMELINE (what the screen reader saw and did)
   3:07.00  You threw a charged move: Altaria 59 → 63 (its fast move in progress counts)
   3:17.00  Altaria threw on the same turn as you: no fast move in progress (63 → 59)
   3:24.00  Altaria used Flamethrower (59 → 4)
-  3:29.50  You threw a charged move: Altaria 4 → 4 (its fast move in progress counts)
+  3:29.50  You threw a charged move: Altaria 4 → 8 (its fast move in progress counts)
   3:41.00  Opponent: Empoleon
   3:41.25    running  Empoleon at 0
   3:42.75    stopped  Empoleon at 8

@@ -259,7 +259,7 @@ public struct BattleAutomation: Sendable {
                 chargedMoveThisStop = true
                 playerChargedThisStop = true
                 let energyBefore = tracker.snapshot(at: t).energy
-                tracker.playerThrewChargedMove(at: t)
+                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: opponentThrewThisStop)
                 if tracker.active != nil {
                     note("You threw a charged move: \(name(tracker.active?.speciesId)) \(energyBefore) → \(tracker.snapshot(at: t).energy) (its fast move in progress counts)")
                 }
@@ -451,6 +451,9 @@ public struct BattleAutomation: Sendable {
         }
         // A name change during a stop is a faint replacement or a switch right after their
         // charged move: both take 0 turns, as does a quick switch (above).
+        // Switching out right after the stop: they chose the switch, not a fast move, on the
+        // turn your charged move took, so a sneak counted then didn't happen.
+        if duringStop, !theirsFainted { tracker.switchingOutAfterStop() }
         var free = stopped || time < freeSwitchUntil || quick
         // After your Pokémon fainted, their switch (theirs still in) is a choice and costs a
         // turn, even straight after their charged move: Mimikyu for Turtonator after its

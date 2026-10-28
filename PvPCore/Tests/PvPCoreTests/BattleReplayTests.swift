@@ -461,3 +461,25 @@ private struct Screen {
     }
     #expect(beforeRockSlide == 45)
 }
+
+/// Saved by the phone: your Mandibuzz threw straight after Shadow Greninja's Hydro Cannon,
+/// in the same stop, and Greninja sneaked a Water Shuriken on your charged move's turn.
+/// Without it, its third Hydro Cannon would have had 32 of 40.
+@Test func replayPhoneBattleSneakAfterTheirChargedMove() throws {
+    let (data, reads) = try loadBattle("battle-2026-10-28-002722")
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    // Greninja's energy as each Hydro Cannon is named (the log keeps only its last lines).
+    var before: [Int] = []
+    for read in reads {
+        let count = automation.log.count, last = automation.log.last
+        automation.process(read, tracker: &tracker)
+        guard automation.log.count != count || automation.log.last != last,
+              let line = automation.log.last, line.contains("used Hydro Cannon ("),
+              let open = line.range(of: "(", options: .backwards),
+              let arrow = line.range(of: " → ", range: open.upperBound..<line.endIndex),
+              let energy = Int(line[open.upperBound..<arrow.lowerBound]) else { continue }
+        before.append(energy)
+    }
+    #expect(before == [56, 58, 46])
+}

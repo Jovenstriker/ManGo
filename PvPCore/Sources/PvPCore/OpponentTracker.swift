@@ -99,6 +99,9 @@ public struct OpponentTracker: Sendable {
     /// and what `opponentThrewOnSameTurn` took back, in case their move shows it shouldn't.
     private var inProgressBonus: (index: Int, energy: Int)?
     private var takenBack: (index: Int, energy: Int)?
+    /// The sneak `playerThrewChargedMove` counted straight after their charged move, until
+    /// the next stop: taken back if they switch out instead (`switchingOutAfterStop`).
+    private var sneak: (index: Int, energy: Int)?
 
     public init(data: GameData) {
         self.data = data
@@ -221,7 +224,7 @@ public struct OpponentTracker: Sendable {
     /// throwing after 1, 4, 7 or 10 fast moves gives them nothing extra.
     ///
     /// Safe to call after `pause(at:)`: the clock is frozen at the pause.
-    public mutating func playerThrewChargedMove(at now: TimeInterval) {
+    public mutating func playerThrewChargedMove(at now: TimeInterval, afterTheirChargedMove: Bool = false) {
         pause(at: now)
         // Only your latest charged move's fast move in progress can be taken back by a tie:
         // a second one straight after (no time between) adds none, and ties with theirs on
@@ -235,7 +238,18 @@ public struct OpponentTracker: Sendable {
         let t = battleTime(at: now)
         // Only if they've had a turn since their chain began: not when you throw straight
         // after their own charged move, or as they come in.
-        if t > start + 1e-6 {
+        if t <= start + 1e-6, afterTheirChargedMove, !Rules.off("sneakAfterTheirs") {
+            // Straight after their charged move, in the same stop: your charged move takes
+            // the next turn, and they start a fast move on it (a sneak), so it counts.
+            // (Shadow Greninja's Water Shuriken after its Hydro Cannon and your Mandibuzz's
+            // throw: without it, its third Hydro Cannon had 32 of 40.)
+            let before = team[i].bankedEnergy
+            team[i].stint?.yourChargedMoves += 1
+            team[i].bankedEnergy = min(maxEnergy, before + fast.energyGain, Self.cap(team[i], atBattleTime: t) ?? maxEnergy)
+            inProgressBonus = (i, team[i].bankedEnergy - before)
+            sneak = (i, team[i].bankedEnergy - before)
+            team[i].history.append(Stretch(length: 0, interrupted: true))
+        } else if t > start + 1e-6 {
             let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
             let withFinished = min(maxEnergy, team[i].bankedEnergy + finished * fast.energyGain)
             team[i].stint?.yourChargedMoves += 1
@@ -261,6 +275,19 @@ public struct OpponentTracker: Sendable {
         if let last = team[i].history.indices.last, team[i].history[last].interrupted {
             team[i].history[last].interrupted = false
         }
+    }
+
+    /// They switch out right after the stop: a sneak counted at your charged move didn't
+    /// happen, since they chose the switch on that turn, not a fast move. (TestWithMangoV1's
+    /// Marowak, after its Rock Slide and your throw, switched to Sableye and came back on 4
+    /// Mud Slaps, not 5; Mimikyu after its Shadow Sneak and yours, 54 by hand, not 62.
+    /// Shadow Greninja stayed in, and needed its sneak.) Call before `setActive`.
+    public mutating func switchingOutAfterStop() {
+        guard let (i, energy) = sneak, i == activeIndex else { return }
+        sneak = nil
+        team[i].bankedEnergy = max(0, team[i].bankedEnergy - energy)
+        if team[i].stint.map({ $0.yourChargedMoves > 0 }) == true { team[i].stint?.yourChargedMoves -= 1 }
+        if let last = team[i].history.indices.last, team[i].history[last].length == 0 { team[i].history.remove(at: last) }
     }
 
     /// Their charged move turned out to cost more than they'd have without the fast move
@@ -344,7 +371,7 @@ public struct OpponentTracker: Sendable {
 
     /// Stops the battle clock. No turns pass while either side's charged move plays out.
     public mutating func pause(at now: TimeInterval) {
-        if pausedAt == nil { pausedAt = now }
+        if pausedAt == nil { pausedAt = now; sneak = nil }
     }
 
     public mutating func resume(at now: TimeInterval) {

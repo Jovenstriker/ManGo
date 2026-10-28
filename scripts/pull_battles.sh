@@ -6,7 +6,8 @@
 #   scripts/pull_battles.sh [device id]   (default: the first connected iPhone)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-DEVICE=${1:-$(xcrun devicectl list devices 2>/dev/null | grep ' connected ' | grep physical | grep -o '[0-9A-F-]\{20,\} (UDID)' | head -1 | cut -d' ' -f1)}
+# A phone on the cable shows as "connected", one over Wi-Fi as "available (paired)".
+DEVICE=${1:-$(xcrun devicectl list devices 2>/dev/null | grep physical | grep -E ' connected | available ' | grep -o '[0-9A-F-]\{20,\} (UDID)' | head -1 | cut -d' ' -f1 || true)}
 [ -n "$DEVICE" ] || { echo "No iPhone connected"; exit 1; }
 TMP=$(mktemp -d)
 xcrun devicectl device copy from --device "$DEVICE" --domain-type appDataContainer \

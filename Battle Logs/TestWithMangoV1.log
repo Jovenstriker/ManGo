@@ -67,8 +67,8 @@ TIMELINE (what the screen reader saw and did)
   1:11.25    stopped  Marowak at 35
   1:12.25  Marowak had finished one more fast move: the battle restarted before your buttons came back
   1:19.00  Marowak used Rock Slide (45 → 0)
-  1:22.25  You threw a charged move: Marowak 0 → 0 (its fast move in progress counts)
-  1:32.00    running  Marowak at 0
+  1:22.25  You threw a charged move: Marowak 0 → 10 (its fast move in progress counts)
+  1:32.00    running  Marowak at 10
   1:32.25  Opponent: Sableye (Shadow)
   1:37.25    stopped  Sableye (Shadow) at 40
   1:44.50  Sableye (Shadow) used Drain Punch (40 → 0)

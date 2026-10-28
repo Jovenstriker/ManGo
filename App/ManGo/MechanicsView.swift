@@ -34,6 +34,7 @@ struct MechanicsView: View {
                     "So the opponent gets every fast move they finished, **plus one**.",
                     "Example, your 2-turn move against their 3-turn move: after 3 of yours they get 3, and after 4 of yours they still get 3. Throwing after 1, 4, 7 or 10 fast moves gives them nothing extra.",
                     "The exception: if they throw a charged move on the same turn as you, they weren't in a fast move, so there's no extra one.",
+                    "If you throw straight after their charged move, they start a fast move on your charged move's turn (a sneak), and it counts. Unless they switch out right after: then they chose the switch, not a fast move.",
                 ])
 
                 topic("Shields", "shield", [

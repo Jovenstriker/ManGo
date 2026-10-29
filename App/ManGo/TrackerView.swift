@@ -71,7 +71,8 @@ struct TrackerView: View {
 
     // MARK: Sections
 
-    /// The PiP card. It pops out over Pokémon GO automatically when you leave the app.
+    /// The PiP card. It pops out over Pokémon GO when you leave the app while the screen
+    /// reader is running, and closes when it stops.
     private var overlaySection: some View {
         VStack(spacing: 6) {
             OverlayPreview(layer: overlay.displayLayer)

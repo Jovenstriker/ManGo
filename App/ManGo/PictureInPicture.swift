@@ -21,6 +21,11 @@ final class OverlayController: NSObject {
     @ObservationIgnored private var pip: AVPictureInPictureController?
     @ObservationIgnored private var timer: Timer?
     @ObservationIgnored private weak var model: TrackerModel?
+    /// Whether the screen reader was sending reads at the last render.
+    @ObservationIgnored private var wasReading = false
+    /// No read for this long means the screen reader stopped (between battles reads still
+    /// come every 2s).
+    static let readingTimeout: TimeInterval = 5
 
     func attach(_ model: TrackerModel) {
         guard self.model == nil else { return }
@@ -34,7 +39,8 @@ final class OverlayController: NSObject {
 
         if isSupported {
             let pip = AVPictureInPictureController(contentSource: .init(sampleBufferDisplayLayer: displayLayer, playbackDelegate: self))
-            pip.canStartPictureInPictureAutomaticallyFromInline = true  // pops out when you leave the app
+            // Pops out when you leave the app, but only while the screen reader is running.
+            pip.canStartPictureInPictureAutomaticallyFromInline = false
             pip.requiresLinearPlayback = true
             pip.delegate = self
             self.pip = pip
@@ -53,7 +59,9 @@ final class OverlayController: NSObject {
     }
 
     private func render() {
-        guard let model, let snap = model.tracker?.snapshot(at: model.now()) else { return }
+        guard let model else { return }
+        followScreenReader(model)
+        guard let snap = model.tracker?.snapshot(at: model.now()) else { return }
         let name = snap.pokemon.flatMap { model.data?.species[$0.speciesId]?.speciesName }
         let bench = model.bench.map { "\($0.name) \($0.energy)" }.joined(separator: "  ·  ")
         // Between battles reads come every 2s.
@@ -64,6 +72,19 @@ final class OverlayController: NSObject {
         ) else { return }
         if displayLayer.status == .failed { displayLayer.flush() }
         displayLayer.enqueue(buffer)
+    }
+}
+
+extension OverlayController {
+    /// No screen reader, no card: it pops out on leaving the app only while reads are
+    /// coming in, and closes when they stop (the broadcast ended). "Pop out overlay" still
+    /// opens it by hand.
+    fileprivate func followScreenReader(_ model: TrackerModel) {
+        let reading = model.lastReadAt.map { Date.now.timeIntervalSince($0) < Self.readingTimeout } ?? false
+        guard let pip, reading != wasReading else { return }
+        wasReading = reading
+        pip.canStartPictureInPictureAutomaticallyFromInline = reading
+        if !reading, pip.isPictureInPictureActive { pip.stopPictureInPicture() }
     }
 }
 

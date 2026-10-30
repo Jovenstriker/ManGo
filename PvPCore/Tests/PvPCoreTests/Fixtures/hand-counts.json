@@ -163,5 +163,13 @@
     "notes": {
       "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that."
     }
+  },
+  "battle-2026-10-28-221337": {
+    "video": "Test Videos/battle-2026-10-28-221337.mp4",
+    "description": "Phone-saved, several battles in one recording (no results screen was shown, so it didn't split). Opponents: Scizor, Guzzlord, Nidoqueen; then Greninja (Shadow), Forretress (Shadow), Mimikyu; then Forretress, Greninja, Nidoqueen.",
+    "counts": [],
+    "notes": {
+      "greninja": "Shadow Greninja's Hydro Cannons and Brutal Swing came with less energy than ManGo counted (30, 28, 28, 28), each soon after it came in and you threw: likely aligned throws where it also sneaked a Water Shuriken that ManGo's timing (e.g. 1.36s for 1.5s) missed. Rounding to whole turns, and timing stops and restarts from the exact frame the buttons changed, both fix some of these but break counts confirmed elsewhere."
+    }
   }
 }

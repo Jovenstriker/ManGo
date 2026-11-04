@@ -389,7 +389,12 @@ public struct OpponentTracker: Sendable {
         team[i].history = []
         team[i].chargedMovesThrown = []
         team[i].historyBase = team[i].bankedEnergy
-        if team[i].chainStart != nil { team[i].chainStart = battleTime(at: now) }
+        let t = battleTime(at: now)
+        team[i].stint = Stint(start: t, entryEnergy: team[i].bankedEnergy)
+        inProgressBonus = nil
+        takenBack = nil
+        sneak = nil
+        if team[i].chainStart != nil { team[i].chainStart = t }
     }
 
     /// The opponent is about to throw a charged move costing `cost`. If the fast move

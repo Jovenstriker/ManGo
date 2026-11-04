@@ -66,6 +66,10 @@ public struct BattleScreenParser: Sendable {
     public private(set) var opponentKey: String?
     private var pending: (key: String, count: Int, since: TimeInterval)?
     private var running: Bool?
+    private var missingButtons: (first: TimeInterval, previous: TimeInterval)?
+    private var lastScreenTime: TimeInterval?
+    /// Bounds of the first missing-button observation, retained while confirming a stop.
+    public private(set) var stopObservation: (first: TimeInterval, previous: TimeInterval)?
     private var started = false
     /// "Go, X!" names seen this battle before the opponent's lead was known.
     private var goNames: [String] = []
@@ -109,6 +113,9 @@ public struct BattleScreenParser: Sendable {
 
     public mutating func process(_ read: ScreenRead) -> [BattleEvent] {
         var events: [BattleEvent] = []
+        guard read.textReadSucceeded != false else { return events }
+        let previousTime = lastScreenTime ?? read.time
+        lastScreenTime = read.time
         let lines = read.lines
 
         // Start and end of a battle: big text in the middle of the screen.
@@ -144,9 +151,22 @@ public struct BattleScreenParser: Sendable {
         // Running or stopped, from the charged move buttons.
         // The game's buttons are ALL CAPS with no numbers ("SHADOW SNEAK"); ManGo's own
         // overlay card, which the screen recording also sees, says "Drain Punch • 40".
-        let isRunning = lines.contains { line in
+        var isRunning = lines.contains { line in
             line.box.midY >= Self.buttonBand.minY && Self.isButtonLabel(line.text)
                 && chargedMoveNames.contains(NameMatcher.normalize(line.text))
+        }
+        let explicitStop = lines.contains {
+            let key = NameMatcher.normalize($0.text)
+            return key.contains("attackincoming") || key.contains("protectshield")
+                || key.contains("getready") || key.contains("switchinanewpokemon")
+        }
+        if !isRunning, running == true {
+            if missingButtons == nil { missingButtons = (read.time, previousTime) }
+            // One failed recognition of the labels must not stop the battle clock.
+            // Explicit charged-move/faint cues are strong enough to act immediately.
+            if !explicitStop, missingButtons?.first == read.time { isRunning = true }
+        } else if isRunning {
+            missingButtons = nil
         }
         if isRunning != running {
             runningSince = isRunning ? read.time : nil
@@ -164,6 +184,8 @@ public struct BattleScreenParser: Sendable {
                 lastThrowWasTheirs = nil
                 bannersSeen = []
             } else if running == true {
+                stopObservation = missingButtons ?? (read.time, previousTime)
+                missingButtons = nil
                 events.append(.stopped)
             }
             running = isRunning
@@ -338,6 +360,9 @@ public struct BattleScreenParser: Sendable {
         opponentKey = nil
         pending = nil
         running = nil
+        missingButtons = nil
+        stopObservation = nil
+        lastScreenTime = nil
         started = false
         goNames = []
         myTeam = []
@@ -346,6 +371,17 @@ public struct BattleScreenParser: Sendable {
         pendingGo = nil
         switchPromptAt = nil
         countdownSeen = false
+        runningSince = nil
+        resumedAfterChargedMove = false
+        bannerConsumed = false
+        sawAttackIncoming = false
+        announcedAttackIncoming = false
+        announcedFaint = false
+        sawGetReady = false
+        opponentThrew = false
+        playerThrew = false
+        lastThrowWasTheirs = nil
+        bannersSeen = []
     }
 
     static func isButtonLabel(_ text: String) -> Bool {

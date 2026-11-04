@@ -50,6 +50,7 @@ final class BattleRecorder {
         var shifted = ScreenRead(time: read.time - startedAt, lines: read.lines)
         shifted.readSeconds = read.readSeconds
         shifted.opponentAlive = read.opponentAlive
+        shifted.textReadSucceeded = read.textReadSucceeded
         shifted.buttonFill = read.buttonFill
         shifted.fillTrace = read.fillTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }
         shifted.hpTrace = read.hpTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }

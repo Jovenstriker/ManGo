@@ -204,7 +204,8 @@ public struct BattleAutomation: Sendable {
                 opponentThrewThisStop = false
                 yourFaintThisStop = false
                 chargedMoveThisStop = false
-                let stop = max(t - stopLead, previousReadTime, resumedAt)
+                let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
+                let stop = max(observation.first - stopLead, observation.previous, resumedAt)
                 lastStopAt = stop
                 tracker.pause(at: stop)
                 if goAt != nil { settleLeadFromHits(at: t, tracker: &tracker) }
@@ -404,6 +405,15 @@ public struct BattleAutomation: Sendable {
         goAt = nil
         awaitingGo = false
         stopped = false
+        shieldedThisStop = false
+        playerChargedThisStop = false
+        opponentThrewAfterYours = false
+        lastResumeAfterShield = false
+        chargedMoveThisStop = false
+        opponentThrewThisStop = false
+        yourFaintThisStop = false
+        leadNamedAt = 0
+        resumedBeforeGo = nil
         lastStopAt = -.infinity
         buttonsBackAt = nil
         resumedAt = -.infinity

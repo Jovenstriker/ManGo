@@ -65,6 +65,8 @@ public enum ScreenTextReader {
 public struct ScreenRead: Codable, Sendable, Equatable {
     public let time: TimeInterval
     public let lines: [RecognizedText]
+    /// False when Vision failed. A failed read is unknown screen state, not an empty screen.
+    public var textReadSucceeded: Bool?
     /// The screen reader's memory when it made this read, in MB: now and the peak so far.
     public var memoryMB: Double?
     public var peakMemoryMB: Double?

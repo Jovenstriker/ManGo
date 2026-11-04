@@ -527,3 +527,30 @@ private struct Screen {
     #expect(observed.energyBefore == 100)
     #expect(observed.fastMoveCount == 10)
 }
+
+@Test func oneMissingButtonReadDoesNotPauseTheBattle() throws {
+    let (data, _) = try loadBattle()
+    var parser = BattleScreenParser(data: data)
+    _ = parser.process(Screen(opponent: "Azumarill").read(at: 0))
+    let missing = parser.process(Screen(opponent: "Azumarill", buttons: false).read(at: 1))
+    #expect(!missing.contains(.stopped))
+    let recovered = parser.process(Screen(opponent: "Azumarill").read(at: 1.25))
+    #expect(!recovered.contains { if case .resumed = $0 { true } else { false } })
+    var failed = ScreenRead(time: 2, lines: [])
+    failed.textReadSucceeded = false
+    #expect(parser.process(failed).isEmpty)
+    let cue = parser.process(Screen(opponent: "Azumarill", buttons: false, banner: "Attack incoming!").read(at: 3))
+    #expect(cue.contains(.stopped))
+    #expect(cue.contains(.attackIncoming))
+}
+
+@Test func confirmedStopRetainsTheFirstObservationTime() throws {
+    let (data, _) = try loadBattle()
+    var parser = BattleScreenParser(data: data)
+    _ = parser.process(Screen(opponent: "Azumarill").read(at: 0))
+    _ = parser.process(ScreenRead(time: 1, lines: []))
+    let events = parser.process(ScreenRead(time: 1.25, lines: []))
+    #expect(events.contains(.stopped))
+    #expect(parser.stopObservation?.first == 1)
+    #expect(parser.stopObservation?.previous == 0)
+}

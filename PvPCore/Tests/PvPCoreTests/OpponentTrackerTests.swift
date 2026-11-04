@@ -248,3 +248,13 @@ private func makeTracker() throws -> OpponentTracker {
     t.playerThrewChargedMove(at: 4)
     #expect(t.snapshot(at: 4).energy == 6 + 18)
 }
+
+@Test func energyCorrectionResetsTheOldStintCapAndSpentEnergy() throws {
+    var tracker = try makeTracker()
+    tracker.setActive(speciesId: "azumarill", at: 0, assumeFastMove: "BUBBLE")
+    tracker.opponentThrewChargedMove("ICE_BEAM", at: 9)
+    tracker.resume(at: 10)
+    tracker.setEnergy(90, at: 10)
+    #expect(tracker.snapshot(at: 10).energy == 90)
+    #expect(tracker.snapshot(at: 11.5).energy == 100)
+}

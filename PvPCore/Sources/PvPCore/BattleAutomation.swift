@@ -264,8 +264,12 @@ public struct BattleAutomation: Sendable {
                     note("\(name(tracker.active?.speciesId)) couldn't afford \(move.name) without its fast move in progress: it threw after yours, not on the same turn (\(short) → \(tracker.snapshot(at: t).energy))")
                 }
                 if playerChargedThisStop { opponentThrewAfterYours = true }
-                // Affordability alone cannot distinguish a different fast move from
-                // missed timing. Keep the moveset hypothesis instead of oscillating it.
+                // A throw the assumed fast move couldn't have afforded, but another fast move it
+                // learns could, means it's that one: Flygon threw Twister and Sand Tomb on Mud
+                // Shot, not PvPoke's Dragon Tail (155712, 174243).
+                if !Rules.off("reconsider"), let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
+                    note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
+                }
                 alignToOpponentChargedMove(&tracker)
                 tracker.restrictForms(learning: move.moveId)
                 let raw = tracker.snapshot(at: t).energy

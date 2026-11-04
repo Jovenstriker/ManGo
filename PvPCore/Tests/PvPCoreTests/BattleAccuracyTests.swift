@@ -81,10 +81,11 @@ private func replayForAccuracy(_ name: String) throws -> (throwsSeen: [BattleAut
 func recordingsRespectGroundTruthAndAffordability(_ name: String) throws {
     let replay = try replayForAccuracy(name)
     #expect(!replay.throwsSeen.isEmpty, "\(name): no charged moves detected")
-    // Necessary, not sufficient: an overestimate may still afford every throw.
+    // Necessary, not sufficient: an overestimate may still afford every throw. The raw
+    // estimate, before the observed spend tops it up: after that every throw is affordable.
     for (i, observed) in replay.throwsSeen.enumerated() {
-        #expect(observed.energyBefore >= observed.move.energy,
-                "\(name) throw \(i + 1), \(observed.speciesId) \(observed.move.moveId): estimated \(observed.energyBefore), costs \(observed.move.energy)")
+        #expect(observed.energyBeforeReconciliation >= observed.move.energy,
+                "\(name) throw \(i + 1), \(observed.speciesId) \(observed.move.moveId): estimated \(observed.energyBeforeReconciliation), costs \(observed.move.energy)")
     }
     guard let entry = try evidence()[name] else { return }
     for (i, count) in entry.counts.enumerated() {
@@ -106,10 +107,12 @@ func recordingsRespectGroundTruthAndAffordability(_ name: String) throws {
         #expect(observed.speciesId == point.speciesId)
         #expect(observed.move.moveId == point.moveId)
         if let exact = point.exact { #expect(observed.energyBefore == exact, "\(name) throw \(point.ordinal): exact energy") }
-        if let minimum = point.minimum { #expect(observed.energyBefore >= minimum, "\(name) throw \(point.ordinal): minimum energy, not an exact count") }
+        if let minimum = point.minimum { #expect(observed.energyBeforeReconciliation >= minimum, "\(name) throw \(point.ordinal): minimum energy, not an exact count") }
     }
+    // A different fast move only shows once a throw the assumed one couldn't afford reveals
+    // it, so check the one ManGo ends up with.
     for (species, move) in entry.observedFastMoves ?? [:] {
-        let observed = try #require(replay.throwsSeen.first { $0.speciesId == species })
+        let observed = try #require(replay.throwsSeen.last { $0.speciesId == species })
         #expect(observed.fastMove?.moveId == move, "\(name): observed moveset differs from the assumption")
     }
 }

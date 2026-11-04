@@ -5,8 +5,8 @@ and Great League rankings.
 
 ## How it tracks energy
 
-PvP runs in 0.5s turns. Once you've seen the opponent's fast move, assume they throw it
-back-to-back, so energy comes from the clock alone:
+PvP runs in 0.5s turns. The display marks energy with `~` because the opponent's energy is hidden. The clock
+estimates back-to-back fast moves, starting with PvPoke's recommended moveset:
 
     energy = min(100, banked + floor(battle time since first seen / move length) × energy gain)
 
@@ -21,6 +21,17 @@ back-to-back, so energy comes from the clock alone:
 - **Faint:** both sides stop attacking until the next Pokémon comes out. If theirs fainted,
   their replacement starts with no switch turn.
 - **Pokémon list:** only PvPoke's top 500 in Great League, sorted by rank.
+
+A clear repeated rhythm of damage on a verified player HP bar can change the fast-move
+hypothesis. So can a charged move the assumed fast move couldn't have afforded: ManGo switches
+to another fast move the Pokémon learns that could have (Flygon threw on Mud Shot, not PvPoke's
+Dragon Tail). A base name retains its possible forms until a distinguishing charged move reveals
+the form.
+
+A charged move that costs more than the estimate proves synchronization was lost. The engine
+records an explicit minimum-energy constraint, subtracts the full cost, and shows an uncertainty
+warning. It does not invent an exact number of missed fast moves. Reports retain the raw estimate
+so this reconciliation cannot hide prediction failures. If reads stop arriving, the display freezes.
 
 The engine is in `PvPCore/` (a Swift package with no UI). `OpponentTracker` takes
 timestamped events, so it doesn't care whether they come from taps or from computer vision.
@@ -50,14 +61,15 @@ has to live outside Documents, because iCloud's file metadata makes code signing
 ## Reading the battle screen
 
 `Extension/ManGoBroadcast` is a ReplayKit Broadcast Upload Extension ("ManGo Screen Reader").
-While it's recording, it reads all the text on screen 4 times a second with Vision and passes it to
+While it's recording, it aims to read text 4 times a second with Vision and passes it to
 the app through the App Group `group.com.jovenstriker.mango`. `BattleScreenParser` and
 `BattleAutomation` (in `PvPCore`) turn the reads into tracker events. These rules come from a
 recorded Great League battle:
 
 | On screen | Meaning |
 |---|---|
-| Your charged move buttons at the bottom ("FLAMETHROWER") | The battle is running. When they disappear (either side's charged move, a faint), the clock stops |
+| Your charged move buttons at the bottom ("FLAMETHROWER") | Two missing reads confirm a stop; explicit battle cues can stop immediately. One missed OCR result is not a pause |
+| Your top-left pokéballs lose a red ball | Your Pokémon fainted. Dimmed charge labels do not restart counting until replacement evidence appears |
 | Name in the top-right box ("CP 1498 Stunfisk") | The opponent's active Pokémon: a switch, a faint replacement, or a new battle |
 | "Stunfisk used Discharge!" banner | The opponent's charged move: subtract its cost. A move only one form learns fixes the form |
 | "Attack incoming!" / "Get Ready!" | Whose charged move it is, when the banner alone can't tell (mirror matches) |
@@ -134,8 +146,10 @@ Energy evidence is stored separately from move counts:
   require at least 40, 35, 40 and 40 energy. The model's 30, 28, 28 and 28 are incorrect
   estimates, not exact energy observations or fast-move counts.
 
-Every detected opponent throw must also have enough estimated energy to pay its cost.
-This is only a necessary check: overestimates can satisfy it. Unlabelled recordings are
+Every detected opponent throw must have enough energy to pay its cost. If the raw clock
+estimate is short, reconciliation uses the observed spend as a minimum and marks uncertainty.
+The reports separately fail validation on raw undercounts; making a spend affordable after seeing
+it is not evidence that the prediction was accurate. Overestimates can also satisfy affordability. Unlabelled recordings are
 checked for affordability, not claimed to be fully hand-verified.
 
 Run `scripts/battle_reports.sh` to regenerate **all** reports. It continues after failures,
@@ -144,6 +158,25 @@ and `MANGO_OUTPUT_DIR` override the build directory (default `/tmp/ManGo-PvPCore
 directory (default `Battle Logs`). Reports use per-read structured observations rather than
 the bounded UI log, and count modelled moves from history instead of dividing capped energy.
 A report's PASS means only that its available evidence agrees; it is not a full-battle accuracy claim.
+
+The user-supplied rules dated November 4, 2026 guide these mechanics; see
+[the tracking contract](docs/tracking-rules.md). In particular, a faint freezes both sides,
+a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
+rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
+
+Current known limit: **35 of 36 exact hand counts match**. v7's Azumarill still estimates 10
+Bubbles against the labelled 9. Its label remains unchanged and its accuracy test remains failing.
+Minimum-energy reconciliation also remains visible as a raw prediction failure in reports.
+
+v7 was enriched with verified HP pixels and your pokéball counts from its original video;
+its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:
+
+    cd PvPCore
+    swift run screen-log "../Test Videos/v7.mov" --hp-all Tests/PvPCoreTests/Fixtures/gbl-battle-2026-10-20-v7.json > /tmp/v7-with-verified-hp.json
+
+The verified sampler checks the player's rectangular HP-bar outline and follows its horizontal
+movement; it does not treat arbitrary colored sprite pixels as HP. Ambiguous or missing damage
+rhythms leave the fast move assumed.
 
 ## Overlay on top of Pokémon GO
 

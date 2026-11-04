@@ -337,7 +337,8 @@
     "counts": [],
     "notes": {
       "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short.",
-      "4": "Azumarill threw Ice Beam (55) when ManGo had 44 (4 Bubbles): at least 5. Your Mimikyu's HP bar shows 2 Bubbles after it came in (2:23.5, 2:24.97), as ManGo counts, so the missing one is in the two short stretches after Azumarill replaced the fainted Corviknight. Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33)."
+      "4": "Azumarill threw Ice Beam (55) when ManGo had 44 (4 Bubbles): at least 5. Your Mimikyu's HP bar shows 2 Bubbles after it came in (2:23.5, 2:24.97), as ManGo counts, so the missing one is in the two short stretches after Azumarill replaced the fainted Corviknight. Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).",
+      "flygon": "Flygon used Mud Shot, not PvPoke's Dragon Tail (\"it is mud shot\", user, Oct 2026). Its shortfall at a throw is the moveset, not timing."
     },
     "throwEnergy": [
       {
@@ -352,7 +353,10 @@
         "moveId": "ICE_BEAM",
         "minimum": 55
       }
-    ]
+    ],
+    "observedFastMoves": {
+      "flygon": "MUD_SHOT"
+    }
   },
   "battle-2026-10-23-192858": {
     "video": "Test Videos/battle-2026-10-23-192858.mp4",
@@ -443,5 +447,16 @@
         "exact": 71
       }
     ]
+  },
+  "battle-2026-10-24-174243": {
+    "video": "Test Videos/battle-2026-10-24-174243.mp4",
+    "description": "Phone-saved battle. Opponent: Flygon, Melmetal, Turtonator.",
+    "counts": [],
+    "notes": {
+      "flygon": "Flygon used Mud Shot, not PvPoke's Dragon Tail (\"it is mud shot\", user, Oct 2026). Its shortfall at a throw is the moveset, not timing."
+    },
+    "observedFastMoves": {
+      "flygon": "MUD_SHOT"
+    }
   }
 }

@@ -174,8 +174,10 @@ for point in hand?.throwEnergy ?? [] {
         evidenceFailures.append("Throw \(point.ordinal): expected at least \(minimum), estimated \(observed.energyBefore)")
     }
 }
+// A different fast move only shows once a throw the assumed one couldn't afford reveals it,
+// so check the fast move ManGo ends up with: its last throw.
 for (species, move) in (hand?.observedFastMoves ?? [:]).sorted(by: { $0.key < $1.key }) {
-    if throwsSeen.first(where: { $0.speciesId == species })?.fastMove?.moveId != move {
+    if throwsSeen.last(where: { $0.speciesId == species })?.fastMove?.moveId != move {
         evidenceFailures.append("\(species): assumed fast move differs from observed \(move)")
     }
 }

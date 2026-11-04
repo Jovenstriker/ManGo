@@ -60,7 +60,7 @@ struct MechanicsView: View {
 
                 Section {
                     bullet("Opponent's Pokémon: the name box in the top-right, and the \"Go, X!\" message when it comes out.")
-                    bullet("Their fast move starts as PvPoke's recommendation. Repeated damage on a verified HP bar can identify a different rhythm; a move cost alone cannot identify the fast move.")
+                    bullet("Their fast move starts as PvPoke's recommendation. A charged move it couldn't have afforded switches ManGo to another fast move the Pokémon learns that could have (Flygon on Mud Shot, not Dragon Tail). A repeated rhythm of damage on your HP bar can also show it.")
                     bullet("Running or frozen: charge-button labels and battle cues, with two reads to confirm missing labels. Your remaining pokéballs confirm a faint even when dimmed labels stay visible.")
                     bullet("Charged moves: \"Attack incoming!\" and the \"X used Y!\" banner for theirs, \"Get Ready!\" for yours.")
                     bullet("Start and end: the countdown's \"GO\" (the first turn begins a moment after it appears), and \"YOU WIN!\" / \"GOOD EFFORT!\". If lag skips the countdown, it starts when your buttons appear.")

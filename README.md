@@ -92,6 +92,59 @@ The screen only shows the base name, so the app picks the highest-ranked form un
 it. Nicknamed Pokémon won't match. The app has no manual controls: start the reader with the record
 button, and everything else comes from the screen.
 
+## Accuracy evidence and validation
+
+`swift test` now checks all 24 saved recordings, including the ones with known inaccuracies.
+A successful behavioral replay is not proof of accurate energy. The accuracy tests deliberately
+fail when the model contradicts the evidence; do not change labels to match model output or
+mark these failures as expected. POMDP is separate and is not involved in these checks.
+
+There are **36 exact hand counts across 9 recordings** in
+`PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
+since that Pokémon's previous charged move (or its first appearance), including moves before
+switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
+not zero. Partial lists do not label the rest of a battle. `countTargets` identifies the Pokémon
+and charged move so a missed or misattributed throw cannot silently shift the labels.
+
+| Recording | Opponent's team | Hand counts |
+|---|---|---|
+| gbl-battle-2026-10-20 (without ManGo) | Stunfisk, Cramorant, Fearow | 6, 7, 1, 5, 5, 5, 6 |
+| gbl-battle-2026-10-20-mango (TestWithMangoV1) | Marowak, Sableye (Shadow), Talonflame | 5, 4, 5, 5, 7, 3, 4 |
+| testV2 | Melmetal, Ninetales (Shadow), Altaria | 6, 6, 0, 6, 2, unknown, unknown |
+| testV3 (Fantasy Cup) | Mimikyu, Turtonator, Granbull | 5, 0, 7 |
+| v7 | Azumarill, Empoleon, Magnezone | unknown, 4, 9, 1 |
+| v8 | Azumarill, Lucario, Mawile | 8, 1, 6, 5, 4 |
+| v11 | Altaria, Mimikyu, Empoleon | 13, 7, unknown, 5, 5 |
+| battle-2026-10-23-132243 | Doublade, Togetic, Stunfisk | 7 |
+| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5 |
+
+Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
+has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
+The observed moveset is checked separately.
+
+Energy evidence is stored separately from move counts:
+
+- Exact checkpoints: Turtonator 80 and Mimikyu 54 in `battle-2026-10-23-140441`;
+  Florges 45 after its fifth Fairy Wind in `battle-2026-10-23-135548`; Stunfisk 70, 71
+  and 45 in the corresponding existing replay scenarios. Checkpoint timestamps use the
+  existing tests' observation times, which may be later than the visible action.
+- Lower bounds: Corviknight's Payback requires at least 60 and Azumarill's Ice Beam at least
+  55 in `battle-2026-10-23-155712`. The model's 56 and 44 are incorrect estimates, not labels.
+- Lower bounds: Shadow Greninja's throws 11, 16, 18 and 19 in `battle-2026-10-28-221337`
+  require at least 40, 35, 40 and 40 energy. The model's 30, 28, 28 and 28 are incorrect
+  estimates, not exact energy observations or fast-move counts.
+
+Every detected opponent throw must also have enough estimated energy to pay its cost.
+This is only a necessary check: overestimates can satisfy it. Unlabelled recordings are
+checked for affordability, not claimed to be fully hand-verified.
+
+Run `scripts/battle_reports.sh` to regenerate **all** reports. It continues after failures,
+prints each result, and exits nonzero if any recording fails validation. `MANGO_BUILD_DIR`
+and `MANGO_OUTPUT_DIR` override the build directory (default `/tmp/ManGo-PvPCore`) and output
+directory (default `Battle Logs`). Reports use per-read structured observations rather than
+the bounded UI log, and count modelled moves from history instead of dividing capped energy.
+A report's PASS means only that its available evidence agrees; it is not a full-battle accuracy claim.
+
 ## Overlay on top of Pokémon GO
 
 The card at the top of the app is a Picture-in-Picture "video" (`App/ManGo/PictureInPicture.swift`),

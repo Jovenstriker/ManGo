@@ -23,6 +23,15 @@ struct HandCounts: Decodable {
     let description: String
     let counts: [Int?]
     let notes: [String: String]?
+    let countTargets: [Target]?
+    let energyCheckpoints: [Checkpoint]?
+    let throwEnergy: [ThrowEnergy]?
+    let observedFastMoves: [String: String]?
+    struct Target: Decodable { let speciesId: String; let moveId: String }
+    struct Checkpoint: Decodable { let time: Double; let speciesId: String; let energy: Int }
+    struct ThrowEnergy: Decodable {
+        let ordinal: Int; let speciesId: String; let moveId: String; let exact: Int?; let minimum: Int?
+    }
 }
 let hand = try JSONDecoder().decode([String: HandCounts].self, from: Data(contentsOf: URL(fileURLWithPath: a[3])))[a[4]]
 
@@ -44,11 +53,20 @@ var tracker = OpponentTracker(data: data)
 var timeline: [String] = []
 var throwsSeen: [BattleAutomation.ChargedMoveObservation] = []
 var wasPaused = false
+var evidenceFailures: [String] = []
+let checkpoints = hand?.energyCheckpoints ?? []
+var checkedPoints = Set<Int>()
 for read in reads {
     automation.process(read, tracker: &tracker)
     let snap = tracker.snapshot(at: read.time)
     timeline += automation.logThisRead.map { "\(clock(read.time))  \($0)" }
     throwsSeen += automation.throwsThisRead
+    for (i, point) in checkpoints.enumerated() where !checkedPoints.contains(i) && read.time >= point.time {
+        checkedPoints.insert(i)
+        if read.time - point.time >= 0.5 || snap.pokemon?.speciesId != point.speciesId || snap.energy != point.energy {
+            evidenceFailures.append("At \(point.time)s expected \(point.speciesId) energy \(point.energy); observed \(snap.pokemon?.speciesId ?? "unknown") energy \(snap.energy) at \(read.time)s")
+        }
+    }
     if tracker.isPaused != wasPaused, let p = snap.pokemon {
         timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.energy)")
         wasPaused = tracker.isPaused
@@ -106,6 +124,12 @@ for (i, t) in throwsSeen.enumerated() {
     let handCount = hand.flatMap { i < $0.counts.count ? $0.counts[i] : nil }
     var verdict = "  -"
     if let h = handCount {
+        if let targets = hand?.countTargets, i < targets.count {
+            let target = targets[i]
+            if t.speciesId != target.speciesId || t.move.moveId != target.moveId {
+                evidenceFailures.append("Throw \(i + 1): expected \(target.speciesId) \(target.moveId), observed \(t.speciesId) \(t.move.moveId)")
+            }
+        } else { evidenceFailures.append("Throw \(i + 1): missing label identity") }
         checked += 1
         if h == count { matches += 1; verdict = "  ✓" } else { verdict = "  ✗ (\(count > h ? "+" : "")\(count - h))" }
     }
@@ -125,10 +149,38 @@ if throwsSeen.count > checked { out.append("  \(throwsSeen.count - checked) not 
 out.append("")
 out.append("TIMELINE (what the screen reader saw and did)")
 out.append(contentsOf: timeline.map { "  " + $0 })
+for (i, point) in checkpoints.enumerated() where !checkedPoints.contains(i) {
+    evidenceFailures.append("Missing energy checkpoint at \(point.time)s")
+}
+for point in hand?.throwEnergy ?? [] {
+    let i = point.ordinal - 1
+    guard throwsSeen.indices.contains(i) else {
+        evidenceFailures.append("Missing energy-labelled throw \(point.ordinal)")
+        continue
+    }
+    let observed = throwsSeen[i]
+    if observed.speciesId != point.speciesId || observed.move.moveId != point.moveId {
+        evidenceFailures.append("Wrong identity at energy-labelled throw \(point.ordinal)")
+    }
+    if let exact = point.exact, observed.energyBefore != exact {
+        evidenceFailures.append("Throw \(point.ordinal): expected exactly \(exact), estimated \(observed.energyBefore)")
+    }
+    if let minimum = point.minimum, observed.energyBefore < minimum {
+        evidenceFailures.append("Throw \(point.ordinal): expected at least \(minimum), estimated \(observed.energyBefore)")
+    }
+}
+for (species, move) in (hand?.observedFastMoves ?? [:]).sorted(by: { $0.key < $1.key }) {
+    if throwsSeen.first(where: { $0.speciesId == species })?.fastMove?.moveId != move {
+        evidenceFailures.append("\(species): assumed fast move differs from observed \(move)")
+    }
+}
 let missingCounts = hand.map { $0.counts.dropFirst(throwsSeen.count).compactMap { $0 }.count } ?? 0
 let underfunded = throwsSeen.filter { $0.energyBefore < $0.move.energy }.count
+let valid = !throwsSeen.isEmpty && matches == checked && missingCounts == 0 && underfunded == 0 && evidenceFailures.isEmpty
 out.append("")
-out.append("VALIDATION: \(matches == checked && missingCounts == 0 && underfunded == 0 ? "PASS (available evidence only)" : "FAIL")")
+out.append("VALIDATION: \(valid ? "PASS (available evidence only)" : "FAIL")")
 out.append("  \(missingCounts) labelled throws missing; \(checked - matches) count mismatches; \(underfunded) underfunded throws.")
+if throwsSeen.isEmpty { out.append("  No charged moves detected.") }
+out.append(contentsOf: evidenceFailures.map { "  " + $0 })
 print(out.joined(separator: "\n"))
-if matches != checked || missingCounts > 0 || underfunded > 0 { exit(1) }
+if !valid { exit(1) }

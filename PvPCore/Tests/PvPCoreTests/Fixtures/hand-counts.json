@@ -14,7 +14,37 @@
     "notes": {
       "1": "Rounding to the nearest fast move had given 7; only finished fast moves count when they throw.",
       "7": "Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run. Fearow had shielded your Double Iron Bash, and your buttons came back late; since Drill Run can only start as a Peck finishes, ManGo works out that the battle restarted 0.6s before them."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "fearow",
+        "moveId": "DRILL_RUN"
+      }
+    ]
   },
   "gbl-battle-2026-10-20-mango": {
     "video": "Test Videos/TestWithMangoV1.mov",
@@ -31,7 +61,37 @@
     "notes": {
       "1": "The countdown's GO read as \"CO\"; ManGo on the phone started late and showed 30 instead of 50.",
       "5": "ManGo said 8 before freezing at your buttons vanishing rather than at \"Get Ready!\"."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "sableye_shadow",
+        "moveId": "DRAIN_PUNCH"
+      },
+      {
+        "speciesId": "sableye_shadow",
+        "moveId": "DRAIN_PUNCH"
+      },
+      {
+        "speciesId": "sableye_shadow",
+        "moveId": "FOUL_PLAY"
+      },
+      {
+        "speciesId": "sableye_shadow",
+        "moveId": "FOUL_PLAY"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "BONE_CLUB"
+      }
+    ]
   },
   "gbl-battle-2026-10-20-v2": {
     "video": "Test Videos/testV2.mov",
@@ -50,7 +110,37 @@
       "4": "Ninetales threw 2 Embers, you threw Dynamic Punch (both 2-turn moves, lined up) so 1 more slipped in, then 3 more with a 1-turn break between the 5th and 6th. ManGo can't see breaks, so it counts 7.",
       "6": "Dragon Breath is too fast to count by eye.",
       "7": "Dragon Breath is too fast to count by eye."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "MOONBLAST"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "FLAMETHROWER"
+      }
+    ]
   },
   "gbl-battle-2026-10-20-v3": {
     "video": "Test Videos/testV3.mov",
@@ -64,7 +154,21 @@
       "1": "Mimikyu led (named from the start's \"Go, Mimikyu!\") and threw 2 Shadow Claws before switching to Turtonator. Turtonator threw 5 Incinerates.",
       "2": "Thrown straight after the first Dragon Claw, in the same stop. Turtonator then switched out to Granbull.",
       "3": "Granbull switched in during the stop after Turtonator's Dragon Claws, so it starts as the battle restarts. 7 Charms before Crunch, then 1 that counted when your charged move interrupted it, then 5 that knocked out your Mimikyu and Altaria."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "turtonator",
+        "moveId": "DRAGON_CLAW"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "DRAGON_CLAW"
+      },
+      {
+        "speciesId": "granbull_shadow",
+        "moveId": "CRUNCH"
+      }
+    ]
   },
   "gbl-battle-2026-10-20-v7": {
     "video": "Test Videos/v7.mov",
@@ -78,6 +182,27 @@
     "notes": {
       "1": "Empoleon used Waterfall (+10 every 3 turns), not PvPoke's Metal Sound, so ManGo overcounted it; not hand-counted.",
       "3": "Includes Azumarill's 1 Bubble as the lead before switching out."
+    },
+    "countTargets": [
+      {
+        "speciesId": "empoleon",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "magnezone",
+        "moveId": "WILD_CHARGE"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM"
+      }
+    ],
+    "observedFastMoves": {
+      "empoleon": "WATERFALL"
     }
   },
   "gbl-battle-2026-10-20-v8": {
@@ -92,7 +217,29 @@
     ],
     "notes": {
       "3": "Includes Azumarill's 1 Bubble as the lead before switching out."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "lucario",
+        "moveId": "POWER_UP_PUNCH"
+      },
+      {
+        "speciesId": "lucario",
+        "moveId": "SHADOW_BALL"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "PLAY_ROUGH"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "PLAY_ROUGH"
+      },
+      {
+        "speciesId": "lucario",
+        "moveId": "POWER_UP_PUNCH"
+      }
+    ]
   },
   "gbl-battle-2026-10-23-v11": {
     "video": "Test Videos/v11.mov",
@@ -108,7 +255,29 @@
       "1": "You both threw on the same turn (Sky Attack, then Moonblast on charged move priority), so Altaria had no fast move in progress: 13 Dragon Breaths, which your Altaria's HP bar also shows (13 drops).",
       "4": "Empoleon threw Hydro Cannon on the same turn as your charged move, which it had shielded.",
       "5": "Empoleon's buttons-back restart wasn't late: its own Hydro Cannon, not its shield of yours, ended the stop before."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "altaria",
+        "moveId": "MOONBLAST"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "FLAMETHROWER"
+      },
+      {
+        "speciesId": "empoleon",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "empoleon",
+        "moveId": "HYDRO_CANNON"
+      }
+    ]
   },
   "battle-2026-10-23-132243": {
     "video": "Test Videos/battle-2026-10-23-132243.mp4",
@@ -118,7 +287,13 @@
     ],
     "notes": {
       "1": "ManGo used to start the lead's clock at GO's first read (19.89s) and counted 8 Shadow Claws. GO stays on screen a moment before the first turn; starting 0.2s after it gives 7. Your Altaria's HP bar drops 7 times before the stop."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "doublade",
+        "moveId": "IRON_HEAD"
+      }
+    ]
   },
   "battle-2026-10-23-135548": {
     "video": "Test Videos/battle-2026-10-23-135548.mp4",
@@ -126,7 +301,14 @@
     "counts": [],
     "notes": {
       "cmp": "At 1:01 you threw after 4 two-turn moves: Florges matched them and sneaked a 5th Fairy Wind (45), as ManGo counts. At 1:10.5 you threw again on the first turn back, on the same turn as Florges's charged move. You won charged move priority and Double Iron Bash knocked it out, so its move never showed and ManGo counted a sneaked Fairy Wind (54). Harmless: Florges was out."
-    }
+    },
+    "energyCheckpoints": [
+      {
+        "time": 65,
+        "speciesId": "florges",
+        "energy": 45
+      }
+    ]
   },
   "battle-2026-10-23-140441": {
     "video": "Test Videos/battle-2026-10-23-140441.mp4",
@@ -135,23 +317,49 @@
     "notes": {
       "switch": "At 1:09.5 Mimikyu blocked your charged move after throwing Shadow Sneak, and the opponent switched to Turtonator about a second into play: a turn, so Turtonator had 3 Incinerates plus the one in progress (80) at your throw, not 100.",
       "faint": "Mimikyu's second time in: Turtonator's Dragon Claw knocked yours out, then they switched to Mimikyu. Your faint makes that a choice, so it costs a turn: 2 Shadow Claws by your throw after 2 Thunder Shocks (38 + 16 = 54). ManGo had made it free (62)."
-    }
+    },
+    "energyCheckpoints": [
+      {
+        "time": 82,
+        "speciesId": "turtonator",
+        "energy": 80
+      },
+      {
+        "time": 120,
+        "speciesId": "mimikyu",
+        "energy": 54
+      }
+    ]
   },
   "battle-2026-10-23-155712": {
     "video": "Test Videos/battle-2026-10-23-155712.mp4",
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Flygon, Corviknight, Azumarill.",
     "counts": [],
     "notes": {
-      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short.",
+      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short.",
       "4": "Azumarill threw Ice Beam (55) when ManGo had 44 (4 Bubbles): at least 5. Your Mimikyu's HP bar shows 2 Bubbles after it came in (2:23.5, 2:24.97), as ManGo counts, so the missing one is in the two short stretches after Azumarill replaced the fainted Corviknight. Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33)."
-    }
+    },
+    "throwEnergy": [
+      {
+        "ordinal": 2,
+        "speciesId": "corviknight",
+        "moveId": "PAYBACK",
+        "minimum": 60
+      },
+      {
+        "ordinal": 4,
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM",
+        "minimum": 55
+      }
+    ]
   },
   "battle-2026-10-23-192858": {
     "video": "Test Videos/battle-2026-10-23-192858.mp4",
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Corviknight, Turtonator, Mimikyu.",
     "counts": [],
     "notes": {
-      "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pokéballs stayed red (opponentAlive added from the video with screen-log --balls)."
+      "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pok\u00e9balls stayed red (opponentAlive added from the video with screen-log --balls)."
     }
   },
   "battle-2026-10-24-220440": {
@@ -162,14 +370,78 @@
     ],
     "notes": {
       "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that."
-    }
+    },
+    "countTargets": [
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "ROCK_SLIDE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 31,
+        "speciesId": "stunfisk_galarian",
+        "energy": 45
+      }
+    ]
   },
   "battle-2026-10-28-221337": {
     "video": "Test Videos/battle-2026-10-28-221337.mp4",
     "description": "Phone-saved, several battles in one recording (no results screen was shown, so it didn't split). Opponents: Scizor, Guzzlord, Nidoqueen; then Greninja (Shadow), Forretress (Shadow), Mimikyu; then Forretress, Greninja, Nidoqueen.",
     "counts": [],
     "notes": {
-      "greninja": "Shadow Greninja's Hydro Cannons and Brutal Swing came with less energy than ManGo counted (30, 28, 28, 28), each soon after it came in and you threw: likely aligned throws where it also sneaked a Water Shuriken that ManGo's timing (e.g. 1.36s for 1.5s) missed. Rounding to whole turns, and timing stops and restarts from the exact frame the buttons changed, both fix some of these but break counts confirmed elsewhere."
-    }
+      "greninja": "ManGo estimated 30, 28, 28 and 28 energy at throws 11, 16, 18 and 19. These are incorrect model outputs, not observed energy or exact fast-move counts. Hydro Cannon requires at least 40 and Brutal Swing at least 35. The cause of the missing energy is unconfirmed."
+    },
+    "throwEnergy": [
+      {
+        "ordinal": 11,
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON",
+        "minimum": 40
+      },
+      {
+        "ordinal": 16,
+        "speciesId": "greninja_shadow",
+        "moveId": "BRUTAL_SWING",
+        "minimum": 35
+      },
+      {
+        "ordinal": 18,
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON",
+        "minimum": 40
+      },
+      {
+        "ordinal": 19,
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON",
+        "minimum": 40
+      }
+    ]
+  },
+  "battle-2026-10-24-214129": {
+    "video": "Test Videos/battle-2026-10-24-214129.mp4",
+    "description": "Phone-saved battle; exact energy checkpoint from the existing verified replay test.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 89,
+        "speciesId": "stunfisk_galarian",
+        "energy": 70
+      }
+    ]
+  },
+  "battle-2026-10-24-172648": {
+    "video": "Test Videos/battle-2026-10-24-172648.mp4",
+    "description": "Galarian Stunfisk threw Earthquake after your charged move; exact energy checkpoint.",
+    "counts": [],
+    "throwEnergy": [
+      {
+        "ordinal": 3,
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE",
+        "exact": 71
+      }
+    ]
   }
 }

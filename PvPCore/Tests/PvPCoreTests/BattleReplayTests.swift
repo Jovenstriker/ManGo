@@ -232,12 +232,10 @@ private struct Screen {
         "Altaria used Moonblast", "Altaria used Flamethrower",
     ])
 
-    // Counted by watching the recording: Melmetal 6, 6, then 0 Thunder Shocks (9 each):
-    // 54 → 19, 73 → 38, 38 → 3. Ninetales: 3 Embers before your Dynamic Punch (2 thrown, 1
-    // slipped in as the moves lined up) and 3 after, around a 1-turn pause ManGo can't see,
-    // so it counts 7 (63); then 2 (63 → 28, + 18).
+    // Verified Melmetal energies. Ninetales's six Embers are enforced by the
+    // ground-truth suite; do not assert the known incorrect seven-Ember output here.
     let energies = energiesAtThrows(automation.log)
-    #expect(Array(energies.prefix(5)) == [54, 73, 38, 63, 46])
+    #expect(Array(energies.prefix(3)) == [54, 73, 38])
 
     // Altaria swapped out and came back: it keeps its energy rather than being written off.
     #expect(tracker.team.first { $0.speciesId == "altaria" }?.isFainted == false)
@@ -304,9 +302,9 @@ private struct Screen {
     }
     // v7: Azumarill leads, throws 1 Bubble and switches out; it brings those 11 back.
     // Empoleon used Waterfall rather than PvPoke's Metal Sound, so its 56 is an overcount.
-    let (a7, t7) = try replay("gbl-battle-2026-10-20-v7")
+    let (_, t7) = try replay("gbl-battle-2026-10-20-v7")
     #expect(t7.team.map(\.speciesId) == ["azumarill", "empoleon", "magnezone"])
-    #expect(energiesAtThrows(a7.log) == [56, 64, 100, 56])
+    // Actual counts and Empoleon's observed Waterfall are checked by BattleAccuracyTests.
 
     // v8: the same 1-Bubble Azumarill lead; Lucario throws Power-Up Punch and Shadow Ball.
     let (a8, t8) = try replay("gbl-battle-2026-10-20-v8")
@@ -512,4 +510,20 @@ private struct Screen {
     automation.process(Screen(opponent: "Azumarill").read(at: 0), tracker: &tracker)
     #expect(automation.logThisRead.isEmpty)
     #expect(automation.throwsThisRead.isEmpty)
+}
+
+@Test func diagnosticMoveCountIsNotInferredFromCappedEnergy() throws {
+    let (data, _) = try loadBattle()
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    tracker.setActive(speciesId: "azumarill", at: 0, assumeFastMove: "BUBBLE")
+    automation.process(Screen(opponent: "Azumarill").read(at: 0), tracker: &tracker)
+    automation.process(Screen(opponent: "Azumarill").read(at: 0.25), tracker: &tracker)
+    // Ten 1.5-second Bubbles produce 110 energy, capped at 100. Dividing 100 by 11
+    // would incorrectly report nine moves; this is a diagnostic test, not a battle label.
+    automation.process(Screen(opponent: "Azumarill", buttons: false, banner: "Attack incoming!").read(at: 15.125), tracker: &tracker)
+    automation.process(Screen(opponent: "Azumarill", buttons: false, banner: "Azumarill used Ice Beam!").read(at: 16), tracker: &tracker)
+    let observed = try #require(automation.throwsThisRead.first)
+    #expect(observed.energyBefore == 100)
+    #expect(observed.fastMoveCount == 10)
 }

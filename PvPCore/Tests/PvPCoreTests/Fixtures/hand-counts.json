@@ -414,10 +414,107 @@
   },
   "battle-2026-10-28-221337": {
     "video": "Test Videos/battle-2026-10-28-221337.mp4",
-    "description": "Phone-saved, several battles in one recording (no results screen was shown, so it didn't split). Opponents: Scizor, Guzzlord, Nidoqueen; then Greninja (Shadow), Forretress (Shadow), Mimikyu; then Forretress, Greninja, Nidoqueen.",
-    "counts": [],
+    "description": "Phone-saved, several battles in one recording (it didn't split: ManGo missed the \"GOOD EFFORT!\" results screens, read as two lines). Opponents: Scizor, Guzzlord, Nidoqueen; then Greninja (Shadow), Forretress (Shadow), Mimikyu; then Forretress, Greninja, Nidoqueen.",
+    "counts": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      3,
+      null,
+      null,
+      null,
+      null,
+      3,
+      null,
+      3
+    ],
+    "countTargets": [
+      {
+        "speciesId": "scizor_shadow",
+        "moveId": "NIGHT_SLASH"
+      },
+      {
+        "speciesId": "scizor_shadow",
+        "moveId": "NIGHT_SLASH"
+      },
+      {
+        "speciesId": "guzzlord",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "guzzlord",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "nidoqueen",
+        "moveId": "POISON_FANG"
+      },
+      {
+        "speciesId": "nidoqueen",
+        "moveId": "POISON_FANG"
+      },
+      {
+        "speciesId": "guzzlord",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      },
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "ROCK_TOMB"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "ROCK_TOMB"
+      },
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "nidoqueen",
+        "moveId": "EARTH_POWER"
+      },
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON"
+      }
+    ],
     "notes": {
-      "greninja": "ManGo estimated 30, 28, 28 and 28 energy at throws 11, 16, 18 and 19. These are incorrect model outputs, not observed energy or exact fast-move counts. Hydro Cannon requires at least 40 and Brutal Swing at least 35. The cause of the missing energy is unconfirmed."
+      "greninja": "Shadow Greninja's Hydro Cannons and Brutal Swing (throws 11, 16, 18) came with less energy than ManGo counted (30, 28, 28): each time it sneaked or squeezed in a Water Shuriken ManGo's timing missed (see 11, 16, 18). A fourth \"Hydro Cannon\" at 13:40 was ManGo reading its own app (see end).",
+      "11": "Recounted by the user on 2026-11-04: 3 Water Shurikens. Greninja sneaked one at your charged move at 5:41: your Mud Slap and its Water Shuriken are both 3-turn moves, so after a restart they always finish together and it always gets one more when you throw. ManGo measured that stretch as 1.37s, short of one Water Shuriken (1.5s), and counted 2.",
+      "16": "Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.",
+      "18": "Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.",
+      "end": "The battle ended at 11:07.9 (\"GOOD EFFORT!\", read as two lines \"GOOD\" and \"EFFORT!\", which ManGo missed). At 11:02 \"Attack incoming!\" showed but its banner was hidden by a \"Surrender and exit?\" prompt. The user: nothing happened between 11:01 and 13:40; no Hydro Cannon was thrown. At 13:40 ManGo read its own app's event line \"Greninja (Shadow) used Hydro Cannon (28 \u2192 0)\" as a banner."
     },
     "throwEnergy": [
       {
@@ -437,12 +534,12 @@
         "speciesId": "greninja_shadow",
         "moveId": "HYDRO_CANNON",
         "minimum": 40
-      },
+      }
+    ],
+    "noThrowsBetween": [
       {
-        "ordinal": 19,
-        "speciesId": "greninja_shadow",
-        "moveId": "HYDRO_CANNON",
-        "minimum": 40
+        "from": 668.0,
+        "to": 822.0
       }
     ]
   },

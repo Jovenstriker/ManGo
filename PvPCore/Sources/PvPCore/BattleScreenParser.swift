@@ -126,7 +126,17 @@ public struct BattleScreenParser: Sendable {
         lastScreenTime = read.time
         let lines = read.lines
 
-        // Start and end of a battle: big text in the middle of the screen.
+        // Start and end of a battle: big text in the middle of the screen. "GOOD EFFORT!" is two
+        // rows, read as two lines ("GOOD", "EFFORT!"), and "YOU WIN!" sometimes splits too.
+        let bigText = lines.filter { (0.35...0.65).contains($0.box.midY) && $0.box.height > 0.04 }
+            .sorted { (($0.box.minY / 0.03).rounded(), $0.box.minX) < (($1.box.minY / 0.03).rounded(), $1.box.minX) }
+            .map { NameMatcher.normalize($0.text) }.joined()
+        if ["youwin", "goodeffort", "youlose", "youlost"].contains(where: bigText.contains) {
+            if !ended { events.append(.battleEnded) }
+            ended = true
+            endOfBattle()
+            return events
+        }
         for line in lines where (0.35...0.65).contains(line.box.midY) {
             let key = NameMatcher.normalize(line.text)
             if key.contains("findingopponent") {
@@ -135,9 +145,7 @@ public struct BattleScreenParser: Sendable {
                 endOfBattle()
                 return events
             }
-            // Win: "YOU WIN!". Loss: "GOOD EFFORT!".
-            if line.box.height > 0.04, key.contains("youwin") || key.contains("goodeffort") || key.contains("youlose")
-                || key.contains("youlost") || key == "draw" {
+            if line.box.height > 0.04, key == "draw" {
                 if !ended { events.append(.battleEnded) }
                 ended = true
                 endOfBattle()
@@ -293,7 +301,10 @@ public struct BattleScreenParser: Sendable {
             events.append(.playerChargedMove)
         }
         for line in lines where (Self.bannerBand.minY...Self.bannerBand.maxY).contains(line.box.midY) {
-            guard let banner = Self.parseBanner(line.text) else { continue }
+            // ManGo's own app shows its last event ("Greninja (Shadow) used Hydro Cannon (28 → 0)"):
+            // read with ManGo in front, it isn't the game's banner. (OCR can add a stray "•" to a
+            // real banner, "Stunfisk used Earthquakel •", so only the arrow rules it out.)
+            guard !line.text.contains("→"), let banner = Self.parseBanner(line.text) else { continue }
             let moveKey = NameMatcher.normalize(banner.move)
             // The banner stays up for ~2s and OCR varies ("Discharge!", "Dischargel"): count it once.
             let seen = bannersSeen.contains { NameMatcher.editDistance($0, moveKey, limit: 2) <= 2 }
@@ -458,11 +469,12 @@ public struct BattleScreenParser: Sendable {
         return t == t.uppercased() && !t.contains(where: \.isNumber) && !t.contains("•") && !t.contains("·")
     }
 
-    /// Text from ManGo's own overlay card: "vs Sableye (Shadow)", "Bench: …", "★ Foul Play · 40".
+    /// Text from ManGo's own overlay card: "vs Sableye (Shadow)", "Bench: …", "★ Foul Play · 40",
+    /// or its app's event log: "Greninja (Shadow) used Hydro Cannon (28 → 0)".
     static func isOverlayText(_ text: String) -> Bool {
         let t = text.trimmingCharacters(in: .whitespaces).lowercased()
         return t.hasPrefix("vs ") || t.hasPrefix("bench") || t.contains("•") || t.contains("·") || t.contains("★")
-            || t == "paused" || t == "ready" || t == "battle over"
+            || t.contains("→") || t == "paused" || t == "ready" || t == "battle over"
     }
 
     public mutating func reset() {

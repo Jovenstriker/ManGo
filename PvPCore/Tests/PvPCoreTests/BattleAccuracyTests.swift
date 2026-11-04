@@ -10,7 +10,13 @@ private struct BattleEvidence: Decodable {
     let energyCheckpoints: [Checkpoint]?
     let throwEnergy: [ThrowEnergy]?
     let observedFastMoves: [String: String]?
+    /// Stretches of the recording with no opponent charged move (seconds).
+    let noThrowsBetween: [Window]?
 
+    struct Window: Decodable {
+        let from: Double
+        let to: Double
+    }
     struct Target: Decodable {
         let speciesId: String
         let moveId: String
@@ -69,8 +75,8 @@ private func replayForAccuracy(_ name: String) throws -> (throwsSeen: [BattleAut
 @Test func handEvidenceInventoryIsComplete() throws {
     let all = try evidence()
     #expect(recordedFixtures.count >= 24)
-    #expect(all.values.filter { $0.counts.contains { $0 != nil } }.count == 10)
-    #expect(all.values.flatMap(\.counts).compactMap { $0 }.count == 37)
+    #expect(all.values.filter { $0.counts.contains { $0 != nil } }.count == 11)
+    #expect(all.values.flatMap(\.counts).compactMap { $0 }.count == 40)
     for (name, entry) in all {
         #expect(recordedFixtures.contains(name), "Missing recording for \(name)")
         if !entry.counts.isEmpty { #expect(entry.countTargets?.count == entry.counts.count, "\(name): label identities missing") }
@@ -106,8 +112,13 @@ func recordingsRespectGroundTruthAndAffordability(_ name: String) throws {
                                     "\(name): missing energy-labelled throw \(point.ordinal)")
         #expect(observed.speciesId == point.speciesId)
         #expect(observed.move.moveId == point.moveId)
-        if let exact = point.exact { #expect(observed.energyBefore == exact, "\(name) throw \(point.ordinal): exact energy") }
+        if let exact = point.exact { #expect(observed.energyBeforeReconciliation == exact, "\(name) throw \(point.ordinal): exact energy") }
         if let minimum = point.minimum { #expect(observed.energyBeforeReconciliation >= minimum, "\(name) throw \(point.ordinal): minimum energy, not an exact count") }
+    }
+    for window in entry.noThrowsBetween ?? [] {
+        for observed in replay.throwsSeen where (window.from...window.to).contains(observed.time) {
+            Issue.record("\(name): \(observed.speciesId) \(observed.move.moveId) detected at \(observed.time)s, but nothing was thrown between \(window.from)s and \(window.to)s")
+        }
     }
     // A different fast move only shows once a throw the assumed one couldn't afford reveals
     // it, so check the one ManGo ends up with.

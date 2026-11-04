@@ -44,19 +44,19 @@ OPPONENT CHARGED MOVES
        note: Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short.
   3  1:50.94  Corviknight           Air Cutter (40)           40 → 0        10          ?     -
        calc: 40 = 0 left before + 10 × 4 (Sand Attack); after: 40 − 40 = 0
-  4  2:33.24  Azumarill             Ice Beam (55)             55 → 0        4           ?     -
+  4  2:33.24  Azumarill             Ice Beam (55)             55 → 0        4           5     ✗ (-1)
        calc: 55 = 0 left before + 4 × 11 (Bubble) + 11 (cap/corrections); after: 55 − 55 = 0
        inferred minimum: raw estimate 44, observed spend requires 55. Timing remains uncertain; no exact missing move count was inferred.
-       note: Azumarill threw Ice Beam (55) when ManGo had 44 (4 Bubbles): at least 5. Your Mimikyu's HP bar shows 2 Bubbles after it came in (2:23.5, 2:24.97), as ManGo counts, so the missing one is in the two short stretches after Azumarill replaced the fainted Corviknight. Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).
+       note: Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13 (play had restarted about 2:11.4), which ManGo missed. ManGo's other 4: the Bubble in progress at your charged moves at 2:01 and 2:13, and 2 shown on your Mimikyu's HP bar (2:23.5, 2:24.97). Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).
   5  2:59.33  Flygon                Sand Tomb (45)            48 → 3        4           ?     -
        calc: 48 = 0 left before + 4 × 12 (Dragon Tail); after: 48 − 45 = 3
   6  3:14.04  Flygon                Sand Tomb (45)            45 → 0        4           ?     -
        calc: 45 = 3 left before + 4 × 9 (Mud Shot) + 6 (cap/corrections); after: 45 − 45 = 0
 
 SUMMARY
-  0 of 0 hand-counted charged moves match ManGo's fast move count exactly.
+  0 of 1 hand-counted charged moves match ManGo's fast move count exactly.
   2 raw estimates below the observed move cost (reconciled after the spend).
-  6 not hand-counted.
+  5 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:34.66  Opponent: Flygon
@@ -108,4 +108,6 @@ TIMELINE (what the screen reader saw and did)
   3:24.39  Battle over
 
 VALIDATION: FAIL
-  0 labelled throws missing; 0 count mismatches; 2 raw underfunded estimates (reconciled after the spend).
+  0 labelled throws missing; 1 count mismatches; 2 raw underfunded estimates (reconciled after the spend).
+  Throw 2: expected at least 60, estimated 56
+  Throw 4: expected at least 55, estimated 44

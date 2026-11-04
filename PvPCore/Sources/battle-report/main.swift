@@ -27,6 +27,8 @@ struct HandCounts: Decodable {
     let energyCheckpoints: [Checkpoint]?
     let throwEnergy: [ThrowEnergy]?
     let observedFastMoves: [String: String]?
+    let noThrowsBetween: [Window]?
+    struct Window: Decodable { let from: Double; let to: Double }
     struct Target: Decodable { let speciesId: String; let moveId: String }
     struct Checkpoint: Decodable { let time: Double; let speciesId: String; let energy: Int }
     struct ThrowEnergy: Decodable {
@@ -167,11 +169,17 @@ for point in hand?.throwEnergy ?? [] {
     if observed.speciesId != point.speciesId || observed.move.moveId != point.moveId {
         evidenceFailures.append("Wrong identity at energy-labelled throw \(point.ordinal)")
     }
-    if let exact = point.exact, observed.energyBefore != exact {
-        evidenceFailures.append("Throw \(point.ordinal): expected exactly \(exact), estimated \(observed.energyBefore)")
+    // The raw estimate: the observed spend tops it up to the move's cost afterwards.
+    if let exact = point.exact, observed.energyBeforeReconciliation != exact {
+        evidenceFailures.append("Throw \(point.ordinal): expected exactly \(exact), estimated \(observed.energyBeforeReconciliation)")
     }
-    if let minimum = point.minimum, observed.energyBefore < minimum {
-        evidenceFailures.append("Throw \(point.ordinal): expected at least \(minimum), estimated \(observed.energyBefore)")
+    if let minimum = point.minimum, observed.energyBeforeReconciliation < minimum {
+        evidenceFailures.append("Throw \(point.ordinal): expected at least \(minimum), estimated \(observed.energyBeforeReconciliation)")
+    }
+}
+for window in hand?.noThrowsBetween ?? [] {
+    for t in throwsSeen where (window.from...window.to).contains(t.time) {
+        evidenceFailures.append("\(name(t.speciesId)) \(t.move.name) detected at \(clock(t.time)), but nothing was thrown between \(clock(window.from)) and \(clock(window.to))")
     }
 }
 // A different fast move only shows once a throw the assumed one couldn't afford reveals it,

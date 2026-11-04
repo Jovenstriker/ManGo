@@ -334,10 +334,33 @@
   "battle-2026-10-23-155712": {
     "video": "Test Videos/battle-2026-10-23-155712.mp4",
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Flygon, Corviknight, Azumarill.",
-    "counts": [],
+    "counts": [
+      null,
+      null,
+      null,
+      5
+    ],
+    "countTargets": [
+      {
+        "speciesId": "corviknight",
+        "moveId": "PAYBACK"
+      },
+      {
+        "speciesId": "corviknight",
+        "moveId": "PAYBACK"
+      },
+      {
+        "speciesId": "corviknight",
+        "moveId": "AIR_CUTTER"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM"
+      }
+    ],
     "notes": {
       "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short.",
-      "4": "Azumarill threw Ice Beam (55) when ManGo had 44 (4 Bubbles): at least 5. Your Mimikyu's HP bar shows 2 Bubbles after it came in (2:23.5, 2:24.97), as ManGo counts, so the missing one is in the two short stretches after Azumarill replaced the fainted Corviknight. Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).",
+      "4": "Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13 (play had restarted about 2:11.4), which ManGo missed. ManGo's other 4: the Bubble in progress at your charged moves at 2:01 and 2:13, and 2 shown on your Mimikyu's HP bar (2:23.5, 2:24.97). Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).",
       "flygon": "Flygon used Mud Shot, not PvPoke's Dragon Tail (\"it is mud shot\", user, Oct 2026). Its shortfall at a throw is the moveset, not timing."
     },
     "throwEnergy": [

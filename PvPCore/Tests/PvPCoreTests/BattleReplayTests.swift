@@ -483,3 +483,33 @@ private struct Screen {
     }
     #expect(before == [56, 58, 46])
 }
+
+@Test func diagnosticsSurviveUILogRolloverAndRepeatedMessages() throws {
+    let (data, _) = try loadBattle()
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    automation.process(Screen(opponent: "Azumarill").read(at: 0), tracker: &tracker)
+    automation.process(Screen(opponent: "Azumarill").read(at: 0.25), tracker: &tracker)
+    var throwsSeen: [BattleAutomation.ChargedMoveObservation] = []
+    var messages: [String] = []
+    for i in 0..<70 {
+        let t = 5 + Double(i) * 4
+        for read in [
+            Screen(opponent: "Azumarill").read(at: t),
+            Screen(opponent: "Azumarill", buttons: false, banner: "Attack incoming!").read(at: t + 1),
+            Screen(opponent: "Azumarill", buttons: false, banner: "Azumarill used Ice Beam!").read(at: t + 2),
+        ] {
+            automation.process(read, tracker: &tracker)
+            throwsSeen += automation.throwsThisRead
+            messages += automation.logThisRead
+        }
+    }
+    #expect(automation.log.count == 50)
+    #expect(throwsSeen.count == 70)
+    #expect(messages.filter { $0.contains(" used ") }.count == 70)
+    #expect(throwsSeen.allSatisfy { $0.move.moveId == "ICE_BEAM" })
+    // An ignored duplicate read must not repeat the previous call's diagnostics.
+    automation.process(Screen(opponent: "Azumarill").read(at: 0), tracker: &tracker)
+    #expect(automation.logThisRead.isEmpty)
+    #expect(automation.throwsThisRead.isEmpty)
+}

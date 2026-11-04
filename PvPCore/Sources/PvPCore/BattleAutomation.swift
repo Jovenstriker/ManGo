@@ -9,6 +9,22 @@ public struct BattleAutomation: Sendable {
     public let data: GameData
     /// What happened, newest last, for showing in the app.
     public private(set) var log: [String] = []
+    /// Diagnostics emitted by the latest process call, independent of the bounded UI log.
+    public private(set) var logThisRead: [String] = []
+    public private(set) var throwsThisRead: [ChargedMoveObservation] = []
+
+    public struct ChargedMoveObservation: Sendable {
+        public let time: TimeInterval
+        public let speciesId: String
+        public let move: Move
+        public let fastMove: Move?
+        public let energyBefore: Int
+        public let energyAfter: Int
+        /// Modelled fast moves since this Pokémon's previous charged move, including
+        /// moves before switching out. Unlike energy differences, this survives the cap.
+        public let fastMoveCount: Int?
+    }
+
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
     /// the next one starts.
     public private(set) var isBattleOver = false
@@ -122,6 +138,8 @@ public struct BattleAutomation: Sendable {
     }
 
     public mutating func process(_ read: ScreenRead, tracker: inout OpponentTracker) {
+        logThisRead = []
+        throwsThisRead = []
         guard read.time > lastTime else { return }
         previousReadTime = lastTime
         lastTime = read.time
@@ -230,6 +248,19 @@ public struct BattleAutomation: Sendable {
                 alignToOpponentChargedMove(&tracker)
                 let before = tracker.snapshot(at: t).energy
                 tracker.opponentThrewChargedMove(move.moveId, at: t)
+                if let pokemon = tracker.active {
+                    let previousEnd = pokemon.chargedMovesThrown.dropLast().last?.afterStretch ?? 0
+                    let count = pokemon.fastMove.map { fast in
+                        pokemon.history.dropFirst(previousEnd).reduce(0) { total, stretch in
+                            total + Int((stretch.length / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
+                                + (stretch.interrupted ? 1 : 0)
+                        }
+                    }
+                    throwsThisRead.append(ChargedMoveObservation(
+                        time: t, speciesId: pokemon.speciesId, move: move, fastMove: pokemon.fastMove,
+                        energyBefore: before, energyAfter: tracker.snapshot(at: t).energy,
+                        fastMoveCount: count))
+                }
                 opponentThrewThisStop = true
                 chargedMoveThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
@@ -497,6 +528,7 @@ public struct BattleAutomation: Sendable {
     }
 
     private mutating func note(_ s: String) {
+        logThisRead.append(s)
         log.append(s)
         if log.count > 50 { log.removeFirst() }
     }

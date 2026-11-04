@@ -69,3 +69,31 @@ private func renderBattleScreen(player: String, opponent: String) throws -> CGIm
     #expect(med.box.maxX < 0.5 && med.box.minY < 0.2)
     #expect(NameMatcher(data: makeData()).match(azu.text)?.key == "azumarill")
 }
+
+@Test func hpReaderRequiresAnOutlineAndFollowsAHorizontalSlide() throws {
+    let sprite: NameBoxBalls.Sampler = { _, _ in (20, 220, 180) }
+    #expect(YourHPBar.locate(aspect: 2, sample: sprite, width: 1000) == nil)
+    let bar: NameBoxBalls.Sampler = { x, y in
+        let top = 0.393, bottom = 0.407, left = 0.08, right = 0.365
+        if (left...right).contains(x), abs(y - top) < 0.0008 || abs(y - bottom) < 0.0008 { return (240, 240, 240) }
+        if (top...bottom).contains(y), abs(x - left) < 0.001 || abs(x - right) < 0.001 { return (240, 240, 240) }
+        if (left...right).contains(x), (top...bottom).contains(y) {
+            return x < 0.28 ? (20, 220, 180) : (30, 40, 50)
+        }
+        return (30, 40, 50)
+    }
+    let y = try #require(YourHPBar.locate(aspect: 2, sample: bar, width: 1000))
+    let fill = YourHPBar.fill(atY: y, aspect: 2, sample: bar, width: 1000, height: 2000)
+    #expect(abs(fill - 0.196) < 0.01)
+}
+
+@Test func pokeballsReadThePlayersSideAndPreserveZero() {
+    let leftBalls: NameBoxBalls.Sampler = { x, y in
+        guard abs(y - 0.124) < 0.01,
+              let i = NameBoxBalls.playerCenters.firstIndex(where: { abs($0.x - x) < 0.012 }) else { return (20, 30, 40) }
+        return i < 2 ? (230, 40, 40) : (100, 80, 80)
+    }
+    #expect(NameBoxBalls.alive(aspect: 2, side: .player, sample: leftBalls) == 2)
+    #expect(NameBoxBalls.alive(aspect: 2, sample: leftBalls) == nil)
+    #expect(NameBoxBalls.alive(aspect: 2, side: .player, sample: { _, _ in (100, 80, 80) }) == 0)
+}

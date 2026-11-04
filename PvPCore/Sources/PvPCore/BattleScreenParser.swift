@@ -21,6 +21,8 @@ public enum BattleEvent: Equatable, Sendable {
     case yourPokemonFainted
     /// You threw a charged move ("Get Ready!", or your Pokémon's "used" banner).
     case playerChargedMove
+    /// Your charged-move labels changed: your active Pokémon changed.
+    case playerChangedPokemon
     /// The countdown's "GO": turn 0 of the battle.
     case battleStarted
     /// The countdown's "2": "GO" should follow in about this long. A fallback if GO is missed.
@@ -65,6 +67,12 @@ public struct BattleScreenParser: Sendable {
 
     public private(set) var opponentKey: String?
     private var pending: (key: String, count: Int, since: TimeInterval)?
+    private var playerAlive: Int?
+    private var pendingPlayerAlive: (value: Int, count: Int, first: TimeInterval, previous: TimeInterval)?
+    private var replacementPendingAt: TimeInterval?
+    private var replacementGoAt: TimeInterval?
+    private var yourButtonLabels: Set<String> = []
+    private var pendingButtonLabels: (labels: Set<String>, count: Int)?
     private var running: Bool?
     private var missingButtons: (first: TimeInterval, previous: TimeInterval)?
     private var lastScreenTime: TimeInterval?
@@ -151,9 +159,51 @@ public struct BattleScreenParser: Sendable {
         // Running or stopped, from the charged move buttons.
         // The game's buttons are ALL CAPS with no numbers ("SHADOW SNEAK"); ManGo's own
         // overlay card, which the screen recording also sees, says "Drain Punch • 40".
-        var isRunning = lines.contains { line in
-            line.box.midY >= Self.buttonBand.minY && Self.isButtonLabel(line.text)
-                && chargedMoveNames.contains(NameMatcher.normalize(line.text))
+        let labels = Set(lines.filter {
+            $0.box.midY >= Self.buttonBand.minY && Self.isButtonLabel($0.text)
+                && chargedMoveNames.contains(NameMatcher.normalize($0.text))
+        }.map { NameMatcher.normalize($0.text) })
+        if let alive = read.playerAlive {
+            if let before = playerAlive, alive < before {
+                if pendingPlayerAlive?.value == alive { pendingPlayerAlive!.count += 1 }
+                else { pendingPlayerAlive = (alive, 1, read.time, previousTime) }
+                if let pending = pendingPlayerAlive, pending.count >= requiredReads {
+                    pendingPlayerAlive = nil
+                    playerAlive = alive
+                    if alive == 0 {
+                        events.append(.battleEnded)
+                        endOfBattle()
+                        ended = true
+                        return events
+                    }
+                    replacementPendingAt = pending.first
+                    replacementGoAt = nil
+                    if running == true {
+                        stopObservation = (pending.first, pending.previous)
+                        events.append(.stopped)
+                    }
+                    running = false
+                    announcedFaint = true
+                    events.append(.yourPokemonFainted)
+                }
+            } else {
+                pendingPlayerAlive = nil
+                if playerAlive == nil { playerAlive = alive }
+            }
+        }
+        var isRunning = !labels.isEmpty
+        if let faint = replacementPendingAt {
+            let goVisible = lines.contains { $0.text.lowercased().hasPrefix("go,") }
+            if goVisible, replacementGoAt == nil { replacementGoAt = read.time }
+            let newBar = read.hpTraceVerified == true && (read.hpTrace ?? []).contains {
+                $0.count == 3 && $0[0] >= faint + 0.25 && $0[0] <= read.time && $0[1] * $0[2] >= 3
+            }
+            let changed = !labels.isEmpty && !labels.isSubset(of: yourButtonLabels)
+            let goFinished = replacementGoAt.map { !goVisible && read.time - $0 >= 0.5 } ?? false
+            if isRunning && changed && (newBar || goFinished) {
+                replacementPendingAt = nil
+                replacementGoAt = nil
+            } else { isRunning = false }
         }
         let explicitStop = lines.contains {
             let key = NameMatcher.normalize($0.text)
@@ -189,6 +239,19 @@ public struct BattleScreenParser: Sendable {
                 events.append(.stopped)
             }
             running = isRunning
+        }
+
+        if replacementPendingAt == nil, !labels.isEmpty {
+            if yourButtonLabels.isEmpty { yourButtonLabels = labels }
+            else if !labels.isSubset(of: yourButtonLabels) {
+                let count = pendingButtonLabels?.labels == labels ? pendingButtonLabels!.count + 1 : 1
+                pendingButtonLabels = (labels, count)
+                if count >= requiredReads {
+                    yourButtonLabels = labels
+                    pendingButtonLabels = nil
+                    events.append(.playerChangedPokemon)
+                }
+            } else { pendingButtonLabels = nil }
         }
 
         // Charged move cues and banners.
@@ -371,6 +434,12 @@ public struct BattleScreenParser: Sendable {
         pendingGo = nil
         switchPromptAt = nil
         countdownSeen = false
+        playerAlive = nil
+        pendingPlayerAlive = nil
+        replacementPendingAt = nil
+        replacementGoAt = nil
+        yourButtonLabels = []
+        pendingButtonLabels = nil
         runningSince = nil
         resumedAfterChargedMove = false
         bannerConsumed = false

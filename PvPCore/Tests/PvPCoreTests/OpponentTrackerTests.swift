@@ -258,3 +258,35 @@ private func makeTracker() throws -> OpponentTracker {
     #expect(tracker.snapshot(at: 10).energy == 90)
     #expect(tracker.snapshot(at: 11.5).energy == 100)
 }
+
+@Test func observedSpendResynchronizesEnergyWithoutInventingFastMoves() throws {
+    var tracker = try makeTracker()
+    tracker.setActive(speciesId: "azumarill", at: 0, assumeFastMove: "BUBBLE")
+    tracker.pause(at: 6)
+    #expect(tracker.snapshot(at: 6).energy == 44)
+    #expect(tracker.reconcileObservedSpend(55, at: 7) == 11)
+    #expect(tracker.active?.history.last?.minimumEnergy == 55)
+    #expect(tracker.snapshot(at: 7).energy == 55)
+    tracker.opponentThrewChargedMove("ICE_BEAM", at: 7)
+    #expect(tracker.snapshot(at: 7).energy == 0)
+    #expect(tracker.active?.energyWarning != nil)
+    let pokemon = try #require(tracker.active)
+    let move = try #require(pokemon.fastMove)
+    #expect(OpponentTracker.replay(pokemon, with: move, openStretch: nil, throwing: nil).energy == 0)
+    tracker.resume(at: 10)
+    #expect(tracker.snapshot(at: 11.5).energy == 11)
+}
+
+@Test func damageCadenceRequiresRepeatedStableHitsAndRejectsGaps() {
+    var detector = FastMoveCadence()
+    var rhythm: Double?
+    for i in 0...55 {
+        let time = Double(i) / 10
+        let damage = time >= 4.5 ? 30.0 : time >= 3 ? 20 : time >= 1.5 ? 10 : 0
+        if let r = detector.observe(time: time, pixels: 200 - damage) { rhythm = r }
+    }
+    #expect(rhythm.map { abs($0 - 1.5) < 0.1 } == true)
+    #expect(detector.observe(time: 10, pixels: 150) == nil)
+    // One new baseline after a missing bar is not a hit or evidence of a new moveset.
+    #expect(detector.observe(time: 10.1, pixels: 150) == nil)
+}

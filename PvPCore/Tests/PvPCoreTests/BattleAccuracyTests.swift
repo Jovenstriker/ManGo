@@ -57,7 +57,9 @@ private func replayForAccuracy(_ name: String) throws -> (throwsSeen: [BattleAut
         for (i, point) in points.enumerated() where checkpoints[i] == nil && read.time >= point.time {
             // First read at the checkpoint; don't wait for a later, conveniently matching species.
             #expect(read.time - point.time < 0.5, "\(name): no timely read at \(point.time)s")
-            #expect(tracker.active?.speciesId == point.speciesId, "\(name): wrong species at \(point.time)s")
+            // A base name cannot identify a form before a distinguishing move appears.
+            #expect(tracker.active?.possibleSpeciesIds.contains(point.speciesId) == true,
+                    "\(name): true form excluded at \(point.time)s")
             checkpoints[i] = tracker.snapshot(at: read.time).energy
         }
     }

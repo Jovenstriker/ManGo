@@ -20,6 +20,8 @@ public struct BattleAutomation: Sendable {
         public let fastMove: Move?
         public let energyBefore: Int
         public let energyAfter: Int
+        /// The raw estimate before an observed spend forced reconciliation.
+        public let energyBeforeReconciliation: Int
         /// Modelled fast moves since this Pokémon's previous charged move, including
         /// moves before switching out. Unlike energy differences, this survives the cap.
         public let fastMoveCount: Int?
@@ -77,6 +79,9 @@ public struct BattleAutomation: Sendable {
     /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
     private var opponentThrewAfterYours = false
     private var lastResumeAfterShield = false
+    private var playerChangedSinceResume = false
+    private var cadence = FastMoveCadence()
+    private var recentVerifiedHP: [[Double]] = []
     private var chargedMoveThisStop = false
 
     private var lastTime: TimeInterval = -.infinity
@@ -141,9 +146,24 @@ public struct BattleAutomation: Sendable {
         logThisRead = []
         throwsThisRead = []
         guard read.time > lastTime else { return }
+        if lastTime.isFinite, read.time - lastTime > 1, !stopped, !isBattleOver, tracker.active != nil {
+            tracker.markEnergyUncertain("Screen reads delayed; timing uncertain")
+        }
         previousReadTime = lastTime
         lastTime = read.time
         let t = read.time
+        if read.hpTraceVerified == true {
+            recentVerifiedHP += (read.hpTrace ?? []).filter { $0.count == 3 && $0[0] <= t && $0[2] > 0 }
+            recentVerifiedHP.removeAll { $0[0] < t - 4 }
+        }
+        if !stopped, !awaitingGo, read.hpTraceVerified == true {
+            for sample in read.hpTrace ?? [] where sample.count == 3 && sample[0] <= t && sample[2] > 0 {
+                if let rhythm = cadence.observe(time: sample[0], pixels: sample[1] * sample[2]),
+                   let move = tracker.inferFastMoveFromCadence(rhythm) {
+                    note("HP damage rhythm suggests \(name(tracker.active?.speciesId)) uses \(move.name); recounted its assumed moveset")
+                }
+            }
+        }
         if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         if let n = read.opponentAlive {
@@ -215,6 +235,8 @@ public struct BattleAutomation: Sendable {
 
             case .resumed(let free):
                 stopped = false
+                playerChangedSinceResume = false
+                cadence = FastMoveCadence()
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
                 let resume = max(t - lead, lastStopAt)
                 resumedAt = resume
@@ -242,11 +264,14 @@ public struct BattleAutomation: Sendable {
                     note("\(name(tracker.active?.speciesId)) couldn't afford \(move.name) without its fast move in progress: it threw after yours, not on the same turn (\(short) → \(tracker.snapshot(at: t).energy))")
                 }
                 if playerChargedThisStop { opponentThrewAfterYours = true }
-                // A throw the assumed fast move couldn't have afforded means it's another one.
-                if !Rules.off("reconsider"), let change = tracker.reconsiderFastMove(throwing: move.energy, at: lastStopAt) {
-                    note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
-                }
+                // Affordability alone cannot distinguish a different fast move from
+                // missed timing. Keep the moveset hypothesis instead of oscillating it.
                 alignToOpponentChargedMove(&tracker)
+                tracker.restrictForms(learning: move.moveId)
+                let raw = tracker.snapshot(at: t).energy
+                if tracker.reconcileObservedSpend(move.energy, at: t) > 0 {
+                    note("Timing uncertain: \(name(tracker.active?.speciesId)) spent \(move.energy) on \(move.name), but the clock counted \(raw); resynchronized to the observed minimum")
+                }
                 let before = tracker.snapshot(at: t).energy
                 tracker.opponentThrewChargedMove(move.moveId, at: t)
                 if let pokemon = tracker.active {
@@ -260,7 +285,7 @@ public struct BattleAutomation: Sendable {
                     throwsThisRead.append(ChargedMoveObservation(
                         time: t, speciesId: pokemon.speciesId, move: move, fastMove: pokemon.fastMove,
                         energyBefore: before, energyAfter: tracker.snapshot(at: t).energy,
-                        fastMoveCount: count))
+                        energyBeforeReconciliation: raw, fastMoveCount: count))
                 }
                 opponentThrewThisStop = true
                 chargedMoveThisStop = true
@@ -278,6 +303,13 @@ public struct BattleAutomation: Sendable {
                 let before = tracker.snapshot(at: t).energy
                 tracker.yourPokemonFainted()
                 note("Your Pokémon fainted: \(name(tracker.active?.speciesId)) \(before) → \(tracker.snapshot(at: t).energy) (the fast move that knocked it out landed)")
+
+            case .playerChangedPokemon:
+                // A switch/faint transition can interrupt the opponent's rhythm even
+                // while OCR still sees the dimmed buttons. It cannot justify adding a
+                // fast move by assuming the whole stretch was uninterrupted.
+                playerChangedSinceResume = true
+                cadence = FastMoveCadence()
 
             case .playerChargedMove:
                 // Their fast move in progress pays out; they start fresh after your move.
@@ -378,7 +410,7 @@ public struct BattleAutomation: Sendable {
     /// Their charged move started as a fast move finished: the stretch since the battle
     /// restarted holds a whole number of fast moves.
     private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
-        guard !Rules.off("align") else { return }
+        guard !Rules.off("align"), !playerChangedSinceResume else { return }
         let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
         if let back = buttonsBackAt, lastStopAt > resumedAt,
            tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
@@ -409,6 +441,9 @@ public struct BattleAutomation: Sendable {
         playerChargedThisStop = false
         opponentThrewAfterYours = false
         lastResumeAfterShield = false
+        playerChangedSinceResume = false
+        cadence = FastMoveCadence()
+        recentVerifiedHP = []
         chargedMoveThisStop = false
         opponentThrewThisStop = false
         yourFaintThisStop = false
@@ -501,7 +536,19 @@ public struct BattleAutomation: Sendable {
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
         if !Rules.off("yourFaintTurn"), yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
+        cadence = FastMoveCadence()
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free, seenAt: isLead ? nil : since)
+        if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
+        // Name confirmation arrives after the switch. Replay the verified samples
+        // belonging to the incoming Pokémon instead of discarding its first hit.
+        if !stopped {
+            for sample in recentVerifiedHP where sample[0] >= time {
+                if let rhythm = cadence.observe(time: sample[0], pixels: sample[1] * sample[2]),
+                   let move = tracker.inferFastMoveFromCadence(rhythm) {
+                    note("HP damage rhythm suggests \(name(speciesId)) uses \(move.name); recounted its assumed moveset")
+                }
+            }
+        }
         if isLead, goAt == nil {
             // Named before the countdown's GO (from "Go, X!"): nothing happens until then.
             tracker.pause(at: time)

@@ -554,3 +554,30 @@ private struct Screen {
     #expect(parser.stopObservation?.first == 1)
     #expect(parser.stopObservation?.previous == 0)
 }
+
+@Test func confirmedPlayerFaintPausesDespiteDimmedChargeLabels() throws {
+    let (data, _) = try loadBattle()
+    var parser = BattleScreenParser(data: data)
+    var initial = Screen(opponent: "Azumarill").read(at: 0)
+    initial.playerAlive = 3
+    _ = parser.process(initial)
+    var faint = Screen(opponent: "Azumarill").read(at: 1)
+    faint.playerAlive = 2
+    #expect(!parser.process(faint).contains(.yourPokemonFainted))
+    faint = Screen(opponent: "Azumarill").read(at: 1.25)
+    faint.playerAlive = 2
+    let events = parser.process(faint)
+    #expect(events.contains(.stopped))
+    #expect(events.contains(.yourPokemonFainted))
+    #expect(!events.contains { if case .resumed = $0 { true } else { false } })
+    #expect(parser.stopObservation?.first == 1)
+    // Incoming labels alone are still dimmed during the replacement animation.
+    var replacement = ScreenRead(time: 1.5, lines: [
+        RecognizedText(text: "ICE BEAM", box: CGRect(x: 0.1, y: 0.94, width: 0.25, height: 0.013)),
+    ])
+    #expect(!parser.process(replacement).contains { if case .resumed = $0 { true } else { false } })
+    replacement = ScreenRead(time: 2, lines: replacement.lines)
+    replacement.hpTraceVerified = true
+    replacement.hpTrace = [[1.9, 0.2, 1000]]
+    #expect(parser.process(replacement).contains { if case .resumed = $0 { true } else { false } })
+}

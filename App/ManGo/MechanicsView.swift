@@ -55,28 +55,28 @@ struct MechanicsView: View {
 
                 topic("Counting fast moves", "number", [
                     "Their energy tells you when a charged move can come. Medicham needs 5 Psycho Cuts (+9 each) for Ice Punch (40), so the shield decision comes after the 5th.",
-                    "That's ManGo's job: it counts their energy so you can play.",
+                    "ManGo estimates that count from screen observations and marks lost synchronization.",
                 ])
 
                 Section {
                     bullet("Opponent's Pokémon: the name box in the top-right, and the \"Go, X!\" message when it comes out.")
-                    bullet("Their fast move: PvPoke's recommended one, thrown nonstop. A charged move it couldn't have afforded switches ManGo to another fast move the Pokémon learns.")
-                    bullet("Running or frozen: your charged move buttons are on screen while the battle runs.")
+                    bullet("Their fast move starts as PvPoke's recommendation. Repeated damage on a verified HP bar can identify a different rhythm; a move cost alone cannot identify the fast move.")
+                    bullet("Running or frozen: charge-button labels and battle cues, with two reads to confirm missing labels. Your remaining pokéballs confirm a faint even when dimmed labels stay visible.")
                     bullet("Charged moves: \"Attack incoming!\" and the \"X used Y!\" banner for theirs, \"Get Ready!\" for yours.")
                     bullet("Start and end: the countdown's \"GO\" (the first turn begins a moment after it appears), and \"YOU WIN!\" / \"GOOD EFFORT!\". If lag skips the countdown, it starts when your buttons appear.")
                     bullet("Their lead starts a moment after GO, unless the first \"…EFFECTIVE\" over your Pokémon shows their first fast move landed later: some opponents start a second or so late.")
                     bullet("Switches: a new name in the top-right box. ManGo works out whether it cost a turn from whether there was a charged move or a faint in the stop, and how soon after the restart the name showed.")
                     bullet("Their energy can never rise faster than their fast move allows: one move per move's length since ManGo saw that Pokémon come in, plus one for each charged move (yours or theirs) and one the screen may have shown late, on top of what it came in with.")
-                    bullet("The screen is read 4 times a second, so ManGo back-dates when the battle stopped and restarted. Their charged moves always start as a fast move finishes, which it uses to correct its timing.")
+                    bullet("The reader aims for 4 reads per second; actual intervals vary. ManGo estimates stop and restart times between reads. A switch by your Pokémon disables corrections that assume an uninterrupted opponent rhythm.")
                     bullet("Between battles it reads every 2 seconds, and stops after 3 minutes without a new battle.")
                 } header: {
                     Label("How ManGo follows the battle", systemImage: "eye")
                 }
 
                 Section {
-                    bullet("If the opponent pauses between fast moves, or lag delays them, ManGo counts too many. It can't see pauses.")
-                    bullet("If they use a fast move other than PvPoke's recommended one, the count runs at the wrong rate until a charged move gives it away.")
-                    bullet("Right after a charged move it can be off by one fast move if your buttons come back unusually early or late.")
+                    bullet("If the opponent delays fast moves or lag pauses them, timing can overcount. Energy is shown as an estimate (~), not a guaranteed measurement.")
+                    bullet("If their fast move is unknown, the count is an estimate. A clear repeated damage rhythm can help, but moves with the same duration remain ambiguous.")
+                    bullet("If an observed charged move costs more than the estimate, ManGo resynchronizes to the minimum required energy and marks the count uncertain. If reads stop, the displayed energy freezes.")
                     bullet("If you tie with their charged move and yours knocks them out, nothing shows they threw, so ManGo counts a fast move they didn't get. That Pokémon is out, so it doesn't matter.")
                     bullet("Nicknamed opponent Pokémon aren't recognized.")
                 } header: {

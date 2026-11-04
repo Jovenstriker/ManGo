@@ -86,7 +86,14 @@ final class TrackerModel {
     func now() -> TimeInterval { CACurrentMediaTime() }
 
     func snapshot(at date: Date) -> OpponentTracker.Snapshot? {
-        tracker?.snapshot(at: now())
+        guard var tracker else { return nil }
+        let time = now()
+        if readCount > 0, !readerIdle, !isBattleOver, time - lastReadTime > 1 {
+            tracker.markEnergyUncertain("Screen reads delayed; energy frozen")
+            // A suspended app or stopped reader cannot justify unlimited extrapolation.
+            return tracker.snapshot(at: lastReadTime)
+        }
+        return tracker.snapshot(at: time)
     }
 
     func load() {

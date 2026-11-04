@@ -19,6 +19,11 @@ import PvPCore
 var args = CommandLine.arguments
 let json = args.contains("--json")
 args.removeAll { $0 == "--json" }
+var hpAllFixture: String?
+if let i = args.firstIndex(of: "--hp-all"), i + 1 < args.count {
+    hpAllFixture = args[i + 1]
+    args.removeSubrange(i...(i + 1))
+}
 var hpFixture: String?
 if let i = args.firstIndex(of: "--hp"), i + 1 < args.count {
     hpFixture = args[i + 1]
@@ -46,6 +51,40 @@ func zone(_ box: CGRect) -> String {
     let v = box.midY < 0.33 ? "top" : box.midY < 0.66 ? "mid" : "bot"
     let h = box.midX < 0.33 ? "L" : box.midX < 0.66 ? "C" : "R"
     return v + "-" + h
+}
+
+if let hpAllFixture {
+    // Decode sequentially, using the same verified sampler as the broadcast extension.
+    // This enriches old recordings with measured pixels, never hand-count annotations.
+    var reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: hpAllFixture)))
+    let track = try await asset.loadTracks(withMediaType: .video)[0]
+    let reader = try AVAssetReader(asset: asset)
+    let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+    ])
+    output.alwaysCopiesSampleData = false
+    reader.add(output)
+    guard reader.startReading() else { throw reader.error ?? CocoaError(.fileReadUnknown) }
+    for i in reads.indices { reads[i].hpTrace = []; reads[i].hpTraceVerified = true }
+    var index = 0, lastSample = -Double.infinity
+    var knownY: Double?, lastLocate = -Double.infinity
+    while let sample = output.copyNextSampleBuffer() {
+        let time = CMSampleBufferGetPresentationTimeStamp(sample).seconds
+        guard time - lastSample >= 0.095, let pixels = CMSampleBufferGetImageBuffer(sample) else { continue }
+        lastSample = time
+        while index < reads.count, reads[index].time < time { index += 1 }
+        guard index < reads.count else { break }
+        let relocate = time - lastLocate >= 0.5
+        let hp = YourHPBar.measure(in: pixels, atY: relocate ? nil : knownY)
+        if relocate { knownY = hp?.y; lastLocate = time }
+        if let hp { reads[index].hpTrace?.append([time, hp.fill, Double(CVPixelBufferGetWidth(pixels))]) }
+        if let alive = NameBoxBalls.alive(in: pixels, side: .player) { reads[index].playerAlive = alive }
+    }
+    if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    print(String(decoding: try encoder.encode(reads), as: UTF8.self))
+    exit(0)
 }
 
 if let hpFixture {
@@ -83,6 +122,7 @@ if let ballsFixture {
     for i in reads.indices {
         let image = try await generator.image(at: CMTime(seconds: reads[i].time, preferredTimescale: 600)).image
         reads[i].opponentAlive = NameBoxBalls.alive(in: image)
+        reads[i].playerAlive = NameBoxBalls.alive(in: image, side: .player)
         reads[i].buttonFill = ChargeButtons.fill(in: image)
         var trace: [[Double]] = []
         var t = previous + step
@@ -110,6 +150,7 @@ while t < duration {
     if json {
         var read = ScreenRead(time: t, lines: lines)
         read.opponentAlive = NameBoxBalls.alive(in: image)
+        read.playerAlive = NameBoxBalls.alive(in: image, side: .player)
         read.buttonFill = ChargeButtons.fill(in: image)
         reads.append(read)
         t += interval

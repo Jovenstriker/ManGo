@@ -117,12 +117,14 @@ final class SampleHandler: RPBroadcastSampleHandler {
             if case .success = result { read.textReadSucceeded = true } else { read.textReadSucceeded = false }
             read.readSeconds = CACurrentMediaTime() - started
             read.opponentAlive = NameBoxBalls.alive(in: pixels)
+            read.playerAlive = NameBoxBalls.alive(in: pixels, side: .player)
             read.buttonFill = ChargeButtons.fill(in: pixels)
             self?.lock.lock()
             // Frames continue arriving while OCR runs. Keep samples captured after this
             // frame for the next read instead of attaching future observations to it.
             read.fillTrace = self?.fillTrace.filter { $0[0] <= now }
             self?.fillTrace.removeAll { $0[0] <= now }
+            read.hpTraceVerified = true
             read.hpTrace = self?.hpTrace.filter { $0[0] <= now }
             self?.hpTrace.removeAll { $0[0] <= now }
             self?.lock.unlock()

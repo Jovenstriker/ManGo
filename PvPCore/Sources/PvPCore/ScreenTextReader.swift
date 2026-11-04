@@ -74,6 +74,8 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     public var readSeconds: Double?
     /// Red pokéballs in the opponent's name box (Pokémon they have left), when it's visible.
     public var opponentAlive: Int?
+    /// Your remaining Pokémon from the top-left name box; distinguishes faints from switches.
+    public var playerAlive: Int?
     /// How full your charged move buttons are, left then right (0–1): see ChargeButtons.
     public var buttonFill: [Double]?
     /// The buttons' fill on every frame since the previous read, as [time, left, right]:
@@ -83,6 +85,8 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     /// in pixels]: fill is a fraction of the width. Its first drop after GO is the
     /// opponent's first fast move landing.
     public var hpTrace: [[Double]]?
+    /// The HP sampler verified the bar outline, rather than searching for colored sprites.
+    public var hpTraceVerified: Bool?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

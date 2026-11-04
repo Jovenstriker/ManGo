@@ -19,6 +19,12 @@ public struct OpponentTracker: Sendable {
     public struct Pokemon: Sendable, Hashable {
         public var speciesId: String
         public var fastMove: Move?
+        public var fastMoveConfirmed = false
+        /// A cadence-selected move remains a hypothesis: deliberate delays can mimic it.
+        public var fastMoveBasedOnCadence = false
+        /// Forms compatible with the visible base name until a move distinguishes them.
+        public var possibleSpeciesIds: [String] = []
+        public var energyWarning: String?
         public var revealedChargedMoves: [Move] = []
         /// Energy settled as of `chainStart` (or as of switching out).
         public var bankedEnergy: Int = 0
@@ -58,6 +64,9 @@ public struct OpponentTracker: Sendable {
         public var length: TimeInterval
         /// Ended by your charged move, so the fast move in progress counted too.
         public var interrupted: Bool
+        /// An observed spend proves at least this much energy existed. This is a
+        /// reconciliation constraint, not an invented fast move or elapsed time.
+        public var minimumEnergy: Int? = nil
     }
 
     /// A charged move thrown after `afterStretch` stretches.
@@ -85,6 +94,13 @@ public struct OpponentTracker: Sendable {
         /// Turns into the fast move currently being performed (0-based).
         public let turnIntoFastMove: Int?
         public let chargedMoves: [ChargedMoveStatus]
+        public var energyLabel: String { pokemon == nil ? "0" : "~\(energy)" }
+        public var estimationNote: String? {
+            guard let pokemon else { return nil }
+            if let warning = pokemon.energyWarning { return warning }
+            if !pokemon.fastMoveConfirmed, let fast = pokemon.fastMove { return "Assuming \(fast.name); energy estimated" }
+            return "Energy estimated from battle timing"
+        }
     }
 
     public let data: GameData
@@ -141,7 +157,8 @@ public struct OpponentTracker: Sendable {
         } else {
             var p = Pokemon(speciesId: speciesId)
             let fast = data.fastMoves(for: speciesId)
-            if fast.count == 1 { p.fastMove = fast[0] }
+            p.possibleSpeciesIds = [speciesId]
+            if fast.count == 1 { p.fastMove = fast[0]; p.fastMoveConfirmed = true }
             team.append(p)
             activeIndex = team.count - 1
         }
@@ -172,6 +189,8 @@ public struct OpponentTracker: Sendable {
         if let current = team[i].fastMove, !fast.contains(current),
            let move = data.recommendedMoves(for: speciesId).fast ?? fast.first {
             team[i].fastMove = move
+            team[i].fastMoveConfirmed = fast.count == 1
+            team[i].fastMoveBasedOnCadence = false
             team[i].bankedEnergy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
         }
         let learnable = data.chargedMoves(for: speciesId)
@@ -186,7 +205,61 @@ public struct OpponentTracker: Sendable {
         team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
         closeStretch(i, at: t)
         team[i].fastMove = move
+        team[i].fastMoveConfirmed = true
         team[i].chainStart = t
+    }
+
+    /// Recounts a previously assumed moveset when repeated HP drops identify its rhythm.
+    public mutating func inferFastMoveFromCadence(_ duration: TimeInterval) -> Move? {
+        guard let i = activeIndex, !team[i].fastMoveConfirmed, !team[i].fastMoveBasedOnCadence else { return nil }
+        let candidates = data.fastMoves(for: team[i].speciesId).filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 }
+        guard candidates.count == 1, let move = candidates.first else { return nil }
+        let old = team[i].fastMove
+        let energy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
+        team[i].fastMove = move
+        team[i].fastMoveBasedOnCadence = true
+        team[i].bankedEnergy = energy
+        if let start = team[i].chainStart { team[i].stint = Stint(start: start, entryEnergy: energy) }
+        return old == move ? nil : move
+    }
+
+    /// Records uncertainty in a visible base name without pretending the ranked form
+    /// has been identified. The active form remains a working hypothesis.
+    public mutating func setPossibleForms(_ ids: [String]) {
+        guard let i = activeIndex else { return }
+        team[i].possibleSpeciesIds = ids.filter { data.species[$0] != nil }
+    }
+
+    public mutating func restrictForms(learning moveId: String) {
+        guard let i = activeIndex else { return }
+        team[i].possibleSpeciesIds.removeAll { !(data.species[$0]?.chargedMoves.contains(moveId) ?? false) }
+        if team[i].possibleSpeciesIds.isEmpty { team[i].possibleSpeciesIds = [team[i].speciesId] }
+    }
+
+    public mutating func markEnergyUncertain(_ reason: String) {
+        guard let i = activeIndex else { return }
+        team[i].energyWarning = reason
+    }
+
+    /// An observed charged move is stronger evidence than our elapsed-time estimate.
+    /// Preserve that minimum in the ledger and explicitly flag the lost synchronization.
+    /// No exact fast-move count is inferred from the missing energy.
+    @discardableResult
+    public mutating func reconcileObservedSpend(_ cost: Int, at now: TimeInterval) -> Int {
+        guard let i = activeIndex else { return 0 }
+        let t = battleTime(at: now)
+        let current = energy(of: team[i], atBattleTime: t)
+        guard current < cost else { return 0 }
+        closeStretch(i, at: t)
+        team[i].history.append(Stretch(length: 0, interrupted: false, minimumEnergy: cost))
+        team[i].bankedEnergy = cost
+        team[i].chainStart = t
+        team[i].stint = Stint(start: t, entryEnergy: cost)
+        team[i].energyWarning = "Timing uncertain: missed at least \(cost - current) energy"
+        inProgressBonus = nil
+        takenBack = nil
+        sneak = nil
+        return cost - current
     }
 
     /// The opponent threw a charged move. Pauses the clock for the cinematic;
@@ -195,7 +268,8 @@ public struct OpponentTracker: Sendable {
     /// Only finished fast moves count. (Rounding to the nearest one gave Marowak a 6th
     /// Mud Slap in a recorded battle where it had thrown 5.)
     public mutating func opponentThrewChargedMove(_ moveId: String, at now: TimeInterval) {
-        guard let i = activeIndex, let move = data.moves[moveId] else { return }
+        guard let i = activeIndex, let move = data.moves[moveId], !move.isFast else { return }
+        reconcileObservedSpend(move.energy, at: now)
         let t = battleTime(at: now)
         let current = energy(of: team[i], atBattleTime: t)
         team[i].bankedEnergy = max(0, current - move.energy)
@@ -389,6 +463,7 @@ public struct OpponentTracker: Sendable {
         team[i].history = []
         team[i].chargedMovesThrown = []
         team[i].historyBase = team[i].bankedEnergy
+        team[i].energyWarning = nil
         let t = battleTime(at: now)
         team[i].stint = Stint(start: t, entryEnergy: team[i].bankedEnergy)
         inProgressBonus = nil
@@ -441,6 +516,7 @@ public struct OpponentTracker: Sendable {
         for (k, s) in p.history.enumerated() {
             let finished = Int((s.length / duration + 1e-9).rounded(.down))
             energy = min(maxEnergy, energy + (finished + (s.interrupted ? 1 : 0)) * move.energyGain)
+            if let minimum = s.minimumEnergy { energy = max(energy, minimum) }
             spend(after: k + 1)
         }
         let afterHistory = energy

@@ -186,7 +186,7 @@ enum OverlayRenderer {
         }
 
         // Header: opponent and status.
-        let status = battleOver ? "BATTLE OVER" : snap.isPaused ? "PAUSED" : nil
+        let status = battleOver ? "BATTLE OVER" : snap.isPaused ? "PAUSED" : snap.pokemon?.energyWarning != nil ? "UNCERTAIN" : nil
         // "vs " keeps the screen reader, which also sees this card, from taking it for the
         // opponent's name box.
         text(name.map { "vs \($0)" } ?? "Waiting for opponent", at: CGPoint(x: pad, y: pad), size: 34, width: 380)
@@ -204,7 +204,7 @@ enum OverlayRenderer {
         guard snap.pokemon != nil else { return }
 
         // Energy number and bar.
-        text("\(snap.energy)", at: CGPoint(x: pad, y: 78), size: 110, weight: .heavy)
+        text(snap.energyLabel, at: CGPoint(x: pad, y: 78), size: snap.energyLabel.count > 3 ? 82 : 100, weight: .heavy)
         let bar = CGRect(x: pad, y: size.height - pad - 22, width: size.width - pad * 2, height: 22)
         UIColor(white: 0.25, alpha: 1).setFill()
         UIBezierPath(roundedRect: bar, cornerRadius: 11).fill()
@@ -221,7 +221,7 @@ enum OverlayRenderer {
             text("\(star)\(status.move.name) · \(status.move.energy)", at: CGPoint(x: x, y: y), size: 26, weight: .medium,
                  color: UIColor(white: 0.75, alpha: 1), width: size.width - x - pad)
             let readiness: String
-            if status.ready { readiness = "READY" }
+            if status.ready { readiness = "LIKELY READY" }
             else if let turns = status.turnsUntilReady { readiness = "\(status.fastMovesNeeded) fast · \(turns)T" }
             else { readiness = "fast move?" }
             text(readiness, at: CGPoint(x: x, y: y + 30), size: 30, weight: .bold,

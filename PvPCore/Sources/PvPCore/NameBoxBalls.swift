@@ -11,6 +11,8 @@ public enum NameBoxBalls {
     /// Ball centers as fractions of a portrait screen (iPhone), and their radius as a
     /// fraction of its width. Calibrated on phone recordings.
     static let centers: [(x: Double, y: Double)] = [(0.839, 0.124), (0.896, 0.124), (0.950, 0.124)]
+    static let playerCenters: [(x: Double, y: Double)] = [(0.061, 0.124), (0.117, 0.124), (0.173, 0.124)]
+    public enum Side { case opponent, player }
     static let radius = 0.010
 
     /// Mean color of a ball, 0–255 per channel, from `sample(x, y)` with x and y as
@@ -18,9 +20,9 @@ public enum NameBoxBalls {
     public typealias Sampler = (_ x: Double, _ y: Double) -> (r: Double, g: Double, b: Double)?
 
     /// Red balls, if all three read clearly as red (alive) or dull red-gray (fainted).
-    public static func alive(aspect: Double, sample: Sampler) -> Int? {
+    public static func alive(aspect: Double, side: Side = .opponent, sample: Sampler) -> Int? {
         var alive = 0
-        for c in centers {
+        for c in side == .opponent ? centers : playerCenters {
             var sum = (r: 0.0, g: 0.0, b: 0.0), n = 0.0
             for i in -4...4 {
                 for j in -4...4 where i * i + j * j <= 16 {
@@ -40,19 +42,19 @@ public enum NameBoxBalls {
                 return nil  // not a ball: sky, the card, a charged move
             }
         }
-        return alive > 0 ? alive : nil
+        return alive
     }
 
     /// From a screen frame as delivered to the broadcast extension (BGRA or 4:2:0 YCbCr).
-    public static func alive(in pixels: CVPixelBuffer) -> Int? {
-        ScreenPixels.withSampler(pixels) { aspect, sample in alive(aspect: aspect, sample: sample) } ?? nil
+    public static func alive(in pixels: CVPixelBuffer, side: Side = .opponent) -> Int? {
+        ScreenPixels.withSampler(pixels) { aspect, sample in alive(aspect: aspect, side: side, sample: sample) } ?? nil
     }
 
     /// From a decoded video frame (for screen-log).
-    public static func alive(in image: CGImage) -> Int? {
+    public static func alive(in image: CGImage, side: Side = .opponent) -> Int? {
         // Only the name box's corner is drawn: x 0.8–1, y 0.1–0.15.
-        ScreenPixels.withSampler(image, region: CGRect(x: 0.8, y: 0.10, width: 0.2, height: 0.05)) { aspect, sample in
-            alive(aspect: aspect, sample: sample)
+        ScreenPixels.withSampler(image, region: CGRect(x: side == .opponent ? 0.8 : 0, y: 0.10, width: 0.2, height: 0.05)) { aspect, sample in
+            alive(aspect: aspect, side: side, sample: sample)
         } ?? nil
     }
 }

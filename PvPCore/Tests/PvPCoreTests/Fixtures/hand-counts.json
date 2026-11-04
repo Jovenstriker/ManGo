@@ -176,12 +176,12 @@
     "counts": [
       null,
       4,
-      9,
+      10,
       1
     ],
     "notes": {
       "1": "Empoleon used Waterfall (+10 every 3 turns), not PvPoke's Metal Sound, so ManGo overcounted it; not hand-counted.",
-      "3": "Includes Azumarill's 1 Bubble as the lead before switching out."
+      "3": "Includes Azumarill's 1 Bubble as the lead before switching out. Recounted by the user on 2026-11-04: 10, as ManGo counts (its card showed 100 at the Ice Beam; 9 Bubbles would be 99). The original hand count was 9."
     },
     "countTargets": [
       {

@@ -164,9 +164,11 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-Current known limit: **35 of 36 exact hand counts match**. v7's Azumarill still estimates 10
-Bubbles against the labelled 9. Its label remains unchanged and its accuracy test remains failing.
-Minimum-energy reconciliation also remains visible as a raw prediction failure in reports.
+All 36 exact hand counts match. v7's Azumarill was labelled 9 Bubbles; you recounted it on
+November 4, 2026 as 10, as ManGo counts (its card showed 100 at the Ice Beam, and 9 would be 99).
+Known limit: 7 opponent charged moves still come with a raw estimate one fast move short of the
+move's cost (155712's Corviknight and Azumarill, four of Shadow Greninja's in 221337, testV2's
+Altaria). Minimum-energy reconciliation keeps them visible as raw prediction failures.
 
 v7 was enriched with verified HP pixels and your pokéball counts from its original video;
 its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:

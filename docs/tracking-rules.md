@@ -34,5 +34,5 @@ explicitly approximate and are not used to identify moves or compute energy.
 
 `BattleAccuracyTests` enforces all 36 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
-raw timing undercounts even after the ledger resynchronizes. The remaining v7 Azumarill count
-mismatch must stay visible until independent observations justify a logic fix.
+raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
+from 9 to 10 Bubbles by the user's recount on November 4, 2026.

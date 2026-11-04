@@ -71,7 +71,8 @@ public struct BattleScreenParser: Sendable {
     private var pendingPlayerAlive: (value: Int, count: Int, first: TimeInterval, previous: TimeInterval)?
     private var replacementPendingAt: TimeInterval?
     private var replacementGoAt: TimeInterval?
-    private var yourButtonLabels: Set<String> = []
+    /// Your active Pokémon's charged moves, from its buttons (normalized names).
+    public private(set) var yourButtonLabels: Set<String> = []
     private var pendingButtonLabels: (labels: Set<String>, count: Int)?
     private var running: Bool?
     private var missingButtons: (first: TimeInterval, previous: TimeInterval)?

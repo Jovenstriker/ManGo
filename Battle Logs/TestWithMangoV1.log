@@ -88,6 +88,7 @@ TIMELINE (what the screen reader saw and did)
   2:37.50    stopped  Sableye (Shadow) at 56
   2:44.50  Sableye (Shadow) used Foul Play (56 → 16)
   2:47.50    running  Sableye (Shadow) at 16
+  2:48.00  Your fast move landed 0.28s after ManGo's restart: their fast moves restarted 0.37s earlier
   2:51.00    stopped  Sableye (Shadow) at 40
   2:57.75  Sableye (Shadow) used Foul Play (40 → 0)
   3:04.50  Opponent: Talonflame
@@ -95,6 +96,7 @@ TIMELINE (what the screen reader saw and did)
   3:08.50    stopped  Talonflame at 20
   3:09.50  You threw a charged move: Talonflame 20 → 40 (its fast move in progress counts)
   3:19.00    running  Talonflame at 40
+  3:19.25  Your fast move landed 0.26s after ManGo's restart: their fast moves restarted 0.39s earlier
   3:21.00    stopped  Talonflame at 40
   3:21.25  You threw a charged move: Talonflame 40 → 60 (its fast move in progress counts)
   3:34.00  Talonflame fainted or switched out

@@ -456,6 +456,17 @@ public struct OpponentTracker: Sendable {
         takenBack = nil
     }
 
+    /// The battle restarted `delta` seconds before the `resume(at: resumedAt)` it was told, and the
+    /// screen showed it late: the active Pokémon's fast moves since then gain that much time. Only
+    /// while its stretch began at that restart (not if it came in since).
+    public mutating func restartedEarlier(by delta: TimeInterval, resumedAt: TimeInterval) -> Bool {
+        guard delta > 0, pausedAt == nil, let i = activeIndex, let start = team[i].chainStart,
+              abs(start - battleTime(at: resumedAt)) < 1e-6 else { return false }
+        pausedTotal -= delta
+        return true
+    }
+
+
     /// Manually corrects the active opponent's energy (e.g. after a missed event).
     public mutating func setEnergy(_ energy: Int, at now: TimeInterval) {
         guard let i = activeIndex else { return }

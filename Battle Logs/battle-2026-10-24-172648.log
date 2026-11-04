@@ -94,8 +94,9 @@ TIMELINE (what the screen reader saw and did)
   3:10.69  Hydreigon (Shadow) fainted or switched out
   3:10.69  Opponent: Melmetal
   3:12.30    running  Melmetal at 45
-  3:15.23    stopped  Melmetal at 63
-  3:15.76  You threw a charged move: Melmetal 63 → 72 (its fast move in progress counts)
+  3:12.57  Your fast move landed 0.18s after ManGo's restart: their fast moves restarted 0.47s earlier
+  3:15.23    stopped  Melmetal at 72
+  3:15.76  You threw a charged move: Melmetal 72 → 81 (its fast move in progress counts)
   3:22.09  Battle over
 
 VALIDATION: PASS (available evidence only)

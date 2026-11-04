@@ -80,6 +80,7 @@ TIMELINE (what the screen reader saw and did)
   1:56.75    stopped  Azumarill at 61
   2:03.50  Azumarill used Play Rough (61 → 1)
   2:06.50    running  Azumarill at 1
+  2:07.00  Your fast move landed 0.43s after ManGo's restart: their fast moves restarted 0.22s earlier
   2:08.25  Opponent: Mawile
   2:10.50    stopped  Mawile at 9
   2:11.50  You threw a charged move: Mawile 18 → 27 (its fast move in progress counts)
@@ -90,6 +91,7 @@ TIMELINE (what the screen reader saw and did)
   2:49.25    stopped  Lucario at 45
   2:56.25  Lucario used Power-Up Punch (45 → 10)
   3:02.50    running  Lucario at 10
+  3:03.00  Your fast move landed 0.41s after ManGo's restart: their fast moves restarted 0.24s earlier
   3:05.75    stopped  Lucario at 30
   3:06.50  Lucario fainted or switched out
   3:06.50  Opponent: Azumarill

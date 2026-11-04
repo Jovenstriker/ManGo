@@ -68,7 +68,8 @@ TIMELINE (what the screen reader saw and did)
   1:31.26  Dragonite (Shadow) fainted or switched out
   1:31.26  Opponent: Melmetal
   1:32.32    running  Melmetal at 0
-  1:36.35    stopped  Melmetal at 27
+  1:32.59  Your fast move landed 0.28s after ManGo's restart: their fast moves restarted 0.37s earlier
+  1:36.35    stopped  Melmetal at 36
   1:37.15  You threw a charged move: Melmetal 36 → 45 (its fast move in progress counts)
   1:46.73    running  Melmetal at 45
   1:50.36    stopped  Melmetal at 72
@@ -77,6 +78,7 @@ TIMELINE (what the screen reader saw and did)
   2:00.83    stopped  Melmetal at 37
   2:07.70  Melmetal used Double Iron Bash (37 → 2)
   2:10.76    running  Melmetal at 2
+  2:11.08  Your fast move landed 0.30s after ManGo's restart: their fast moves restarted 0.35s earlier
   2:11.08  Opponent: Togetic
   2:11.89    stopped  Togetic at 0
   2:12.94  You threw a charged move: Togetic 9 → 18 (its fast move in progress counts)

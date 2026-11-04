@@ -22,6 +22,16 @@ estimates back-to-back fast moves, starting with PvPoke's recommended moveset:
   their replacement starts with no switch turn.
 - **Pokémon list:** only PvPoke's top 500 in Great League, sorted by rank.
 
+Your own fast moves are the battle's clock. Each one fills your charged move buttons a step,
+which the broadcast extension measures on every frame (`fillTrace`, see `YourFastMoves`). After a
+restart both sides start fast moves on the same turn, so your first one lands exactly one of your
+fast moves after it: usually about 0.7s before your buttons are readable (they fade in). Their fast
+moves are then counted from that restart, less 0.35s for them to react (0.3-0.45s all fit every hand
+count). Your fast move's length comes from the gaps between your steps, or PvPoke's fast move for
+the Pokémon your two charged move buttons identify. It can't see the restart when your buttons are
+full or your fast move takes 1 turn. The 13 older recordings' fill traces were measured from their
+videos (`screen-log <video> --fill <fixture>`), which is noisier than the phone's own.
+
 A clear repeated rhythm of damage on a verified player HP bar can change the fast-move
 hypothesis. So can a charged move the assumed fast move couldn't have afforded: ManGo switches
 to another fast move the Pokémon learns that could have (Flygon threw on Mud Shot, not PvPoke's
@@ -164,13 +174,14 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-36 of 37 exact hand counts match. v7's Azumarill was labelled 9 Bubbles; you recounted it on
+39 of 40 exact hand counts match. v7's Azumarill was labelled 9 Bubbles; you recounted it on
 November 4, 2026 as 10, as ManGo counts (its card showed 100 at the Ice Beam, and 9 would be 99).
-155712's Azumarill had 5 Bubbles at its Ice Beam: you saw it sneak one at your charged move at 2:13,
-which ManGo misses (it counts 4). Known limit: 7 opponent charged moves still come with a raw
-estimate one fast move short of the move's cost (155712's Corviknight and Azumarill, four of Shadow
-Greninja's in 221337, testV2's Altaria). Minimum-energy reconciliation keeps them visible as raw
-prediction failures.
+Shadow Greninja's three sneaks in 221337 (5:41, 9:24, and 2 Water Shurikens before its switch at
+9:45) are counted from your fast moves. Known limit: 155712's Azumarill had 5 Bubbles at its Ice
+Beam (you saw it sneak one at 2:13) and Corviknight at least 9 Sand Attacks between its Paybacks;
+ManGo counts one fewer of each: your buttons were full at 2:13, and your Altaria's Dragon Breath
+takes 1 turn, so your fast moves couldn't date those restarts. Minimum-energy reconciliation keeps
+them visible as raw prediction failures.
 
 v7 was enriched with verified HP pixels and your pokéball counts from its original video;
 its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:

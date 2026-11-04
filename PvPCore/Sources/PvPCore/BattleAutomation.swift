@@ -83,6 +83,19 @@ public struct BattleAutomation: Sendable {
     private var cadence = FastMoveCadence()
     private var recentVerifiedHP: [[Double]] = []
     private var chargedMoveThisStop = false
+    /// Your buttons' fill on recent frames, the gaps between your fast moves landing in it (see
+    /// `YourFastMoves`), when the buttons came back (before a correction moves the restart), and
+    /// whether this stretch's restart was checked against your first fast move.
+    private var fillSamples: [[Double]] = []
+    private var yourGaps: [TimeInterval] = []
+    private var buttonsResumedAt: TimeInterval = -.infinity
+    private var restartChecked = true
+    /// Your Pokémon fainted in the stop: the restart is checked once your replacement's buttons show.
+    private var awaitingYourReplacement = false
+    /// The opponent starts its first fast move this long after the restart your fast moves show:
+    /// the old restart guess counted their reaction too. 0.3-0.45s all fit every hand count
+    /// (testV2's Ninetales threw 2 Embers, not 3; Shadow Greninja sneaked at 5:41 and 9:24).
+    static let opponentReaction: TimeInterval = 0.35
 
     private var lastTime: TimeInterval = -.infinity
     private var previousReadTime: TimeInterval = -.infinity
@@ -164,6 +177,11 @@ public struct BattleAutomation: Sendable {
                 }
             }
         }
+        // Every frame the phone attached: older builds attached frames from while this read's
+        // text was being recognized too, which it had seen by the time it processed the read.
+        fillSamples += (read.fillTrace ?? []).filter { $0.count == 3 }
+        if let first = fillSamples.first, t - first[0] > 20 { fillSamples.removeAll { t - $0[0] > 20 } }
+        if !stopped { checkRestartAgainstYourFastMoves(before: max(t, fillSamples.last?[0] ?? t), tracker: &tracker) }
         if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         if let n = read.opponentAlive {
@@ -210,6 +228,7 @@ public struct BattleAutomation: Sendable {
                 // its clock restarts then (on the first read after, if that's later than now).
                 let start = t + (Rules.off("goDelay") ? 0 : goDelay)
                 goAt = start
+                buttonsResumedAt = start
                 if awaitingGo, start <= t {
                     awaitingGo = false
                     tracker.resume(at: t)
@@ -225,7 +244,11 @@ public struct BattleAutomation: Sendable {
                 yourFaintThisStop = false
                 chargedMoveThisStop = false
                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
+                checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
                 let stop = max(observation.first - stopLead, observation.previous, resumedAt)
+                learnYourFastMove(between: buttonsResumedAt, and: observation.first)
+                restartChecked = true
+                awaitingYourReplacement = false
                 lastStopAt = stop
                 tracker.pause(at: stop)
                 if goAt != nil { settleLeadFromHits(at: t, tracker: &tracker) }
@@ -240,6 +263,10 @@ public struct BattleAutomation: Sendable {
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
                 let resume = max(t - lead, lastStopAt)
                 resumedAt = resume
+                buttonsResumedAt = resume
+                // When your Pokémon fainted, not until your replacement's buttons show its fast move.
+                restartChecked = awaitingGo || yourFaintThisStop
+                awaitingYourReplacement = !awaitingGo && yourFaintThisStop
                 buttonsBackAt = t
                 // They blocked yours, and didn't throw their own after (v11's Empoleon did: its
                 // next stretch restarted with the buttons, as after any charged move of theirs).
@@ -314,6 +341,9 @@ public struct BattleAutomation: Sendable {
                 // fast move by assuming the whole stretch was uninterrupted.
                 playerChangedSinceResume = true
                 cadence = FastMoveCadence()
+                yourGaps = []
+                restartChecked = !awaitingYourReplacement
+                awaitingYourReplacement = false
 
             case .playerChargedMove:
                 // Their fast move in progress pays out; they start fresh after your move.
@@ -339,6 +369,60 @@ public struct BattleAutomation: Sendable {
     }
 
     // MARK: Helpers
+
+    /// Your fast move's length: from the gaps between your fast moves landing so far, or else
+    /// PvPoke's fast move for your Pokémon, known from its two charged move buttons (Poison Fang
+    /// and Earth Power: Nidoqueen, Mud Slap), if every ranked Pokémon with both agrees. A single
+    /// gap counts when it fits that.
+    private var yourFastMove: TimeInterval? {
+        let prior = yourFastMoveFromButtons
+        if let turns = YourFastMoves.turns(fromGaps: yourGaps) { return Double(turns) * turnDuration }
+        if let gap = yourGaps.last, let prior, abs(gap - prior) <= 0.15 { return prior }
+        return prior
+    }
+
+    private var yourFastMoveFromButtons: TimeInterval? {
+        let labels = parser.yourButtonLabels
+        guard labels.count == 2 else { return nil }
+        let moveIds = data.moves.values.filter { !$0.isFast && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
+        guard Set(moveIds.map { NameMatcher.normalize(data.moves[$0]!.name) }) == labels else { return nil }
+        let turns = Set(data.species.values.filter { $0.rank != nil && moveIds.allSatisfy($0.chargedMoves.contains) }
+            .compactMap { data.recommendedMoves(for: $0.speciesId).fast?.turns })
+        guard turns.count == 1, let t = turns.first else { return nil }
+        return Double(t) * turnDuration
+    }
+
+    private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {
+        YourFastMoves.landings(in: fillSamples.filter { $0[0] >= start && $0[0] <= end })
+    }
+
+    /// The gaps between your fast moves landing in a stretch of play tell your fast move's length.
+    private mutating func learnYourFastMove(between start: TimeInterval, and end: TimeInterval) {
+        guard !Rules.off("yourClock"), end > start else { return }
+        let landings = yourLandings(from: start, to: end)
+        yourGaps += zip(landings.dropFirst(), landings).map { $0 - $1 }
+        if yourGaps.count > 12 { yourGaps.removeFirst(yourGaps.count - 12) }
+    }
+
+    /// After a restart both sides can start a fast move on the same turn, so your first one lands
+    /// exactly one of your fast moves after it. Landing sooner than ManGo's restart allows means
+    /// the battle restarted earlier than the buttons showed (they fade in), and so did their fast
+    /// moves, less `opponentReaction`. Only ever earlier: a later first landing may be a second one,
+    /// the first hidden while the buttons faded in.
+    private mutating func checkRestartAgainstYourFastMoves(before end: TimeInterval, tracker: inout OpponentTracker) {
+        guard !restartChecked, !stopped, !Rules.off("yourClock") else { return }
+        guard let move = yourFastMove else { restartChecked = true; return }
+        guard let first = yourLandings(from: buttonsResumedAt, to: end).first else {
+            if end > buttonsResumedAt + 2 * move + 0.5 { restartChecked = true }  // full buttons don't fill
+            return
+        }
+        restartChecked = true
+        let restart = max(first - move + Self.opponentReaction, lastStopAt)
+        let earlier = resumedAt - restart
+        guard earlier > 0.05, tracker.restartedEarlier(by: earlier, resumedAt: resumedAt) else { return }
+        note(String(format: "Your fast move landed %.2fs after ManGo's restart: their fast moves restarted %.2fs earlier", first - resumedAt, earlier))
+        resumedAt = restart
+    }
 
     /// "NOT VERY EFFECTIVE..." or "SUPER EFFECTIVE!" over your Pokémon shows their fast move
     /// landing (not a neutral one): the first after GO came between the last read and this
@@ -448,6 +532,11 @@ public struct BattleAutomation: Sendable {
         playerChangedSinceResume = false
         cadence = FastMoveCadence()
         recentVerifiedHP = []
+        fillSamples = []
+        yourGaps = []
+        buttonsResumedAt = -.infinity
+        restartChecked = true
+        awaitingYourReplacement = false
         chargedMoveThisStop = false
         opponentThrewThisStop = false
         yourFaintThisStop = false

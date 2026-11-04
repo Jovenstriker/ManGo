@@ -26,6 +26,9 @@ explicitly approximate and are not used to identify moves or compute energy.
   That does not prove an exact missing attack count. It does switch the assumed fast move when
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
   not PvPoke's Dragon Tail).
+- After a restart both sides start fast moves on the same turn: your first fast move landing (a
+  step in your buttons' fill) dates the restart, often earlier than the buttons are readable.
+  The opponent's count starts from it less a 0.35s reaction; restarts only ever move earlier.
 - A switch or unreadable interval breaks the premise of uninterrupted fast moves.
   A clear repeated HP-damage cadence can refine an assumed moveset. Shared durations and
   occluded bars remain ambiguous; do not convert their absence into a measured zero.

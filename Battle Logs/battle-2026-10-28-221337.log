@@ -38,27 +38,26 @@ OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
   1  0:56.71  Scizor (Shadow)       Night Slash (35)          60 → 25       15          ?     -
        calc: 60 = 0 left before + 15 × 4 (Fury Cutter); after: 60 − 35 = 25
-  2  1:20.14  Scizor (Shadow)       Night Slash (35)          45 → 10       5           ?     -
-       calc: 45 = 25 left before + 5 × 4 (Fury Cutter); after: 45 − 35 = 10
-  3  2:20.05  Guzzlord              Brutal Swing (35)         72 → 37       6           ?     -
-       calc: 72 = 0 left before + 6 × 12 (Dragon Tail); after: 72 − 35 = 37
-  4  2:33.66  Guzzlord              Brutal Swing (35)         61 → 26       2           ?     -
-       calc: 61 = 37 left before + 2 × 12 (Dragon Tail); after: 61 − 35 = 26
+  2  1:20.14  Scizor (Shadow)       Night Slash (35)          49 → 14       6           ?     -
+       calc: 49 = 25 left before + 6 × 4 (Fury Cutter); after: 49 − 35 = 14
+  3  2:20.05  Guzzlord              Brutal Swing (35)         84 → 49       7           ?     -
+       calc: 84 = 0 left before + 7 × 12 (Dragon Tail); after: 84 − 35 = 49
+  4  2:33.66  Guzzlord              Brutal Swing (35)         73 → 38       2           ?     -
+       calc: 73 = 49 left before + 2 × 12 (Dragon Tail); after: 73 − 35 = 38
   5  3:17.96  Nidoqueen             Poison Fang (40)          60 → 20       6           ?     -
        calc: 60 = 0 left before + 6 × 10 (Mud Slap); after: 60 − 40 = 20
   6  3:31.54  Nidoqueen             Poison Fang (40)          40 → 0        2           ?     -
        calc: 40 = 20 left before + 2 × 10 (Mud Slap); after: 40 − 40 = 0
-  7  3:55.51  Guzzlord              Brutal Swing (35)         38 → 3        1           ?     -
-       calc: 38 = 26 left before + 1 × 12 (Dragon Tail); after: 38 − 35 = 3
+  7  3:55.51  Guzzlord              Brutal Swing (35)         50 → 15       1           ?     -
+       calc: 50 = 38 left before + 1 × 12 (Dragon Tail); after: 50 − 35 = 15
   8  4:41.18  Greninja (Shadow)     Hydro Cannon (40)         42 → 2        3           ?     -
        calc: 42 = 0 left before + 3 × 14 (Water Shuriken); after: 42 − 40 = 2
   9  5:08.07  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           ?     -
        calc: 48 = 0 left before + 3 × 16 (Volt Switch); after: 48 − 45 = 3
   10 5:34.20  Forretress (Shadow)   Sand Tomb (45)            51 → 6        3           ?     -
        calc: 51 = 3 left before + 3 × 16 (Volt Switch); after: 51 − 45 = 6
-  11 6:03.79  Greninja (Shadow)     Hydro Cannon (40)         40 → 0        2           3     ✗ (-1)
-       calc: 40 = 2 left before + 2 × 14 (Water Shuriken) + 10 (cap/corrections); after: 40 − 40 = 0
-       inferred minimum: raw estimate 30, observed spend requires 40. Timing remains uncertain; no exact missing move count was inferred.
+  11 6:03.79  Greninja (Shadow)     Hydro Cannon (40)         44 → 4        3           3     ✓
+       calc: 44 = 2 left before + 3 × 14 (Water Shuriken); after: 44 − 40 = 4
        note: Recounted by the user on 2026-11-04: 3 Water Shurikens. Greninja sneaked one at your charged move at 5:41: your Mud Slap and its Water Shuriken are both 3-turn moves, so after a restart they always finish together and it always gets one more when you throw. ManGo measured that stretch as 1.37s, short of one Water Shuriken (1.5s), and counted 2.
   12 6:33.12  Mimikyu               Shadow Sneak (50)         56 → 6        7           ?     -
        calc: 56 = 0 left before + 7 × 8 (Shadow Claw); after: 56 − 50 = 6
@@ -68,20 +67,18 @@ OPPONENT CHARGED MOVES
        calc: 100 = 6 left before + 7 × 16 (Volt Switch) + -18 (cap/corrections); after: 100 − 50 = 50
   15 9:07.48  Forretress (Shadow)   Rock Tomb (50)            50 → 0        0           ?     -
        calc: 50 = 50 left before + 0 × 16 (Volt Switch); after: 50 − 50 = 0
-  16 9:41.34  Greninja (Shadow)     Brutal Swing (35)         35 → 0        2           3     ✗ (-1)
-       calc: 35 = 0 left before + 2 × 14 (Water Shuriken) + 7 (cap/corrections); after: 35 − 35 = 0
-       inferred minimum: raw estimate 28, observed spend requires 35. Timing remains uncertain; no exact missing move count was inferred.
+  16 9:41.34  Greninja (Shadow)     Brutal Swing (35)         42 → 7        3           3     ✓
+       calc: 42 = 4 left before + 3 × 14 (Water Shuriken) + -4 (cap/corrections); after: 42 − 35 = 7
        note: Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.
   17 10:25.68  Nidoqueen             Earth Power (50)          60 → 10       6           ?     -
        calc: 60 = 0 left before + 6 × 10 (Mud Slap); after: 60 − 50 = 10
-  18 10:54.94  Greninja (Shadow)     Hydro Cannon (40)         40 → 0        2           3     ✗ (-1)
-       calc: 40 = 0 left before + 2 × 14 (Water Shuriken) + 12 (cap/corrections); after: 40 − 40 = 0
-       inferred minimum: raw estimate 28, observed spend requires 40. Timing remains uncertain; no exact missing move count was inferred.
+  18 10:54.94  Greninja (Shadow)     Hydro Cannon (40)         49 → 9        3           3     ✓
+       calc: 49 = 7 left before + 3 × 14 (Water Shuriken); after: 49 − 40 = 9
        note: Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.
 
 SUMMARY
-  0 of 3 hand-counted charged moves match ManGo's fast move count exactly.
-  3 raw estimates below the observed move cost (reconciled after the spend).
+  3 of 3 hand-counted charged moves match ManGo's fast move count exactly.
+  0 raw estimates below the observed move cost (reconciled after the spend).
   15 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
@@ -94,29 +91,31 @@ TIMELINE (what the screen reader saw and did)
   1:00.97    stopped  Scizor (Shadow) at 33
   1:01.50  You threw a charged move: Scizor (Shadow) 33 → 37 (its fast move in progress counts)
   1:11.62    running  Scizor (Shadow) at 37
-  1:12.95    stopped  Scizor (Shadow) at 45
-  1:20.14  Scizor (Shadow) used Night Slash (45 → 10)
-  1:23.07    running  Scizor (Shadow) at 10
-  1:26.00    stopped  Scizor (Shadow) at 30
-  1:27.06  You threw a charged move: Scizor (Shadow) 34 → 38 (its fast move in progress counts)
+  1:12.42  Your fast move landed 1.05s after ManGo's restart: their fast moves restarted 0.10s earlier
+  1:12.95    stopped  Scizor (Shadow) at 49
+  1:20.14  Scizor (Shadow) used Night Slash (49 → 14)
+  1:23.07    running  Scizor (Shadow) at 14
+  1:26.00    stopped  Scizor (Shadow) at 34
+  1:27.06  You threw a charged move: Scizor (Shadow) 38 → 42 (its fast move in progress counts)
   1:39.31  Scizor (Shadow) fainted or switched out
   1:39.31  Opponent: Guzzlord
   1:40.11    running  Guzzlord at 0
   1:43.04    stopped  Guzzlord at 12
   1:43.57  You threw a charged move: Guzzlord 12 → 24 (its fast move in progress counts)
   1:53.69    running  Guzzlord at 24
-  1:58.22    stopped  Guzzlord at 48
-  1:58.48  You threw a charged move: Guzzlord 48 → 60 (its fast move in progress counts)
-  2:11.00    running  Guzzlord at 60
-  2:13.39    stopped  Guzzlord at 72
-  2:20.05  Guzzlord used Brutal Swing (72 → 37)
-  2:22.98    running  Guzzlord at 37
-  2:26.74    stopped  Guzzlord at 61
-  2:33.66  Guzzlord used Brutal Swing (61 → 26)
-  2:36.59    running  Guzzlord at 26
-  2:37.66    stopped  Guzzlord at 26
-  2:37.92  You threw a charged move: Guzzlord 26 → 38 (its fast move in progress counts)
-  2:48.07    running  Guzzlord at 38
+  1:54.49  Your fast move landed 0.78s after ManGo's restart: their fast moves restarted 0.37s earlier
+  1:58.22    stopped  Guzzlord at 60
+  1:58.48  You threw a charged move: Guzzlord 60 → 72 (its fast move in progress counts)
+  2:11.00    running  Guzzlord at 72
+  2:13.39    stopped  Guzzlord at 84
+  2:20.05  Guzzlord used Brutal Swing (84 → 49)
+  2:22.98    running  Guzzlord at 49
+  2:26.74    stopped  Guzzlord at 73
+  2:33.66  Guzzlord used Brutal Swing (73 → 38)
+  2:36.59    running  Guzzlord at 38
+  2:37.66    stopped  Guzzlord at 38
+  2:37.92  You threw a charged move: Guzzlord 38 → 50 (its fast move in progress counts)
+  2:48.07    running  Guzzlord at 50
   2:48.34  Opponent: Nidoqueen
   2:57.23    stopped  Nidoqueen at 50
   2:57.49  You threw a charged move: Nidoqueen 50 → 60 (its fast move in progress counts)
@@ -131,9 +130,9 @@ TIMELINE (what the screen reader saw and did)
   3:35.80  You threw a charged move: Nidoqueen 0 → 10 (its fast move in progress counts)
   3:46.99  Nidoqueen fainted or switched out
   3:46.99  Opponent: Guzzlord
-  3:48.05    running  Guzzlord at 38
-  3:48.59    stopped  Guzzlord at 38
-  3:55.51  Guzzlord used Brutal Swing (38 → 3)
+  3:48.05    running  Guzzlord at 50
+  3:48.59    stopped  Guzzlord at 50
+  3:55.51  Guzzlord used Brutal Swing (50 → 15)
   4:02.90  Battle over
   4:08.36  New battle
   4:26.92  Opponent: Greninja (Shadow)
@@ -156,13 +155,13 @@ TIMELINE (what the screen reader saw and did)
   5:39.26  Forretress (Shadow) fainted or switched out
   5:39.26  Opponent: Greninja (Shadow)
   5:40.32    running  Greninja (Shadow) at 2
+  5:40.89  Your fast move landed 0.92s after ManGo's restart: their fast moves restarted 0.23s earlier
   5:41.69    stopped  Greninja (Shadow) at 2
-  5:42.22  You threw a charged move: Greninja (Shadow) 2 → 16 (its fast move in progress counts)
-  5:54.74    running  Greninja (Shadow) at 16
-  5:56.60    stopped  Greninja (Shadow) at 30
-  6:03.79  Timing uncertain: Greninja (Shadow) spent 40 on Hydro Cannon, but the clock counted 30; resynchronized to the observed minimum
-  6:03.79  Greninja (Shadow) used Hydro Cannon (40 → 0)
-  6:06.72    running  Greninja (Shadow) at 0
+  5:42.22  You threw a charged move: Greninja (Shadow) 16 → 30 (its fast move in progress counts)
+  5:54.74    running  Greninja (Shadow) at 30
+  5:56.60    stopped  Greninja (Shadow) at 44
+  6:03.79  Greninja (Shadow) used Hydro Cannon (44 → 4)
+  6:06.72    running  Greninja (Shadow) at 4
   6:08.58  Opponent: Mimikyu
   6:08.58    stopped  Mimikyu at 0
   6:09.12  You threw a charged move: Mimikyu 0 → 8 (its fast move in progress counts)
@@ -179,10 +178,10 @@ TIMELINE (what the screen reader saw and did)
   7:15.37  You threw a charged move: Mimikyu 84 → 92 (its fast move in progress counts)
   7:25.77  Mimikyu fainted or switched out
   7:25.77  Opponent: Greninja (Shadow)
-  7:26.84    running  Greninja (Shadow) at 14
-  7:29.80    stopped  Greninja (Shadow) at 28
-  7:32.20    running  Greninja (Shadow) at 42
-  7:32.73    stopped  Greninja (Shadow) at 42
+  7:26.84    running  Greninja (Shadow) at 18
+  7:29.80    stopped  Greninja (Shadow) at 32
+  7:32.20    running  Greninja (Shadow) at 46
+  7:32.73    stopped  Greninja (Shadow) at 46
   7:39.57  Battle over
   7:50.44  New battle
   8:13.54  Opponent: Forretress (Shadow)
@@ -205,13 +204,14 @@ TIMELINE (what the screen reader saw and did)
   9:19.77  Forretress (Shadow) fainted or switched out
   9:19.77  Opponent: Greninja (Shadow)
   9:20.57    running  Greninja (Shadow) at 0
-  9:21.90    stopped  Greninja (Shadow) at 0
-  9:22.43  You threw a charged move: Greninja (Shadow) 0 → 14 (its fast move in progress counts)
-  9:32.55    running  Greninja (Shadow) at 14
-  9:34.42    stopped  Greninja (Shadow) at 28
-  9:41.34  Timing uncertain: Greninja (Shadow) spent 35 on Brutal Swing, but the clock counted 28; resynchronized to the observed minimum
-  9:41.34  Greninja (Shadow) used Brutal Swing (35 → 0)
-  9:44.54    running  Greninja (Shadow) at 0
+  9:21.10  Your fast move landed 0.82s after ManGo's restart: their fast moves restarted 0.33s earlier
+  9:21.90    stopped  Greninja (Shadow) at 14
+  9:22.43  You threw a charged move: Greninja (Shadow) 14 → 28 (its fast move in progress counts)
+  9:32.55    running  Greninja (Shadow) at 28
+  9:34.42    stopped  Greninja (Shadow) at 42
+  9:41.34  Greninja (Shadow) used Brutal Swing (42 → 7)
+  9:44.54    running  Greninja (Shadow) at 7
+  9:45.33  Your fast move landed 0.78s after ManGo's restart: their fast moves restarted 0.37s earlier
   9:47.47  Opponent: Nidoqueen
   9:47.47    stopped  Nidoqueen at 0
   9:48.26  You threw a charged move: Nidoqueen 0 → 10 (its fast move in progress counts)
@@ -226,16 +226,12 @@ TIMELINE (what the screen reader saw and did)
   10:34.47  You threw a charged move: Nidoqueen 40 → 50 (its fast move in progress counts)
   10:44.82  Nidoqueen fainted or switched out
   10:44.82  Opponent: Greninja (Shadow)
-  10:45.88    running  Greninja (Shadow) at 14
-  10:47.75    stopped  Greninja (Shadow) at 28
-  10:54.94  Timing uncertain: Greninja (Shadow) spent 40 on Hydro Cannon, but the clock counted 28; resynchronized to the observed minimum
-  10:54.94  Greninja (Shadow) used Hydro Cannon (40 → 0)
-  10:57.87    running  Greninja (Shadow) at 0
-  11:01.56    stopped  Greninja (Shadow) at 28
+  10:45.88    running  Greninja (Shadow) at 35
+  10:47.75    stopped  Greninja (Shadow) at 49
+  10:54.94  Greninja (Shadow) used Hydro Cannon (49 → 9)
+  10:57.87    running  Greninja (Shadow) at 9
+  11:01.56    stopped  Greninja (Shadow) at 37
   11:07.89  Battle over
 
-VALIDATION: FAIL
-  0 labelled throws missing; 3 count mismatches; 3 raw underfunded estimates (reconciled after the spend).
-  Throw 11: expected at least 40, estimated 30
-  Throw 16: expected at least 35, estimated 28
-  Throw 18: expected at least 40, estimated 28
+VALIDATION: PASS (available evidence only)
+  0 labelled throws missing; 0 count mismatches; 0 raw underfunded estimates (reconciled after the spend).

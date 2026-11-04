@@ -68,6 +68,7 @@ struct MechanicsView: View {
                     bullet("Switches: a new name in the top-right box. ManGo works out whether it cost a turn from whether there was a charged move or a faint in the stop, and how soon after the restart the name showed.")
                     bullet("Their energy can never rise faster than their fast move allows: one move per move's length since ManGo saw that Pokémon come in, plus one for each charged move (yours or theirs) and one the screen may have shown late, on top of what it came in with.")
                     bullet("The reader aims for 4 reads per second; actual intervals vary. ManGo estimates stop and restart times between reads. A switch by your Pokémon disables corrections that assume an uninterrupted opponent rhythm.")
+                    bullet("Your own fast moves are its clock: each one fills your charged move buttons a step, which the reader sees on every frame. After a restart both sides start fast moves on the same turn, so your first one landing shows when the battle really restarted, often about 0.7s before your buttons can be read. Their fast moves count from then, less a third of a second for them to react. That's how it catches their sneak when your fast moves and theirs finish together (Mud Slap and Water Shuriken, both 3 turns).")
                     bullet("Between battles it reads every 2 seconds, and stops after 3 minutes without a new battle.")
                 } header: {
                     Label("How ManGo follows the battle", systemImage: "eye")
@@ -77,6 +78,7 @@ struct MechanicsView: View {
                     bullet("If the opponent delays fast moves or lag pauses them, timing can overcount. Energy is shown as an estimate (~), not a guaranteed measurement.")
                     bullet("If their fast move is unknown, the count is an estimate. A clear repeated damage rhythm can help, but moves with the same duration remain ambiguous.")
                     bullet("If an observed charged move costs more than the estimate, ManGo resynchronizes to the minimum required energy and marks the count uncertain. If reads stop, the displayed energy freezes.")
+                    bullet("Your fast moves can't show the restart when your buttons are already full, or when your fast move takes 1 turn (it lands while the buttons are still fading in). Then ManGo goes by the buttons alone.")
                     bullet("If you tie with their charged move and yours knocks them out, nothing shows they threw, so ManGo counts a fast move they didn't get. That Pokémon is out, so it doesn't matter.")
                     bullet("Nicknamed opponent Pokémon aren't recognized.")
                 } header: {

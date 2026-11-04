@@ -77,11 +77,13 @@ TIMELINE (what the screen reader saw and did)
   2:16.75    stopped  Mimikyu at 64
   2:23.50  Mimikyu used Shadow Sneak (64 → 14)
   2:30.00    running  Mimikyu at 14
+  2:30.50  Your fast move landed 0.55s after ManGo's restart: their fast moves restarted 0.10s earlier
   2:35.00    stopped  Mimikyu at 46
   2:35.50  You threw a charged move: Mimikyu 54 → 62 (its fast move in progress counts)
   2:47.50  Mimikyu fainted or switched out
   2:47.50  Opponent: Magnezone
   2:48.00    running  Magnezone at 26
+  2:48.50  Your fast move landed 0.46s after ManGo's restart: their fast moves restarted 0.19s earlier
   2:50.75    stopped  Magnezone at 42
   2:57.50  Magnezone used Mirror Shot (42 → 7)
   3:02.50    running  Magnezone at 7

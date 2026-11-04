@@ -81,11 +81,13 @@ TIMELINE (what the screen reader saw and did)
   2:08.75    stopped  Mimikyu at 30
   2:09.75  You threw a charged move: Mimikyu 38 → 46 (its fast move in progress counts)
   2:19.25    running  Mimikyu at 46
+  2:19.75  Your fast move landed 0.42s after ManGo's restart: their fast moves restarted 0.23s earlier
   2:21.00  Mimikyu had finished one more fast move: the battle restarted before your buttons came back
   2:21.00    stopped  Mimikyu at 62
   2:27.75  Mimikyu used Shadow Sneak (62 → 12)
   2:33.75  Opponent: Forretress (Shadow)
   2:34.25    running  Forretress (Shadow) at 16
+  2:34.75  Your fast move landed 0.36s after ManGo's restart: their fast moves restarted 0.29s earlier
   2:39.00    stopped  Forretress (Shadow) at 48
   2:46.75  Forretress (Shadow) used Sand Tomb (48 → 3)
   2:49.25    running  Forretress (Shadow) at 3

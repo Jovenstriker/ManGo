@@ -100,10 +100,11 @@ TIMELINE (what the screen reader saw and did)
   3:33.43    stopped  Mimikyu at 96
   3:40.36  Mimikyu used Shadow Sneak (96 → 46)
   3:46.78    running  Mimikyu at 46
-  3:49.74    stopped  Mimikyu at 62
-  3:50.27  Mimikyu had finished one more fast move: the battle restarted before your buttons came back
+  3:47.08  Your fast move landed 0.38s after ManGo's restart: their fast moves restarted 0.27s earlier
+  3:49.74    stopped  Mimikyu at 70
   3:57.48  Mimikyu used Shadow Sneak (70 → 20)
   4:02.32    running  Mimikyu at 20
+  4:02.59  Your fast move landed 0.42s after ManGo's restart: their fast moves restarted 0.23s earlier
   4:04.45    stopped  Mimikyu at 36
   4:05.23  You threw a charged move: Mimikyu 36 → 44 (its fast move in progress counts)
   4:12.67  Battle over

@@ -51,14 +51,13 @@ OPPONENT CHARGED MOVES
   6  2:31.25  Altaria               Moonblast (50)            52 → 2        13          ?     -
        calc: 52 = 0 left before + 13 × 4 (Dragon Breath); after: 52 − 50 = 2
        note: Dragon Breath is too fast to count by eye.
-  7  3:26.00  Altaria               Flamethrower (55)         55 → 0        13          ?     -
-       calc: 55 = 2 left before + 13 × 4 (Dragon Breath) + 1 (cap/corrections); after: 55 − 55 = 0
-       inferred minimum: raw estimate 54, observed spend requires 55. Timing remains uncertain; no exact missing move count was inferred.
+  7  3:26.00  Altaria               Flamethrower (55)         58 → 3        14          ?     -
+       calc: 58 = 2 left before + 14 × 4 (Dragon Breath); after: 58 − 55 = 3
        note: Dragon Breath is too fast to count by eye.
 
 SUMMARY
   5 of 5 hand-counted charged moves match ManGo's fast move count exactly.
-  1 raw estimates below the observed move cost (reconciled after the spend).
+  0 raw estimates below the observed move cost (reconciled after the spend).
   2 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
@@ -85,9 +84,11 @@ TIMELINE (what the screen reader saw and did)
   1:40.75    stopped  Ninetales (Shadow) at 54
   1:48.75  Ninetales (Shadow) used Weather Ball (Fire) (54 → 19)
   1:54.50    running  Ninetales (Shadow) at 19
+  1:55.00  Your fast move landed 0.45s after ManGo's restart: their fast moves restarted 0.20s earlier
   1:57.25    stopped  Ninetales (Shadow) at 37
   2:04.25  Ninetales (Shadow) used Weather Ball (Fire) (37 → 2)
   2:07.25    running  Ninetales (Shadow) at 2
+  2:07.50  Your fast move landed 0.24s after ManGo's restart: their fast moves restarted 0.41s earlier
   2:07.50  Opponent: Altaria
   2:09.25    stopped  Altaria at 12
   2:09.75  You threw a charged move: Altaria 12 → 16 (its fast move in progress counts)
@@ -96,25 +97,25 @@ TIMELINE (what the screen reader saw and did)
   2:24.50  Altaria had finished one more fast move: the battle restarted before your buttons came back
   2:31.25  Altaria used Moonblast (52 → 2)
   2:34.25    running  Altaria at 2
-  2:36.25    stopped  Altaria at 14
-  2:36.50  You threw a charged move: Altaria 14 → 18 (its fast move in progress counts)
-  2:46.75    running  Altaria at 18
-  2:49.75    stopped  Altaria at 38
-  2:50.00  You threw a charged move: Altaria 38 → 42 (its fast move in progress counts)
-  3:00.25    running  Altaria at 42
+  2:34.50  Your fast move landed 0.20s after ManGo's restart: their fast moves restarted 0.45s earlier
+  2:36.25    stopped  Altaria at 18
+  2:36.50  You threw a charged move: Altaria 18 → 22 (its fast move in progress counts)
+  2:46.75    running  Altaria at 22
+  2:49.75    stopped  Altaria at 42
+  2:50.00  You threw a charged move: Altaria 42 → 46 (its fast move in progress counts)
+  3:00.25    running  Altaria at 46
   3:00.50  Opponent: Ninetales (Shadow)
   3:04.25    stopped  Ninetales (Shadow) at 29
   3:04.50  You threw a charged move: Ninetales (Shadow) 29 → 38 (its fast move in progress counts)
   3:15.50  Ninetales (Shadow) fainted or switched out
   3:15.50  Opponent: Altaria
-  3:16.50    running  Altaria at 42
-  3:18.25    stopped  Altaria at 54
-  3:26.00  Timing uncertain: Altaria spent 55 on Flamethrower, but the clock counted 54; resynchronized to the observed minimum
-  3:26.00  Altaria used Flamethrower (55 → 0)
-  3:28.50    running  Altaria at 0
-  3:30.75    stopped  Altaria at 16
-  3:31.00  You threw a charged move: Altaria 16 → 20 (its fast move in progress counts)
+  3:16.50    running  Altaria at 46
+  3:18.25    stopped  Altaria at 58
+  3:26.00  Altaria used Flamethrower (58 → 3)
+  3:28.50    running  Altaria at 3
+  3:30.75    stopped  Altaria at 19
+  3:31.00  You threw a charged move: Altaria 19 → 23 (its fast move in progress counts)
   3:45.50  Battle over
 
-VALIDATION: FAIL
-  0 labelled throws missing; 0 count mismatches; 1 raw underfunded estimates (reconciled after the spend).
+VALIDATION: PASS (available evidence only)
+  0 labelled throws missing; 0 count mismatches; 0 raw underfunded estimates (reconciled after the spend).

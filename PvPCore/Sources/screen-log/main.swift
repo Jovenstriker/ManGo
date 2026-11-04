@@ -10,6 +10,11 @@ import PvPCore
 //
 // With --json, prints every frame as a JSON array of ScreenRead, for test fixtures.
 //
+//   swift run screen-log <video> --fill <fixture.json>
+//
+// Adds your charged move buttons' fill on every frame (fillTrace), as the phone records it,
+// to a fixture recorded before the phone did.
+//
 //   swift run screen-log <video> --pixels <fixture.json>
 //
 // Adds what's read from pixels rather than text (the opponent's pokéballs, your charged
@@ -22,6 +27,11 @@ args.removeAll { $0 == "--json" }
 var hpAllFixture: String?
 if let i = args.firstIndex(of: "--hp-all"), i + 1 < args.count {
     hpAllFixture = args[i + 1]
+    args.removeSubrange(i...(i + 1))
+}
+var fillFixture: String?
+if let i = args.firstIndex(of: "--fill"), i + 1 < args.count {
+    fillFixture = args[i + 1]
     args.removeSubrange(i...(i + 1))
 }
 var hpFixture: String?
@@ -79,6 +89,36 @@ if let hpAllFixture {
         if relocate { knownY = hp?.y; lastLocate = time }
         if let hp { reads[index].hpTrace?.append([time, hp.fill, Double(CVPixelBufferGetWidth(pixels))]) }
         if let alive = NameBoxBalls.alive(in: pixels, side: .player) { reads[index].playerAlive = alive }
+    }
+    if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    print(String(decoding: try encoder.encode(reads), as: UTF8.self))
+    exit(0)
+}
+
+if let fillFixture {
+    // Your charged move buttons' fill on every frame (at most 30 a second), added to each read
+    // as fillTrace the way the phone records it: the frames since the previous read. Nothing
+    // else in the fixture changes. For recordings made before the phone recorded it.
+    var reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: fillFixture)))
+    let track = try await asset.loadTracks(withMediaType: .video)[0]
+    let reader = try AVAssetReader(asset: asset)
+    let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+    ])
+    output.alwaysCopiesSampleData = false
+    reader.add(output)
+    guard reader.startReading() else { throw reader.error ?? CocoaError(.fileReadUnknown) }
+    for i in reads.indices { reads[i].fillTrace = [] }
+    var index = 0, lastSample = -Double.infinity
+    while let sample = output.copyNextSampleBuffer() {
+        let time = CMSampleBufferGetPresentationTimeStamp(sample).seconds
+        guard time - lastSample >= 0.03, let pixels = CMSampleBufferGetImageBuffer(sample) else { continue }
+        lastSample = time
+        while index < reads.count, reads[index].time < time { index += 1 }
+        guard index < reads.count else { break }
+        if let f = ChargeButtons.fill(in: pixels) { reads[index].fillTrace?.append([time, f[0], f[1]]) }
     }
     if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
     let encoder = JSONEncoder()

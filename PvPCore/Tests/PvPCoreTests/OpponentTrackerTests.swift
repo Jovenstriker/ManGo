@@ -290,3 +290,25 @@ private func makeTracker() throws -> OpponentTracker {
     // One new baseline after a missing bar is not a hit or evidence of a new moveset.
     #expect(detector.observe(time: 10.1, pixels: 150) == nil)
 }
+
+@Test func yourFastMovesLandWhereBothButtonsStepUp() {
+    // 30 frames a second: the buttons fade in (no steady level), hold, then fill a step every
+    // 1.0s (a 2-turn fast move), with a one-frame glitch before the first step.
+    var samples: [[Double]] = [[0, 0, 0.82], [0.03, 0.42, 0.92], [0.07, 0.57, 0.57]]
+    var left = 0.40, right = 0.30
+    for i in 3...120 {
+        let t = Double(i) / 30
+        if [1.5, 2.5, 3.5].contains(where: { abs(t - $0) < 0.017 }) { left += 0.12; right += 0.1 }
+        samples.append([t, abs(t - 1.467) < 0.017 ? 0.1 : left, right])
+    }
+    let landings = YourFastMoves.landings(in: samples)
+    #expect(landings.count == 3)
+    #expect(zip(landings, [1.5, 2.5, 3.5]).allSatisfy { abs($0 - $1) < 0.05 })
+    #expect(YourFastMoves.turns(fromGaps: zip(landings.dropFirst(), landings).map { $0 - $1 }) == 2)
+    // An effect over one button: the clean one still shows the step.
+    let covered = samples.map { s in [s[0], s[0] > 2.3 && s[0] < 2.9 ? (Int(s[0] * 30) % 2 == 0 ? 0.12 : 0.72) : s[1], s[2]] }
+    #expect(YourFastMoves.landings(in: covered).count == 3)
+    // A step on one button while the other reads clearly and stays put isn't your energy.
+    let lone = samples.map { s in [s[0], s[1], s[0] < 1.5 ? 0.30 : 0.30] }
+    #expect(YourFastMoves.landings(in: lone).isEmpty)
+}

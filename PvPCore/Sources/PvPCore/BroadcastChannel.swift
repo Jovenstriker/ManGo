@@ -52,6 +52,14 @@ public enum BroadcastChannel {
         )
     }
 
+    /// Forgets the reads waiting for the app. A broadcast starts with this: reads are timed from
+    /// when the phone started up, so ones left from before it restarted would look newer than any
+    /// new read, and the app would take them first and then reject every new one as out of date.
+    /// (Your 4 November battle: the card counted reads all battle and never named Altaria.)
+    public static func clearReads() {
+        UserDefaults(suiteName: appGroup)?.removeObject(forKey: readsKey)
+    }
+
     /// Reads newer than `time`, oldest first.
     public static func reads(after time: TimeInterval) -> [ScreenRead] {
         guard let defaults = UserDefaults(suiteName: appGroup) else { return [] }

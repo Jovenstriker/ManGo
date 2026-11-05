@@ -37,8 +37,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
     #endif
 
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
-        // A new broadcast reads at full speed, even if the last one ended idle.
+        // A new broadcast reads at full speed, even if the last one ended idle, and starts with
+        // none of the last one's reads waiting for the app.
         BroadcastChannel.idleSince = nil
+        BroadcastChannel.clearReads()
     }
 
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with type: RPSampleBufferType) {

@@ -244,9 +244,10 @@ private func makeTracker() throws -> OpponentTracker {
     t.setActive(speciesId: "azumarill", at: 1)
     t.setActive(speciesId: "medicham", at: 1, freeSwitch: true, seenAt: 3)
     #expect(t.snapshot(at: 4).energy == 6 + 12)   // 6 banked from before, + 1 Counter + 1 slack
-    // Your charged move allows the one in progress on top.
+    // At your charged move, no slack: the one it finished since it was seen and the one in
+    // progress, no more (Jirachi, seen 1.6s before yours: 14 with 4-turn Confusion, not 28).
     t.playerThrewChargedMove(at: 4)
-    #expect(t.snapshot(at: 4).energy == 6 + 18)
+    #expect(t.snapshot(at: 4).energy == 6 + 12)
 }
 
 @Test func energyCorrectionResetsTheOldStintCapAndSpentEnergy() throws {

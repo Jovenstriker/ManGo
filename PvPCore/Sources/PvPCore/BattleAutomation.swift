@@ -167,7 +167,7 @@ public struct BattleAutomation: Sendable {
         let t = read.time
         if read.hpTraceVerified == true {
             recentVerifiedHP += (read.hpTrace ?? []).filter { $0.count == 3 && $0[0] <= t && $0[2] > 0 }
-            recentVerifiedHP.removeAll { $0[0] < t - 4 }
+            recentVerifiedHP.removeAll { $0[0] < t - 15 }
         }
         if !stopped, !awaitingGo, read.hpTraceVerified == true {
             for sample in read.hpTrace ?? [] where sample.count == 3 && sample[0] <= t && sample[2] > 0 {
@@ -500,11 +500,44 @@ public struct BattleAutomation: Sendable {
     private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
         guard !Rules.off("align"), !playerChangedSinceResume else { return }
         let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
+        // The fast move it would add must have hit you: their first would have landed one stretch
+        // of finished fast moves before the stop. Your HP bar steady then means it didn't.
+        if !Rules.off("hpVetoAlign"), let fast = tracker.active?.fastMove, lastStopAt > resumedAt {
+            let move = Double(fast.turns) * turnDuration
+            let finished = ((lastStopAt - resumedAt) / move + 1e-9).rounded(.down)
+            let wouldHaveLanded = lastStopAt - finished * move
+            if yourHPShowsHits(between: resumedAt, and: lastStopAt), yourHPShowsNoHit(around: wouldHaveLanded) {
+                note("Your HP bar shows no hit at \(clockString(wouldHaveLanded)): \(name(tracker.active?.speciesId)) didn't finish one more fast move")
+                return
+            }
+        }
         if let back = buttonsBackAt, lastStopAt > resumedAt,
            tracker.alignToChargedMove(stretchStart: resumedAt, stop: lastStopAt,
                                       restartWindow: (back + window.lowerBound)...(back + window.upperBound)) {
             note("\(name(tracker.active?.speciesId)) had finished one more fast move: the battle restarted before your buttons came back")
         }
+    }
+
+    private func clockString(_ t: TimeInterval) -> String { String(format: "%d:%05.2f", Int(t) / 60, t.truncatingRemainder(dividingBy: 60)) }
+
+    /// Your HP bar shown steady (and not hidden) from just before `t` to half a second after: no
+    /// fast move of theirs landed then. (233009: Morpeko's would-be Thunder Shock at 1:03.3 left
+    /// your bar at 60; its hits came at 1:04.1 and 1:05.0, so 5 before Psychic Fangs, not 6.)
+    private func yourHPShowsNoHit(around t: TimeInterval) -> Bool {
+        let seen = recentVerifiedHP.filter { $0[0] >= t - 0.15 && $0[0] <= t + 0.5 && $0[1] * $0[2] > 0.5 }
+        guard seen.count >= 3, let width = seen.first?[2] else { return false }
+        let pixels = seen.map { $0[1] * $0[2] }
+        return pixels.max()! - pixels.min()! < max(1.5, 0.0035 * width)
+    }
+
+    /// Their fast moves visibly hit you in this stretch (your bar fell), so a hit would have shown:
+    /// a light one, like Dragon Breath, may not move the bar at all.
+    private func yourHPShowsHits(between start: TimeInterval, and end: TimeInterval) -> Bool {
+        let seen = recentVerifiedHP.filter { $0[0] >= start && $0[0] <= end && $0[1] * $0[2] > 0.5 }
+        guard seen.count >= 6, let width = seen.first?[2] else { return false }
+        let pixels = seen.map { $0[1] * $0[2] }
+        let held = (2..<pixels.count).map { [pixels[$0 - 2], pixels[$0 - 1], pixels[$0]].sorted()[1] }
+        return held.first! - held.min()! >= max(1.5, 0.0035 * width)
     }
 
     /// Their charged move came in the same stop as yours, with no restart between: you

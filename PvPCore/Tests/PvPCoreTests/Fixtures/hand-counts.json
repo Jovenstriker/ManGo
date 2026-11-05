@@ -578,5 +578,54 @@
     "observedFastMoves": {
       "flygon": "MUD_SHOT"
     }
+  },
+  "battle-2026-11-04-233009": {
+    "video": "Test Videos/battle-2026-11-04-233009.mp4",
+    "description": "Phone-saved battle, Great League: Mega Edition. Opponent: Morpeko (Full Belly), Jirachi, Azumarill.",
+    "counts": [
+      null,
+      5,
+      null,
+      null,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "morpeko_full_belly",
+        "moveId": "AURA_WHEEL"
+      },
+      {
+        "speciesId": "morpeko_full_belly",
+        "moveId": "PSYCHIC_FANGS"
+      },
+      {
+        "speciesId": "morpeko_full_belly",
+        "moveId": "PSYCHIC_FANGS"
+      },
+      {
+        "speciesId": "jirachi",
+        "moveId": "DOOM_DESIRE"
+      },
+      {
+        "speciesId": "jirachi",
+        "moveId": "DOOM_DESIRE"
+      },
+      {
+        "speciesId": "morpeko_full_belly",
+        "moveId": "AURA_WHEEL"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 101.0,
+        "speciesId": "jirachi",
+        "energy": 14
+      }
+    ],
+    "notes": {
+      "2": "User, 2026-11-04: 5 Thunder Shocks, not 6. ManGo's line-up rule (the opponent's charged move starts as a fast move finishes) moved the 1:03 restart earlier to fit a third in the stretch before Psychic Fangs.",
+      "jirachi": "User, 2026-11-04: Jirachi switched in at 1:40 (name seen 1:38.8, after play resumed at 1:37.5) and had 14 after your charged move at 1:40.4, not 28. A switch takes a turn and Confusion 4 turns (2s): it couldn't finish one in the second it was in. ManGo took it for the free switch at the restart and its cap allowed one extra."
+    }
   }
 }

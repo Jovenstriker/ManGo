@@ -312,7 +312,7 @@ public struct OpponentTracker: Sendable {
             // throw: without it, its third Hydro Cannon had 32 of 40.)
             let before = team[i].bankedEnergy
             team[i].stint?.yourChargedMoves += 1
-            team[i].bankedEnergy = min(maxEnergy, before + fast.energyGain, Self.cap(team[i], atBattleTime: t) ?? maxEnergy)
+            team[i].bankedEnergy = min(maxEnergy, before + fast.energyGain, Self.cap(team[i], atBattleTime: t, leeway: Rules.off("strictCapAtYourThrow")) ?? maxEnergy)
             inProgressBonus = (i, team[i].bankedEnergy - before)
             sneak = (i, team[i].bankedEnergy - before)
             team[i].history.append(Stretch(length: 0, interrupted: true))
@@ -321,7 +321,7 @@ public struct OpponentTracker: Sendable {
             let withFinished = min(maxEnergy, team[i].bankedEnergy + finished * fast.energyGain)
             team[i].stint?.yourChargedMoves += 1
             team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + (Rules.off("inProgress") ? 0 : 1)) * fast.energyGain,
-                                       Self.cap(team[i], atBattleTime: t) ?? maxEnergy)
+                                       Self.cap(team[i], atBattleTime: t, leeway: Rules.off("strictCapAtYourThrow")) ?? maxEnergy)
             inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished))
             closeStretch(i, at: t, interrupted: true)
         }
@@ -615,11 +615,14 @@ public struct OpponentTracker: Sendable {
     }
 
     /// The most energy `p` can physically have at battle time `t` this stint (see Stint).
-    static func cap(_ p: Pokemon, atBattleTime t: TimeInterval) -> Int? {
+    /// `leeway` allows the fast move a correction at their next throw may add; your own charged
+    /// move gets none: whole fast moves since it came in plus the one in progress, no more.
+    /// (Jirachi, seen switching in 1.6s before your charged move: 4-turn Confusion, so 14, not 28.)
+    static func cap(_ p: Pokemon, atBattleTime t: TimeInterval, leeway: Bool = true) -> Int? {
         guard !Rules.off("cap"), let s = p.stint, let fast = p.fastMove else { return nil }
         let moveDuration = Double(fast.turns) * turnDuration
         let moves = Int((max(0, t - s.start) / moveDuration + 1e-9).rounded(.down)) + s.yourChargedMoves
-            + s.theirChargedMoves + 1  // and the one being corrected for at their next throw
+            + s.theirChargedMoves + (leeway ? 1 : 0)  // the one being corrected for at their next throw
         return max(0, s.entryEnergy - s.spent + moves * fast.energyGain)
     }
 }

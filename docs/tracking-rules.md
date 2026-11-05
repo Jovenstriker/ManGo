@@ -22,7 +22,8 @@ explicitly approximate and are not used to identify moves or compute energy.
 - CMP knockouts do not spend energy for the move that never happens. Only an observed
   opponent banner spends energy; absence of a banner does not prove a sneak occurred.
 - A charged move requires at least its cost. If an observed spend contradicts the clock,
-  preserve the raw discrepancy, record a minimum-energy constraint, and mark uncertainty.
+  preserve the raw discrepancy and record a minimum-energy constraint (the card shows no
+  uncertainty marks, at the user's request).
   That does not prove an exact missing attack count. It does switch the assumed fast move when
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
   not PvPoke's Dragon Tail).

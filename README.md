@@ -5,8 +5,8 @@ and Great League rankings.
 
 ## How it tracks energy
 
-PvP runs in 0.5s turns. The display marks energy with `~` because the opponent's energy is hidden. The clock
-estimates back-to-back fast moves, starting with PvPoke's recommended moveset:
+PvP runs in 0.5s turns. ManGo assumes the opponent throws PvPoke's recommended fast move
+back-to-back, so their energy comes from the clock:
 
     energy = min(100, banked + floor(battle time since first seen / move length) × energy gain)
 
@@ -39,9 +39,10 @@ Dragon Tail). A base name retains its possible forms until a distinguishing char
 the form.
 
 A charged move that costs more than the estimate proves synchronization was lost. The engine
-records an explicit minimum-energy constraint, subtracts the full cost, and shows an uncertainty
-warning. It does not invent an exact number of missed fast moves. Reports retain the raw estimate
-so this reconciliation cannot hide prediction failures. If reads stop arriving, the display freezes.
+records an explicit minimum-energy constraint, subtracts the full cost, and counts on from there.
+It does not invent an exact number of missed fast moves. Reports retain the raw estimate so this
+reconciliation cannot hide prediction failures. If reads stop arriving, the energy stops counting up.
+The card shows one number with no uncertainty marks, as you asked.
 
 The engine is in `PvPCore/` (a Swift package with no UI). `OpponentTracker` takes
 timestamped events, so it doesn't care whether they come from taps or from computer vision.
@@ -157,7 +158,7 @@ Energy evidence is stored separately from move counts:
   estimates, not exact energy observations or fast-move counts.
 
 Every detected opponent throw must have enough energy to pay its cost. If the raw clock
-estimate is short, reconciliation uses the observed spend as a minimum and marks uncertainty.
+estimate is short, reconciliation uses the observed spend as a minimum.
 The reports separately fail validation on raw undercounts; making a spend affordable after seeing
 it is not evidence that the prediction was accurate. Overestimates can also satisfy affordability. Unlabelled recordings are
 checked for affordability, not claimed to be fully hand-verified.

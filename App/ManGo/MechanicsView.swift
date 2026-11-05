@@ -55,7 +55,7 @@ struct MechanicsView: View {
 
                 topic("Counting fast moves", "number", [
                     "Their energy tells you when a charged move can come. Medicham needs 5 Psycho Cuts (+9 each) for Ice Punch (40), so the shield decision comes after the 5th.",
-                    "ManGo estimates that count from screen observations and marks lost synchronization.",
+                    "That's ManGo's job: it counts their energy so you can play.",
                 ])
 
                 Section {
@@ -75,9 +75,9 @@ struct MechanicsView: View {
                 }
 
                 Section {
-                    bullet("If the opponent delays fast moves or lag pauses them, timing can overcount. Energy is shown as an estimate (~), not a guaranteed measurement.")
+                    bullet("If the opponent pauses between fast moves, or lag delays them, ManGo counts too many. It can't see pauses.")
                     bullet("If their fast move is unknown, the count is an estimate. A clear repeated damage rhythm can help, but moves with the same duration remain ambiguous.")
-                    bullet("If an observed charged move costs more than the estimate, ManGo resynchronizes to the minimum required energy and marks the count uncertain. If reads stop, the displayed energy freezes.")
+                    bullet("If they throw a charged move ManGo's count couldn't have paid for, it raises their energy to that move's cost and counts on from there. If reads stop, the energy stops counting up until they're back.")
                     bullet("Your fast moves can't show the restart when your buttons are already full, or when your fast move takes 1 turn (it lands while the buttons are still fading in). Then ManGo goes by the buttons alone.")
                     bullet("If you tie with their charged move and yours knocks them out, nothing shows they threw, so ManGo counts a fast move they didn't get. That Pokémon is out, so it doesn't matter.")
                     bullet("Nicknamed opponent Pokémon aren't recognized.")

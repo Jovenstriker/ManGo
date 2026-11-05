@@ -137,14 +137,11 @@ struct TrackerView: View {
 
     private func energyGauge(_ snap: OpponentTracker.Snapshot) -> some View {
         VStack(spacing: 6) {
-            Text(snap.energyLabel)
+            Text("\(snap.energy)")
                 .font(.system(size: 64, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
             ProgressView(value: Double(snap.energy), total: Double(maxEnergy))
-            if let note = snap.estimationNote {
-                Text(note).font(.caption).foregroundStyle(.secondary)
-            }
             if model.isBattleOver {
                 Text("Battle over · resets when the next battle starts").font(.caption).foregroundStyle(.secondary)
             } else if snap.isPaused {
@@ -209,7 +206,7 @@ struct TrackerView: View {
     // MARK: Helpers
 
     private func readiness(_ s: OpponentTracker.ChargedMoveStatus) -> String {
-        if s.ready { return "Likely ready" }
+        if s.ready { return "READY" }
         guard let turns = s.turnsUntilReady else { return "?" }
         return "\(s.fastMovesNeeded) fast · \(turns)T"
     }

@@ -94,13 +94,6 @@ public struct OpponentTracker: Sendable {
         /// Turns into the fast move currently being performed (0-based).
         public let turnIntoFastMove: Int?
         public let chargedMoves: [ChargedMoveStatus]
-        public var energyLabel: String { pokemon == nil ? "0" : "~\(energy)" }
-        public var estimationNote: String? {
-            guard let pokemon else { return nil }
-            if let warning = pokemon.energyWarning { return warning }
-            if !pokemon.fastMoveConfirmed, let fast = pokemon.fastMove { return "Assuming \(fast.name); energy estimated" }
-            return "Energy estimated from battle timing"
-        }
     }
 
     public let data: GameData

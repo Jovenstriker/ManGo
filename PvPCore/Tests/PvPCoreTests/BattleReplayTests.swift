@@ -555,6 +555,22 @@ private struct Screen {
     #expect(parser.stopObservation?.previous == 0)
 }
 
+@Test func yourPokeballsUnderManGosCardDontEndTheBattle() throws {
+    let (data, _) = try loadBattle()
+    var parser = BattleScreenParser(data: data)
+    var read = Screen(opponent: "Azumarill").read(at: 0)
+    read.playerAlive = 3
+    _ = parser.process(read)
+    // The card pops up over them, and its text reads as three fainted balls.
+    for t in [1.0, 1.25, 1.5] {
+        read = Screen(opponent: "Azumarill").read(at: t)
+        read.playerAlive = 0
+        let events = parser.process(read)
+        #expect(!events.contains(.battleEnded))
+        #expect(!events.contains(.yourPokemonFainted))
+    }
+}
+
 @Test func confirmedPlayerFaintPausesDespiteDimmedChargeLabels() throws {
     let (data, _) = try loadBattle()
     var parser = BattleScreenParser(data: data)

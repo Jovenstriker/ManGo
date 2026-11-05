@@ -172,19 +172,16 @@ public struct BattleScreenParser: Sendable {
             $0.box.midY >= Self.buttonBand.minY && Self.isButtonLabel($0.text)
                 && chargedMoveNames.contains(NameMatcher.normalize($0.text))
         }.map { NameMatcher.normalize($0.text) })
-        if let alive = read.playerAlive {
-            if let before = playerAlive, alive < before {
+        // Your pokéballs, top left. ManGo's card often sits over them, and its text averages to
+        // the gray of fainted balls: none left would end every battle as the card appears. So a
+        // faint is one ball going dark, never all of them (the results screen ends the battle).
+        if let alive = read.playerAlive, alive > 0 {
+            if let before = playerAlive, alive == before - 1 {
                 if pendingPlayerAlive?.value == alive { pendingPlayerAlive!.count += 1 }
                 else { pendingPlayerAlive = (alive, 1, read.time, previousTime) }
                 if let pending = pendingPlayerAlive, pending.count >= requiredReads {
                     pendingPlayerAlive = nil
                     playerAlive = alive
-                    if alive == 0 {
-                        events.append(.battleEnded)
-                        endOfBattle()
-                        ended = true
-                        return events
-                    }
                     replacementPendingAt = pending.first
                     replacementGoAt = nil
                     if running == true {

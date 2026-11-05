@@ -51,4 +51,28 @@ enum BattleRecordings {
         return min(battles.count, keep)
     }
 }
+
+/// Debug builds: what the app did with the screen reads (events, opponents, resets), with the
+/// reads' times, in Files → On My iPhone → ManGo as "ManGo app.log", for when a live battle goes
+/// wrong in a way its recording doesn't show. The last 4000 lines are kept.
+enum AppLog {
+    private static var lines: [String] = []
+    private static var unsaved = 0
+    static let url = BattleRecordings.folder.appendingPathComponent("ManGo app.log")
+
+    static func note(_ time: TimeInterval, _ line: String) {
+        if lines.isEmpty, let saved = try? String(contentsOf: url, encoding: .utf8) {
+            lines = saved.split(separator: "\n").map(String.init)
+        }
+        lines.append(String(format: "%@  %.2f  %@", Date.now.formatted(date: .omitted, time: .standard), time, line))
+        if lines.count > 4000 { lines.removeFirst(lines.count - 4000) }
+        unsaved += 1
+        if unsaved >= 20 || line.hasPrefix("Card") || line.hasPrefix("New") { save() }
+    }
+
+    static func save() {
+        unsaved = 0
+        try? lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+    }
+}
 #endif

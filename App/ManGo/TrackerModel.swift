@@ -57,6 +57,9 @@ final class TrackerModel {
     /// The battle ended ("YOU WIN!"/"GOOD EFFORT!"). The final count stays up this long,
     /// then ManGo clears it for the next battle.
     static let clearAfterBattle: TimeInterval = 5
+    /// Reads resuming after this long without any start a new screen reader session: nothing
+    /// from the last one (a battle half-seen, a stop) carries into it.
+    static let newSessionAfter: TimeInterval = 10
     var isBattleOver: Bool { automation?.isBattleOver ?? false }
     /// The latest thing the screen reader noticed, e.g. "Stunfisk used Discharge (81 → 41)".
     var lastEvent: String? { automation?.log.last }
@@ -84,6 +87,12 @@ final class TrackerModel {
     }
 
     func now() -> TimeInterval { CACurrentMediaTime() }
+
+    private func log(_ time: TimeInterval, _ line: String) {
+        #if DEBUG
+        AppLog.note(time, line)
+        #endif
+    }
 
     func snapshot(at date: Date) -> OpponentTracker.Snapshot? {
         guard var tracker else { return nil }
@@ -127,14 +136,24 @@ final class TrackerModel {
     /// the clock, subtracts the opponent's charged moves, and follows their switches.
     func handleScreenReads() {
         guard var automation, var tracker else { return }
-        let reads = BroadcastChannel.reads(after: lastReadTime)
+        // Read times count from when the phone started up: reads left from before a restart
+        // look like they're from the future, and would make every new one look out of date.
+        let reads = BroadcastChannel.reads(after: lastReadTime).filter { $0.time <= now() + 5 }
         guard !reads.isEmpty else { return }
         for read in reads {
             if let ended = automation.battleEndedAt, read.time >= ended + Self.clearAfterBattle, let data {
                 tracker = OpponentTracker(data: data)
                 automation.reset()
+                log(read.time, "Cleared after the battle")
+            } else if readCount > 0, read.time - lastReadTime > Self.newSessionAfter, let data {
+                tracker = OpponentTracker(data: data)
+                automation.reset()
+                log(read.time, String(format: "New screen reader session after %.0fs without reads: starting fresh", read.time - lastReadTime))
             }
+            let hadOpponent = tracker.active?.speciesId
             automation.process(read, tracker: &tracker)
+            for line in automation.logThisRead { log(read.time, line) }
+            if tracker.active?.speciesId != hadOpponent { log(read.time, "Card now shows \(tracker.active?.speciesId ?? "no opponent") (read \(readCount + 1))") }
             updateReaderIdle(read, automation: automation, tracker: tracker)
             lastReadTime = read.time
             if let now = read.memoryMB { readerMemoryMB = now }

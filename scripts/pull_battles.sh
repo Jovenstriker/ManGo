@@ -25,6 +25,13 @@ for reads in "$TMP"/*.reads.jsonl; do
   python3 -c 'import json,sys; print(json.dumps([json.loads(l) for l in open(sys.argv[1]) if l.strip()], separators=(",",":")))' "$reads" > "$F/$name.json"
   echo "$F/$name.json"
 done
+# What the app did with the reads, for when a live battle goes wrong in a way its recording
+# doesn't show.
+if [ -s "$TMP/ManGo app.log" ]; then
+  mkdir -p "Test Videos/app logs"
+  cp "$TMP/ManGo app.log" "Test Videos/app logs/$(date +%Y-%m-%d-%H%M%S).log"
+  echo "Test Videos/app logs/$(ls -t "Test Videos/app logs" | head -1)"
+fi
 if [ -s "$TMP/pulled.txt" ]; then
   xcrun devicectl device copy to --device "$DEVICE" --domain-type appDataContainer \
     --domain-identifier com.jovenstriker.mango --source "$TMP/pulled.txt" --destination Documents/pulled.txt >/dev/null

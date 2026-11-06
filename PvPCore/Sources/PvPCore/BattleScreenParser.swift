@@ -97,6 +97,11 @@ public struct BattleScreenParser: Sendable {
     private var runningSince: TimeInterval?
     private var resumedAfterChargedMove = false
     private var bannerConsumed = false
+    /// When their name box last showed their current Pokémon.
+    private var opponentShownAt: TimeInterval?
+    /// When their name box last showed the Pokémon the latest `opponentAppeared` replaced (nil
+    /// if it was never read): gone before the battle restarted, they switched during the stop.
+    public private(set) var replacedLastShownAt: TimeInterval?
     /// The switch happens about this long before its "Go, X!" banner shows.
     static let goBannerLead: TimeInterval = 0.5
     private var countdownSeen = false
@@ -114,6 +119,8 @@ public struct BattleScreenParser: Sendable {
     /// free only for the side that threw it.
     private var lastThrowWasTheirs: Bool?
     private var bannersSeen: Set<String> = []
+    /// A charged move's cue was on the last read.
+    private var cueOnLastRead = false
 
     public init(data: GameData) {
         matcher = NameMatcher(data: data)
@@ -268,7 +275,16 @@ public struct BattleScreenParser: Sendable {
             let key = NameMatcher.normalize(line.text)
             return key.contains("attackincoming") || key.contains("protectshield") || key.contains("getready")
         }
-        if cueNow, bannerConsumed, running == false {
+        // A cue still up from this charged move isn't a new one: "No Protect Shields remaining!"
+        // stays up as its banner shows (Mightyena's one Poison Fang, 125109 at 1:59.2). The next
+        // charged move's cue comes after this one's banner has gone.
+        let bannerUp = lines.contains {
+            (Self.bannerBand.minY...Self.bannerBand.maxY).contains($0.box.midY) && !$0.text.contains("→")
+                && Self.parseBanner($0.text) != nil
+        }
+        let newCue = cueNow && !cueOnLastRead && !bannerUp
+        cueOnLastRead = cueNow
+        if newCue, bannerConsumed, running == false {
             // A new charged move in the same stop (back-to-back, possibly the same move again).
             bannerConsumed = false
             bannersSeen = []
@@ -316,7 +332,7 @@ public struct BattleScreenParser: Sendable {
                 } else if !myTeam.contains(user), sawAttackIncoming, !sawGetReady {
                     // Their charged move, from a Pokémon whose switch-in was missed (name box covered).
                     byOpponent = true
-                    opponentKey = user
+                    replaced(by: user, at: nil)
                     pending = nil
                     events.append(.opponentAppeared(userMatch, since: read.time))
                 } else {
@@ -361,7 +377,7 @@ public struct BattleScreenParser: Sendable {
                 if goNames.last != match.key { goNames.append(match.key) }
                 if goNames.count == 1 { myTeam.insert(match.key) }
                 if goNames.count == 2 {
-                    opponentKey = match.key
+                    replaced(by: match.key, at: nil)
                     pending = nil
                     events.append(.opponentAppeared(match, since: read.time))
                 }
@@ -387,6 +403,7 @@ public struct BattleScreenParser: Sendable {
         }
         let shown = nameLines.compactMap({ matcher.match($0.text) }).min(by: { $0.distance < $1.distance })
         if let match = shown {
+            if match.key == opponentKey { opponentShownAt = read.time }
             let same = pending?.key == match.key
             let count = same ? pending!.count + 1 : 1
             var since = same ? pending!.since : read.time
@@ -397,7 +414,7 @@ public struct BattleScreenParser: Sendable {
                 if let go = recentGo[match.key], since - go < 3, !(resumedAfterChargedMove && runningSince.map { go - $0 < 1.5 } ?? false) {
                     since = min(since, go - Self.goBannerLead)
                 }
-                opponentKey = match.key
+                replaced(by: match.key, at: read.time)
                 if pendingGo?.match.key == match.key { pendingGo = nil }
                 events.append(.opponentAppeared(match, since: since))
             }
@@ -417,7 +434,7 @@ public struct BattleScreenParser: Sendable {
             if !yourBoxReadable, let shown, shown.key == opponentKey {
                 myTeam.insert(go.match.key)
             } else if go.match.key != opponentKey {
-                opponentKey = go.match.key
+                replaced(by: go.match.key, at: nil)
                 pending = nil
                 let midBattle = !(resumedAfterChargedMove && runningSince.map { go.time - $0 < 1.5 } ?? false)
                 events.append(.opponentAppeared(go.match, since: midBattle ? go.time - Self.goBannerLead : go.time))
@@ -426,10 +443,19 @@ public struct BattleScreenParser: Sendable {
         return events
     }
 
+    /// Their Pokémon is now `key` (shown in their name box at `shownAt`, if it was).
+    private mutating func replaced(by key: String, at shownAt: TimeInterval?) {
+        replacedLastShownAt = opponentKey == nil ? nil : opponentShownAt
+        opponentShownAt = shownAt
+        opponentKey = key
+    }
+
     /// Between battles: forget the opponent so the next battle's lead is reported even if
     /// it's the same species.
     private mutating func endOfBattle() {
         opponentKey = nil
+        opponentShownAt = nil
+        replacedLastShownAt = nil
         pending = nil
         running = nil
         missingButtons = nil

@@ -412,6 +412,67 @@
       }
     ]
   },
+  "battle-2026-10-24-171905": {
+    "video": "Test Videos/battle-2026-10-24-171905.mp4",
+    "description": "Phone-saved battle. Opponent: Dragonite (Shadow), Melmetal, Togetic.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 135.0,
+        "speciesId": "togetic",
+        "energy": 18
+      }
+    ],
+    "notes": {
+      "togetic": "Counted by the user on 2026-11-06: you shielded Melmetal's Double Iron Bash (2:07.7) and they switched to Togetic, a 0-turn switch. You threw 1 Shadow Claw (2 turns) and your charged move (2:12.9); Togetic's Fairy Wind is 2 turns too, so it hit 1 and sneaked 1: 18."
+    }
+  },
+  "battle-2026-10-28-002722": {
+    "video": "Test Videos/battle-2026-10-28-002722.mp4",
+    "description": "Phone-saved battle. Opponent: Greninja (Shadow), Florges, Charjabug.",
+    "counts": [
+      null,
+      null,
+      null,
+      null,
+      3,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "greninja_shadow",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "charjabug",
+        "moveId": "X_SCISSOR"
+      },
+      {
+        "speciesId": "charjabug",
+        "moveId": "X_SCISSOR"
+      },
+      {
+        "speciesId": "charjabug",
+        "moveId": "CRUNCH"
+      }
+    ],
+    "notes": {
+      "5": "Counted by the user on 2026-11-06: 3 Volt Switches. After you shielded Florges' Chilling Water they switched straight to Charjabug, a 0-turn switch. Your Nidoqueen threw 1 Mud Slap (3 turns) and its charged move (1:52.7); Charjabug's Volt Switch takes 4, so its first was still in progress then, and 2 more came before X-Scissor (2:13.6). Starting it at the restart and taking your fast-move clock's earlier restart gave it one finished by your charged move: after their charged move play restarts around your buttons."
+    }
+  },
   "battle-2026-10-28-221337": {
     "video": "Test Videos/battle-2026-10-28-221337.mp4",
     "description": "Phone-saved, several battles in one recording (it didn't split: ManGo missed the \"GOOD EFFORT!\" results screens, read as two lines). Opponents: Scizor, Guzzlord, Nidoqueen; then Greninja (Shadow), Forretress (Shadow), Mimikyu; then Forretress, Greninja, Nidoqueen.",
@@ -420,7 +481,7 @@
       null,
       null,
       null,
-      null,
+      7,
       null,
       null,
       null,
@@ -510,6 +571,7 @@
       }
     ],
     "notes": {
+      "5": "Counted by the user on 2026-11-06: 7 Mud Slaps. Guzzlord blocked your Clodsire's Stone Edge and they switched straight to Nidoqueen, a 0-turn switch. Your Clodsire threw 1 Poison Sting (2 turns) and you switched to your Nidoqueen (1 turn), so their first Mud Slap (3 turns) landed on your Nidoqueen and both Nidoqueens' Mud Slaps lined up. You threw 5 and your charged move (2:57.5): 6 and one sneaked. ManGo had started theirs when your buttons came back (2:48.07), 0.25s after the restart, and counted 6.",
       "greninja": "Shadow Greninja's Hydro Cannons and Brutal Swing (throws 11, 16, 18) came with less energy than ManGo counted (30, 28, 28): each time it sneaked or squeezed in a Water Shuriken ManGo's timing missed (see 11, 16, 18). A fourth \"Hydro Cannon\" at 13:40 was ManGo reading its own app (see end).",
       "11": "Recounted by the user on 2026-11-04: 3 Water Shurikens. Greninja sneaked one at your charged move at 5:41: your Mud Slap and its Water Shuriken are both 3-turn moves, so after a restart they always finish together and it always gets one more when you throw. ManGo measured that stretch as 1.37s, short of one Water Shuriken (1.5s), and counted 2.",
       "16": "Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.",
@@ -626,6 +688,31 @@
     "notes": {
       "2": "User, 2026-11-04: 5 Thunder Shocks, not 6. ManGo's line-up rule (the opponent's charged move starts as a fast move finishes) moved the 1:03 restart earlier to fit a third in the stretch before Psychic Fangs.",
       "jirachi": "User, 2026-11-04: Jirachi switched in at 1:40 (name seen 1:38.8, after play resumed at 1:37.5) and had 14 after your charged move at 1:40.4, not 28. A switch takes a turn and Confusion 4 turns (2s): it couldn't finish one in the second it was in. ManGo took it for the free switch at the restart and its cap allowed one extra."
+    }
+  },
+  "battle-2026-11-06-125109": {
+    "video": "Test Videos/battle-2026-11-06-125109.mp4",
+    "description": "Phone-saved battle. You: Thievul, Blaziken, Jumpluff. Opponent: Mightyena (Shadow), Corviknight, Charjabug.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 108.0,
+        "speciesId": "mightyena_shadow",
+        "energy": 28
+      }
+    ],
+    "noThrowsBetween": [
+      {
+        "from": 119.3,
+        "to": 125.0
+      }
+    ],
+    "observedFastMoves": {
+      "mightyena_shadow": "SUCKER_PUNCH"
+    },
+    "notes": {
+      "mightyena": "User, 2026-11-06: Mightyena led and switched out straight away (0 Sucker Punches), then switched in for Charjabug as your Blaze Kick ended, a 0-turn switch, threw 3 and sneaked 1 on your next charged move (1:37.3): 28 when Blaziken fell to that one at 1:46. Your HP bar shows its hits at 1:34.6, 1:35.6 and 1:36.6, with your Embers. ManGo started it when your buttons showed (1:33.59), 0.25s after the restart, so the third finished after its freeze (1:36.54).",
+      "poisonFang": "One Poison Fang at 1:59.2: \"No Protect Shields remaining!\" was still up with the banner, and ManGo took it for a second charged move's cue (1:59.5)."
     }
   }
 }

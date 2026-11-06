@@ -74,6 +74,8 @@ public struct BattleAutomation: Sendable {
     /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
     public var assumedFastMoves: [String: String] = [:]
     private var buttonsBackAt: TimeInterval?
+    /// The last read before your buttons came back.
+    private var readBeforeButtonsBack: TimeInterval?
     private var shieldedThisStop = false
     private var playerChargedThisStop = false
     /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
@@ -268,6 +270,7 @@ public struct BattleAutomation: Sendable {
                 restartChecked = awaitingGo || yourFaintThisStop
                 awaitingYourReplacement = !awaitingGo && yourFaintThisStop
                 buttonsBackAt = t
+                readBeforeButtonsBack = previousReadTime
                 // They blocked yours, and didn't throw their own after (v11's Empoleon did: its
                 // next stretch restarted with the buttons, as after any charged move of theirs).
                 lastResumeAfterShield = shieldedThisStop && playerChargedThisStop && !opponentThrewAfterYours
@@ -577,6 +580,7 @@ public struct BattleAutomation: Sendable {
         resumedBeforeGo = nil
         lastStopAt = -.infinity
         buttonsBackAt = nil
+        readBeforeButtonsBack = nil
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
         leadStartChecked = false
@@ -605,6 +609,19 @@ public struct BattleAutomation: Sendable {
             seen = nil
         }
         var time = max(since, resumedAt)  // never before the latest resume
+        // A switch made during a stop starts as the Pokémon it replaced leaves. Gone from their
+        // name box before the last read before your buttons came back, it left during the stop,
+        // a 0-turn switch: the new one starts at the restart, as the old one would have. After
+        // your charged move that's before your buttons (Mightyena for Charjabug as your Blaze Kick
+        // ended, 125109: Charjabug gone from 1:32.7, buttons back at 1:33.6, so 3 Sucker Punches
+        // and one sneaked on your next one, not 2; Nidoqueen for Guzzlord after it blocked your
+        // Stone Edge, 221337: 6 Mud Slaps and a sneak). After theirs, even one you shielded, play
+        // restarts around your buttons, so it starts with them, below (Charjabug for Florges
+        // after its Chilling Water, 002722; Togetic for Melmetal after its Double Iron Bash,
+        // 171905). Still there on that read (Turtonator, then Mimikyu with your buttons) or never
+        // read, it was leaving as play resumed: the new one starts with your buttons.
+        let leftDuringStop = !Rules.off("leftDuringStop") && !opponentThrewThisStop
+            && parser.replacedLastShownAt.map { last in readBeforeButtonsBack.map { last < $0 } ?? false } == true
         // Switched in during the stop straight after their charged move (a free switch):
         // it starts as the battle restarts, when your buttons come back (Granbull after
         // Turtonator's Dragon Claws: 7 Charms before Crunch; Cramorant after Stunfisk's
@@ -640,7 +657,7 @@ public struct BattleAutomation: Sendable {
         // made in play and costs a turn (Turtonator, 1.1s after: 3 Incinerates plus the one
         // in progress, not 4 plus one).
         let quick = !Rules.off("quickSwitch") && chargedMoveThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
-        if quick, let back = buttonsBackAt { time = max(resumedAt, min(time, back)) }
+        if quick, let back = buttonsBackAt { time = leftDuringStop ? resumedAt : max(resumedAt, min(time, back)) }
         if theirsFainted {
             // A new Pokémon right after a stop with no charged move from them: theirs fainted.
             // The clock stays as the screen says: if the battle is still stopped, the new
@@ -663,7 +680,8 @@ public struct BattleAutomation: Sendable {
         if !Rules.off("yourFaintTurn"), yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
         cadence = FastMoveCadence()
-        tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free, seenAt: isLead ? nil : since)
+        tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
+                          seenAt: isLead ? nil : leftDuringStop ? time : since)
         if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
         // Name confirmation arrives after the switch. Replay the verified samples
         // belonging to the incoming Pokémon instead of discarding its first hit.

@@ -16,6 +16,10 @@ explicitly approximate and are not used to identify moves or compute energy.
 - A normal switch costs one turn. Replacing a fainted Pokémon is free. Either side can
   switch freely as a charged move ends; once play has resumed, the normal switch turn applies.
   Choosing to switch out after the other side fainted costs one turn.
+- A free switch counts from when the Pokémon it replaced left. Gone from their name box before
+  the last read before your buttons came back, it left during the stop and the new one starts
+  at the restart: a moment before your buttons after your charged move, with them after theirs
+  (play restarts around your buttons then, even when you shield).
 - After a faint, neither side attacks until the replacement is out. Dimmed move labels
   can remain on screen during this transition. Confirmed player pokéball loss overrides them.
 - Benched Pokémon keep their energy. Form clarification must preserve their history.
@@ -36,7 +40,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 37 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 43 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

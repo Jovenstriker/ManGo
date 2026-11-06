@@ -44,10 +44,11 @@ OPPONENT CHARGED MOVES
        calc: 84 = 0 left before + 7 × 12 (Dragon Tail); after: 84 − 35 = 49
   4  2:33.66  Guzzlord              Brutal Swing (35)         73 → 38       2           ?     -
        calc: 73 = 49 left before + 2 × 12 (Dragon Tail); after: 73 − 35 = 38
-  5  3:17.96  Nidoqueen             Poison Fang (40)          60 → 20       6           ?     -
-       calc: 60 = 0 left before + 6 × 10 (Mud Slap); after: 60 − 40 = 20
-  6  3:31.54  Nidoqueen             Poison Fang (40)          40 → 0        2           ?     -
-       calc: 40 = 20 left before + 2 × 10 (Mud Slap); after: 40 − 40 = 0
+  5  3:17.96  Nidoqueen             Poison Fang (40)          70 → 30       7           7     ✓
+       calc: 70 = 0 left before + 7 × 10 (Mud Slap); after: 70 − 40 = 30
+       note: Counted by the user on 2026-11-06: 7 Mud Slaps. Guzzlord blocked your Clodsire's Stone Edge and they switched straight to Nidoqueen, a 0-turn switch. Your Clodsire threw 1 Poison Sting (2 turns) and you switched to your Nidoqueen (1 turn), so their first Mud Slap (3 turns) landed on your Nidoqueen and both Nidoqueens' Mud Slaps lined up. You threw 5 and your charged move (2:57.5): 6 and one sneaked. ManGo had started theirs when your buttons came back (2:48.07), 0.25s after the restart, and counted 6.
+  6  3:31.54  Nidoqueen             Poison Fang (40)          50 → 10       2           ?     -
+       calc: 50 = 30 left before + 2 × 10 (Mud Slap); after: 50 − 40 = 10
   7  3:55.51  Guzzlord              Brutal Swing (35)         50 → 15       1           ?     -
        calc: 50 = 38 left before + 1 × 12 (Dragon Tail); after: 50 − 35 = 15
   8  4:41.18  Greninja (Shadow)     Hydro Cannon (40)         42 → 2        3           ?     -
@@ -71,15 +72,15 @@ OPPONENT CHARGED MOVES
        calc: 42 = 4 left before + 3 × 14 (Water Shuriken) + -4 (cap/corrections); after: 42 − 35 = 7
        note: Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.
   17 10:25.68  Nidoqueen             Earth Power (50)          60 → 10       6           ?     -
-       calc: 60 = 0 left before + 6 × 10 (Mud Slap); after: 60 − 50 = 10
+       calc: 60 = 10 left before + 6 × 10 (Mud Slap) + -10 (cap/corrections); after: 60 − 50 = 10
   18 10:54.94  Greninja (Shadow)     Hydro Cannon (40)         49 → 9        3           3     ✓
        calc: 49 = 7 left before + 3 × 14 (Water Shuriken); after: 49 − 40 = 9
        note: Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.
 
 SUMMARY
-  3 of 3 hand-counted charged moves match ManGo's fast move count exactly.
+  4 of 4 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  15 not hand-counted.
+  14 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:39.20  Opponent: Scizor (Shadow)
@@ -117,17 +118,17 @@ TIMELINE (what the screen reader saw and did)
   2:37.92  You threw a charged move: Guzzlord 38 → 50 (its fast move in progress counts)
   2:48.07    running  Guzzlord at 50
   2:48.34  Opponent: Nidoqueen
-  2:57.23    stopped  Nidoqueen at 50
-  2:57.49  You threw a charged move: Nidoqueen 50 → 60 (its fast move in progress counts)
-  3:09.44    running  Nidoqueen at 60
-  3:10.24    stopped  Nidoqueen at 60
-  3:17.96  Nidoqueen used Poison Fang (60 → 20)
-  3:20.63    running  Nidoqueen at 20
-  3:23.82    stopped  Nidoqueen at 40
-  3:31.54  Nidoqueen used Poison Fang (40 → 0)
-  3:34.47    running  Nidoqueen at 0
-  3:35.54    stopped  Nidoqueen at 0
-  3:35.80  You threw a charged move: Nidoqueen 0 → 10 (its fast move in progress counts)
+  2:57.23    stopped  Nidoqueen at 60
+  2:57.49  You threw a charged move: Nidoqueen 60 → 70 (its fast move in progress counts)
+  3:09.44    running  Nidoqueen at 70
+  3:10.24    stopped  Nidoqueen at 70
+  3:17.96  Nidoqueen used Poison Fang (70 → 30)
+  3:20.63    running  Nidoqueen at 30
+  3:23.82    stopped  Nidoqueen at 50
+  3:31.54  Nidoqueen used Poison Fang (50 → 10)
+  3:34.47    running  Nidoqueen at 10
+  3:35.54    stopped  Nidoqueen at 10
+  3:35.80  You threw a charged move: Nidoqueen 10 → 20 (its fast move in progress counts)
   3:46.99  Nidoqueen fainted or switched out
   3:46.99  Opponent: Guzzlord
   3:48.05    running  Guzzlord at 50

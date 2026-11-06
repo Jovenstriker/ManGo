@@ -15,7 +15,9 @@ back-to-back, so their energy comes from the clock:
 - **Your charged move:** pause the clock. Their fast move freezes mid-animation and continues
   when the battle resumes.
 - **Switch:** the outgoing Pokémon keeps its energy. The incoming Pokémon's fast moves start
-  1 turn later, or 0 turns if the opponent switches right after throwing a charged move.
+  1 turn later, or 0 turns if they switch as a charged move ends (either side's). One that
+  replaced a Pokémon already gone before your buttons came back starts at the restart: after
+  your charged move a moment before your buttons, after theirs with them.
   A Pokémon whose fast move is already known (seen before, or it has only one) starts
   counting on its own.
 - **Faint:** both sides stop attacking until the next Pokémon comes out. If theirs fainted,
@@ -175,7 +177,10 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-39 of 40 exact hand counts match. v7's Azumarill was labelled 9 Bubbles; you recounted it on
+42 of 43 exact hand counts match, and every energy checkpoint. On November 6, 2026 you counted four
+switch-ins made during a stop: Mightyena (3 Sucker Punches and a sneak, 125109) and Nidoqueen (6 Mud
+Slaps and a sneak, 221337) after your charged moves start at the restart; Charjabug (002722) and
+Togetic (171905) after theirs start with your buttons. v7's Azumarill was labelled 9 Bubbles; you recounted it on
 November 4, 2026 as 10, as ManGo counts (its card showed 100 at the Ice Beam, and 9 would be 99).
 Shadow Greninja's three sneaks in 221337 (5:41, 9:24, and 2 Water Shurikens before its switch at
 9:45) are counted from your fast moves. Known limit: 155712's Azumarill had 5 Bubbles at its Ice

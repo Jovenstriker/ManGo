@@ -183,11 +183,13 @@ Slaps and a sneak, 221337) after your charged moves start at the restart; Charja
 Togetic (171905) after theirs start with your buttons. v7's Azumarill was labelled 9 Bubbles; you recounted it on
 November 4, 2026 as 10, as ManGo counts (its card showed 100 at the Ice Beam, and 9 would be 99).
 Shadow Greninja's three sneaks in 221337 (5:41, 9:24, and 2 Water Shurikens before its switch at
-9:45) are counted from your fast moves. Known limit: 155712's Azumarill had 5 Bubbles at its Ice
-Beam (you saw it sneak one at 2:13) and Corviknight at least 9 Sand Attacks between its Paybacks;
-ManGo counts one fewer of each: your buttons were full at 2:13, and your Altaria's Dragon Breath
-takes 1 turn, so your fast moves couldn't date those restarts. Minimum-energy reconciliation keeps
-them visible as raw prediction failures.
+9:45) are counted from your fast moves. 155712's Azumarill (5 Bubbles: your 3 Dragon Breaths, then
+one finished and one sneaked at 2:13) and Corviknight (9 Sand Attacks between its Paybacks) are
+counted from their fast move in progress at your charged move hitting you, which shows when play
+restarted: up to 0.8s before your buttons came back. Known limits: testV2's Ninetales paused a turn
+between Embers (6 by hand, 7 by ManGo, which can't see breaks), and 155536's Altaria had at least
+50 for its fifth Sky Attack where ManGo counts 44. Minimum-energy reconciliation keeps the second
+visible as a raw prediction failure.
 
 v7 was enriched with verified HP pixels and your pokéball counts from its original video;
 its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:

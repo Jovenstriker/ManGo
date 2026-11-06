@@ -31,6 +31,10 @@ explicitly approximate and are not used to identify moves or compute energy.
   That does not prove an exact missing attack count. It does switch the assumed fast move when
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
   not PvPoke's Dragon Tail).
+- After your charged move, their fast move in progress finishes as play resumes: its hit on you
+  ("…EFFECTIVE" over your Pokémon, fresh in the stop) shows play had restarted by that read, often
+  before your buttons are readable. Not if it knocked yours out: play then waits for your next
+  Pokémon, whose "Go, X!" or the switch prompt follows the hit.
 - After a restart both sides start fast moves on the same turn: your first fast move landing (a
   step in your buttons' fill) dates the restart, often earlier than the buttons are readable.
   The opponent's count starts from it less a 0.35s reaction; restarts only ever move earlier.

@@ -43,11 +43,11 @@ OPPONENT CHARGED MOVES
   3  1:11.75  Melmetal              Double Iron Bash (35)     38 → 3        0           0     ✓
        calc: 38 = 38 left before + 0 × 9 (Thunder Shock); after: 38 − 35 = 3
        note: Thrown straight away with leftover energy. Melmetal then threw 3 Thunder Shocks and fainted to a fast move. Thrown as soon as the battle restarted, about when your buttons came back.
-  4  1:48.75  Ninetales (Shadow)    Weather Ball (Fire) (35)  54 → 19       6           6     ✓
-       calc: 54 = 0 left before + 6 × 9 (Ember); after: 54 − 35 = 19
-       note: Ninetales threw 2 Embers, you threw Dynamic Punch (both 2-turn moves, lined up) so 1 more slipped in, then 3 more with a 1-turn break between the 5th and 6th. ManGo can't see breaks, so it counts 7.
-  5  2:04.25  Ninetales (Shadow)    Weather Ball (Fire) (35)  37 → 2        2           2     ✓
-       calc: 37 = 19 left before + 2 × 9 (Ember); after: 37 − 35 = 2
+  4  1:48.75  Ninetales (Shadow)    Weather Ball (Fire) (35)  63 → 28       7           6     ✗ (+1)
+       calc: 63 = 0 left before + 7 × 9 (Ember); after: 63 − 35 = 28
+       note: Ninetales threw 2 Embers, you threw Dynamic Punch (both 2-turn moves, lined up) so 1 more slipped in, then 3 more with a 1-turn break between the 5th and 6th. ManGo can't see breaks, so it counts 7. (It counted 6 for a while only because it put the restart at 1:36.5, after its Ember in progress at your Dynamic Punch hit you at 1:36.25; that late restart cancelled the break.)
+  5  2:04.25  Ninetales (Shadow)    Weather Ball (Fire) (35)  46 → 11       2           2     ✓
+       calc: 46 = 28 left before + 2 × 9 (Ember); after: 46 − 35 = 11
   6  2:31.25  Altaria               Moonblast (50)            52 → 2        13          ?     -
        calc: 52 = 0 left before + 13 × 4 (Dragon Breath); after: 52 − 50 = 2
        note: Dragon Breath is too fast to count by eye.
@@ -56,7 +56,7 @@ OPPONENT CHARGED MOVES
        note: Dragon Breath is too fast to count by eye.
 
 SUMMARY
-  5 of 5 hand-counted charged moves match ManGo's fast move count exactly.
+  4 of 5 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
   2 not hand-counted.
 
@@ -80,21 +80,22 @@ TIMELINE (what the screen reader saw and did)
   1:24.25    running  Ninetales (Shadow) at 0
   1:26.25    stopped  Ninetales (Shadow) at 9
   1:27.25  You threw a charged move: Ninetales (Shadow) 18 → 27 (its fast move in progress counts)
+  1:36.75  Their fast move in progress hit you at 1:36.25, before your buttons came back: the battle had restarted
   1:36.75    running  Ninetales (Shadow) at 27
-  1:40.75    stopped  Ninetales (Shadow) at 54
-  1:48.75  Ninetales (Shadow) used Weather Ball (Fire) (54 → 19)
-  1:54.50    running  Ninetales (Shadow) at 19
+  1:40.75    stopped  Ninetales (Shadow) at 63
+  1:48.75  Ninetales (Shadow) used Weather Ball (Fire) (63 → 28)
+  1:54.50    running  Ninetales (Shadow) at 28
   1:55.00  Your fast move landed 0.45s after ManGo's restart: their fast moves restarted 0.20s earlier
-  1:57.25    stopped  Ninetales (Shadow) at 37
-  2:04.25  Ninetales (Shadow) used Weather Ball (Fire) (37 → 2)
-  2:07.25    running  Ninetales (Shadow) at 2
+  1:57.25    stopped  Ninetales (Shadow) at 46
+  2:04.25  Ninetales (Shadow) used Weather Ball (Fire) (46 → 11)
+  2:07.25    running  Ninetales (Shadow) at 11
   2:07.50  Your fast move landed 0.24s after ManGo's restart: their fast moves restarted 0.41s earlier
   2:07.50  Opponent: Altaria
   2:09.25    stopped  Altaria at 12
   2:09.75  You threw a charged move: Altaria 12 → 16 (its fast move in progress counts)
-  2:19.75    running  Altaria at 16
-  2:24.25    stopped  Altaria at 48
-  2:24.50  Altaria had finished one more fast move: the battle restarted before your buttons came back
+  2:19.75  Their fast move in progress hit you at 2:19.25, before your buttons came back: the battle had restarted
+  2:19.75    running  Altaria at 20
+  2:24.25    stopped  Altaria at 52
   2:31.25  Altaria used Moonblast (52 → 2)
   2:34.25    running  Altaria at 2
   2:34.50  Your fast move landed 0.20s after ManGo's restart: their fast moves restarted 0.45s earlier
@@ -105,8 +106,8 @@ TIMELINE (what the screen reader saw and did)
   2:50.00  You threw a charged move: Altaria 42 → 46 (its fast move in progress counts)
   3:00.25    running  Altaria at 46
   3:00.50  Opponent: Ninetales (Shadow)
-  3:04.25    stopped  Ninetales (Shadow) at 29
-  3:04.50  You threw a charged move: Ninetales (Shadow) 29 → 38 (its fast move in progress counts)
+  3:04.25    stopped  Ninetales (Shadow) at 38
+  3:04.50  You threw a charged move: Ninetales (Shadow) 38 → 47 (its fast move in progress counts)
   3:15.50  Ninetales (Shadow) fainted or switched out
   3:15.50  Opponent: Altaria
   3:16.50    running  Altaria at 46
@@ -117,5 +118,5 @@ TIMELINE (what the screen reader saw and did)
   3:31.00  You threw a charged move: Altaria 19 → 23 (its fast move in progress counts)
   3:45.50  Battle over
 
-VALIDATION: PASS (available evidence only)
-  0 labelled throws missing; 0 count mismatches; 0 raw underfunded estimates (reconciled after the spend).
+VALIDATION: FAIL
+  0 labelled throws missing; 1 count mismatches; 0 raw underfunded estimates (reconciled after the spend).

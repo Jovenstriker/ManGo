@@ -95,6 +95,7 @@ TIMELINE (what the screen reader saw and did)
   2:41.55    running  Stunfisk at 0
   2:42.65    stopped  Stunfisk at 0
   2:43.44  You threw a charged move: Stunfisk 9 → 18 (its fast move in progress counts)
+  2:53.05  Their fast move in progress hit you at 2:52.78, before your buttons came back: the battle had restarted
   2:53.05    running  Stunfisk at 18
   2:55.79    stopped  Stunfisk at 36
   3:00.05  Battle over

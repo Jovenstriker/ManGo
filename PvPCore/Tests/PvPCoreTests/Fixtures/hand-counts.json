@@ -107,7 +107,7 @@
     ],
     "notes": {
       "3": "Thrown straight away with leftover energy. Melmetal then threw 3 Thunder Shocks and fainted to a fast move. Thrown as soon as the battle restarted, about when your buttons came back.",
-      "4": "Ninetales threw 2 Embers, you threw Dynamic Punch (both 2-turn moves, lined up) so 1 more slipped in, then 3 more with a 1-turn break between the 5th and 6th. ManGo can't see breaks, so it counts 7.",
+      "4": "Ninetales threw 2 Embers, you threw Dynamic Punch (both 2-turn moves, lined up) so 1 more slipped in, then 3 more with a 1-turn break between the 5th and 6th. ManGo can't see breaks, so it counts 7. (It counted 6 for a while only because it put the restart at 1:36.5, after its Ember in progress at your Dynamic Punch hit you at 1:36.25; that late restart cancelled the break.)",
       "6": "Dragon Breath is too fast to count by eye.",
       "7": "Dragon Breath is too fast to count by eye."
     },
@@ -359,8 +359,8 @@
       }
     ],
     "notes": {
-      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short.",
-      "4": "Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13 (play had restarted about 2:11.4), which ManGo missed. ManGo's other 4: the Bubble in progress at your charged moves at 2:01 and 2:13, and 2 shown on your Mimikyu's HP bar (2:23.5, 2:24.97). Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).",
+      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short. It has 60 now that the restart comes from its Sand Attack in progress hitting you.",
+      "4": "Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13. On 2026-11-06: you threw 3 Dragon Breaths (3 turns) before that charged move, so it finished 1 Bubble and sneaked 1. ManGo started the stretch at 2:11.19, 0.25s before your button labels were readable (2:11.44), and saw 1.2s, short of a Bubble. Its Bubble in progress at your 2:01 charged move hit your Altaria by 2:10.64 (\"NOT VERY EFFECTIVE..\"), so play was back then; restarting there it counts 5.",
       "flygon": "Flygon used Mud Shot, not PvPoke's Dragon Tail (\"it is mud shot\", user, Oct 2026). Its shortfall at a throw is the moveset, not timing."
     },
     "throwEnergy": [

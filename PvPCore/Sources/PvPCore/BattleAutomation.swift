@@ -76,6 +76,13 @@ public struct BattleAutomation: Sendable {
     private var buttonsBackAt: TimeInterval?
     /// The last read before your buttons came back.
     private var readBeforeButtonsBack: TimeInterval?
+    /// A hit on you was showing on the last read.
+    private var hitOverYouLastRead = false
+    /// The read by which their fast move in progress at your charged move had hit you this stop,
+    /// whether a "Go, X!" already showed then, and whether your Pokémon went down to it after.
+    private var inProgressLandedBy: TimeInterval?
+    private var goShownAtHit = false
+    private var inProgressRuledOut = false
     private var shieldedThisStop = false
     private var playerChargedThisStop = false
     /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
@@ -186,6 +193,23 @@ public struct BattleAutomation: Sendable {
         if !stopped { checkRestartAgainstYourFastMoves(before: max(t, fillSamples.last?[0] ?? t), tracker: &tracker) }
         if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
+        // After your charged move their fast move in progress finishes as play resumes, often
+        // before your buttons can be read: a fresh "…EFFECTIVE" over your Pokémon in the stop
+        // shows the battle had restarted by this read. Unless it knocked yours out: then play
+        // waits for your next one, and its "Go, X!" (or the switch prompt) comes after the hit
+        // (221337: Clodsire after Nidoqueen's Poison Jab at 3:07.3, play back at 3:09.4).
+        let hitOverYou = read.lines.contains(where: Self.isHitOnYou)
+        let goShown = read.lines.contains { $0.text.lowercased().hasPrefix("go,") }
+        if stopped, let hit = inProgressLandedBy, hit < t,
+           (goShown && !goShownAtHit) || read.lines.contains(where: { NameMatcher.normalize($0.text).contains("switchinanewpokemon") }) {
+            inProgressLandedBy = nil
+            inProgressRuledOut = true
+        }
+        if stopped, playerChargedThisStop, !opponentThrewThisStop, !inProgressRuledOut, hitOverYou, !hitOverYouLastRead, inProgressLandedBy == nil {
+            inProgressLandedBy = t
+            goShownAtHit = goShown
+        }
+        hitOverYouLastRead = hitOverYou
         if let n = read.opponentAlive {
             if let before = opponentAlive, n < before { aliveDroppedAt = t }
             opponentAlive = n
@@ -245,6 +269,8 @@ public struct BattleAutomation: Sendable {
                 opponentThrewThisStop = false
                 yourFaintThisStop = false
                 chargedMoveThisStop = false
+                inProgressLandedBy = nil
+                inProgressRuledOut = false
                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
                 checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
                 let stop = max(observation.first - stopLead, observation.previous, resumedAt)
@@ -263,9 +289,18 @@ public struct BattleAutomation: Sendable {
                 playerChangedSinceResume = false
                 cadence = FastMoveCadence()
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
-                let resume = max(t - lead, lastStopAt)
+                var resume = max(t - lead, lastStopAt)
+                // Their fast move in progress at your charged move hit you before your buttons
+                // came back, so play had restarted by then (155712: Azumarill's Bubble showed over
+                // your Altaria at 2:10.64, your buttons at 2:11.44; your 3 Dragon Breaths fit
+                // after it, and so did one Bubble and the one it sneaked on your next charged move).
+                if !Rules.off("inProgressHit"), !yourFaintThisStop, let hit = inProgressLandedBy, hit < resume, hit > lastStopAt {
+                    note("Their fast move in progress hit you at \(clockString(hit)), before your buttons came back: the battle had restarted")
+                    resume = hit
+                }
                 resumedAt = resume
-                buttonsResumedAt = resume
+                // Your buttons only show your fast moves once they're back (they fade in at first).
+                buttonsResumedAt = max(t - lead, lastStopAt)
                 // When your Pokémon fainted, not until your replacement's buttons show its fast move.
                 restartChecked = awaitingGo || yourFaintThisStop
                 awaitingYourReplacement = !awaitingGo && yourFaintThisStop
@@ -441,17 +476,18 @@ public struct BattleAutomation: Sendable {
         }
         let move = Double(fast.turns) * turnDuration
         guard read.time < go + 2 * move else { leadStartChecked = true; return }
-        let overYou = read.lines.contains { line in
-            NameMatcher.normalize(line.text).contains("effective") && line.box.midX < 0.45
-                && (0.12...0.7).contains(line.box.midY)
-        }
-        guard overYou else { return }
+        guard read.lines.contains(where: Self.isHitOnYou) else { return }
         leadStartChecked = true
         let start = previousReadTime - move
         guard start > go else { return }
         tracker.setEnergy(0, at: start)
         let shown = go - goDelay  // when GO appeared
         note(String(format: "First hit on you %.2f-%.2fs after GO: \(name(tracker.active?.speciesId)) started %.2fs after GO, not %.2fs", previousReadTime - shown, read.time - shown, start - shown, goDelay))
+    }
+
+    /// "NOT VERY EFFECTIVE..." or "SUPER EFFECTIVE!" over your Pokémon: their move hit you.
+    private static func isHitOnYou(_ line: RecognizedText) -> Bool {
+        NameMatcher.normalize(line.text).contains("effective") && line.box.midX < 0.45 && (0.12...0.7).contains(line.box.midY)
     }
 
     /// The opponent's fast moves landing on your HP bar in the opening stretch, GO to the
@@ -581,6 +617,10 @@ public struct BattleAutomation: Sendable {
         lastStopAt = -.infinity
         buttonsBackAt = nil
         readBeforeButtonsBack = nil
+        hitOverYouLastRead = false
+        inProgressLandedBy = nil
+        goShownAtHit = false
+        inProgressRuledOut = false
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
         leadStartChecked = false

@@ -58,6 +58,7 @@ TIMELINE (what the screen reader saw and did)
   0:40.90    running  Stunfisk (Galarian) at 0
   0:42.80    stopped  Stunfisk (Galarian) at 9
   0:43.05  You threw a charged move: Stunfisk (Galarian) 9 → 18 (its fast move in progress counts)
+  0:52.92  Their fast move in progress hit you at 0:52.65, before your buttons came back: the battle had restarted
   0:52.92    running  Stunfisk (Galarian) at 18
   0:58.56    stopped  Stunfisk (Galarian) at 63
   0:58.84  Stunfisk (Galarian) had finished one more fast move: the battle restarted before your buttons came back
@@ -65,6 +66,7 @@ TIMELINE (what the screen reader saw and did)
   1:08.79    running  Stunfisk (Galarian) at 27
   1:10.42  You threw a charged move: Stunfisk (Galarian) 36 → 45 (its fast move in progress counts)
   1:10.42    stopped  Stunfisk (Galarian) at 45
+  1:20.54  Their fast move in progress hit you at 1:20.00, before your buttons came back: the battle had restarted
   1:20.54    running  Stunfisk (Galarian) at 45
   1:25.63  Opponent: Forretress (Shadow)
   1:25.63    stopped  Forretress (Shadow) at 0

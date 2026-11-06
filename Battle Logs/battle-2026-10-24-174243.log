@@ -78,9 +78,11 @@ TIMELINE (what the screen reader saw and did)
   1:41.52    running  Turtonator at 0
   1:43.72    stopped  Turtonator at 0
   1:43.98  You threw a charged move: Turtonator 0 → 20 (its fast move in progress counts)
+  1:54.10  Their fast move in progress hit you at 1:53.83, before your buttons came back: the battle had restarted
   1:54.10    running  Turtonator at 20
   1:58.09    stopped  Turtonator at 40
   1:58.89  You threw a charged move: Turtonator 40 → 60 (its fast move in progress counts)
+  2:08.81  Their fast move in progress hit you at 2:08.28, before your buttons came back: the battle had restarted
   2:08.81    running  Turtonator at 60
   2:12.27  Opponent: Flygon
   2:13.60    stopped  Flygon at 8

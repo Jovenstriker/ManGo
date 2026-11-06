@@ -57,6 +57,7 @@ TIMELINE (what the screen reader saw and did)
   1:00.32  Opponent: Altaria
   1:09.34    stopped  Altaria at 52
   1:10.40  You threw a charged move: Altaria 56 → 60 (its fast move in progress counts)
+  1:19.17  Their fast move in progress hit you at 1:18.92, before your buttons came back: the battle had restarted
   1:19.17    running  Altaria at 60
   1:20.78  Altaria had finished one more fast move: the battle restarted before your buttons came back
   1:20.78    stopped  Altaria at 72
@@ -81,6 +82,7 @@ TIMELINE (what the screen reader saw and did)
   2:43.05  You threw a charged move: Florges 18 → 27 (its fast move in progress counts)
   2:53.97  Florges fainted or switched out
   2:53.97  Opponent: Altaria
+  2:56.86  Their fast move in progress hit you at 2:56.60, before your buttons came back: the battle had restarted
   2:56.86    running  Altaria at 16
   3:00.89    stopped  Altaria at 44
   3:08.63  Timing uncertain: Altaria spent 50 on Sky Attack, but the clock counted 44; resynchronized to the observed minimum

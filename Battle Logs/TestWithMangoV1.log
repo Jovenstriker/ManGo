@@ -65,9 +65,9 @@ TIMELINE (what the screen reader saw and did)
   0:55.50    running  Marowak at 5
   0:56.75  You threw a charged move: Marowak 5 → 15 (its fast move in progress counts)
   0:56.75    stopped  Marowak at 15
+  1:07.00  Their fast move in progress hit you at 1:06.50, before your buttons came back: the battle had restarted
   1:07.00    running  Marowak at 15
-  1:11.50    stopped  Marowak at 35
-  1:12.25  Marowak had finished one more fast move: the battle restarted before your buttons came back
+  1:11.50    stopped  Marowak at 45
   1:19.00  Marowak used Rock Slide (45 → 0)
   1:22.25  You threw a charged move: Marowak 0 → 10 (its fast move in progress counts)
   1:32.00    running  Marowak at 10

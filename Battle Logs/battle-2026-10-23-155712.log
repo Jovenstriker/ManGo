@@ -38,24 +38,22 @@ OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
   1  1:05.41  Corviknight           Payback (60)              84 → 24       21          ?     -
        calc: 84 = 0 left before + 21 × 4 (Sand Attack); after: 84 − 60 = 24
-  2  1:35.50  Corviknight           Payback (60)              60 → 0        8           ?     -
-       calc: 60 = 24 left before + 8 × 4 (Sand Attack) + 4 (cap/corrections); after: 60 − 60 = 0
-       inferred minimum: raw estimate 56, observed spend requires 60. Timing remains uncertain; no exact missing move count was inferred.
-       note: Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short.
+  2  1:35.50  Corviknight           Payback (60)              60 → 0        9           ?     -
+       calc: 60 = 24 left before + 9 × 4 (Sand Attack); after: 60 − 60 = 0
+       note: Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short. It has 60 now that the restart comes from its Sand Attack in progress hitting you.
   3  1:50.94  Corviknight           Air Cutter (40)           40 → 0        10          ?     -
        calc: 40 = 0 left before + 10 × 4 (Sand Attack); after: 40 − 40 = 0
-  4  2:33.24  Azumarill             Ice Beam (55)             55 → 0        4           5     ✗ (-1)
-       calc: 55 = 0 left before + 4 × 11 (Bubble) + 11 (cap/corrections); after: 55 − 55 = 0
-       inferred minimum: raw estimate 44, observed spend requires 55. Timing remains uncertain; no exact missing move count was inferred.
-       note: Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13 (play had restarted about 2:11.4), which ManGo missed. ManGo's other 4: the Bubble in progress at your charged moves at 2:01 and 2:13, and 2 shown on your Mimikyu's HP bar (2:23.5, 2:24.97). Restarting 0.75s before your buttons after a faint fixes it but breaks other hand counts; rhythm carried through charged moves made it worse (33).
+  4  2:33.24  Azumarill             Ice Beam (55)             55 → 0        5           5     ✓
+       calc: 55 = 0 left before + 5 × 11 (Bubble); after: 55 − 55 = 0
+       note: Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13. On 2026-11-06: you threw 3 Dragon Breaths (3 turns) before that charged move, so it finished 1 Bubble and sneaked 1. ManGo started the stretch at 2:11.19, 0.25s before your button labels were readable (2:11.44), and saw 1.2s, short of a Bubble. Its Bubble in progress at your 2:01 charged move hit your Altaria by 2:10.64 ("NOT VERY EFFECTIVE.."), so play was back then; restarting there it counts 5.
   5  2:59.33  Flygon                Sand Tomb (45)            48 → 3        4           ?     -
        calc: 48 = 0 left before + 4 × 12 (Dragon Tail); after: 48 − 45 = 3
   6  3:14.04  Flygon                Sand Tomb (45)            45 → 0        4           ?     -
        calc: 45 = 3 left before + 4 × 9 (Mud Shot) + 6 (cap/corrections); after: 45 − 45 = 0
 
 SUMMARY
-  0 of 1 hand-counted charged moves match ManGo's fast move count exactly.
-  2 raw estimates below the observed move cost (reconciled after the spend).
+  1 of 1 hand-counted charged moves match ManGo's fast move count exactly.
+  0 raw estimates below the observed move cost (reconciled after the spend).
   5 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
@@ -63,18 +61,19 @@ TIMELINE (what the screen reader saw and did)
   0:37.36  Opponent: Corviknight
   0:44.35    stopped  Corviknight at 52
   0:44.61  You threw a charged move: Corviknight 52 → 56 (its fast move in progress counts)
+  0:54.76  Their fast move in progress hit you at 0:54.50, before your buttons came back: the battle had restarted
   0:54.76    running  Corviknight at 56
   0:58.49    stopped  Corviknight at 84
   1:05.41  Corviknight used Payback (84 → 24)
   1:08.34    running  Corviknight at 24
   1:10.47    stopped  Corviknight at 36
   1:11.00  You threw a charged move: Corviknight 40 → 44 (its fast move in progress counts)
-  1:21.12    running  Corviknight at 44
+  1:21.12  Their fast move in progress hit you at 1:20.59, before your buttons came back: the battle had restarted
+  1:21.12    running  Corviknight at 48
   1:21.92    stopped  Corviknight at 48
-  1:23.52  Your Pokémon fainted: Corviknight 48 → 48 (the fast move that knocked it out landed)
-  1:26.98    running  Corviknight at 48
-  1:28.58    stopped  Corviknight at 56
-  1:35.50  Timing uncertain: Corviknight spent 60 on Payback, but the clock counted 56; resynchronized to the observed minimum
+  1:23.52  Your Pokémon fainted: Corviknight 48 → 52 (the fast move that knocked it out landed)
+  1:26.98    running  Corviknight at 52
+  1:28.58    stopped  Corviknight at 60
   1:35.50  Corviknight used Payback (60 → 0)
   1:38.43    running  Corviknight at 0
   1:44.02    stopped  Corviknight at 40
@@ -86,12 +85,12 @@ TIMELINE (what the screen reader saw and did)
   1:59.73    running  Azumarill at 0
   2:00.79    stopped  Azumarill at 0
   2:01.32  You threw a charged move: Azumarill 0 → 11 (its fast move in progress counts)
+  2:11.44  Their fast move in progress hit you at 2:10.64, before your buttons came back: the battle had restarted
   2:11.44    running  Azumarill at 11
   2:12.51    stopped  Azumarill at 11
-  2:13.04  You threw a charged move: Azumarill 11 → 22 (its fast move in progress counts)
-  2:22.86    running  Azumarill at 22
-  2:26.58    stopped  Azumarill at 44
-  2:33.24  Timing uncertain: Azumarill spent 55 on Ice Beam, but the clock counted 44; resynchronized to the observed minimum
+  2:13.04  You threw a charged move: Azumarill 22 → 33 (its fast move in progress counts)
+  2:22.86    running  Azumarill at 33
+  2:26.58    stopped  Azumarill at 55
   2:33.24  Azumarill used Ice Beam (55 → 0)
   2:36.43    running  Azumarill at 0
   2:36.70  Opponent: Flygon
@@ -107,7 +106,5 @@ TIMELINE (what the screen reader saw and did)
   3:14.04  Flygon used Sand Tomb (45 → 0)
   3:24.39  Battle over
 
-VALIDATION: FAIL
-  0 labelled throws missing; 1 count mismatches; 2 raw underfunded estimates (reconciled after the spend).
-  Throw 2: expected at least 60, estimated 56
-  Throw 4: expected at least 55, estimated 44
+VALIDATION: PASS (available evidence only)
+  0 labelled throws missing; 0 count mismatches; 0 raw underfunded estimates (reconciled after the spend).

@@ -756,5 +756,48 @@
       "2": "User, 2026-11-08: at 1:46 Mimikyu threw 3 Shadow Claws and Shadow Sneak; everything else ManGo counted in this battle is right. ManGo's line-up rule added a 4th: after Mimikyu blocked your Energy Ball, its window put the restart before your buttons. Your HP bar (146 px) held from 1:40.4 and fell at 1:41.35, 1:42.37 and 1:43.39: the first is its Shadow Claw in progress at your Energy Ball, landing as play resumed, which an earlier restart would have put at 1:40.4.",
       "sableye": "User, 2026-11-08: Sableye threw on the same turn as your Blaze Kick at 4:11 (CMP), so it had no fast move in progress: 48, not ManGo's 56. Your Blaze Kick knocked it out, so its charged move never showed and its energy no longer mattered; nothing on screen shows the tie."
     }
+  },
+  "battle-2026-11-08-144330": {
+    "video": "Test Videos/battle-2026-11-08-144330.mp4",
+    "description": "Phone-saved battle. You: Blaziken and others. Opponent: Cramorant, Melmetal, Clodsire.",
+    "counts": [
+      5,
+      8,
+      2,
+      10,
+      1
+    ],
+    "countTargets": [
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DYNAMIC_PUNCH"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DYNAMIC_PUNCH"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "FLY"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 103.0,
+        "speciesId": "melmetal",
+        "energy": 45
+      }
+    ],
+    "notes": {
+      "3": "User, 2026-11-08: ManGo counted right, but after the CMP tie at 1:29.6 (your Blaziken won it; Melmetal's second Dynamic Punch came after in the same stop) it took a Thunder Shock off (45 → 36) and only put it back at the banner. Both of you throw as your fast moves finish, so a tie leaves a whole number: ManGo's clock had Melmetal 98% through its second Thunder Shock, so it had landed. The take-back is right only when ManGo counted one too many (54 down to 45, the user's example)."
+    }
   }
 }

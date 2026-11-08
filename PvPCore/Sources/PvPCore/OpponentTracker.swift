@@ -104,9 +104,10 @@ public struct OpponentTracker: Sendable {
     private var pausedTotal: TimeInterval = 0
     /// Battle time of the opponent's last charged move; a switch right after it is free.
     private var lastChargedMoveAt: TimeInterval?
-    /// What your charged move this stop added for their fast move in progress, and to whom;
+    /// What your charged move this stop added for their fast move in progress, to whom, and how
+    /// far through that move the clock had them (0 for one started on your charged move's turn);
     /// and what `opponentThrewOnSameTurn` took back, in case their move shows it shouldn't.
-    private var inProgressBonus: (index: Int, energy: Int)?
+    private var inProgressBonus: (index: Int, energy: Int, done: Double)?
     private var takenBack: (index: Int, energy: Int)?
     /// The sneak `playerThrewChargedMove` counted straight after their charged move, until
     /// the next stop: taken back if they switch out instead (`switchingOutAfterStop`).
@@ -313,35 +314,43 @@ public struct OpponentTracker: Sendable {
             let before = team[i].bankedEnergy
             team[i].stint?.yourChargedMoves += 1
             team[i].bankedEnergy = min(maxEnergy, before + fast.energyGain, Self.cap(team[i], atBattleTime: t, leeway: Rules.off("strictCapAtYourThrow")) ?? maxEnergy)
-            inProgressBonus = (i, team[i].bankedEnergy - before)
+            inProgressBonus = (i, team[i].bankedEnergy - before, 0)
             sneak = (i, team[i].bankedEnergy - before)
             team[i].history.append(Stretch(length: 0, interrupted: true))
         } else if t > start + 1e-6 {
-            let finished = Int((max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9).rounded(.down))
+            let moves = max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9
+            let finished = Int(moves.rounded(.down))
             let withFinished = min(maxEnergy, team[i].bankedEnergy + finished * fast.energyGain)
             team[i].stint?.yourChargedMoves += 1
             team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + (finished + (Rules.off("inProgress") ? 0 : 1)) * fast.energyGain,
                                        Self.cap(team[i], atBattleTime: t, leeway: Rules.off("strictCapAtYourThrow")) ?? maxEnergy)
-            inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished))
+            inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished), moves - Double(finished))
             closeStretch(i, at: t, interrupted: true)
         }
         team[i].chainStart = max(t, start)
     }
 
     /// The opponent threw a charged move on the same turn as yours (charged move priority
-    /// decided who went first), so they weren't partway through a fast move: takes back
-    /// the one `playerThrewChargedMove` counted in progress. (v11: Altaria's Moonblast came
-    /// right after your blocked Sky Attack, on 13 Dragon Breaths, not 14.) Call before
+    /// decided who went first), so they weren't partway through a fast move: both of you threw
+    /// as your fast moves finished, so they'd finished a whole number. Takes back the one
+    /// `playerThrewChargedMove` counted in progress if the clock had it less than half done
+    /// (v11: Altaria's Moonblast came right after your blocked Sky Attack, on 13 Dragon Breaths,
+    /// not 14). Nearer done, it had landed and the clock was a moment behind: it stays (144330:
+    /// Melmetal's second Dynamic Punch tied with your Blaziken's throw on 2 Thunder Shocks, the
+    /// second 98% done by the clock). Returns whether it kept one. Call before
     /// `opponentThrewChargedMove`, in the same stop.
-    public mutating func opponentThrewOnSameTurn() {
-        guard let (i, bonus) = inProgressBonus, i == activeIndex else { return }
+    @discardableResult
+    public mutating func opponentThrewOnSameTurn() -> Bool {
+        guard let (i, bonus, done) = inProgressBonus, i == activeIndex else { return false }
         inProgressBonus = nil
+        if done >= 0.5, !Rules.off("tieRounds") { return true }
         takenBack = (i, bonus)
         if team[i].stint.map({ $0.yourChargedMoves > 0 }) == true { team[i].stint?.yourChargedMoves -= 1 }
         team[i].bankedEnergy = max(0, team[i].bankedEnergy - bonus)
         if let last = team[i].history.indices.last, team[i].history[last].interrupted {
             team[i].history[last].interrupted = false
         }
+        return false
     }
 
     /// They switch out right after the stop: a sneak counted at your charged move didn't

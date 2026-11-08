@@ -598,9 +598,11 @@ public struct BattleAutomation: Sendable {
     private mutating func sameTurnAsYours(_ tracker: inout OpponentTracker) {
         guard playerChargedThisStop, !opponentThrewThisStop else { return }
         let before = tracker.snapshot(at: lastTime).energy
-        tracker.opponentThrewOnSameTurn()
+        let kept = tracker.opponentThrewOnSameTurn()
         let after = tracker.snapshot(at: lastTime).energy
-        if after != before {
+        if kept {
+            note("\(name(tracker.active?.speciesId)) threw on the same turn as you, as its fast move finished: it keeps that one (\(after))")
+        } else if after != before {
             note("\(name(tracker.active?.speciesId)) threw on the same turn as you: no fast move in progress (\(before) → \(after))")
         }
     }

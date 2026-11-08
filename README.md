@@ -177,8 +177,10 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-48 of 49 exact hand counts match, and every energy checkpoint. On November 8, 2026 you confirmed all six
-in 142007; Mimikyu's 3 Shadow Claws before Shadow Sneak needed the HP-bar check to look a fast move
+53 of 54 exact hand counts match, and every energy checkpoint. On November 8, 2026 you confirmed 144330:
+after a CMP tie ManGo keeps the fast move it counted in progress when its clock had it more than half
+done (Melmetal's second Thunder Shock, 98%), since both sides throw as their fast moves finish. You
+also confirmed all six in 142007; Mimikyu's 3 Shadow Claws before Shadow Sneak needed the HP-bar check to look a fast move
 earlier after your charged move, where its move in progress would have hit you had play restarted
 sooner. On November 6, 2026 you counted four
 switch-ins made during a stop: Mightyena (3 Sucker Punches and a sneak, 125109) and Nidoqueen (6 Mud

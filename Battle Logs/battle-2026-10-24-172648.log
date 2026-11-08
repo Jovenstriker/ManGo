@@ -69,8 +69,7 @@ TIMELINE (what the screen reader saw and did)
   1:28.96    running  Stunfisk (Galarian) at 35
   1:32.92    stopped  Stunfisk (Galarian) at 62
   1:33.18  You threw a charged move: Stunfisk (Galarian) 62 → 71 (its fast move in progress counts)
-  1:43.90  Stunfisk (Galarian) threw on the same turn as you: no fast move in progress (71 → 62)
-  1:50.59  Stunfisk (Galarian) couldn't afford Earthquake without its fast move in progress: it threw after yours, not on the same turn (62 → 71)
+  1:43.90  Stunfisk (Galarian) threw on the same turn as you, as its fast move finished: it keeps that one (71)
   1:50.59  Stunfisk (Galarian) used Earthquake (71 → 6)
   1:53.52    running  Stunfisk (Galarian) at 6
   1:58.31    stopped  Stunfisk (Galarian) at 42

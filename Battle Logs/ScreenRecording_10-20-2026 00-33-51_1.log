@@ -60,6 +60,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:40.00  Opponent: Stunfisk
   0:40.00    stopped  Stunfisk at 0
+  0:42.50  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:42.50    running  Stunfisk at 0
   0:49.50    stopped  Stunfisk at 54
   0:56.50  Stunfisk used Discharge (54 → 14)
@@ -77,6 +78,7 @@ TIMELINE (what the screen reader saw and did)
   1:45.50  Stunfisk used Discharge (46 → 6)
   1:48.25    running  Stunfisk at 6
   1:48.75  Opponent: Cramorant
+  1:50.75  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:54.50    stopped  Cramorant at 40
   2:01.50  Cramorant used Dive (40 → 0)
   2:08.00    running  Cramorant at 0
@@ -88,6 +90,7 @@ TIMELINE (what the screen reader saw and did)
   2:33.00    running  Cramorant at 0
   2:35.00    stopped  Cramorant at 8
   2:38.50    running  Cramorant at 16
+  2:41.50  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   2:42.00    stopped  Cramorant at 40
   2:49.75  Cramorant used Dive (40 → 0)
   2:54.50    running  Cramorant at 0

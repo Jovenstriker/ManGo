@@ -108,6 +108,7 @@ TIMELINE (what the screen reader saw and did)
   1:58.22    stopped  Guzzlord at 60
   1:58.48  You threw a charged move: Guzzlord 60 → 72 (its fast move in progress counts)
   2:11.00    running  Guzzlord at 72
+  2:11.26  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
   2:13.39    stopped  Guzzlord at 84
   2:20.05  Guzzlord used Brutal Swing (84 → 49)
   2:22.98    running  Guzzlord at 49
@@ -118,9 +119,11 @@ TIMELINE (what the screen reader saw and did)
   2:37.92  You threw a charged move: Guzzlord 38 → 50 (its fast move in progress counts)
   2:48.07    running  Guzzlord at 50
   2:48.34  Opponent: Nidoqueen
+  2:49.14  Your buttons: earthpower, poisonfang; your fast move takes 3 turns
   2:57.23    stopped  Nidoqueen at 60
   2:57.49  You threw a charged move: Nidoqueen 60 → 70 (its fast move in progress counts)
   3:09.44    running  Nidoqueen at 70
+  3:09.71  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
   3:10.24    stopped  Nidoqueen at 70
   3:17.96  Nidoqueen used Poison Fang (70 → 30)
   3:20.63    running  Nidoqueen at 30
@@ -145,6 +148,7 @@ TIMELINE (what the screen reader saw and did)
   4:45.97    stopped  Forretress (Shadow) at 0
   4:46.50  You threw a charged move: Forretress (Shadow) 0 → 16 (its fast move in progress counts)
   4:56.35    running  Forretress (Shadow) at 16
+  4:56.62  Your buttons: earthpower, poisonfang; your fast move takes 3 turns
   5:00.88    stopped  Forretress (Shadow) at 48
   5:08.07  Forretress (Shadow) used Sand Tomb (48 → 3)
   5:10.73    running  Forretress (Shadow) at 3
@@ -168,6 +172,7 @@ TIMELINE (what the screen reader saw and did)
   6:08.58    stopped  Mimikyu at 0
   6:09.12  You threw a charged move: Mimikyu 0 → 8 (its fast move in progress counts)
   6:18.97    running  Mimikyu at 8
+  6:19.24  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
   6:25.93    stopped  Mimikyu at 56
   6:33.12  Mimikyu used Shadow Sneak (56 → 6)
   6:36.55  You threw a charged move: Mimikyu 6 → 14 (its fast move in progress counts)
@@ -203,6 +208,7 @@ TIMELINE (what the screen reader saw and did)
   9:00.30    stopped  Forretress (Shadow) at 50
   9:07.48  Forretress (Shadow) used Rock Tomb (50 → 0)
   9:12.82    running  Forretress (Shadow) at 0
+  9:13.08  Your buttons: earthpower, poisonfang; your fast move takes 3 turns
   9:17.64    stopped  Forretress (Shadow) at 32
   9:19.77  Forretress (Shadow) fainted or switched out
   9:19.77  Opponent: Greninja (Shadow)
@@ -223,6 +229,7 @@ TIMELINE (what the screen reader saw and did)
   10:03.84    stopped  Nidoqueen at 40
   10:04.37  You threw a charged move: Nidoqueen 40 → 50 (its fast move in progress counts)
   10:16.36    running  Nidoqueen at 50
+  10:16.62  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
   10:18.49    stopped  Nidoqueen at 60
   10:25.68  Nidoqueen used Earth Power (60 → 10)
   10:28.34    running  Nidoqueen at 10

@@ -56,6 +56,7 @@ TIMELINE (what the screen reader saw and did)
   0:15.00  Opponent: Azumarill
   0:15.00    stopped  Azumarill at 0
   0:17.25    running  Azumarill at 0
+  0:17.50  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:21.00  Opponent: Empoleon
   0:23.75  HP damage rhythm suggests Empoleon uses Waterfall; recounted its assumed moveset
   0:25.50    stopped  Empoleon at 30
@@ -83,6 +84,7 @@ TIMELINE (what the screen reader saw and did)
   1:55.75  You threw a charged move: Azumarill 77 → 88 (its fast move in progress counts)
   2:06.00  Their fast move in progress hit you at 2:05.50, before your buttons came back: the battle had restarted
   2:06.00    running  Azumarill at 88
+  2:07.00  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   2:09.25    stopped  Azumarill at 100
   2:16.25  Azumarill used Ice Beam (100 → 45)
   2:22.75    running  Azumarill at 45

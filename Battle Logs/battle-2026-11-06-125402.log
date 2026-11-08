@@ -53,23 +53,29 @@ TIMELINE (what the screen reader saw and did)
   1:05.83  Your fast move landed 0.25s after ManGo's restart: their fast moves restarted 0.40s earlier
   1:05.83  Mightyena (Shadow) fainted or switched out
   1:05.83  Opponent: Corviknight
+  1:06.09  Your buttons: icywind, nightslash; your fast move takes 2 turns
+  1:07.61  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   1:08.65  New battle
   1:08.65  Opponent: Blaziken (Shadow)
   1:08.65    stopped  Blaziken (Shadow) at 0
   1:11.51    running  Blaziken (Shadow) at 0
   1:11.78  Opponent: Thievul
   1:13.85  Opponent: Mightyena (Shadow)
+  1:14.64  Your buttons: icywind, nightslash; your fast move takes 2 turns
   1:15.67  New battle
   1:15.67  Opponent: Corviknight
   1:15.67    stopped  Corviknight at 0
   1:19.58    running  Corviknight at 0
+  1:20.10  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   1:21.13    stopped  Corviknight at 8
   1:21.90  Corviknight fainted or switched out
   1:21.90  Opponent: Thievul
   1:23.97  Thievul fainted or switched out
   1:23.97  Opponent: Mightyena (Shadow)
   1:24.47    running  Mightyena (Shadow) at 0
+  1:24.72  Your buttons: icywind, nightslash; your fast move takes 2 turns
   1:25.77  Opponent: Corviknight
+  1:27.85  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   1:32.02    stopped  Corviknight at 56
   1:32.56  You threw a charged move: Corviknight 56 → 60 (its fast move in progress counts)
   1:55.32  Their fast move in progress hit you at 1:54.81, before your buttons came back: the battle had restarted
@@ -88,6 +94,7 @@ TIMELINE (what the screen reader saw and did)
   2:41.10    running  Charjabug at 32
   2:50.11  Charjabug fainted or switched out
   2:50.11  Opponent: Mightyena (Shadow)
+  2:50.11  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   2:52.82    stopped  Mightyena (Shadow) at 14
   2:53.72  You threw a charged move: Mightyena (Shadow) 21 → 28 (its fast move in progress counts)
   2:56.11  Mightyena (Shadow) fainted or switched out

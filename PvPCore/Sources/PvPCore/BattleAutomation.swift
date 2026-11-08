@@ -159,6 +159,8 @@ public struct BattleAutomation: Sendable {
     private var battleRecord = BattleSummaryRecord()
     private var completedBattles: [BattleSummary] = []
     private var yourBannersNamed = 0
+    private var summaryButtonLabels: Set<String> = []
+    private var summaryPendingLabels: (labels: Set<String>, count: Int, at: Double, inPlay: Bool)?
 
     public init(data: GameData) {
         self.data = data
@@ -306,7 +308,11 @@ public struct BattleAutomation: Sendable {
                 lastStopAt = stop
                 tracker.pause(at: stop)
                 if goAt != nil { settleLeadFromHits(at: t, tracker: &tracker) }
-                if battleRecord.start != nil { battleRecord.yourMoves[battleRecord.stops.count] = yourFastMoveForSummary }
+                // Your fast moves landing this stretch tell their length better than your buttons.
+                if parser.yourButtonLabels == summaryButtonLabels, let turns = YourFastMoves.turns(fromGaps: yourGaps),
+                   let last = battleRecord.yourMoves.indices.last {
+                    battleRecord.yourMoves[last].turns = turns
+                }
 
             case .shielded:
                 shieldedThisStop = true
@@ -458,6 +464,7 @@ public struct BattleAutomation: Sendable {
             }
         }
         nameYourChargedMove()
+        noteYourFastMove(tracker)
     }
 
     // MARK: Helpers
@@ -486,22 +493,23 @@ public struct BattleAutomation: Sendable {
 
     // MARK: Battle summary
 
-    /// Your fast move's length for the summary, and its type from PvPoke's fast move for your
-    /// Pokémon when that has the same length (nil if unknown).
-    private var yourFastMoveForSummary: (turns: Int, type: String?)? {
-        guard let d = yourFastMove else { return nil }
-        let turns = Int((d / turnDuration).rounded())
-        let fast = yourButtonMoves.isEmpty ? nil : data.species.values
-            .filter { $0.rank != nil && yourButtonMoves.allSatisfy($0.chargedMoves.contains) }
+    /// PvPoke's fast move for your Pokémon, from its two charged move buttons: the best-ranked
+    /// Pokémon with both (Aura Sphere and Blaze Kick: Shadow Blaziken's Ember, not Lucario's
+    /// Force Palm). A guess for drawing your side; your fast moves landing correct its length.
+    private func fastMove(forButtons labels: Set<String>) -> (turns: Int, type: String?)? {
+        guard labels.count == 2 else { return nil }
+        let moveIds = data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
+        guard Set(moveIds.compactMap { data.moves[$0].map { NameMatcher.normalize($0.name) } }) == labels else { return nil }
+        let top = data.species.values
+            .filter { $0.rank != nil && moveIds.allSatisfy($0.chargedMoves.contains) }
             .sorted { ($0.rank ?? .max) < ($1.rank ?? .max) }
-            .compactMap { data.recommendedMoves(for: $0.speciesId).fast }
-            .first { $0.turns == turns }
-        return (turns, fast?.type)
+            .lazy.compactMap { self.data.recommendedMoves(for: $0.speciesId).fast }.first
+        return top.map { ($0.turns, $0.type) }
     }
 
-    /// The charged moves on your buttons.
+    /// The charged moves on your buttons, as the summary last read them.
     private var yourButtonMoves: [String] {
-        let labels = parser.yourButtonLabels
+        let labels = summaryButtonLabels.isEmpty ? parser.yourButtonLabels : summaryButtonLabels
         return data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
     }
 
@@ -523,11 +531,34 @@ public struct BattleAutomation: Sendable {
         battleRecord.charged[i].move.pokemon = banner.user
     }
 
+    /// Your buttons changed (your lead's, then each switch), read the same on two reads in a row:
+    /// your fast move from the first of them. A switch made in play takes a turn; one made in a
+    /// stop shows as the buttons come back, and a Pokémon sent in after yours fainted takes none.
+    private mutating func noteYourFastMove(_ tracker: OpponentTracker) {
+        guard let start = battleRecord.start else { return }
+        let labels = parser.buttonLabelsThisRead
+        guard labels.count == 2 else { return }  // a label missed on this read
+        guard labels != summaryButtonLabels else { summaryPendingLabels = nil; return }
+        if summaryPendingLabels?.labels != labels {
+            let atRestart = buttonsBackAt.map { lastTime - $0 < 0.6 } ?? true
+            summaryPendingLabels = (labels, 0, tracker.battleClock(at: lastTime), !atRestart && !stopped && !yourFaintThisStop)
+        }
+        summaryPendingLabels!.count += 1
+        guard let pending = summaryPendingLabels, pending.count >= 2, let move = fastMove(forButtons: labels) else { return }
+        let first = battleRecord.yourMoves.isEmpty
+        summaryButtonLabels = labels
+        summaryPendingLabels = nil
+        battleRecord.yourMoves.append((from: first ? start : pending.at, turns: move.turns, type: move.type, switchTurn: !first && pending.inPlay))
+        note("Your buttons: \(labels.sorted().joined(separator: ", ")); your fast move takes \(move.turns) turn\(move.turns == 1 ? "" : "s")")
+    }
+
     private mutating func finishSummary(_ tracker: OpponentTracker, result: String?) {
         if let summary = battleRecord.summary(tracker: tracker, endedAt: tracker.battleClock(at: lastTime), result: result) {
             completedBattles.append(summary)
         }
         battleRecord = BattleSummaryRecord()
+        summaryButtonLabels = []
+        summaryPendingLabels = nil
     }
 
     private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {

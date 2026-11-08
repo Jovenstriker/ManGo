@@ -73,6 +73,8 @@ public struct BattleScreenParser: Sendable {
     private var replacementGoAt: TimeInterval?
     /// Your active Pokémon's charged moves, from its buttons (normalized names).
     public private(set) var yourButtonLabels: Set<String> = []
+    /// The charged move buttons on this read alone, unconfirmed (normalized names).
+    public private(set) var buttonLabelsThisRead: Set<String> = []
     private var pendingButtonLabels: (labels: Set<String>, count: Int)?
     private var running: Bool?
     private var missingButtons: (first: TimeInterval, previous: TimeInterval)?
@@ -134,6 +136,7 @@ public struct BattleScreenParser: Sendable {
 
     public mutating func process(_ read: ScreenRead) -> [BattleEvent] {
         var events: [BattleEvent] = []
+        buttonLabelsThisRead = []
         guard read.textReadSucceeded != false else { return events }
         let previousTime = lastScreenTime ?? read.time
         lastScreenTime = read.time
@@ -215,6 +218,7 @@ public struct BattleScreenParser: Sendable {
                 if playerAlive == nil { playerAlive = alive }
             }
         }
+        buttonLabelsThisRead = labels
         var isRunning = !labels.isEmpty
         if let faint = replacementPendingAt {
             let goVisible = lines.contains { $0.text.lowercased().hasPrefix("go,") }

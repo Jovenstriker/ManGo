@@ -54,6 +54,7 @@ TIMELINE (what the screen reader saw and did)
   0:56.75  Opponent: Mimikyu
   0:56.75    stopped  Mimikyu at 0
   0:59.00    running  Mimikyu at 0
+  0:59.25  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   1:01.75  Opponent: Magnezone
   1:07.00    stopped  Magnezone at 32
   1:08.00  You threw a charged move: Magnezone 32 → 48 (its fast move in progress counts)
@@ -74,6 +75,7 @@ TIMELINE (what the screen reader saw and did)
   2:12.00    stopped  Mimikyu at 48
   2:13.25  Your Pokémon fainted: Mimikyu 48 → 56 (the fast move that knocked it out landed)
   2:15.00    running  Mimikyu at 56
+  2:15.25  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   2:16.75    stopped  Mimikyu at 64
   2:23.50  Mimikyu used Shadow Sneak (64 → 14)
   2:30.00    running  Mimikyu at 14
@@ -87,6 +89,7 @@ TIMELINE (what the screen reader saw and did)
   2:50.75    stopped  Magnezone at 42
   2:57.50  Magnezone used Mirror Shot (42 → 7)
   3:02.50    running  Magnezone at 7
+  3:02.75  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   3:09.00    stopped  Magnezone at 55
   3:16.25  Magnezone used Mirror Shot (55 → 20)
   3:19.00    running  Magnezone at 20

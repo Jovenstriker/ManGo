@@ -55,7 +55,9 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:33.55  Opponent: Machamp (Shadow)
   0:33.55    stopped  Machamp (Shadow) at 0
+  0:35.18  Your buttons: icywind, nightslash; your fast move takes 2 turns
   0:35.18    running  Machamp (Shadow) at 0
+  0:36.00  Your buttons: acrobatics, energyball; your fast move takes 2 turns
   0:37.68  Opponent: Dunsparce
   0:44.30    stopped  Dunsparce at 44
   0:45.13  You threw a charged move: Dunsparce 48 → 52 (its fast move in progress counts)
@@ -74,6 +76,7 @@ TIMELINE (what the screen reader saw and did)
   1:24.00    stopped  Dunsparce at 91
   1:24.27  You threw a charged move: Dunsparce 91 → 95 (its fast move in progress counts)
   1:34.85    running  Dunsparce at 95
+  1:35.12  Your buttons: icywind, nightslash; your fast move takes 2 turns
   1:35.95    stopped  Dunsparce at 99
   1:41.98  Dunsparce used Rock Slide (99 → 54)
   1:47.21  Dunsparce fainted or switched out
@@ -84,14 +87,17 @@ TIMELINE (what the screen reader saw and did)
   1:59.07  Your HP bar shows no hit at 1:48.10: Machamp (Shadow) didn't finish one more fast move
   1:59.07  Machamp (Shadow) used Cross Chop (54 → 19)
   2:15.22    running  Machamp (Shadow) at 19
+  2:15.52  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   2:19.31    stopped  Machamp (Shadow) at 46
   2:19.84  You threw a charged move: Machamp (Shadow) 55 → 64 (its fast move in progress counts)
   2:29.63  Machamp (Shadow) threw on the same turn as you: no fast move in progress (64 → 55)
   2:36.02  Machamp (Shadow) used Cross Chop (55 → 20)
   2:38.86    running  Machamp (Shadow) at 20
+  2:41.91  Your buttons: acrobatics, energyball; your fast move takes 2 turns
   2:42.46    stopped  Machamp (Shadow) at 47
   2:48.90  Machamp (Shadow) used Cross Chop (47 → 12)
   2:54.03    running  Machamp (Shadow) at 12
+  2:54.34  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   2:54.91    stopped  Machamp (Shadow) at 12
   2:55.52  You threw a charged move: Machamp (Shadow) 12 → 21 (its fast move in progress counts)
   2:57.29  Opponent: Toxapex

@@ -55,6 +55,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:42.94  Opponent: Melmetal
   0:42.94    stopped  Melmetal at 0
+  0:45.11  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:45.11    running  Melmetal at 0
   0:52.91    stopped  Melmetal at 63
   0:53.71  You threw a charged move: Melmetal 63 → 72 (its fast move in progress counts)
@@ -97,6 +98,7 @@ TIMELINE (what the screen reader saw and did)
   3:26.94    stopped  Mimikyu at 64
   3:28.26  Your Pokémon fainted: Mimikyu 64 → 72 (the fast move that knocked it out landed)
   3:29.89    running  Mimikyu at 72
+  3:30.16  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   3:33.43    stopped  Mimikyu at 96
   3:40.36  Mimikyu used Shadow Sneak (96 → 46)
   3:46.78    running  Mimikyu at 46

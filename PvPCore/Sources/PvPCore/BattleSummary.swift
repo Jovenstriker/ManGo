@@ -60,8 +60,9 @@ struct BattleSummaryRecord {
     /// later while it's stopped).
     var start: Double?
     var stops: [Double] = []
-    /// Your fast move in the stretch of play before each stop (nil: not known).
-    var yourMoves: [Int: (turns: Int, type: String?)] = [:]
+    /// Your fast move from each time your buttons changed (your lead, then each switch), and
+    /// whether that switch was made in play, so it took a turn.
+    var yourMoves: [(from: Double, turns: Int, type: String?, switchTurn: Bool)] = []
     var charged: [(stop: Int, move: BattleSummary.ChargedMove)] = []
     var markers: [(stop: Int?, marker: BattleSummary.Marker)] = []
     var yourTeam: [String] = []
@@ -91,16 +92,20 @@ struct BattleSummaryRecord {
                 }
             }
         }
-        // Yours, filled in: back to back from each restart to the next stop.
+        // Yours, filled in: back to back from each restart to the next stop, each Pokémon from
+        // when it came in (a turn later for a switch made in play).
         var from = origin
-        for (k, to) in stopTimes.enumerated() {
+        for to in stopTimes {
             defer { from = to }
-            guard to > from + 0.05, let move = yourMoves[k] else { continue }
-            let d = Double(move.turns) * turnDuration
-            var t = from
-            while t < to - 0.05 {
-                fast.append(.init(side: .you, start: t - origin, end: min(t + d, to) - origin, turns: move.turns, type: move.type, estimated: true))
-                t += d
+            guard to > from + 0.05 else { continue }
+            for (i, move) in yourMoves.enumerated() {
+                let until = min(to, i + 1 < yourMoves.count ? yourMoves[i + 1].from : .infinity)
+                var t = move.from > from ? move.from + (move.switchTurn ? turnDuration : 0) : from
+                let d = Double(move.turns) * turnDuration
+                while t < until - 0.05 {
+                    fast.append(.init(side: .you, start: t - origin, end: min(t + d, until) - origin, turns: move.turns, type: move.type, estimated: true))
+                    t += d
+                }
             }
         }
         let charged = self.charged.compactMap { c -> BattleSummary.ChargedMove? in
@@ -109,11 +114,18 @@ struct BattleSummaryRecord {
             m.time = t - origin
             return m
         }
-        let markers = self.markers.map { m -> BattleSummary.Marker in
+        var markers = self.markers.map { m -> BattleSummary.Marker in
             var marker = m.marker
             if let t = at(m.stop) { marker.time = t }
             marker.time -= origin
             return marker
+        }
+        // The last knockout ended it.
+        if result == "won" {
+            markers.append(.init(side: .them, time: end - origin, kind: .fainted,
+                                 pokemon: tracker.active.map { tracker.data.species[$0.speciesId]?.speciesName ?? $0.speciesId }))
+        } else if result == "lost" {
+            markers.append(.init(side: .you, time: end - origin, kind: .fainted))
         }
         return BattleSummary(
             result: result,

@@ -63,9 +63,11 @@ TIMELINE (what the screen reader saw and did)
   0:47.07  You threw a charged move: Cramorant 0 → 8 (its fast move in progress counts)
   0:58.88  Opponent: Melmetal
   0:59.68    running  Melmetal at 0
+  0:59.95  Your buttons: icywind, nightslash; your fast move takes 2 turns
   1:04.79    stopped  Melmetal at 36
   1:05.64  You threw a charged move: Melmetal 45 → 54 (its fast move in progress counts)
   1:15.32    running  Melmetal at 54
+  1:15.59  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   1:17.55    stopped  Melmetal at 72
   1:24.28  Melmetal used Dynamic Punch (72 → 27)
   1:27.24    running  Melmetal at 27
@@ -79,12 +81,14 @@ TIMELINE (what the screen reader saw and did)
   1:52.60  You threw a charged move: Cramorant 24 → 32 (its fast move in progress counts)
   2:02.18  Their fast move in progress hit you at 2:01.92, before your buttons came back: the battle had restarted
   2:02.18    running  Cramorant at 32
+  2:04.35  Your buttons: icywind, nightslash; your fast move takes 2 turns
   2:08.34    stopped  Cramorant at 80
   2:09.67  Your Pokémon fainted: Cramorant 80 → 80 (the fast move that knocked it out landed)
   2:11.27    running  Cramorant at 80
   2:11.79    stopped  Cramorant at 80
   2:18.19  Cramorant used Dive (80 → 40)
   2:23.28    running  Cramorant at 40
+  2:23.53  Your buttons: acrobatics, energyball; your fast move takes 2 turns
   2:24.88    stopped  Cramorant at 48
   2:31.37  Cramorant used Fly (48 → 3)
   2:34.38    running  Cramorant at 3

@@ -54,6 +54,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:24.04  Opponent: Corviknight
+  0:25.14  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:26.85  First hit on you 0.85-1.13s after GO: Corviknight started 0.35s after GO, not 0.20s
   0:33.85    stopped  Corviknight at 56
   0:40.78  Corviknight used Air Cutter (56 → 16)
@@ -101,6 +102,7 @@ TIMELINE (what the screen reader saw and did)
   3:20.77    running  Turtonator at 60
   3:21.30    stopped  Turtonator at 60
   3:28.49  Turtonator used Brutal Swing (60 → 25)
+  3:31.45  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   3:31.45    running  Turtonator at 25
   3:34.41    stopped  Turtonator at 45
   3:41.34  Turtonator used Brutal Swing (45 → 10)

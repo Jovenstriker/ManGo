@@ -37,11 +37,16 @@ is random.
 """
 from __future__ import annotations
 
+import ctypes
+import hashlib
 import math
+import os
 import random
+import subprocess
 import sys
 from dataclasses import dataclass
 from itertools import combinations
+from pathlib import Path
 
 from .battle import CHARGED, FAST, Battle, Mon, View
 from .gamedata import MAX_ENERGY, MAX_STAGE, GameData, Move, Species, damage, stage_multiplier
@@ -161,6 +166,10 @@ class Duel:
         if v is None:
             v = self.memo[s] = self._cycle(s, 0)
         return v
+
+    def states(self) -> int:
+        """How many states have been solved."""
+        return len(self.memo)
 
     def strategy(self, s: tuple, k: int) -> Strategy:
         acts = self.actions(s, k)
@@ -328,6 +337,114 @@ def _clamp(stage: int) -> int:
     return max(-MAX_STAGE, min(MAX_STAGE, stage))
 
 
+# The same solver in C ---------------------------------------------------------------------------
+
+class _SideSpec(ctypes.Structure):
+    """Mirrors SideSpec in duel.c: one side's moves against the other, damage by [atk stage][def stage]."""
+    _fields_ = [("hp", ctypes.c_int), ("fast_turns", ctypes.c_int), ("fast_gain", ctypes.c_int),
+                ("n_charged", ctypes.c_int), ("fast_dmg", ctypes.c_int * 81), ("cost", ctypes.c_int * 2),
+                ("dmg", (ctypes.c_int * 81) * 2), ("buff_self", (ctypes.c_int * 2) * 2),
+                ("buff_opp", (ctypes.c_int * 2) * 2), ("buff_chance", ctypes.c_double * 2),
+                ("atk", ctypes.c_double * 9)]
+
+
+_lib: ctypes.CDLL | None | bool = None
+
+
+def _library() -> ctypes.CDLL | None:
+    """duel.c compiled on first use (into ~/Library/Caches/ManGo-pomdp), or None without a C compiler."""
+    global _lib
+    if _lib is None:
+        _lib = False
+        src = Path(__file__).with_name("duel.c")
+        caches = Path.home() / "Library" / "Caches"
+        cache = Path(os.environ.get("MANGO_POMDP_CACHE", caches / "ManGo-pomdp" if caches.is_dir()
+                                    else Path.home() / ".cache" / "mango-pomdp"))
+        out = cache / f"duel-{hashlib.sha1(src.read_bytes()).hexdigest()[:12]}.so"
+        if not out.exists():
+            cache.mkdir(parents=True, exist_ok=True)
+            tmp = out.with_suffix(f".{os.getpid()}.tmp")
+            try:
+                built = subprocess.run([os.environ.get("CC", "cc"), "-O2", "-shared", "-fPIC", "-o", str(tmp), str(src)],
+                                       capture_output=True).returncode == 0
+            except OSError:
+                built = False
+            if not built:
+                return None
+            tmp.replace(out)   # atomic, in case parallel workers build at once
+        lib = ctypes.CDLL(str(out))
+        state = ctypes.POINTER(ctypes.c_int)
+        lib.duel_new.restype = ctypes.c_void_p
+        lib.duel_new.argtypes = [ctypes.POINTER(_SideSpec), ctypes.POINTER(_SideSpec), ctypes.c_int, ctypes.c_double]
+        lib.duel_free.argtypes = [ctypes.c_void_p]
+        lib.duel_size.restype = ctypes.c_long
+        lib.duel_size.argtypes = [ctypes.c_void_p]
+        for name, extra in (("duel_value", [ctypes.c_int]), ("duel_continue", [ctypes.c_int]),
+                            ("duel_resolve", [ctypes.c_int] * 3), ("duel_hit", [ctypes.c_int] * 5)):
+            fn = getattr(lib, name)
+            fn.restype = ctypes.c_double
+            fn.argtypes = [ctypes.c_void_p, state] + extra
+        _lib = lib
+    return _lib or None
+
+
+class CDuel(Duel):
+    """The same game solved by duel.c, about 100× faster. Duel stays the readable reference."""
+
+    def __init__(self, a: Fighter, b: Fighter, margin_weight: float = 0.1):
+        super().__init__(a, b, margin_weight)
+        self._lib = _library()
+        if self._lib is None:
+            raise RuntimeError("couldn't compile duel.c; use Duel instead")
+        specs = [self._spec(0), self._spec(1)]
+        self._h = self._lib.duel_new(ctypes.byref(specs[0]), ctypes.byref(specs[1]), self.period, margin_weight)
+
+    def __del__(self):
+        if getattr(self, "_h", None):
+            self._lib.duel_free(self._h)
+
+    def _spec(self, x: int) -> _SideSpec:
+        f = self.f[x]
+        if len(f.charged) > 2:
+            raise ValueError("at most two charged moves")
+        sp = _SideSpec(hp=f.species.hp, fast_turns=f.fast.turns, fast_gain=f.fast.energy_gain, n_charged=len(f.charged))
+        stages = range(-MAX_STAGE, MAX_STAGE + 1)
+        for a in stages:
+            sp.atk[a + MAX_STAGE] = f.species.atk * stage_multiplier(a)
+            for d in stages:
+                sp.fast_dmg[(a + 4) * 9 + d + 4] = self._damage(x, f.fast, a, d)
+                for i, c in enumerate(f.charged):
+                    sp.dmg[i][(a + 4) * 9 + d + 4] = self._damage(x, c, a, d)
+        for i, c in enumerate(f.charged):
+            sp.cost[i] = c.energy
+            sp.buff_chance[i] = c.buff_chance
+            sp.buff_self[i][:] = list(c.buff_self)
+            sp.buff_opp[i][:] = list(c.buff_opponent)
+        return sp
+
+    def states(self) -> int:
+        return self._lib.duel_size(self._h)
+
+    def value(self, s, k: int = 0) -> float:
+        return self._lib.duel_value(self._h, (ctypes.c_int * 10)(*s), k)
+
+    def _continue(self, s, k: int) -> float:
+        return self._lib.duel_continue(self._h, (ctypes.c_int * 10)(*s), k)
+
+    def _resolve(self, s, k: int, a0, a1) -> float:
+        code = lambda a: -2 if a is None else a   # noqa: E731
+        return self._lib.duel_resolve(self._h, (ctypes.c_int * 10)(*s), k, code(a0), code(a1))
+
+    def hit(self, st, x: int, i: int, rest: list, shield: bool) -> float:
+        rx, ri = rest[0] if rest else (-1, 0)
+        return self._lib.duel_hit(self._h, (ctypes.c_int * 10)(*st), x, i, rx, ri, int(shield))
+
+
+def make_duel(a: Fighter, b: Fighter, margin_weight: float = 0.1) -> Duel:
+    """The C solver if it compiles, else the Python one."""
+    return CDuel(a, b, margin_weight) if _library() else Duel(a, b, margin_weight)
+
+
 # Playing the solution in the simulator --------------------------------------------------------
 
 class DuelPlayer:
@@ -342,7 +459,8 @@ class DuelPlayer:
         self.rng = random.Random(seed)
         self.queued: tuple[int, int, int] | None = None   # (turn, charged index, energy when queued)
         self.foe_energy = 0
-        self.decisions: list[tuple[int, Strategy]] = []
+        self.decisions: list[tuple[int, Strategy]] = []           # turns it had a choice of throws
+        self.shield_calls: list[tuple[int, str, float, float]] = []  # (turn, move id, no shield, shield)
 
     def start(self, side: int) -> None:
         self.side = side
@@ -388,6 +506,7 @@ class DuelPlayer:
             rest = [(self.side, self.queued[1])]           # my own throw this turn hasn't gone yet
         i = next(k for k, c in enumerate(self.duel.f[foe].charged) if c.id == move.id)
         no, yes = self.duel.hit(st, foe, i, rest, False), self.duel.hit(st, foe, i, rest, True)
+        self.shield_calls.append((view.turn, move.id, no, yes))
         return yes > no if self.side == 0 else yes < no
 
     def replace(self, view: View) -> int:
@@ -395,16 +514,19 @@ class DuelPlayer:
 
 
 def play_out(duel: Duel, shields: tuple[int, int] = (1, 1), players: list | None = None,
-             seed: int | None = None) -> Battle:
+             seed: int | None = None, energy: tuple[int, int] = (0, 0)) -> Battle:
     """One battle in the simulator, both sides playing the solution unless `players` says otherwise."""
     a, b = duel.f
     battle = Battle([[a.mon()], [b.mon()]], seed=seed, shields=0)
-    battle.sides[0].shields, battle.sides[1].shields = shields
+    for side, sh, e in zip(battle.sides, shields, energy):
+        side.shields, side.mon.energy = sh, e
     rng = random.Random(seed)
     players = players or [DuelPlayer(duel, rng.randrange(1 << 30)), DuelPlayer(duel, rng.randrange(1 << 30))]
     for side, p in enumerate(players):
         if hasattr(p, "start"):
             p.start(side)
+        if isinstance(p, DuelPlayer):
+            p.foe_energy = energy[1 - side]
     observers = [p for p in players if hasattr(p, "observe")]
     battle.play(players, observers)
     return battle

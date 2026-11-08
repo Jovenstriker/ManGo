@@ -4,7 +4,7 @@ import unittest
 
 from mango_pomdp.battle import CHARGED, FAST, SWITCH, SWITCH_TURNS, Battle, Mon
 from mango_pomdp.belief import Belief
-from mango_pomdp.duel import Duel, DuelPlayer, Fighter, play_out, solve_matrix
+from mango_pomdp.duel import CDuel, Duel, DuelPlayer, Fighter, _library, play_out, solve_matrix
 from mango_pomdp.gamedata import IMMUNE, SE, damage, effectiveness, load
 from mango_pomdp.match import make_player, play
 from mango_pomdp.policies import Heuristic
@@ -215,6 +215,19 @@ class DuelTests(unittest.TestCase):
             duel = Duel(Fighter.of(gd, a), Fighter.of(gd, b))
             v = duel.value(duel.start(shields))
             self.assertAlmostEqual(payoff(play_out(duel, shields, seed=1), duel), v, places=9)
+
+    @unittest.skipUnless(_library(), "no C compiler")
+    def test_c_solver_matches_python_exactly(self):
+        # Includes a mirror match (CMP ties are coin flips) and moves with buff chances.
+        cases = (("medicham", "azumarill", (1, 0)), ("medicham", "medicham", (0, 0)),
+                 ("melmetal", "altaria", (0, 1)), ("registeel", "swampert", (1, 1)))
+        for a, b, shields in cases:
+            fa, fb = Fighter.of(gd, a), Fighter.of(gd, b)
+            py, c = Duel(fa, fb), CDuel(fa, fb)
+            s = py.start(shields)
+            self.assertEqual(py.value(s), c.value(s), (a, b))
+            sp, sc = py.strategy(s, 0), c.strategy(s, 0)
+            self.assertEqual((sp.payoffs, sp.mix), (sc.payoffs, sc.mix), (a, b))
 
     def test_solution_cannot_be_exploited(self):
         duel = Duel(Fighter.of(gd, "registeel"), Fighter.of(gd, "swampert"))

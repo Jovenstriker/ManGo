@@ -121,6 +121,11 @@ public struct BattleScreenParser: Sendable {
     private var bannersSeen: Set<String> = []
     /// A charged move's cue was on the last read.
     private var cueOnLastRead = false
+    /// How the last battle ended: "won", "lost" or "draw".
+    public private(set) var lastResult: String?
+    /// Your charged moves' banners ("Blaziken used Blaze Kick!") so far, and the latest one.
+    public private(set) var yourBannerCount = 0
+    public private(set) var yourLastBanner: (user: String?, move: String)?
 
     public init(data: GameData) {
         matcher = NameMatcher(data: data)
@@ -140,7 +145,10 @@ public struct BattleScreenParser: Sendable {
             .sorted { (($0.box.minY / 0.03).rounded(), $0.box.minX) < (($1.box.minY / 0.03).rounded(), $1.box.minX) }
             .map { NameMatcher.normalize($0.text) }.joined()
         if ["youwin", "goodeffort", "youlose", "youlost"].contains(where: bigText.contains) {
-            if !ended { events.append(.battleEnded) }
+            if !ended {
+                lastResult = bigText.contains("youwin") ? "won" : "lost"
+                events.append(.battleEnded)
+            }
             ended = true
             endOfBattle()
             return events
@@ -154,7 +162,10 @@ public struct BattleScreenParser: Sendable {
                 return events
             }
             if line.box.height > 0.04, key == "draw" {
-                if !ended { events.append(.battleEnded) }
+                if !ended {
+                    lastResult = "draw"
+                    events.append(.battleEnded)
+                }
                 ended = true
                 endOfBattle()
                 return events
@@ -346,6 +357,10 @@ public struct BattleScreenParser: Sendable {
             }
             bannersSeen.insert(moveKey)
             bannerConsumed = true
+            if !byOpponent {
+                yourBannerCount += 1
+                yourLastBanner = (banner.user, banner.move)
+            }
             if byOpponent {
                 opponentThrew = true
                 lastThrowWasTheirs = true

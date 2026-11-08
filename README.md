@@ -177,7 +177,10 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-42 of 43 exact hand counts match, and every energy checkpoint. On November 6, 2026 you counted four
+48 of 49 exact hand counts match, and every energy checkpoint. On November 8, 2026 you confirmed all six
+in 142007; Mimikyu's 3 Shadow Claws before Shadow Sneak needed the HP-bar check to look a fast move
+earlier after your charged move, where its move in progress would have hit you had play restarted
+sooner. On November 6, 2026 you counted four
 switch-ins made during a stop: Mightyena (3 Sucker Punches and a sneak, 125109) and Nidoqueen (6 Mud
 Slaps and a sneak, 221337) after your charged moves start at the restart; Charjabug (002722) and
 Togetic (171905) after theirs start with your buttons. v7's Azumarill was labelled 9 Bubbles; you recounted it on

@@ -714,5 +714,47 @@
       "mightyena": "User, 2026-11-06: Mightyena led and switched out straight away (0 Sucker Punches), then switched in for Charjabug as your Blaze Kick ended, a 0-turn switch, threw 3 and sneaked 1 on your next charged move (1:37.3): 28 when Blaziken fell to that one at 1:46. Your HP bar shows its hits at 1:34.6, 1:35.6 and 1:36.6, with your Embers. ManGo started it when your buttons showed (1:33.59), 0.25s after the restart, so the third finished after its freeze (1:36.54).",
       "poisonFang": "One Poison Fang at 1:59.2: \"No Protect Shields remaining!\" was still up with the banner, and ManGo took it for a second charged move's cue (1:59.5)."
     }
+  },
+  "battle-2026-11-08-142007": {
+    "video": "Test Videos/battle-2026-11-08-142007.mp4",
+    "description": "Phone-saved battle. You: Jumpluff, Thievul, Blaziken. Opponent: Florges, Mimikyu, Sableye (Shadow).",
+    "counts": [
+      5,
+      10,
+      4,
+      8,
+      3,
+      5
+    ],
+    "countTargets": [
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "PLAY_ROUGH"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "MOONBLAST"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      }
+    ],
+    "notes": {
+      "2": "User, 2026-11-08: at 1:46 Mimikyu threw 3 Shadow Claws and Shadow Sneak; everything else ManGo counted in this battle is right. ManGo's line-up rule added a 4th: after Mimikyu blocked your Energy Ball, its window put the restart before your buttons. Your HP bar (146 px) held from 1:40.4 and fell at 1:41.35, 1:42.37 and 1:43.39: the first is its Shadow Claw in progress at your Energy Ball, landing as play resumed, which an earlier restart would have put at 1:40.4.",
+      "sableye": "User, 2026-11-08: Sableye threw on the same turn as your Blaze Kick at 4:11 (CMP), so it had no fast move in progress: 48, not ManGo's 56. Your Blaze Kick knocked it out, so its charged move never showed and its energy no longer mattered; nothing on screen shows the tie."
+    }
   }
 }

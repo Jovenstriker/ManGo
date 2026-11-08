@@ -88,6 +88,8 @@ public struct BattleAutomation: Sendable {
     /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
     private var opponentThrewAfterYours = false
     private var lastResumeAfterShield = false
+    /// The last stop ended with your charged move, so their fast move in progress landed as play resumed.
+    private var lastResumeAfterYourChargedMove = false
     private var playerChangedSinceResume = false
     private var cadence = FastMoveCadence()
     private var recentVerifiedHP: [[Double]] = []
@@ -309,6 +311,7 @@ public struct BattleAutomation: Sendable {
                 // They blocked yours, and didn't throw their own after (v11's Empoleon did: its
                 // next stretch restarted with the buttons, as after any charged move of theirs).
                 lastResumeAfterShield = shieldedThisStop && playerChargedThisStop && !opponentThrewAfterYours
+                lastResumeAfterYourChargedMove = playerChargedThisStop && !opponentThrewThisStop
                 opponentThrewAfterYours = false
                 shieldedThisStop = false
                 playerChargedThisStop = false
@@ -540,14 +543,25 @@ public struct BattleAutomation: Sendable {
         guard !Rules.off("align"), !playerChangedSinceResume else { return }
         let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
         // The fast move it would add must have hit you: their first would have landed one stretch
-        // of finished fast moves before the stop. Your HP bar steady then means it didn't.
+        // of finished fast moves before the stop. Your HP bar steady then means it didn't. After
+        // your charged move their move in progress lands as play resumes, so a hit then proves
+        // nothing; but that earlier restart would have put it a fast move before, and your bar
+        // steady there means play hadn't resumed (142007: Mimikyu's Shadow Claw in progress at
+        // your Energy Ball hit at 1:41.35, your bar held from 1:40.4: 3 more and Shadow Sneak).
         if !Rules.off("hpVetoAlign"), let fast = tracker.active?.fastMove, lastStopAt > resumedAt {
             let move = Double(fast.turns) * turnDuration
             let finished = ((lastStopAt - resumedAt) / move + 1e-9).rounded(.down)
             let wouldHaveLanded = lastStopAt - finished * move
-            if yourHPShowsHits(between: resumedAt, and: lastStopAt), yourHPShowsNoHit(around: wouldHaveLanded) {
-                note("Your HP bar shows no hit at \(clockString(wouldHaveLanded)): \(name(tracker.active?.speciesId)) didn't finish one more fast move")
-                return
+            let inProgressAt = wouldHaveLanded - move
+            if yourHPShowsHits(between: resumedAt, and: lastStopAt) {
+                if yourHPShowsNoHit(around: wouldHaveLanded) {
+                    note("Your HP bar shows no hit at \(clockString(wouldHaveLanded)): \(name(tracker.active?.speciesId)) didn't finish one more fast move")
+                    return
+                }
+                if !Rules.off("hpVetoInProgress"), lastResumeAfterYourChargedMove, yourHPShowsNoHit(around: inProgressAt) {
+                    note("Your HP bar shows no hit at \(clockString(inProgressAt)), where its fast move in progress at your charged move would have landed: \(name(tracker.active?.speciesId)) didn't finish one more fast move")
+                    return
+                }
             }
         }
         if let back = buttonsBackAt, lastStopAt > resumedAt,
@@ -601,6 +615,7 @@ public struct BattleAutomation: Sendable {
         playerChargedThisStop = false
         opponentThrewAfterYours = false
         lastResumeAfterShield = false
+        lastResumeAfterYourChargedMove = false
         playerChangedSinceResume = false
         cadence = FastMoveCadence()
         recentVerifiedHP = []

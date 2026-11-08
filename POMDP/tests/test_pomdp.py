@@ -4,6 +4,7 @@ import unittest
 
 from mango_pomdp.battle import CHARGED, FAST, SWITCH, SWITCH_TURNS, Battle, Mon
 from mango_pomdp.belief import Belief
+from mango_pomdp.duel import Duel, DuelPlayer, Fighter, play_out, solve_matrix
 from mango_pomdp.gamedata import IMMUNE, SE, damage, effectiveness, load
 from mango_pomdp.match import make_player, play
 from mango_pomdp.policies import Heuristic
@@ -69,17 +70,31 @@ class BattleTests(unittest.TestCase):
             b.step([Scripted(), Scripted()])
         self.assertEqual(b.sides[0].mon.energy, 100)
 
-    def test_shield_takes_one_damage_and_lag_turn(self):
+    def test_shield_takes_one_damage(self):
         b = Battle([[mon("medicham")], [mon("azumarill")]], seed=0)
         b.sides[0].mon.energy = 100
         hp = b.sides[1].mon.hp
         b.step([Scripted([CHARGED(0)]), Scripted(shields=True)])
         self.assertEqual(b.sides[1].shields, 1)
         self.assertEqual(hp - b.sides[1].mon.hp, 1)
-        self.assertEqual(b.lag_turn, 1)
-        # Only switches go through on the lag turn.
+
+    def test_charged_move_interrupts_fast_moves_and_resets_cooldowns(self):
+        # PvPoke's fast move registration guide: Incinerate (5 turns) used on turn 0 would hit on
+        # turn 4, but a charged move on turn 1 makes it register on turn 1, and Talonflame acts
+        # again on turn 2 (3 "free" turns).
+        b = Battle([[mon("registeel")], [mon("azumarill", fast="INCINERATE")]], seed=0)   # Lock-On: 1 turn
+        b.sides[0].mon.energy = 100
+        hp = b.sides[0].mon.hp
+        incinerate = b.sides[1].mon.fast
+        b.step([Scripted(), Scripted()])
+        self.assertEqual(b.sides[1].busy_until, 5)
+        hp_after_turn0 = b.sides[0].mon.hp
+        self.assertEqual(hp_after_turn0, hp)    # nothing registered yet
         b.step([Scripted([CHARGED(0)]), Scripted()])
-        self.assertEqual(b.sides[1].shields, 1)
+        self.assertEqual(b.sides[1].mon.energy, incinerate.energy_gain)
+        self.assertLess(b.sides[0].mon.hp, hp)
+        self.assertEqual((b.sides[0].busy_until, b.sides[1].busy_until), (2, 2))
+        self.assertEqual(b.view(0).legal_actions()[0], FAST)   # no dead turn after a charged move
 
     def test_cmp_higher_attack_goes_first_and_can_ko(self):
         fast_hitter, slow = mon("medicham"), mon("azumarill")
@@ -175,6 +190,42 @@ class PlannerTests(unittest.TestCase):
                                               make_player("random", gd, prior, g)], seed=g)
                 score += {0: 1, -1: 0.5, 1: 0}[b.winner]
         self.assertGreaterEqual(score / 12, 0.7)
+
+
+def payoff(battle, duel):
+    a, b = duel.f
+    margin = battle.sides[0].mon.hp / a.species.hp - battle.sides[1].mon.hp / b.species.hp
+    return (1 - duel.w) * {0: 1, -1: 0, 1: -1}[battle.winner] + duel.w * margin
+
+
+class DuelTests(unittest.TestCase):
+    def test_matrix_games(self):
+        x, y, v = solve_matrix([[1, -1], [-1, 1]])   # matching pennies
+        self.assertAlmostEqual(v, 0)
+        self.assertAlmostEqual(x[0], 0.5)
+        x, y, v = solve_matrix([[0, -1, 1], [1, 0, -1], [-1, 1, 0]])   # rock paper scissors
+        self.assertAlmostEqual(v, 0)
+        for p in x + y:
+            self.assertAlmostEqual(p, 1 / 3)
+        x, y, v = solve_matrix([[3, 1], [4, 2]])     # saddle point
+        self.assertEqual((x, y, v), ([0.0, 1.0], [0.0, 1.0], 2))
+
+    def test_solver_predicts_the_simulator(self):
+        for a, b, shields in (("registeel", "swampert", (1, 1)), ("medicham", "azumarill", (0, 0))):
+            duel = Duel(Fighter.of(gd, a), Fighter.of(gd, b))
+            v = duel.value(duel.start(shields))
+            self.assertAlmostEqual(payoff(play_out(duel, shields, seed=1), duel), v, places=9)
+
+    def test_solution_cannot_be_exploited(self):
+        duel = Duel(Fighter.of(gd, "registeel"), Fighter.of(gd, "swampert"))
+        v = duel.value(duel.start((1, 1)))
+        for seed in range(3):
+            for foe in ("shielder", "baiter", "nuker", "casual", "random"):
+                opponent = make_player(foe, gd, prior, seed)
+                as0 = payoff(play_out(duel, (1, 1), [DuelPlayer(duel, seed), opponent], seed), duel)
+                as1 = payoff(play_out(duel, (1, 1), [make_player(foe, gd, prior, seed), DuelPlayer(duel, seed)], seed), duel)
+                self.assertGreaterEqual(as0, v - 1e-9, foe)
+                self.assertLessEqual(as1, v + 1e-9, foe)
 
 
 if __name__ == "__main__":

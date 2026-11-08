@@ -160,8 +160,6 @@ class Heuristic:
             sw = self.switch_choice(view)
             if sw is not None:
                 return SWITCH(sw)
-        if view.turn == view.lag_turn:
-            return FAST
         probs = throw_probs(self.style, self.throw_context(view), self.eps)
         choice = self.rng.choices(list(probs), list(probs.values()))[0]
         return FAST if choice is None else CHARGED(choice)

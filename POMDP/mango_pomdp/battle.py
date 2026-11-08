@@ -1,14 +1,18 @@
-"""A 3v3 Great League battle in 0.5s turns, modeled on PvPoke's Battle.js.
+"""A 3v3 Great League battle in 0.5s turns, following PvPoke's Battle.js and its guide to fast
+move registration (pvpoke.com/articles/strategy/guide-to-fast-move-registration).
 
 Each turn:
   1. Every side whose Pokémon isn't mid fast move picks an action: a fast move, a charged move
-     it has the energy for, or a switch (once its 45s switch timer has run out). On the turn
-     right after a charged move, only switches go through (PvPoke's "charged move lag").
+     it has the energy for, or a switch (once its 45s switch timer has run out).
   2. Switches happen first. The incoming Pokémon takes any fast move that lands this turn.
-  3. Fast moves land on their last turn: damage to the opponent, energy to the user.
-  4. Charged moves resolve in CMP order (higher attack first). Any fast move still in progress
-     lands first ("floating" fast moves, the sneak ManGo counts). The defender decides to shield.
-     A Pokémon knocked out by the first charged move doesn't get to throw its own.
+  3. Fast moves register on their last turn (duration − 1 turns after they're used): damage to
+     the opponent, energy to the user. A 1-turn move registers the turn it's used.
+  4. Charged moves resolve in CMP order (higher attack first). A charged move interrupts every
+     fast move in progress: each registers on the spot, including one the opponent starts this
+     same turn (the sneak ManGo counts). Then every cooldown resets, so both Pokémon act again
+     next turn; interrupting a long fast move early grants its user "free" turns, and throwing on
+     the turn it registers grants none. A charged move fails if a fast move registering that turn
+     knocks out its user, and a Pokémon knocked out by the first charged move doesn't throw its own.
   5. Faints: both sides stop attacking, the fainted side picks a replacement (no switch timer).
 
 The battle clock (4 minutes) stops during charged moves. At time-out the side with more Pokémon
@@ -115,13 +119,12 @@ class Controller(Protocol):
 
 
 class Battle:
-    __slots__ = ("sides", "turn", "clock", "lag_turn", "done", "winner", "rng", "seen", "log")
+    __slots__ = ("sides", "turn", "clock", "done", "winner", "rng", "seen", "log")
 
     def __init__(self, teams: list[list[Mon]], seed: int | None = None, shields: int = SHIELDS, log: bool = True):
         self.sides = [Side(teams[0], shields), Side(teams[1], shields)]
         self.turn = 0
         self.clock = 0
-        self.lag_turn = -1
         self.done = False
         self.winner: int | None = None   # 0, 1, or -1 for a tie
         self.rng = random.Random(seed)
@@ -137,18 +140,18 @@ class Battle:
     def clone(self, seed: int | None = None) -> Battle:
         b = Battle.__new__(Battle)
         b.sides = [self.sides[0].clone(), self.sides[1].clone()]
-        b.turn, b.clock, b.lag_turn, b.done, b.winner = self.turn, self.clock, self.lag_turn, self.done, self.winner
+        b.turn, b.clock, b.done, b.winner = self.turn, self.clock, self.done, self.winner
         b.rng = random.Random(seed)
         b.seen = [{k: {"fast": v["fast"], "charged": set(v["charged"])} for k, v in d.items()} for d in self.seen]
         b.log = None
         return b
 
     @classmethod
-    def from_sides(cls, sides: list[Side], turn: int, clock: int, lag_turn: int,
+    def from_sides(cls, sides: list[Side], turn: int, clock: int,
                    seen: list[dict[str, dict]], seed: int | None = None) -> Battle:
         b = Battle.__new__(Battle)
         b.sides = sides
-        b.turn, b.clock, b.lag_turn, b.done, b.winner = turn, clock, lag_turn, False, None
+        b.turn, b.clock, b.done, b.winner = turn, clock, False, None
         b.rng = random.Random(seed)
         b.seen = seen
         b.log = None
@@ -187,8 +190,6 @@ class Battle:
             kind, arg = controllers[s].act(View(self, s))
             if kind == "switch" and side.switch_timer == 0 and arg in side.bench():
                 self._switch_in(s, arg, timer=True)
-            elif t == self.lag_turn:
-                continue
             elif kind == "charged" and 0 <= arg < len(side.mon.charged) and side.mon.energy >= side.mon.charged[arg].energy:
                 queued.append((s, arg))
             else:
@@ -242,7 +243,9 @@ class Battle:
             target.atk_stage = _clamp(target.atk_stage + move.buff_opponent[0])
             target.def_stage = _clamp(target.def_stage + move.buff_opponent[1])
         self.seen[s][mon.species.id]["charged"].add(move.id)
-        self.lag_turn = t + 1
+        for x in self.sides:   # every cooldown resets: both act again next turn
+            x.busy_until = t + 1
+            x.fast_due = -1
         self._event(s, "charged", mon.species.id, move, {
             "shielded": shield, "damage": 1 if shield else full, "full_damage": full,
             "target": target.species.id, "target_hp": hp_before, "target_shields": shields_before,
@@ -291,6 +294,7 @@ class Battle:
 
     def _land_fast(self, s: int) -> None:
         side, foe = self.sides[s], self.sides[1 - s]
+        started = side.busy_until - side.mon.fast.turns
         side.fast_due = -1
         mon, target = side.mon, foe.mon
         if target.hp <= 0:
@@ -301,7 +305,7 @@ class Battle:
         self.seen[s][mon.species.id]["fast"] = mon.fast
         self._event(s, "fast", mon.species.id, mon.fast, {
             "damage": dmg, "target": target.species.id, "target_hp": target.hp + dmg,
-            "target_shields": foe.shields})
+            "target_shields": foe.shields, "started": started})
 
     def _switch_in(self, s: int, i: int, timer: bool) -> None:
         side = self.sides[s]
@@ -352,9 +356,7 @@ class View:
 
     def legal_actions(self) -> list[tuple[str, int]]:
         me = self.me
-        acts = [FAST]
-        if self._b.turn != self._b.lag_turn:
-            acts += [CHARGED(i) for i, c in enumerate(me.mon.charged) if me.mon.energy >= c.energy]
+        acts = [FAST] + [CHARGED(i) for i, c in enumerate(me.mon.charged) if me.mon.energy >= c.energy]
         if me.switch_timer == 0:
             acts += [SWITCH(i) for i in me.bench()]
         return acts
@@ -367,10 +369,6 @@ class View:
     @property
     def clock(self) -> int:
         return self._b.clock
-
-    @property
-    def lag_turn(self) -> int:
-        return self._b.lag_turn
 
     @property
     def foe_species(self) -> Species:
@@ -396,6 +394,15 @@ class View:
     @property
     def foe_entered(self) -> int:
         return self._b.sides[1 - self.side].entered
+
+    @property
+    def foe_timer(self) -> tuple[int, int]:
+        """(turns until they can act, turns until their fast move lands or −1), as of the start of this
+        turn: you see their fast move animation start, but not a choice they make this same turn."""
+        foe, t = self._b.sides[1 - self.side], self._b.turn
+        if foe.busy_until == t + foe.mon.fast.turns and foe.fast_due == foe.busy_until - 1:
+            return 0, -1   # started this turn
+        return max(0, foe.busy_until - t), (foe.fast_due - t if foe.fast_due >= t else -1)
 
     def foe_seen(self) -> dict[str, dict]:
         """Species id -> {"fast": Move or None, "charged": set of move ids} for every opponent seen."""

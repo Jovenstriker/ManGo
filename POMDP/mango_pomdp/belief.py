@@ -232,7 +232,7 @@ class Belief:
         foe.busy_until = view.turn
         foe.entered = view.foe_entered
         sides = [view.me.clone(), foe] if view.side == 0 else [foe, view.me.clone()]
-        return Battle.from_sides(sides, view.turn, view.clock, view.lag_turn, view.seen_copy(), seed)
+        return Battle.from_sides(sides, view.turn, view.clock, view.seen_copy(), seed)
 
 
 class Oracle(Belief):

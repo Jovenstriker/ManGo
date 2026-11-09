@@ -106,6 +106,11 @@ public struct BattleScreenParser: Sendable {
     public private(set) var replacedLastShownAt: TimeInterval?
     /// The switch happens about this long before its "Go, X!" banner shows.
     static let goBannerLead: TimeInterval = 0.5
+    /// GO was first read already growing as it fades (taller than it stands), so it had been up
+    /// most of its time on screen: the reads before missed it.
+    public private(set) var goReadFading = false
+    /// GO stands about 0.12-0.14 of the screen high; it grows past that only as it fades out.
+    static let fadingGoHeight = 0.15
     private var countdownSeen = false
     private var ended = false
     private var searching = false
@@ -176,6 +181,7 @@ public struct BattleScreenParser: Sendable {
             // The stylized "GO" often reads as "CO". The countdown's "2" comes ~1.6s before it.
             if line.box.height > 0.08, key == "go" || key == "co", !started {
                 started = true
+                goReadFading = line.box.height >= Self.fadingGoHeight
                 events.append(.battleStarted)
             }
             if line.box.height > 0.12, line.text.trimmingCharacters(in: .whitespaces) == "2", !started, !countdownSeen {
@@ -488,6 +494,7 @@ public struct BattleScreenParser: Sendable {
         pendingGo = nil
         switchPromptAt = nil
         countdownSeen = false
+        goReadFading = false
         playerAlive = nil
         pendingPlayerAlive = nil
         replacementPendingAt = nil

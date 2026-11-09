@@ -986,5 +986,44 @@
       "2": "User, 2026-11-09: right (4 after switching in for Carbink, a sneak at your charged move at 1:58.5, then 2).",
       "3": "User, 2026-11-09: a sneak at your charged move at 2:23.1, then 2 Mud Slaps before switching to Carbink at 2:36.4 (ManGo had 1: the switch came as the second finished, 97% done by the clock), then 2 after coming back when Carbink fainted: 5."
     }
+  },
+  "battle-2026-11-08-223847": {
+    "video": "Test Videos/battle-2026-11-08-223847.mp4",
+    "description": "Phone-saved battle. You: Thievul and others. Opponent: Stunfisk, Annihilape, Fearow.",
+    "counts": [
+      6,
+      5
+    ],
+    "countTargets": [
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 73.0,
+        "speciesId": "stunfisk",
+        "energy": 45
+      },
+      {
+        "time": 87.0,
+        "speciesId": "annihilape",
+        "energy": 8
+      },
+      {
+        "time": 97.0,
+        "speciesId": "fearow",
+        "energy": 48
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-08: ManGo's counts are right except the lead's; the others are taken as hand counts (the checkpoints: 3 Thunder Shocks and one in progress at your 1:12.3 charged move, 1 Low Kick that knocked yours out, 5 Pecks and one in progress at your 1:36.8 charged move).",
+      "1": "User, 2026-11-08: as the lead Stunfisk threw 6 Thunder Shocks before Mud Bomb (0:34.1), not 7. GO showed from about 0:26.85 to 0:27.5 and was first read at 0:27.01."
+    }
   }
 }

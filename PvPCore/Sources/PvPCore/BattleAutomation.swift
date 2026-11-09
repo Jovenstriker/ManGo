@@ -66,18 +66,17 @@ public struct BattleAutomation: Sendable {
     private var leadStartChecked = false
     /// When the lead's first fast move began, as counted.
     private var leadStartedAt: TimeInterval?
-    /// The lead's first hit on your HP bar, its start before that hit moved it, and the length (in
-    /// turns) of the fast move it was dated with.
-    private var leadHit: (at: TimeInterval, before: TimeInterval, turns: Int)?
     /// This stretch's restart was seen (their move in progress hit you), not guessed from your buttons.
     private var restartSeen = false
-    /// This stretch's start was checked against their first hit on your HP bar.
-    private var theirHitsChecked = true
     /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
     /// a moment before anyone can attack. (The phone-saved Doublade battle: 7 Shadow Claws,
-    /// not 8.) 0.15-0.25s all fit every hand count; with no countdown or GO at all, the
-    /// lead's clock starts with your buttons instead.
+    /// not 8.) Of the starts tried after GO on November 8, 2026, only this one fits every lead's
+    /// hand count (0.1s loses 132243's, 0.3s 174243's and 144330's). With no countdown or GO at
+    /// all, the lead's clock starts with your buttons instead.
     public var goDelay: TimeInterval = 0.2
+    /// GO shows about 0.65s and a first read usually lags it by about 0.15s: one that caught it
+    /// fading came about this much later.
+    static let fadingGoLag: TimeInterval = 0.5
     public var restartWindowAfterShield: ClosedRange<TimeInterval> = -0.8 ... -0.2
     public var restartWindow: ClosedRange<TimeInterval> = -0.5 ... 0.4
     /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
@@ -222,8 +221,6 @@ public struct BattleAutomation: Sendable {
         fillSamples += (read.fillTrace ?? []).filter { $0.count == 3 }
         if let first = fillSamples.first, t - first[0] > 20 { fillSamples.removeAll { t - $0[0] > 20 } }
         if !stopped { checkRestartAgainstYourFastMoves(before: max(t, fillSamples.last?[0] ?? t), tracker: &tracker) }
-        if !stopped { checkStartAgainstTheirHits(tracker: &tracker) }
-        if !stopped, !Rules.off("revisitLeadStart") { revisitLeadStart(tracker: &tracker) }
         if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         // After your charged move their fast move in progress finishes as play resumes, often
@@ -265,7 +262,6 @@ public struct BattleAutomation: Sendable {
             tracker.resume(at: go)
             tracker.setEnergy(0, at: go)
             leadStartedAt = go
-            theirHitsChecked = false
         }
         if awaitingGo, goAt == nil, t >= leadNamedAt + Self.goWait {
             // No countdown at all: go by the buttons.
@@ -292,7 +288,12 @@ public struct BattleAutomation: Sendable {
             case .battleStarted:
                 // Turn 0, `goDelay` after GO shows. The lead was probably read during the countdown:
                 // its clock restarts then (on the first read after, if that's later than now).
-                let start = t + (Rules.off("goDelay") ? 0 : goDelay)
+                // A first read of GO usually comes within a read of it appearing; one that caught it
+                // growing as it fades came most of its 0.65s on screen later (152828: up from 0:43.9,
+                // first read at 0:44.56; 4 Mud Slaps from Marowak by 0:50.7, not 3).
+                let late = !Rules.off("fadingGo") && parser.goReadFading ? Self.fadingGoLag : 0
+                if late > 0 { note("GO was first read as it faded: the battle started \(String(format: "%.2f", late))s earlier") }
+                let start = t + (Rules.off("goDelay") ? 0 : goDelay) - late
                 goAt = start
                 buttonsResumedAt = start
                 if battleRecord.start == nil { battleRecord.start = tracker.battleClock(at: start) }
@@ -304,8 +305,6 @@ public struct BattleAutomation: Sendable {
                     tracker.setEnergy(0, at: start)
                     leadStartedAt = start
                 }
-                leadHit = nil
-                theirHitsChecked = false
 
             case .stopped:
                 // Either side's charged move or a faint: no turns pass from here.
@@ -315,7 +314,6 @@ public struct BattleAutomation: Sendable {
                 chargedMoveThisStop = false
                 inProgressLandedBy = nil
                 inProgressRuledOut = false
-                theirHitsChecked = true
                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
                 checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
                 let stop = max(observation.first - stopLead, observation.previous, resumedAt)
@@ -358,7 +356,6 @@ public struct BattleAutomation: Sendable {
                 buttonsResumedAt = max(t - lead, lastStopAt)
                 // When your Pokémon fainted, not until your replacement's buttons show its fast move.
                 restartChecked = awaitingGo || yourFaintThisStop
-                theirHitsChecked = false
                 awaitingYourReplacement = !awaitingGo && yourFaintThisStop
                 buttonsBackAt = t
                 readBeforeButtonsBack = previousReadTime
@@ -739,70 +736,6 @@ public struct BattleAutomation: Sendable {
         return pixels.max()! - pixels.min()! < max(1.5, 0.0035 * width)
     }
 
-    /// When your HP bar first fell after `start`, if it has: a hit's drop from where it held first
-    /// that stays (its middle value over the next 0.3s is that low), so a frame or two of glitch
-    /// isn't one (152828: 93 px for two frames at 0:44.62 between 244s). HP never comes back, so
-    /// nor is a dip the bar climbs back from within a second: something covered it (212316: the
-    /// big "GO" over it at 0:34.4, 202 px, then 244 again; Ninetales' first hit was at 0:35.54).
-    private func firstHitOnYou(after start: TimeInterval) -> TimeInterval? {
-        let seen = recentVerifiedHP.filter { $0[0] > start && $0[1] * $0[2] > 0.5 }
-        guard let first = seen.first, let last = seen.last else { return nil }
-        let drop = max(Self.hitPixels, 0.0035 * first[2])
-        func held(from t: TimeInterval) -> Double? {
-            guard last[0] >= t + 0.3 else { return nil }  // not all read yet
-            let px = seen.filter { $0[0] >= t && $0[0] < t + 0.3 }.map { $0[1] * $0[2] }.sorted()
-            return px.count >= 2 ? px[px.count / 2] : nil
-        }
-        guard let level = held(from: first[0]) else { return nil }
-        for s in seen where s[0] >= first[0] + 0.3 && level - s[1] * s[2] >= drop {
-            guard let after = held(from: s[0]), level - after >= drop else { continue }
-            guard last[0] >= s[0] + 1 else { return nil }  // wait to see it stay down
-            if seen.contains(where: { $0[0] > s[0] && $0[0] <= s[0] + 1 && level - $0[1] * $0[2] < drop / 2 }) { continue }
-            return s[0]
-        }
-        return nil
-    }
-
-    /// A fast move registers on its last turn, so the lead's first one lands one fast move after it
-    /// started: the first hit on your HP bar after GO dates the latest it could have begun. Only
-    /// ever earlier. (152828: Marowak's first Mud Slap hit at 0:45.5, so it began by 0:44.0, not
-    /// 0.2s after GO was read at 0:44.76: 4 Mud Slaps before it switched, as the user counted, not
-    /// 3.) Only the opening: after a charged move a hit already counted shows as play resumes
-    /// (their move in progress after yours; after theirs, their last one before it), so the
-    /// first drop then isn't a fresh move (Melmetal in 144330 at 1:27.30, Furret here at 1:45.49).
-    private mutating func checkStartAgainstTheirHits(tracker: inout OpponentTracker) {
-        guard !theirHitsChecked, !stopped, !awaitingGo, !Rules.off("theirHits") else { return }
-        guard let fast = tracker.active?.fastMove, !playerChangedSinceResume, let go = goAt,
-              lastStopAt < go, tracker.team.count == 1, let start = leadStartedAt else { theirHitsChecked = true; return }
-        let move = Double(fast.turns) * turnDuration
-        guard let hit = firstHitOnYou(after: go - 1) else {
-            if lastTime > go + 2 * move + 1.5 { theirHitsChecked = true }
-            return
-        }
-        theirHitsChecked = true
-        leadHit = (hit, start, fast.turns)
-        let latest = hit - move
-        guard start - latest > 0.05 else { return }
-        tracker.setEnergy(0, at: latest)
-        leadStartedAt = latest
-        note("Your HP bar fell at \(clockString(hit)): \(name(tracker.active?.speciesId))'s first fast move began by \(clockString(latest)), not \(clockString(start))")
-    }
-
-    /// The lead's start was dated from its first hit with the fast move assumed then. If the
-    /// rhythm of its hits has since shown another fast move, date it again with that one's length
-    /// (220414: Shadow Forretress, assumed on 4-turn Volt Switch, hit you at 0:57.31, so "began by
-    /// 0:55.31"; it was 1-turn Bug Bite, so by 0:56.81: 10 before your Night Slash, not 13).
-    private mutating func revisitLeadStart(tracker: inout OpponentTracker) {
-        guard let h = leadHit, let fast = tracker.active?.fastMove, fast.turns != h.turns,
-              let go = goAt, lastStopAt < go, tracker.team.count == 1 else { return }
-        leadHit = (h.at, h.before, fast.turns)
-        let start = min(h.before, h.at - Double(fast.turns) * turnDuration)
-        guard let current = leadStartedAt, abs(current - start) > 0.05 else { return }
-        tracker.setEnergy(0, at: start)
-        leadStartedAt = start
-        note("\(name(tracker.active?.speciesId)) uses \(fast.name): its first hit at \(clockString(h.at)) puts its start at \(clockString(start)), not \(clockString(current))")
-    }
-
     /// Their fast moves visibly hit you in this stretch (your bar fell), so a hit would have shown:
     /// a light one, like Dragon Breath, may not move the bar at all.
     private func yourHPShowsHits(between start: TimeInterval, and end: TimeInterval) -> Bool {
@@ -863,9 +796,7 @@ public struct BattleAutomation: Sendable {
         freeSwitchUntil = -.infinity
         leadStartChecked = false
         leadStartedAt = nil
-        leadHit = nil
         restartSeen = false
-        theirHitsChecked = true
         opponentAlive = nil
         opponentAliveAt = -.infinity
         hpRecent = []

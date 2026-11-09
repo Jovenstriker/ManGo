@@ -36,12 +36,12 @@ explicitly approximate and are not used to identify moves or compute energy.
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
   not PvPoke's Dragon Tail), but not to one of the same length when the assumed move is less than
   one fast move short: those fit the same turns, and a lag can lose one (Furret, Sucker Punch).
-- A fast move registers on its last turn (PvPoke's guide to fast move registration), so the
-  lead's first hit on your HP bar shows it began at least one fast move earlier, sometimes before
-  GO is readable. Only for the opening: after a charged move a hit already counted can show as
-  play resumes. If the rhythm of its hits then shows another fast move, the start is dated again
-  with that move's length. A dip the bar climbs back from within a second isn't a hit (the "GO"
-  banner can cover it).
+- The lead starts 0.2s after GO is first read: of the starts tried after the countdown on
+  November 8, 2026, the only one that fits every lead's hand count. GO stands about 0.65s, then
+  grows as it fades; a first read that caught it fading (taller than it stands) came most of that
+  late, and the start is 0.5s earlier (152828: up from 0:43.9, first read at 0:44.56; Marowak's 4
+  Mud Slaps). Your HP bar doesn't date the lead: Stunfisk in 223847 waited about a second after its
+  sixth Thunder Shock before Mud Bomb, so dated from its first hit it got 7, not the user's 6.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
   one more. Your HP bar overrules that when it held steady where the extra one would have hit you,
   or, after your charged move, a fast move earlier, where their move in progress would have. And it
@@ -65,7 +65,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 58 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 60 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

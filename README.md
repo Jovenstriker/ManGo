@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **58 exact hand counts across 20 recordings** in
+There are **60 exact hand counts across 21 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -155,6 +155,7 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | battle-2026-11-08-152828 | Marowak, Furret, Talonflame | unknown, 8, unknown × 3 |
 | battle-2026-11-08-212316 | Ninetales (Alolan), Quagsire (Shadow), Jumpluff | unknown, 6, 6, unknown, 3 |
 | battle-2026-11-08-220414 | Forretress (Shadow), Carbink, Marowak | 24, 7, 5 |
+| battle-2026-11-08-223847 | Stunfisk, Annihilape, Fearow | 6, 5 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -190,7 +191,11 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-56 of 58 exact hand counts match, and every energy checkpoint. A Pokémon switching out in play has
+58 of 60 exact hand counts match, and every energy checkpoint. The lead starts 0.2s after GO is
+first read, the only start after the countdown that fits every lead's count; when that first read
+caught GO already growing as it fades, it came late and the start is 0.5s earlier. Your HP bar
+doesn't date the lead: in 223847 (November 8, 2026) Stunfisk threw 6 Thunder Shocks, not 7. Dated from
+its first hit it got 7, since it waited about a second after its sixth before Mud Bomb. A Pokémon switching out in play has
 thrown a whole number of fast moves (the switch waits for the one in progress, like a charged move):
 your counts on November 9, 2026 put Marowak, Florges, Quagsire, Turtonator, Hydreigon and Altaria at
 their time on the field over their fast move, to the nearest, except a lead leaving the opening
@@ -199,8 +204,8 @@ starts as a fast move finishes, so a late-shown restart may hide one more) no lo
 when ManGo saw play restart, from their move in progress hitting you: Quagsire's 6 in 212316,
 Galarian Stunfisk's 5 after its hit at 0:52.65 in 220440, and Altaria's 2 after its hit at 1:18.92
 in 155536, all counted by you. In 152828 (November 8, 2026) Marowak
-threw 4 Mud Slaps as the lead, as its first hit on your HP bar shows (it began before GO was readable),
-and Furret stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
+threw 4 Mud Slaps as the lead (GO was up from 0:43.9 but first read, fading, at 0:44.56), and Furret
+stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
 after a CMP tie ManGo keeps the fast move it counted in progress when its clock had it more than half
 done (Melmetal's second Thunder Shock, 98%), since both sides throw as their fast moves finish. You
 also confirmed all six in 142007; Mimikyu's 3 Shadow Claws before Shadow Sneak needed the HP-bar check to look a fast move

@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **78 exact hand counts across 24 recordings** in
+There are **80 exact hand counts across 25 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -159,6 +159,7 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | battle-2026-11-08-223847 | Stunfisk, Annihilape, Fearow | 6, 5 |
 | battle-2026-11-08-233921 | Wigglytuff, Stunfisk, Quagsire (Shadow) | 6, 5, 5, 8, 1, 6 |
 | battle-2026-11-09-005151 | Diggersby, Fearow, Jumpluff | 5, 5, 5, 5, 5, 9, 4 |
+| battle-2026-11-09-010443 | Clodsire, Altaria, Mimikyu | 11, 4 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -194,7 +195,7 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-76 of 78 exact hand counts match, and every energy checkpoint. In 221337 you counted Mimikyu's (November 9,
+78 of 80 exact hand counts match, and every energy checkpoint. In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
 the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move

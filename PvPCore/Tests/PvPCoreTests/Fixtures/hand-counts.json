@@ -1188,5 +1188,38 @@
     "notes": {
       "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts, including Fearow's Drill Peck (1:51.2) and your charged move at 1:54.6 as a CMP tie Fearow won (no sneak). The checkpoints are ManGo's energy at your charged moves at 1:05.9, 2:08.6 and 3:36.1, with the fast move in progress counted."
     }
+  },
+  "battle-2026-11-09-010443": {
+    "video": "Test Videos/battle-2026-11-09-010443.mp4",
+    "description": "Phone-saved battle. Opponent: Clodsire, Altaria, Mimikyu.",
+    "counts": [
+      11,
+      4
+    ],
+    "countTargets": [
+      {
+        "speciesId": "clodsire",
+        "moveId": "EARTHQUAKE"
+      },
+      {
+        "speciesId": "clodsire",
+        "moveId": "EARTHQUAKE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 31.2,
+        "speciesId": "clodsire",
+        "energy": 72
+      },
+      {
+        "time": 57.2,
+        "speciesId": "clodsire",
+        "energy": 61
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 0:30.9 and 0:56.8, with the fast move in progress counted."
+    }
   }
 }

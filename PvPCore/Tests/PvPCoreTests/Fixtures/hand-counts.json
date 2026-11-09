@@ -1365,5 +1365,73 @@
     "notes": {
       "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 0:51.3, 1:33.0, 1:47.7 and 2:18.6. At 1:47.7 Marowak had just come in for the fainted Forretress and you threw straight away: it sneaked a Mud Slap (0 to 10), the rule from 010753."
     }
+  },
+  "battle-2026-11-09-021617": {
+    "video": "Test Videos/battle-2026-11-09-021617.mp4",
+    "description": "Phone-saved battle. Opponent: Sandslash (Alolan), Marowak, Carbink.",
+    "counts": [
+      5,
+      9,
+      23,
+      1
+    ],
+    "countTargets": [
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "sandslash_alolan",
+        "moveId": "ICE_PUNCH"
+      },
+      {
+        "speciesId": "carbink",
+        "moveId": "MOONBLAST"
+      },
+      {
+        "speciesId": "carbink",
+        "moveId": "MOONBLAST"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 83.2,
+        "speciesId": "marowak",
+        "energy": 35
+      },
+      {
+        "time": 98.7,
+        "speciesId": "sandslash_alolan",
+        "energy": 56
+      },
+      {
+        "time": 115.4,
+        "speciesId": "carbink",
+        "energy": 30
+      },
+      {
+        "time": 132.3,
+        "speciesId": "carbink",
+        "energy": 70
+      },
+      {
+        "time": 155.8,
+        "speciesId": "sandslash_alolan",
+        "energy": 64
+      },
+      {
+        "time": 203.1,
+        "speciesId": "carbink",
+        "energy": 20
+      },
+      {
+        "time": 219.9,
+        "speciesId": "carbink",
+        "energy": 45
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:22.9, 1:38.4, 1:55.1, 2:12.0, 2:35.5, 3:22.8 and 3:39.6. At 2:35.5 Sandslash had just switched in for Carbink in play and was still on its switch turn: nothing in progress (64 to 64), the rule from 221337. Carbink's 23 before its first Moonblast runs into the 100 cap."
+    }
   }
 }

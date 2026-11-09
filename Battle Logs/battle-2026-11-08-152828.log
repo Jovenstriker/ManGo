@@ -57,9 +57,11 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:41.59  Opponent: Marowak
   0:41.59    stopped  Marowak at 0
+  0:44.81  Your buttons: icywind, nightslash; your fast move takes 2 turns
   0:44.81    running  Marowak at 0
   0:45.94  Your HP bar fell at 0:45.50: Marowak's first fast move began by 0:44.00, not 0:44.76
   0:51.23  Opponent: Furret
+  0:53.47  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   0:57.10    stopped  Furret at 35
   1:03.22  Furret used Swift (35 → 0)
   1:07.75    running  Furret at 0
@@ -70,6 +72,7 @@ TIMELINE (what the screen reader saw and did)
   1:21.42    stopped  Furret at 35
   1:22.22  You threw a charged move: Furret 35 → 42 (its fast move in progress counts)
   1:34.44    running  Furret at 42
+  1:34.70  Your buttons: acrobatics, energyball; your fast move takes 2 turns
   1:36.03    stopped  Furret at 49
   1:42.59  Furret used Swift (49 → 14)
   1:45.29    running  Furret at 14
@@ -87,6 +90,7 @@ TIMELINE (what the screen reader saw and did)
   2:05.05    stopped  Talonflame at 0
   2:05.32  You threw a charged move: Talonflame 0 → 20 (its fast move in progress counts)
   2:14.93    running  Talonflame at 20
+  2:15.20  Your buttons: icywind, nightslash; your fast move takes 2 turns
   2:16.00  Opponent: Marowak
   2:17.36    stopped  Marowak at 40
   2:17.63  You threw a charged move: Marowak 40 → 50 (its fast move in progress counts)

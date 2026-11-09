@@ -53,6 +53,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:21.25  Opponent: Mimikyu
   0:21.25    stopped  Mimikyu at 0
+  0:24.00  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:24.00    running  Mimikyu at 0
   0:27.75  Opponent: Turtonator
   0:33.25    stopped  Turtonator at 40
@@ -69,6 +70,7 @@ TIMELINE (what the screen reader saw and did)
   1:20.50  Turtonator used Dragon Claw (50 → 0)
   1:23.50    running  Turtonator at 0
   1:24.50  Opponent: Granbull (Shadow)
+  1:28.75  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:34.50    stopped  Granbull (Shadow) at 56
   1:41.75  Granbull (Shadow) used Crunch (56 → 11)
   1:48.00    running  Granbull (Shadow) at 11
@@ -77,6 +79,7 @@ TIMELINE (what the screen reader saw and did)
   1:59.50    running  Granbull (Shadow) at 19
   2:05.50    stopped  Granbull (Shadow) at 43
   2:08.00    running  Granbull (Shadow) at 51
+  2:08.25  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   2:10.25    stopped  Granbull (Shadow) at 59
   2:14.25  Battle over
 

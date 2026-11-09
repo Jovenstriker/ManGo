@@ -67,6 +67,8 @@ public struct OpponentTracker: Sendable {
         /// An observed spend proves at least this much energy existed. This is a
         /// reconciliation constraint, not an invented fast move or elapsed time.
         public var minimumEnergy: Int? = nil
+        /// Battle time its first fast move began, for the battle summary.
+        public var start: TimeInterval = 0
     }
 
     /// A charged move thrown after `afterStretch` stretches.
@@ -245,7 +247,7 @@ public struct OpponentTracker: Sendable {
         let current = energy(of: team[i], atBattleTime: t)
         guard current < cost else { return 0 }
         closeStretch(i, at: t)
-        team[i].history.append(Stretch(length: 0, interrupted: false, minimumEnergy: cost))
+        team[i].history.append(Stretch(length: 0, interrupted: false, minimumEnergy: cost, start: t))
         team[i].bankedEnergy = cost
         team[i].chainStart = t
         team[i].stint = Stint(start: t, entryEnergy: cost)
@@ -316,7 +318,7 @@ public struct OpponentTracker: Sendable {
             team[i].bankedEnergy = min(maxEnergy, before + fast.energyGain, Self.cap(team[i], atBattleTime: t, leeway: Rules.off("strictCapAtYourThrow")) ?? maxEnergy)
             inProgressBonus = (i, team[i].bankedEnergy - before, 0)
             sneak = (i, team[i].bankedEnergy - before)
-            team[i].history.append(Stretch(length: 0, interrupted: true))
+            team[i].history.append(Stretch(length: 0, interrupted: true, start: t))
         } else if t > start + 1e-6 {
             let moves = max(0, t - start) / (Double(fast.turns) * turnDuration) + 1e-9
             let finished = Int(moves.rounded(.down))
@@ -553,7 +555,7 @@ public struct OpponentTracker: Sendable {
     /// Ends the active stretch of fast moves at battle time `t`, for the history.
     private mutating func closeStretch(_ i: Int, at t: TimeInterval, interrupted: Bool = false) {
         guard let start = team[i].chainStart, t > start else { return }
-        team[i].history.append(Stretch(length: t - start, interrupted: interrupted))
+        team[i].history.append(Stretch(length: t - start, interrupted: interrupted, start: start))
     }
 
     // MARK: Queries
@@ -609,6 +611,10 @@ public struct OpponentTracker: Sendable {
             turnIntoFastMove: turnInto, chargedMoves: statuses
         )
     }
+
+    /// Seconds of play by wall time `now`: charged moves don't count, so a stop is an instant.
+    /// The clock the history's stretches are measured on.
+    public func battleClock(at now: TimeInterval) -> TimeInterval { battleTime(at: now) }
 
     // MARK: Internals
 

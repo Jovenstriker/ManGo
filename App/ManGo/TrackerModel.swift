@@ -12,6 +12,8 @@ final class TrackerModel {
 
     /// Screen reading: turns reads from the broadcast extension into battle events.
     private var automation: BattleAutomation?
+    /// Every battle as ManGo followed it, for the Battles screen.
+    let history = BattleHistory()
     private var lastReadTime: TimeInterval = 0
     private(set) var lastReadAt: Date?
     /// The screen reader's memory from its latest read, and the highest peak seen this
@@ -80,6 +82,14 @@ final class TrackerModel {
             tracker?.setEnergy(42, at: now())
             setActive("medicham")
         }
+        // Launch with `-battleSummaryFile <path>` to add battles summarized on the Mac, for
+        // checking the Battles screen.
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-battleSummaryFile"), i + 1 < args.count,
+           let data = try? Data(contentsOf: URL(fileURLWithPath: args[i + 1])),
+           let battles = try? JSONDecoder().decode([BattleSummary].self, from: data) {
+            history.add(battles)
+        }
         #endif
         ScreenTextObserver.start { [weak self] in
             self?.handleScreenReads()
@@ -126,6 +136,8 @@ final class TrackerModel {
     /// Starts over: forgets the opponent's team and energy. The screen reader keeps running.
     func reset() {
         guard let data else { return }
+        if let tracker { automation?.finishBattle(tracker: tracker) }
+        history.add(automation?.takeCompletedBattles() ?? [])
         tracker = OpponentTracker(data: data)
         automation?.reset()
         lastReadTime = now()
@@ -141,10 +153,12 @@ final class TrackerModel {
         guard !reads.isEmpty else { return }
         for read in reads {
             if let ended = automation.battleEndedAt, read.time >= ended + Self.clearAfterBattle, let data {
+                automation.finishBattle(tracker: tracker)
                 tracker = OpponentTracker(data: data)
                 automation.reset()
                 log(read.time, "Cleared after the battle")
             } else if readCount > 0, read.time - lastReadTime > Self.newSessionAfter, let data {
+                automation.finishBattle(tracker: tracker)
                 tracker = OpponentTracker(data: data)
                 automation.reset()
                 log(read.time, String(format: "New screen reader session after %.0fs without reads: starting fresh", read.time - lastReadTime))
@@ -152,6 +166,7 @@ final class TrackerModel {
             let hadOpponent = tracker.active?.speciesId
             automation.process(read, tracker: &tracker)
             for line in automation.logThisRead { log(read.time, line) }
+            history.add(automation.takeCompletedBattles())
             if tracker.active?.speciesId != hadOpponent { log(read.time, "Card now shows \(tracker.active?.speciesId ?? "no opponent") (read \(readCount + 1))") }
             updateReaderIdle(read, automation: automation, tracker: tracker)
             lastReadTime = read.time

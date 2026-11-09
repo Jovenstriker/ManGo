@@ -54,6 +54,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:15.25  Opponent: Azumarill
+  0:16.25  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:19.25  Opponent: Lucario
   0:25.00    stopped  Lucario at 30
   0:25.50  You threw a charged move: Lucario 30 → 40 (its fast move in progress counts)
@@ -72,6 +73,7 @@ TIMELINE (what the screen reader saw and did)
   1:14.00  Lucario used Shadow Ball (55 → 5)
   1:17.00    running  Lucario at 5
   1:20.25  Opponent: Azumarill
+  1:21.25  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:28.50    stopped  Azumarill at 66
   1:35.75  Azumarill used Play Rough (66 → 6)
   1:38.50    running  Azumarill at 6

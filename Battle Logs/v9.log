@@ -52,6 +52,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:20.00  Opponent: Mimikyu
+  0:20.75  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:25.50  Opponent: Turtonator
   0:30.75    stopped  Turtonator at 40
   0:31.25  You threw a charged move: Turtonator 40 → 60 (its fast move in progress counts)
@@ -75,6 +76,7 @@ TIMELINE (what the screen reader saw and did)
   1:38.50    stopped  Mimikyu at 32
   1:39.00  You threw a charged move: Mimikyu 32 → 40 (its fast move in progress counts)
   1:52.25    running  Mimikyu at 40
+  1:52.50  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:54.75    stopped  Mimikyu at 56
   2:01.75  Mimikyu used Shadow Sneak (56 → 6)
   2:05.00    running  Mimikyu at 6
@@ -88,6 +90,7 @@ TIMELINE (what the screen reader saw and did)
   2:33.75  Opponent: Forretress (Shadow)
   2:34.25    running  Forretress (Shadow) at 16
   2:34.75  Your fast move landed 0.36s after ManGo's restart: their fast moves restarted 0.29s earlier
+  2:37.25  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   2:39.00    stopped  Forretress (Shadow) at 48
   2:46.75  Forretress (Shadow) used Sand Tomb (48 → 3)
   2:49.25    running  Forretress (Shadow) at 3
@@ -98,6 +101,7 @@ TIMELINE (what the screen reader saw and did)
   3:02.75    running  Mimikyu at 12
   3:05.75    stopped  Mimikyu at 28
   3:08.25    running  Mimikyu at 36
+  3:08.50  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   3:10.00    stopped  Mimikyu at 44
   3:14.00  Battle over
 

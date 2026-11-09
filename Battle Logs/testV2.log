@@ -62,6 +62,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:19.25  Opponent: Melmetal
+  0:20.25  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:28.00    stopped  Melmetal at 54
   0:35.25  Melmetal used Double Iron Bash (54 → 19)
   0:38.00    running  Melmetal at 19
@@ -82,6 +83,7 @@ TIMELINE (what the screen reader saw and did)
   1:27.25  You threw a charged move: Ninetales (Shadow) 18 → 27 (its fast move in progress counts)
   1:36.75  Their fast move in progress hit you at 1:36.25, before your buttons came back: the battle had restarted
   1:36.75    running  Ninetales (Shadow) at 27
+  1:37.50  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:40.75    stopped  Ninetales (Shadow) at 63
   1:48.75  Ninetales (Shadow) used Weather Ball (Fire) (63 → 28)
   1:54.50    running  Ninetales (Shadow) at 28

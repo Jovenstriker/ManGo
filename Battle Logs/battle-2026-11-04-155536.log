@@ -55,6 +55,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   1:00.32  Opponent: Altaria
+  1:00.32  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   1:09.34    stopped  Altaria at 52
   1:10.40  You threw a charged move: Altaria 56 → 60 (its fast move in progress counts)
   1:19.17  Their fast move in progress hit you at 1:18.92, before your buttons came back: the battle had restarted
@@ -68,6 +69,7 @@ TIMELINE (what the screen reader saw and did)
   1:46.04  Altaria threw on the same turn as you: no fast move in progress (62 → 58)
   1:51.37  Altaria used Sky Attack (58 → 8)
   1:57.79    running  Altaria at 8
+  1:58.06  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:59.39  Opponent: Florges
   2:05.51    stopped  Florges at 45
   2:12.42  Florges used Chilling Water (45 → 0)

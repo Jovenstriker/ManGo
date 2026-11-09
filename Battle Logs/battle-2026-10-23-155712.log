@@ -58,6 +58,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:34.66  Opponent: Flygon
+  0:35.49  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:37.36  Opponent: Corviknight
   0:44.35    stopped  Corviknight at 52
   0:44.61  You threw a charged move: Corviknight 52 → 56 (its fast move in progress counts)
@@ -90,6 +91,7 @@ TIMELINE (what the screen reader saw and did)
   2:12.51    stopped  Azumarill at 11
   2:13.04  You threw a charged move: Azumarill 22 → 33 (its fast move in progress counts)
   2:22.86    running  Azumarill at 33
+  2:23.12  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   2:26.58    stopped  Azumarill at 55
   2:33.24  Azumarill used Ice Beam (55 → 0)
   2:36.43    running  Azumarill at 0

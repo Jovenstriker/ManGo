@@ -7,6 +7,7 @@ struct TrackerView: View {
     let model: TrackerModel
     @State private var overlay = OverlayController()
     @State private var showingMechanics = false
+    @State private var showingBattles = false
 
     var body: some View {
         NavigationStack {
@@ -33,14 +34,22 @@ struct TrackerView: View {
                     Button("Reset", systemImage: "arrow.counterclockwise") { model.reset() }
                 }
                 ToolbarItem(placement: .primaryAction) {
+                    Button("Battles", systemImage: "list.bullet.rectangle") { showingBattles = true }
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button("How PvP works", systemImage: "info.circle") { showingMechanics = true }
                 }
             }
             .task { overlay.attach(model) }
             .sheet(isPresented: $showingMechanics) { MechanicsView() }
+            .sheet(isPresented: $showingBattles) { BattlesView(history: model.history) }
             #if DEBUG
-            // Launch with `-showMechanics` to open the mechanics page, for checking it.
-            .onAppear { if ProcessInfo.processInfo.arguments.contains("-showMechanics") { showingMechanics = true } }
+            // Launch with `-showMechanics` or `-showBattles` to open those pages, for checking them.
+            .onAppear {
+                let args = ProcessInfo.processInfo.arguments
+                if args.contains("-showMechanics") { showingMechanics = true }
+                if args.contains("-showBattles") { showingBattles = true }
+            }
             #endif
         }
     }

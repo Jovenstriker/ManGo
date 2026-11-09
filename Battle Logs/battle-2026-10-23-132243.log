@@ -56,6 +56,7 @@ SUMMARY
 TIMELINE (what the screen reader saw and did)
   0:17.99  Opponent: Doublade
   0:17.99    stopped  Doublade at 0
+  0:20.19  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:20.19    running  Doublade at 0
   0:28.13    stopped  Doublade at 56
   0:35.30  Doublade used Iron Head (56 → 6)
@@ -69,6 +70,7 @@ TIMELINE (what the screen reader saw and did)
   1:05.36    stopped  Doublade at 19
   1:05.66  You threw a charged move: Doublade 19 → 27 (its fast move in progress counts)
   1:15.81    running  Doublade at 27
+  1:16.15  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:18.28    stopped  Doublade at 43
   1:26.07  Doublade used Sacred Sword (43 → 8)
   1:31.96    running  Doublade at 8
@@ -79,6 +81,7 @@ TIMELINE (what the screen reader saw and did)
   1:49.65    stopped  Togetic at 63
   1:57.00  Togetic used Draining Kiss (63 → 8)
   2:02.71    running  Togetic at 8
+  2:07.70  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   2:08.23    stopped  Togetic at 53
   2:15.17  Togetic used Heat Wave (53 → 8)
   2:18.39    running  Togetic at 8

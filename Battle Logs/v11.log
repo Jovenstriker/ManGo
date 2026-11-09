@@ -59,6 +59,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:25.25  Opponent: Altaria
+  0:25.25  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:33.25    stopped  Altaria at 48
   0:33.75  You threw a charged move: Altaria 52 → 56 (its fast move in progress counts)
   0:44.00  Altaria threw on the same turn as you: no fast move in progress (56 → 52)
@@ -84,6 +85,7 @@ TIMELINE (what the screen reader saw and did)
   2:08.75    stopped  Altaria at 23
   2:10.00  Your Pokémon fainted: Altaria 23 → 23 (the fast move that knocked it out landed)
   2:16.75    running  Altaria at 23
+  2:17.00  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   2:18.50  Opponent: Empoleon
   2:23.75    stopped  Empoleon at 32
   2:24.25  You threw a charged move: Empoleon 40 → 48 (its fast move in progress counts)

@@ -58,8 +58,10 @@ var wasPaused = false
 var evidenceFailures: [String] = []
 let checkpoints = hand?.energyCheckpoints ?? []
 var checkedPoints = Set<Int>()
+var summaries: [BattleSummary] = []
 for read in reads {
     automation.process(read, tracker: &tracker)
+    summaries += automation.takeCompletedBattles()
     let snap = tracker.snapshot(at: read.time)
     timeline += automation.logThisRead.map { "\(clock(read.time))  \($0)" }
     throwsSeen += automation.throwsThisRead
@@ -73,6 +75,12 @@ for read in reads {
         timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.energy)")
         wasPaused = tracker.isPaused
     }
+}
+// SUMMARY_OUT=battles.json battle-report … writes each battle's summary, as the app keeps it.
+if let path = env["SUMMARY_OUT"] {
+    automation.finishBattle(tracker: tracker)
+    summaries += automation.takeCompletedBattles()
+    try JSONEncoder().encode(summaries).write(to: URL(fileURLWithPath: path))
 }
 
 var out: [String] = []

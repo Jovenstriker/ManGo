@@ -52,6 +52,7 @@ SUMMARY
 
 TIMELINE (what the screen reader saw and did)
   0:26.32  Opponent: Corviknight
+  0:27.89  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:34.91    stopped  Corviknight at 52
   0:35.18  You threw a charged move: Corviknight 52 → 56 (its fast move in progress counts)
   0:45.43    running  Corviknight at 56
@@ -75,6 +76,7 @@ TIMELINE (what the screen reader saw and did)
   1:47.27  Corviknight used Iron Head (56 → 6)
   1:50.20    running  Corviknight at 6
   1:50.46  Turtonator switched out, not fainted: 3 pokéballs still red
+  1:50.46  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:56.58    stopped  Corviknight at 58
   2:03.77  Corviknight used Air Cutter (58 → 18)
   2:06.70    running  Corviknight at 18

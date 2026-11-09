@@ -52,6 +52,7 @@ TIMELINE (what the screen reader saw and did)
   0:22.26  Opponent: Turtonator
   0:22.26    stopped  Turtonator at 0
   0:23.33    running  Turtonator at 0
+  0:23.58  Your buttons: flamethrower, skyattack; your fast move takes 1 turn
   0:24.90  Opponent: Mimikyu
   0:31.13    stopped  Mimikyu at 48
   0:31.93  You threw a charged move: Mimikyu 48 → 56 (its fast move in progress counts)
@@ -81,6 +82,7 @@ TIMELINE (what the screen reader saw and did)
   2:23.81  Mimikyu fainted or switched out
   2:23.81  Opponent: Turtonator
   2:24.61    running  Turtonator at 0
+  2:24.87  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   2:28.07    stopped  Turtonator at 20
   2:28.87  Turtonator fainted or switched out
   2:28.87  Opponent: Stunfisk

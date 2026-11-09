@@ -159,15 +159,35 @@ public struct BattleAutomation: Sendable {
     /// A hit counts if your bar drops at least this many pixels and holds for two frames
     /// (a bar flickers by a pixel).
     static let hitPixels = 1.5
+    /// This battle so far, for its summary, and the ones finished since the app last took them.
+    private var battleRecord = BattleSummaryRecord()
+    private var completedBattles: [BattleSummary] = []
+    private var yourBannersNamed = 0
+    private var summaryButtonLabels: Set<String> = []
+    private var summaryPendingLabels: (labels: Set<String>, count: Int, at: Double, inPlay: Bool)?
 
     public init(data: GameData) {
         self.data = data
         parser = BattleScreenParser(data: data)
     }
 
-    /// Forgets everything, as if the screen reader had just started.
+    /// Forgets everything, as if the screen reader had just started. Finished battles' summaries
+    /// stay until taken.
     public mutating func reset() {
+        let done = completedBattles
         self = BattleAutomation(data: data)
+        completedBattles = done
+    }
+
+    /// Battles that ended since the last call, for the battle history.
+    public mutating func takeCompletedBattles() -> [BattleSummary] {
+        defer { completedBattles = [] }
+        return completedBattles
+    }
+
+    /// Ends the battle in progress for its summary, when the app starts fresh without seeing it end.
+    public mutating func finishBattle(tracker: OpponentTracker) {
+        finishSummary(tracker, result: nil)
     }
 
     public mutating func process(_ read: ScreenRead, tracker: inout OpponentTracker) {
@@ -226,6 +246,10 @@ public struct BattleAutomation: Sendable {
                 if aliveDroppedAt < f.stop - Self.faintBallLead {
                     tracker.markNotFainted(f.speciesId)
                     note("\(name(f.speciesId)) switched out, not fainted: \(n) pokéballs still red")
+                    if let i = battleRecord.markers.lastIndex(where: { $0.marker.kind == .fainted && $0.marker.pokemon == name(f.speciesId) }) {
+                        battleRecord.markers[i].marker.kind = .switched
+                        battleRecord.markers[i].marker.pokemon = name(tracker.active?.speciesId)
+                    }
                 }
             }
         }
@@ -254,6 +278,7 @@ public struct BattleAutomation: Sendable {
                 battleEndedAt = t
                 tracker.pause(at: t)
                 note("Battle over")
+                finishSummary(tracker, result: parser.lastResult)
 
             case .countdown(let goIn):
                 if goAt == nil { goAt = t + goIn + (Rules.off("goDelay") ? 0 : goDelay) }
@@ -264,6 +289,7 @@ public struct BattleAutomation: Sendable {
                 let start = t + (Rules.off("goDelay") ? 0 : goDelay)
                 goAt = start
                 buttonsResumedAt = start
+                if battleRecord.start == nil { battleRecord.start = tracker.battleClock(at: start) }
                 if awaitingGo, start <= t {
                     awaitingGo = false
                     tracker.resume(at: t)
@@ -292,9 +318,17 @@ public struct BattleAutomation: Sendable {
                 lastStopAt = stop
                 tracker.pause(at: stop)
                 if goAt != nil { settleLeadFromHits(at: t, tracker: &tracker) }
+                // Your fast moves landing this stretch tell their length better than your buttons.
+                if parser.yourButtonLabels == summaryButtonLabels, let turns = YourFastMoves.turns(fromGaps: yourGaps),
+                   let last = battleRecord.yourMoves.indices.last {
+                    battleRecord.yourMoves[last].turns = turns
+                }
 
             case .shielded:
                 shieldedThisStop = true
+                if let i = battleRecord.charged.lastIndex(where: { $0.stop == battleRecord.stops.count }) {
+                    battleRecord.charged[i].move.shielded = true
+                }
 
             case .resumed(let free):
                 stopped = false
@@ -327,6 +361,11 @@ public struct BattleAutomation: Sendable {
                 shieldedThisStop = false
                 playerChargedThisStop = false
                 if free { freeSwitchUntil = resume + Self.afterStopWindow }
+                if !awaitingGo {
+                    // Where the stop sits on the clock of play, now it can't move any more.
+                    let at = tracker.battleClock(at: resume)
+                    if battleRecord.start == nil { battleRecord.start = at } else { battleRecord.stops.append(at) }
+                }
                 // The buttons show during the countdown: the lead's clock waits for GO.
                 if awaitingGo { resumedBeforeGo = resume } else { tracker.resume(at: resume) }
 
@@ -373,6 +412,11 @@ public struct BattleAutomation: Sendable {
                 opponentThrewThisStop = true
                 chargedMoveThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
+                if battleRecord.start != nil {
+                    battleRecord.charged.append((battleRecord.stops.count, .init(
+                        side: .them, time: 0, name: move.name, type: move.type, pokemon: name(tracker.active?.speciesId),
+                        shielded: false, energyBefore: before, energyAfter: tracker.snapshot(at: t).energy)))
+                }
 
             case .attackIncoming:
                 // Corrects the count as the battle freezes, not only once the banner names the move.
@@ -381,6 +425,9 @@ public struct BattleAutomation: Sendable {
 
             case .yourPokemonFainted:
                 yourFaintThisStop = true
+                if battleRecord.start != nil {
+                    battleRecord.markers.append((battleRecord.stops.count, .init(side: .you, time: 0, kind: .fainted)))
+                }
                 if !Rules.off("yourFaintTurn") { tracker.opponentsNextSwitchCostsATurn() }
                 guard !opponentThrewThisStop, !playerChargedThisStop else { continue }
                 let before = tracker.snapshot(at: t).energy
@@ -394,6 +441,11 @@ public struct BattleAutomation: Sendable {
                 playerChangedSinceResume = true
                 cadence = FastMoveCadence()
                 yourGaps = []
+                // A switch, not the Pokémon you sent in after yours fainted.
+                if battleRecord.start != nil, !yourFaintThisStop {
+                    battleRecord.markers.append((stopped ? battleRecord.stops.count : nil,
+                                                 .init(side: .you, time: tracker.battleClock(at: t), kind: .switched)))
+                }
                 restartChecked = !awaitingYourReplacement
                 awaitingYourReplacement = false
 
@@ -413,11 +465,17 @@ public struct BattleAutomation: Sendable {
                 if tracker.active != nil {
                     note("You threw a charged move: \(name(tracker.active?.speciesId)) \(energyBefore) → \(tracker.snapshot(at: t).energy) (its fast move in progress counts)")
                 }
+                if battleRecord.start != nil {
+                    battleRecord.charged.append((battleRecord.stops.count, .init(
+                        side: .you, time: 0, shielded: false, energyBefore: energyBefore, energyAfter: tracker.snapshot(at: t).energy)))
+                }
 
             case .opponentAppeared(let match, let since):
                 appear(match, at: since, now: t, tracker: &tracker)
             }
         }
+        nameYourChargedMove()
+        noteYourFastMove(tracker)
     }
 
     // MARK: Helpers
@@ -442,6 +500,76 @@ public struct BattleAutomation: Sendable {
             .compactMap { data.recommendedMoves(for: $0.speciesId).fast?.turns })
         guard turns.count == 1, let t = turns.first else { return nil }
         return Double(t) * turnDuration
+    }
+
+    // MARK: Battle summary
+
+    /// PvPoke's fast move for your Pokémon, from its two charged move buttons: the best-ranked
+    /// Pokémon with both (Aura Sphere and Blaze Kick: Shadow Blaziken's Ember, not Lucario's
+    /// Force Palm). A guess for drawing your side; your fast moves landing correct its length.
+    private func fastMove(forButtons labels: Set<String>) -> (turns: Int, type: String?)? {
+        guard labels.count == 2 else { return nil }
+        let moveIds = data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
+        guard Set(moveIds.compactMap { data.moves[$0].map { NameMatcher.normalize($0.name) } }) == labels else { return nil }
+        let top = data.species.values
+            .filter { $0.rank != nil && moveIds.allSatisfy($0.chargedMoves.contains) }
+            .sorted { ($0.rank ?? .max) < ($1.rank ?? .max) }
+            .lazy.compactMap { self.data.recommendedMoves(for: $0.speciesId).fast }.first
+        return top.map { ($0.turns, $0.type) }
+    }
+
+    /// The charged moves on your buttons, as the summary last read them.
+    private var yourButtonMoves: [String] {
+        let labels = summaryButtonLabels.isEmpty ? parser.yourButtonLabels : summaryButtonLabels
+        return data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
+    }
+
+    /// Your banner ("Blaziken used Blaze Kick!") names your charged move: the one on your buttons
+    /// nearest what was read.
+    private mutating func nameYourChargedMove() {
+        guard parser.yourBannerCount > yourBannersNamed, let banner = parser.yourLastBanner else { return }
+        yourBannersNamed = parser.yourBannerCount
+        guard battleRecord.start != nil else { return }
+        if let user = banner.user?.trimmingCharacters(in: .whitespaces), !user.isEmpty, !battleRecord.yourTeam.contains(user) {
+            battleRecord.yourTeam.append(user)
+        }
+        guard let i = battleRecord.charged.lastIndex(where: { $0.move.side == .you }), battleRecord.charged[i].move.name == nil else { return }
+        let read = NameMatcher.normalize(banner.move)
+        let move = yourButtonMoves.compactMap { data.moves[$0] }
+            .min { NameMatcher.editDistance(NameMatcher.normalize($0.name), read, limit: 6) < NameMatcher.editDistance(NameMatcher.normalize($1.name), read, limit: 6) }
+        battleRecord.charged[i].move.name = move?.name ?? banner.move
+        battleRecord.charged[i].move.type = move?.type
+        battleRecord.charged[i].move.pokemon = banner.user
+    }
+
+    /// Your buttons changed (your lead's, then each switch), read the same on two reads in a row:
+    /// your fast move from the first of them. A switch made in play takes a turn; one made in a
+    /// stop shows as the buttons come back, and a Pokémon sent in after yours fainted takes none.
+    private mutating func noteYourFastMove(_ tracker: OpponentTracker) {
+        guard let start = battleRecord.start else { return }
+        let labels = parser.buttonLabelsThisRead
+        guard labels.count == 2 else { return }  // a label missed on this read
+        guard labels != summaryButtonLabels else { summaryPendingLabels = nil; return }
+        if summaryPendingLabels?.labels != labels {
+            let atRestart = buttonsBackAt.map { lastTime - $0 < 0.6 } ?? true
+            summaryPendingLabels = (labels, 0, tracker.battleClock(at: lastTime), !atRestart && !stopped && !yourFaintThisStop)
+        }
+        summaryPendingLabels!.count += 1
+        guard let pending = summaryPendingLabels, pending.count >= 2, let move = fastMove(forButtons: labels) else { return }
+        let first = battleRecord.yourMoves.isEmpty
+        summaryButtonLabels = labels
+        summaryPendingLabels = nil
+        battleRecord.yourMoves.append((from: first ? start : pending.at, turns: move.turns, type: move.type, switchTurn: !first && pending.inPlay))
+        note("Your buttons: \(labels.sorted().joined(separator: ", ")); your fast move takes \(move.turns) turn\(move.turns == 1 ? "" : "s")")
+    }
+
+    private mutating func finishSummary(_ tracker: OpponentTracker, result: String?) {
+        if let summary = battleRecord.summary(tracker: tracker, endedAt: tracker.battleClock(at: lastTime), result: result) {
+            completedBattles.append(summary)
+        }
+        battleRecord = BattleSummaryRecord()
+        summaryButtonLabels = []
+        summaryPendingLabels = nil
     }
 
     private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {
@@ -663,6 +791,7 @@ public struct BattleAutomation: Sendable {
     }
 
     private mutating func newBattle(_ tracker: inout OpponentTracker) {
+        finishSummary(tracker, result: nil)  // one whose results screen wasn't seen
         isBattleOver = false
         battleEndedAt = nil
         goAt = nil
@@ -793,6 +922,13 @@ public struct BattleAutomation: Sendable {
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
         if !Rules.off("yourFaintTurn"), yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
+        if battleRecord.start != nil, let old = tracker.active {
+            // A faint goes on the stop it happened in (still stopped, or the one just ended).
+            let stop = stopped ? battleRecord.stops.count : duringStop ? battleRecord.stops.count - 1 : nil
+            battleRecord.markers.append(theirsFainted
+                ? (stop, .init(side: .them, time: tracker.battleClock(at: time), kind: .fainted, pokemon: name(old.speciesId)))
+                : (stopped ? battleRecord.stops.count : nil, .init(side: .them, time: tracker.battleClock(at: time), kind: .switched, pokemon: name(speciesId))))
+        }
         cadence = FastMoveCadence()
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
                           seenAt: isLead ? nil : leftDuringStop ? time : since)

@@ -1433,5 +1433,63 @@
     "notes": {
       "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:22.9, 1:38.4, 1:55.1, 2:12.0, 2:35.5, 3:22.8 and 3:39.6. At 2:35.5 Sandslash had just switched in for Carbink in play and was still on its switch turn: nothing in progress (64 to 64), the rule from 221337. Carbink's 23 before its first Moonblast runs into the 100 cap."
     }
+  },
+  "battle-2026-11-09-022052": {
+    "video": "Test Videos/battle-2026-11-09-022052.mp4",
+    "description": "Phone-saved battle. Opponent: Corsola (Galarian), Ursaluna, Tinkaton.",
+    "counts": [
+      17,
+      2,
+      5,
+      9
+    ],
+    "countTargets": [
+      {
+        "speciesId": "ursaluna",
+        "moveId": "FIRE_PUNCH"
+      },
+      {
+        "speciesId": "ursaluna",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "corsola_galarian",
+        "moveId": "NIGHT_SHADE"
+      },
+      {
+        "speciesId": "tinkaton",
+        "moveId": "BULLDOZE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 67.9,
+        "speciesId": "ursaluna",
+        "energy": 13
+      },
+      {
+        "time": 83.5,
+        "speciesId": "corsola_galarian",
+        "energy": 10
+      },
+      {
+        "time": 109.4,
+        "speciesId": "corsola_galarian",
+        "energy": 15
+      },
+      {
+        "time": 123.9,
+        "speciesId": "ursaluna",
+        "energy": 41
+      },
+      {
+        "time": 140.2,
+        "speciesId": "tinkaton",
+        "energy": 45
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:07.6, 1:23.2, 1:49.1, 2:03.6 and 2:19.9."
+    }
   }
 }

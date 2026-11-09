@@ -77,7 +77,9 @@ TIMELINE (what the screen reader saw and did)
   1:26.51  You threw a charged move: Florges 9 → 18 (its fast move in progress counts)
   1:36.58  Their fast move in progress hit you at 1:36.31, before your buttons came back: the battle had restarted
   1:36.58    running  Florges at 18
+  1:40.30  Florges's restart was seen, when its fast move in progress hit you: no fast move added
   1:40.30    stopped  Florges at 45
+  1:47.38  Florges's restart was seen, when its fast move in progress hit you: no fast move added
   1:47.38  Florges used Chilling Water (45 → 0)
   1:50.29    running  Florges at 0
   1:50.55  Opponent: Charjabug
@@ -85,7 +87,9 @@ TIMELINE (what the screen reader saw and did)
   1:52.67  You threw a charged move: Charjabug 0 → 16 (its fast move in progress counts)
   2:02.14  Their fast move in progress hit you at 2:01.89, before your buttons came back: the battle had restarted
   2:02.14    running  Charjabug at 16
+  2:06.65  Charjabug's restart was seen, when its fast move in progress hit you: no fast move added
   2:06.65    stopped  Charjabug at 48
+  2:13.55  Charjabug's restart was seen, when its fast move in progress hit you: no fast move added
   2:13.55  Charjabug used X-Scissor (48 → 8)
   2:16.75    running  Charjabug at 8
   2:17.55  Your fast move landed 0.92s after ManGo's restart: their fast moves restarted 0.23s earlier
@@ -94,6 +98,8 @@ TIMELINE (what the screen reader saw and did)
   2:28.60  Their fast move in progress hit you at 2:28.33, before your buttons came back: the battle had restarted
   2:28.60    running  Charjabug at 24
   2:30.73    stopped  Charjabug at 40
+  2:31.56  Charjabug's restart was seen, when its fast move in progress hit you: no fast move added
+  2:38.25  Charjabug's restart was seen, when its fast move in progress hit you: no fast move added
   2:38.25  Charjabug used X-Scissor (40 → 0)
   2:42.53  New battle
   2:42.53  Opponent: Clodsire

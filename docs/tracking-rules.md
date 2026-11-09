@@ -38,7 +38,8 @@ explicitly approximate and are not used to identify moves or compute energy.
   play resumes.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
   one more. Your HP bar overrules that when it held steady where the extra one would have hit you,
-  or, after your charged move, a fast move earlier, where their move in progress would have.
+  or, after your charged move, a fast move earlier, where their move in progress would have. And it
+  doesn't apply when the restart was seen: their move in progress hitting you as play resumed.
 - On a same-turn throw (CMP) they had no fast move in progress: no sneak. Both sides throw as
   their fast moves finish, so they'd finished a whole number: the move counted in progress at
   your charged move is taken back if the clock had it less than half done, and kept if nearer
@@ -58,7 +59,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 55 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 51 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

@@ -58,9 +58,9 @@ TIMELINE (what the screen reader saw and did)
   0:56.94  You threw a charged move: Altaria 48 → 52 (its fast move in progress counts)
   1:06.06  Their fast move in progress hit you at 1:05.79, before your buttons came back: the battle had restarted
   1:06.06    running  Altaria at 52
-  1:08.02  Your HP bar shows no hit at 1:05.90: Altaria didn't finish one more fast move
+  1:08.02  Altaria's restart was seen, when its fast move in progress hit you: no fast move added
   1:08.02    stopped  Altaria at 68
-  1:16.65  Your HP bar shows no hit at 1:05.90: Altaria didn't finish one more fast move
+  1:16.65  Altaria's restart was seen, when its fast move in progress hit you: no fast move added
   1:16.65  Altaria used Flamethrower (68 → 13)
   1:17.71    running  Altaria at 13
   1:21.62    stopped  Altaria at 41

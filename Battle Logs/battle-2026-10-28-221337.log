@@ -156,7 +156,9 @@ TIMELINE (what the screen reader saw and did)
   5:12.84  You threw a charged move: Forretress (Shadow) 3 → 19 (its fast move in progress counts)
   5:22.72  Their fast move in progress hit you at 5:22.45, before your buttons came back: the battle had restarted
   5:22.72    running  Forretress (Shadow) at 19
+  5:27.28  Forretress (Shadow)'s restart was seen, when its fast move in progress hit you: no fast move added
   5:27.28    stopped  Forretress (Shadow) at 51
+  5:34.20  Forretress (Shadow)'s restart was seen, when its fast move in progress hit you: no fast move added
   5:34.20  Forretress (Shadow) used Sand Tomb (51 → 6)
   5:39.26  Forretress (Shadow) fainted or switched out
   5:39.26  Opponent: Greninja (Shadow)
@@ -203,6 +205,8 @@ TIMELINE (what the screen reader saw and did)
   8:47.52  Their fast move in progress hit you at 8:47.25, before your buttons came back: the battle had restarted
   8:47.52    running  Forretress (Shadow) at 96
   8:49.65    stopped  Forretress (Shadow) at 100
+  8:50.45  Forretress (Shadow)'s restart was seen, when its fast move in progress hit you: no fast move added
+  8:57.11  Forretress (Shadow)'s restart was seen, when its fast move in progress hit you: no fast move added
   8:57.11  Forretress (Shadow) used Rock Tomb (100 → 50)
   9:00.02    running  Forretress (Shadow) at 50
   9:00.30    stopped  Forretress (Shadow) at 50
@@ -218,7 +222,9 @@ TIMELINE (what the screen reader saw and did)
   9:22.43  You threw a charged move: Greninja (Shadow) 14 → 28 (its fast move in progress counts)
   9:32.55  Their fast move in progress hit you at 9:32.02, before your buttons came back: the battle had restarted
   9:32.55    running  Greninja (Shadow) at 28
+  9:34.42  Greninja (Shadow)'s restart was seen, when its fast move in progress hit you: no fast move added
   9:34.42    stopped  Greninja (Shadow) at 42
+  9:41.34  Greninja (Shadow)'s restart was seen, when its fast move in progress hit you: no fast move added
   9:41.34  Greninja (Shadow) used Brutal Swing (42 → 7)
   9:44.54    running  Greninja (Shadow) at 7
   9:45.33  Your fast move landed 0.78s after ManGo's restart: their fast moves restarted 0.37s earlier

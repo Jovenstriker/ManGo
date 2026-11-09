@@ -65,7 +65,9 @@ TIMELINE (what the screen reader saw and did)
   1:14.35  Their fast move in progress hit you at 1:14.08, before your buttons came back: the battle had restarted
   1:14.35    running  Stunfisk at 72
   1:18.84    stopped  Stunfisk at 100
+  1:19.37  Stunfisk's restart was seen, when its fast move in progress hit you: no fast move added
   1:25.76  Form: Stunfisk (Galarian)
+  1:25.76  Stunfisk (Galarian)'s restart was seen, when its fast move in progress hit you: no fast move added
   1:25.76  Stunfisk (Galarian) used Earthquake (100 → 35)
   1:28.96    running  Stunfisk (Galarian) at 35
   1:32.92    stopped  Stunfisk (Galarian) at 62

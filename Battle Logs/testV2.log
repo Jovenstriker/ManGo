@@ -98,6 +98,8 @@ TIMELINE (what the screen reader saw and did)
   2:19.75  Their fast move in progress hit you at 2:19.25, before your buttons came back: the battle had restarted
   2:19.75    running  Altaria at 20
   2:24.25    stopped  Altaria at 52
+  2:24.50  Altaria's restart was seen, when its fast move in progress hit you: no fast move added
+  2:31.25  Altaria's restart was seen, when its fast move in progress hit you: no fast move added
   2:31.25  Altaria used Moonblast (52 → 2)
   2:34.25    running  Altaria at 2
   2:34.50  Your fast move landed 0.20s after ManGo's restart: their fast moves restarted 0.45s earlier

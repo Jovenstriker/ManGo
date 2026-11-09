@@ -14,7 +14,6 @@ for fixture in "$F"/*.json; do
   name=$(basename "$fixture" .json)
   [ "$name" != hand-counts ] || continue
   case "$name" in
-    gbl-battle-2026-10-20) log="ScreenRecording_10-20-2026 00-33-51_1" ;;
     gbl-battle-2026-10-20-mango) log=TestWithMangoV1 ;;
     gbl-battle-2026-10-20-v2) log=testV2 ;;
     gbl-battle-2026-10-20-v3) log=testV3 ;;

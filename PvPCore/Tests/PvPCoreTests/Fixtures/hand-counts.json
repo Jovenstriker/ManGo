@@ -1,51 +1,4 @@
 {
-  "gbl-battle-2026-10-20": {
-    "video": "ScreenRecording_10-20-2026 00-33-51_1.MP4",
-    "description": "First battle, recorded without ManGo. You: Altaria, Mimikyu, Melmetal. Opponent: Stunfisk, Cramorant, Fearow.",
-    "counts": [
-      6,
-      7,
-      1,
-      5,
-      5,
-      5,
-      6
-    ],
-    "notes": {
-      "1": "Rounding to the nearest fast move had given 7; only finished fast moves count when they throw.",
-      "7": "Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run. Fearow had shielded your Double Iron Bash, and your buttons came back late; since Drill Run can only start as a Peck finishes, ManGo works out that the battle restarted 0.6s before them."
-    },
-    "countTargets": [
-      {
-        "speciesId": "stunfisk",
-        "moveId": "DISCHARGE"
-      },
-      {
-        "speciesId": "stunfisk",
-        "moveId": "DISCHARGE"
-      },
-      {
-        "speciesId": "stunfisk",
-        "moveId": "DISCHARGE"
-      },
-      {
-        "speciesId": "cramorant",
-        "moveId": "DIVE"
-      },
-      {
-        "speciesId": "cramorant",
-        "moveId": "DIVE"
-      },
-      {
-        "speciesId": "cramorant",
-        "moveId": "DIVE"
-      },
-      {
-        "speciesId": "fearow",
-        "moveId": "DRILL_RUN"
-      }
-    ]
-  },
   "gbl-battle-2026-10-20-mango": {
     "video": "Test Videos/TestWithMangoV1.mov",
     "description": "Second battle, with ManGo's overlay on screen (dragged to the bottom partway through). You: Altaria, Melmetal, Mimikyu. Opponent: Marowak, Sableye (Shadow), Talonflame.",
@@ -393,12 +346,18 @@
     "video": "Test Videos/battle-2026-10-24-220440.mp4",
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Stunfisk (Galarian), Forretress (Shadow), Melmetal.",
     "counts": [
-      5
+      5,
+      7
     ],
     "notes": {
-      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that."
+      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that.",
+      "2": "User, 2026-11-09: 5 Mud Shots between its Mud Shot in progress hitting you as play resumed (0:52.65) and \"Attack incoming!\" (0:58.6); with ManGo's 1 and a sneak at your charged move at 0:43, 7 since its first Rock Slide. The line-up rule had added a 6th in that stretch, guessing play restarted earlier than the hit showed."
     },
     "countTargets": [
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "ROCK_SLIDE"
+      },
       {
         "speciesId": "stunfisk_galarian",
         "moveId": "ROCK_SLIDE"
@@ -846,6 +805,43 @@
       "2": "User, 2026-11-08: Furret threw 8 Sucker Punches before its second Swift; ManGo counted 7. The game lagged, the user thinks, and nothing in the recording shows it (no gaps in the reads or frames): maybe something ManGo can't resolve. With 8, its third Swift came on 21 + 2.",
       "marowak": "User, 2026-11-08: Marowak threw 4 Mud Slaps as the lead before switching to Furret (~0:50.7), not 3. Your HP bar shows them at 0:45.5, 0:47.0, 0:48.5 and 0:50.0: it began by 0:44.0, half a second before GO was read (0:44.56).",
       "furret": "User, 2026-11-08: Furret used Sucker Punch (PvPoke's), not Quick Attack; ManGo took its third Swift, one Sucker Punch short after the missed one, for Quick Attack."
+    }
+  },
+  "battle-2026-11-08-212316": {
+    "video": "Test Videos/battle-2026-11-08-212316.mp4",
+    "description": "Phone-saved battle. You: Thievul, Blaziken and others. Opponent: Ninetales (Alolan), Quagsire (Shadow), Jumpluff.",
+    "counts": [
+      null,
+      6,
+      6,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      },
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      },
+      {
+        "speciesId": "ninetales_alolan",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "ninetales_alolan",
+        "moveId": "WEATHER_BALL_ICE"
+      },
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      }
+    ],
+    "notes": {
+      "2": "User, 2026-11-08: Quagsire threw 6 Mud Shots: 4 and a sneak at your charged move at 1:08.2, then 1, then Aqua Tail (no sneak at its own). ManGo's line-up rule (their charged move starts as a fast move finishes) used to add a 7th, guessing play restarted before your buttons; but its Mud Shot in progress had hit you by 1:17.02, which showed when play restarted, so the rule no longer second-guesses it. (The first GBL battle's Fearow, whose 6 needed that extra, was dropped with its missing video.)",
+      "3": "User, 2026-11-08: Alolan Ninetales threw 4 Powder Snows as the lead, not 5; with the 2 ManGo counts after it came back at 1:31.8, 6 before Chilling Water. The opening rule had taken the big \"GO\" covering your HP bar at 0:34.4 (202 px, then 244 again) for its first hit; its first hit was at 0:35.54."
     }
   }
 }

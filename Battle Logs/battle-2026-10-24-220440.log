@@ -39,15 +39,16 @@ OPPONENT CHARGED MOVES
   1  0:37.97  Stunfisk (Galarian)   Rock Slide (45)           45 → 0        5           5     ✓
        calc: 45 = 0 left before + 5 × 9 (Mud Shot); after: 45 − 45 = 0
        note: Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as "NOT VERY EFFECTIVE..." over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that.
-  2  1:05.50  Stunfisk (Galarian)   Rock Slide (45)           72 → 27       8           ?     -
-       calc: 72 = 0 left before + 8 × 9 (Mud Shot); after: 72 − 45 = 27
+  2  1:05.50  Stunfisk (Galarian)   Rock Slide (45)           63 → 18       7           7     ✓
+       calc: 63 = 0 left before + 7 × 9 (Mud Shot); after: 63 − 45 = 18
+       note: User, 2026-11-09: 5 Mud Shots between its Mud Shot in progress hitting you as play resumed (0:52.65) and "Attack incoming!" (0:58.6); with ManGo's 1 and a sneak at your charged move at 0:43, 7 since its first Rock Slide. The line-up rule had added a 6th in that stretch, guessing play restarted earlier than the hit showed.
   3  1:49.46  Forretress (Shadow)   Sand Tomb (45)            64 → 19       4           ?     -
        calc: 64 = 0 left before + 4 × 16 (Volt Switch); after: 64 − 45 = 19
 
 SUMMARY
-  1 of 1 hand-counted charged moves match ManGo's fast move count exactly.
+  2 of 2 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  2 not hand-counted.
+  1 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:22.97  Opponent: Stunfisk
@@ -62,13 +63,14 @@ TIMELINE (what the screen reader saw and did)
   0:52.92  Their fast move in progress hit you at 0:52.65, before your buttons came back: the battle had restarted
   0:52.92    running  Stunfisk (Galarian) at 18
   0:58.56    stopped  Stunfisk (Galarian) at 63
-  0:58.84  Stunfisk (Galarian) had finished one more fast move: the battle restarted before your buttons came back
-  1:05.50  Stunfisk (Galarian) used Rock Slide (72 → 27)
-  1:08.79    running  Stunfisk (Galarian) at 27
-  1:10.42  You threw a charged move: Stunfisk (Galarian) 36 → 45 (its fast move in progress counts)
-  1:10.42    stopped  Stunfisk (Galarian) at 45
+  0:58.84  Stunfisk (Galarian)'s restart was seen, when its fast move in progress hit you: no fast move added
+  1:05.50  Stunfisk (Galarian)'s restart was seen, when its fast move in progress hit you: no fast move added
+  1:05.50  Stunfisk (Galarian) used Rock Slide (63 → 18)
+  1:08.79    running  Stunfisk (Galarian) at 18
+  1:10.42  You threw a charged move: Stunfisk (Galarian) 27 → 36 (its fast move in progress counts)
+  1:10.42    stopped  Stunfisk (Galarian) at 36
   1:20.54  Their fast move in progress hit you at 1:20.00, before your buttons came back: the battle had restarted
-  1:20.54    running  Stunfisk (Galarian) at 45
+  1:20.54    running  Stunfisk (Galarian) at 36
   1:25.63  Opponent: Forretress (Shadow)
   1:25.63    stopped  Forretress (Shadow) at 0
   1:26.16  You threw a charged move: Forretress (Shadow) 0 → 16 (its fast move in progress counts)

@@ -66,6 +66,8 @@ public struct BattleAutomation: Sendable {
     private var leadStartChecked = false
     /// When the lead's first fast move began, as counted.
     private var leadStartedAt: TimeInterval?
+    /// This stretch's restart was seen (their move in progress hit you), not guessed from your buttons.
+    private var restartSeen = false
     /// This stretch's start was checked against their first hit on your HP bar.
     private var theirHitsChecked = true
     /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
@@ -336,6 +338,7 @@ public struct BattleAutomation: Sendable {
                 cadence = FastMoveCadence()
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
                 var resume = max(t - lead, lastStopAt)
+                restartSeen = false
                 // Their fast move in progress at your charged move hit you before your buttons
                 // came back, so play had restarted by then (155712: Azumarill's Bubble showed over
                 // your Altaria at 2:10.64, your buttons at 2:11.44; your 3 Dragon Breaths fit
@@ -343,6 +346,7 @@ public struct BattleAutomation: Sendable {
                 if !Rules.off("inProgressHit"), !yourFaintThisStop, let hit = inProgressLandedBy, hit < resume, hit > lastStopAt {
                     note("Their fast move in progress hit you at \(clockString(hit)), before your buttons came back: the battle had restarted")
                     resume = hit
+                    restartSeen = true
                 }
                 resumedAt = resume
                 // Your buttons only show your fast moves once they're back (they fade in at first).
@@ -681,6 +685,13 @@ public struct BattleAutomation: Sendable {
     /// restarted holds a whole number of fast moves.
     private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
         guard !Rules.off("align"), !playerChangedSinceResume else { return }
+        // It corrects a restart time guessed from your buttons. One seen directly (their move in
+        // progress hitting you as play resumed) needs no correcting (212316: Quagsire's at 1:17.02;
+        // 4 Mud Shots and a sneak at your 1:08 charged move, then 1, then Aqua Tail: 6, not 7).
+        if restartSeen, !Rules.off("alignTrustsHit") {
+            note("\(name(tracker.active?.speciesId))'s restart was seen, when its fast move in progress hit you: no fast move added")
+            return
+        }
         let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
         // The fast move it would add must have hit you: their first would have landed one stretch
         // of finished fast moves before the stop. Your HP bar steady then means it didn't. After
@@ -725,7 +736,9 @@ public struct BattleAutomation: Sendable {
 
     /// When your HP bar first fell after `start`, if it has: a hit's drop from where it held first
     /// that stays (its middle value over the next 0.3s is that low), so a frame or two of glitch
-    /// isn't one (152828: 93 px for two frames at 0:44.62 between 244s).
+    /// isn't one (152828: 93 px for two frames at 0:44.62 between 244s). HP never comes back, so
+    /// nor is a dip the bar climbs back from within a second: something covered it (212316: the
+    /// big "GO" over it at 0:34.4, 202 px, then 244 again; Ninetales' first hit was at 0:35.54).
     private func firstHitOnYou(after start: TimeInterval) -> TimeInterval? {
         let seen = recentVerifiedHP.filter { $0[0] > start && $0[1] * $0[2] > 0.5 }
         guard let first = seen.first, let last = seen.last else { return nil }
@@ -737,7 +750,10 @@ public struct BattleAutomation: Sendable {
         }
         guard let level = held(from: first[0]) else { return nil }
         for s in seen where s[0] >= first[0] + 0.3 && level - s[1] * s[2] >= drop {
-            if let after = held(from: s[0]), level - after >= drop { return s[0] }
+            guard let after = held(from: s[0]), level - after >= drop else { continue }
+            guard last[0] >= s[0] + 1 else { return nil }  // wait to see it stay down
+            if seen.contains(where: { $0[0] > s[0] && $0[0] <= s[0] + 1 && level - $0[1] * $0[2] < drop / 2 }) { continue }
+            return s[0]
         }
         return nil
     }
@@ -826,6 +842,7 @@ public struct BattleAutomation: Sendable {
         freeSwitchUntil = -.infinity
         leadStartChecked = false
         leadStartedAt = nil
+        restartSeen = false
         theirHitsChecked = true
         opponentAlive = nil
         opponentAliveAt = -.infinity

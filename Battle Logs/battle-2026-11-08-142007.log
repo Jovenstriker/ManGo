@@ -87,8 +87,8 @@ TIMELINE (what the screen reader saw and did)
   2:31.86  Their fast move in progress hit you at 2:31.34, before your buttons came back: the battle had restarted
   2:31.86    running  Florges at 45
   2:35.49    stopped  Florges at 72
-  2:35.77  Your HP bar shows no hit at 2:31.08, where its fast move in progress at your charged move would have landed: Florges didn't finish one more fast move
-  2:41.88  Your HP bar shows no hit at 2:31.08, where its fast move in progress at your charged move would have landed: Florges didn't finish one more fast move
+  2:35.77  Florges's restart was seen, when its fast move in progress hit you: no fast move added
+  2:41.88  Florges's restart was seen, when its fast move in progress hit you: no fast move added
   2:41.88  Florges used Moonblast (72 → 22)
   2:55.34    running  Florges at 22
   2:55.62  Your buttons: aurasphere, blazekick; your fast move takes 2 turns

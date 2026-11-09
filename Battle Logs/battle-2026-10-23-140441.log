@@ -68,6 +68,8 @@ TIMELINE (what the screen reader saw and did)
   1:30.01  Their fast move in progress hit you at 1:29.75, before your buttons came back: the battle had restarted
   1:30.01    running  Turtonator at 80
   1:33.19    stopped  Turtonator at 100
+  1:34.26  Turtonator's restart was seen, when its fast move in progress hit you: no fast move added
+  1:40.11  Turtonator's restart was seen, when its fast move in progress hit you: no fast move added
   1:40.11  Turtonator used Dragon Claw (100 → 50)
   1:43.04    running  Turtonator at 50
   1:43.58    stopped  Turtonator at 50

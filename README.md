@@ -119,12 +119,14 @@ button, and everything else comes from the screen.
 
 ## Accuracy evidence and validation
 
-`swift test` now checks all 24 saved recordings, including the ones with known inaccuracies.
+`swift test` now checks all 34 saved recordings, including the ones with known inaccuracies.
+Only recordings whose video is still in `Test Videos/` are kept (the first battle, recorded
+without ManGo on October 20, 2026, was dropped with its video on November 9).
 A successful behavioral replay is not proof of accurate energy. The accuracy tests deliberately
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **36 exact hand counts across 9 recordings** in
+There are **51 exact hand counts across 16 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -133,15 +135,22 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 
 | Recording | Opponent's team | Hand counts |
 |---|---|---|
-| gbl-battle-2026-10-20 (without ManGo) | Stunfisk, Cramorant, Fearow | 6, 7, 1, 5, 5, 5, 6 |
 | gbl-battle-2026-10-20-mango (TestWithMangoV1) | Marowak, Sableye (Shadow), Talonflame | 5, 4, 5, 5, 7, 3, 4 |
 | testV2 | Melmetal, Ninetales (Shadow), Altaria | 6, 6, 0, 6, 2, unknown, unknown |
 | testV3 (Fantasy Cup) | Mimikyu, Turtonator, Granbull | 5, 0, 7 |
-| v7 | Azumarill, Empoleon, Magnezone | unknown, 4, 9, 1 |
+| v7 | Azumarill, Empoleon, Magnezone | unknown, 4, 10, 1 |
 | v8 | Azumarill, Lucario, Mawile | 8, 1, 6, 5, 4 |
 | v11 | Altaria, Mimikyu, Empoleon | 13, 7, unknown, 5, 5 |
 | battle-2026-10-23-132243 | Doublade, Togetic, Stunfisk | 7 |
-| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5 |
+| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5, 7 |
+| battle-2026-10-23-155712 | Flygon, Corviknight, Azumarill | unknown, unknown, unknown, 5 |
+| battle-2026-10-28-002722 | Greninja (Shadow), Florges, Charjabug | unknown × 4, 3, unknown × 2 |
+| battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each |
+| battle-2026-11-04-233009 | Morpeko (Full Belly), Jirachi, Azumarill | unknown, 5, unknown × 4 |
+| battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 5 |
+| battle-2026-11-08-144330 | Cramorant, Melmetal, Clodsire | 5, 8, 2, 10, 1 |
+| battle-2026-11-08-152828 | Marowak, Furret, Talonflame | unknown, 8, unknown × 3 |
+| battle-2026-11-08-212316 | Ninetales (Alolan), Quagsire (Shadow), Jumpluff | unknown, 6, 6, unknown × 2 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -177,7 +186,10 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-53 of 55 exact hand counts match, and every energy checkpoint. In 152828 (November 8, 2026) Marowak
+49 of 51 exact hand counts match, and every energy checkpoint. The line-up rule (their charged move
+starts as a fast move finishes, so a late-shown restart may hide one more) no longer adds a fast move
+when ManGo saw play restart, from their move in progress hitting you: Quagsire's 6 in 212316 and
+Galarian Stunfisk's 5 after its hit at 0:52.65 in 220440, both counted by you. In 152828 (November 8, 2026) Marowak
 threw 4 Mud Slaps as the lead, as its first hit on your HP bar shows (it began before GO was readable),
 and Furret stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
 after a CMP tie ManGo keeps the fast move it counted in progress when its clock had it more than half

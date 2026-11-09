@@ -8,7 +8,9 @@ let package = Package(
         .library(name: "PvPCore", targets: ["PvPCore"]),
     ],
     targets: [
-        .target(name: "PvPCore"),
+        // Optimized even in debug builds: the phone checks your buttons and HP bar on every frame
+        // (about 60 a second), which unoptimized is several times the work. Same results.
+        .target(name: "PvPCore", swiftSettings: [.unsafeFlags(["-O"], .when(configuration: .debug))]),
         // Dev tool: prints the text in a battle recording over time.
         .executableTarget(name: "screen-log", dependencies: ["PvPCore"]),
         // Dev tool: writes a battle report (timeline, energy math, hand counts) for a recording.

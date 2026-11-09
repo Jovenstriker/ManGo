@@ -799,5 +799,53 @@
     "notes": {
       "3": "User, 2026-11-08: ManGo counted right, but after the CMP tie at 1:29.6 (your Blaziken won it; Melmetal's second Dynamic Punch came after in the same stop) it took a Thunder Shock off (45 → 36) and only put it back at the banner. Both of you throw as your fast moves finish, so a tie leaves a whole number: ManGo's clock had Melmetal 98% through its second Thunder Shock, so it had landed. The take-back is right only when ManGo counted one too many (54 down to 45, the user's example)."
     }
+  },
+  "battle-2026-11-08-152828": {
+    "video": "Test Videos/battle-2026-11-08-152828.mp4",
+    "description": "Phone-saved battle. You: Thievul, Jumpluff and others. Opponent: Marowak, Furret, Talonflame.",
+    "counts": [
+      null,
+      8,
+      null,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "furret",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "furret",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "furret",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "BONE_CLUB"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "BONE_CLUB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 50.5,
+        "speciesId": "marowak",
+        "energy": 40
+      }
+    ],
+    "observedFastMoves": {
+      "furret": "SUCKER_PUNCH"
+    },
+    "notes": {
+      "2": "User, 2026-11-08: Furret threw 8 Sucker Punches before its second Swift; ManGo counted 7. The game lagged, the user thinks, and nothing in the recording shows it (no gaps in the reads or frames): maybe something ManGo can't resolve. With 8, its third Swift came on 21 + 2.",
+      "marowak": "User, 2026-11-08: Marowak threw 4 Mud Slaps as the lead before switching to Furret (~0:50.7), not 3. Your HP bar shows them at 0:45.5, 0:47.0, 0:48.5 and 0:50.0: it began by 0:44.0, half a second before GO was read (0:44.56).",
+      "furret": "User, 2026-11-08: Furret used Sucker Punch (PvPoke's), not Quick Attack; ManGo took its third Swift, one Sucker Punch short after the missed one, for Quick Attack."
+    }
   }
 }

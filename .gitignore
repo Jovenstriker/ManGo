@@ -9,3 +9,8 @@ xcuserdata/
 *.mp4
 *.MP4
 Test Videos/app logs/
+# What ManGo read off your screen in each recorded battle, and the reports made from it: kept
+# on this Mac only (they can hold notification text). The hand counts stay in the repo.
+PvPCore/Tests/PvPCoreTests/Fixtures/battle-*.json
+PvPCore/Tests/PvPCoreTests/Fixtures/gbl-battle-*.json
+Battle Logs/

@@ -133,6 +133,12 @@ switching out. Entries follow opponent charged moves in recording order. `null` 
 not zero. Partial lists do not label the rest of a battle. `countTargets` identifies the Pokémon
 and charged move so a missed or misattributed throw cannot silently shift the labels.
 
+The recordings themselves (`Fixtures/battle-*.json` and `gbl-battle-*.json`: what ManGo read off
+the screen in each battle, which can include notification text) and the reports in `Battle Logs/`
+are kept on the Mac that recorded them, not in the repository (`.gitignore`), like the videos.
+`scripts/pull_battles.sh` puts new ones there. The accuracy and replay tests need them, so they
+only run where they are.
+
 | Recording | Opponent's team | Hand counts |
 |---|---|---|
 | gbl-battle-2026-10-20-mango (TestWithMangoV1) | Marowak, Sableye (Shadow), Talonflame | 5, 4, 5, 5, 7, 3, 4 |

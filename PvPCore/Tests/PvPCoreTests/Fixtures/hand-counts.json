@@ -1225,7 +1225,25 @@
   "battle-2026-11-09-010753": {
     "video": "Test Videos/battle-2026-11-09-010753.mp4",
     "description": "Phone-saved battle. You: Thievul, Jumpluff, Blaziken. Opponent: Empoleon, Nidoqueen, Forretress (Shadow).",
-    "counts": [],
+    "counts": [
+      6,
+      4,
+      3
+    ],
+    "countTargets": [
+      {
+        "speciesId": "empoleon",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "nidoqueen",
+        "moveId": "POISON_FANG"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      }
+    ],
     "energyCheckpoints": [
       {
         "time": 150.3,
@@ -1234,6 +1252,7 @@
       }
     ],
     "notes": {
+      "all": "User, 2026-11-09: ManGo's counts are right apart from the sneak below; taken as hand counts.",
       "checkpoint": "User, 2026-11-09: Nidoqueen came in on your Blaziken for the fainted Forretress (\"Go, Nidoqueen!\" at 2:27.1) and you threw your charged move straight away (Get Ready! at 2:29.8): Nidoqueen sneaked a Mud Slap. It came in with 0 (it had spent its 40 on Poison Fang at 1:51 and switched out), so 10. ManGo had given it none: your buttons never showed between, so it hadn't seen play resume."
     }
   }

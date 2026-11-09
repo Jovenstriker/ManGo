@@ -36,17 +36,16 @@ OPPONENT FAST MOVES ASSUMED (PvPoke recommended)
 
 OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
-  1  1:17.49  Empoleon              Hydro Cannon (40)         60 → 20       6           ?     -
+  1  1:17.49  Empoleon              Hydro Cannon (40)         60 → 20       6           6     ✓
        calc: 60 = 0 left before + 6 × 10 (Waterfall); after: 60 − 40 = 20
-  2  1:50.95  Nidoqueen             Poison Fang (40)          40 → 0        4           ?     -
+  2  1:50.95  Nidoqueen             Poison Fang (40)          40 → 0        4           4     ✓
        calc: 40 = 0 left before + 4 × 10 (Mud Slap); after: 40 − 40 = 0
-  3  2:07.57  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           ?     -
+  3  2:07.57  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           3     ✓
        calc: 48 = 0 left before + 3 × 16 (Volt Switch); after: 48 − 45 = 3
 
 SUMMARY
-  0 of 0 hand-counted charged moves match ManGo's fast move count exactly.
+  3 of 3 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  3 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:49.47  Opponent: Empoleon

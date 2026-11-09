@@ -256,7 +256,7 @@ v7 was enriched with verified HP pixels and your pokéball counts from its origi
 its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:
 
     cd PvPCore
-    swift run screen-log "../Test Videos/v7.mov" --hp-all Tests/PvPCoreTests/Fixtures/gbl-battle-2026-10-20-v7.json > /tmp/v7-with-verified-hp.json
+    swift run screen-log "../Test Videos/v7.mp4" --hp-all Tests/PvPCoreTests/Fixtures/gbl-battle-2026-10-20-v7.json > /tmp/v7-with-verified-hp.json
 
 The verified sampler checks the player's rectangular HP-bar outline and follows its horizontal
 movement; it does not treat arbitrary colored sprite pixels as HP. Ambiguous or missing damage

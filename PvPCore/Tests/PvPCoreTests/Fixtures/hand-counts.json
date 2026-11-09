@@ -1,6 +1,6 @@
 {
   "gbl-battle-2026-10-20-mango": {
-    "video": "Test Videos/TestWithMangoV1.mov",
+    "video": "Test Videos/TestWithMangoV1.mp4",
     "description": "Second battle, with ManGo's overlay on screen (dragged to the bottom partway through). You: Altaria, Melmetal, Mimikyu. Opponent: Marowak, Sableye (Shadow), Talonflame.",
     "counts": [
       5,
@@ -47,7 +47,7 @@
     ]
   },
   "gbl-battle-2026-10-20-v2": {
-    "video": "Test Videos/testV2.mov",
+    "video": "Test Videos/testV2.mp4",
     "description": "Third battle, with ManGo's overlay on screen. You: Altaria, Melmetal, Mimikyu. Opponent: Melmetal, Ninetales (Shadow), Altaria (swapping Ninetales and Altaria).",
     "counts": [
       6,
@@ -96,7 +96,7 @@
     ]
   },
   "gbl-battle-2026-10-20-v3": {
-    "video": "Test Videos/testV3.mov",
+    "video": "Test Videos/testV3.mp4",
     "description": "Fourth battle, a Fantasy Cup with ManGo's overlay on screen (covering the opponent's name box much of the time). You: Altaria, Melmetal, Mimikyu. Opponent: Mimikyu, Turtonator, Granbull.",
     "counts": [
       5,
@@ -124,7 +124,7 @@
     ]
   },
   "gbl-battle-2026-10-20-v7": {
-    "video": "Test Videos/v7.mov",
+    "video": "Test Videos/v7.mp4",
     "description": "Seventh battle, with ManGo on screen. Opponent: Azumarill, Empoleon, Magnezone.",
     "counts": [
       null,
@@ -159,7 +159,7 @@
     }
   },
   "gbl-battle-2026-10-20-v9": {
-    "video": "Test Videos/v9.mov",
+    "video": "Test Videos/v9.mp4",
     "description": "Screen recording. You: Altaria and Mimikyu among others. Opponent: Turtonator, Mimikyu, Forretress (Shadow).",
     "counts": [
       null,
@@ -190,7 +190,7 @@
     }
   },
   "gbl-battle-2026-10-20-v8": {
-    "video": "Test Videos/v8.mov",
+    "video": "Test Videos/v8.mp4",
     "description": "Eighth battle, with ManGo on screen. Opponent: Azumarill, Lucario, Mawile.",
     "counts": [
       8,
@@ -226,7 +226,7 @@
     ]
   },
   "gbl-battle-2026-10-23-v11": {
-    "video": "Test Videos/v11.mov",
+    "video": "Test Videos/v11.mp4",
     "description": "Eleventh battle, with ManGo on screen. You: Altaria, Mimikyu, Melmetal. Opponent: Altaria, Mimikyu, Empoleon.",
     "counts": [
       13,

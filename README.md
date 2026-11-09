@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **66 exact hand counts across 22 recordings** in
+There are **68 exact hand counts across 22 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -148,7 +148,7 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | battle-2026-10-23-155712 | Flygon, Corviknight, Azumarill | unknown, unknown, unknown, 5 |
 | battle-2026-10-28-002722 | Greninja (Shadow), Florges, Charjabug | unknown × 4, 3, unknown × 2 |
 | battle-2026-11-04-155536 | Altaria, Florges, Melmetal | 17, unknown × 5 |
-| battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each |
+| battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each; throws 12, 13: 7, 6 |
 | battle-2026-11-04-233009 | Morpeko (Full Belly), Jirachi, Azumarill | unknown, 5, unknown × 4 |
 | battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 6 |
 | battle-2026-11-08-144330 | Cramorant, Melmetal, Clodsire | 5, 8, 2, 10, 1 |
@@ -192,7 +192,12 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-64 of 66 exact hand counts match, and every energy checkpoint. In 233921 (November 8, 2026) Stunfisk's
+66 of 68 exact hand counts match, and every energy checkpoint. In 221337 you counted Mimikyu's (November 9,
+2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
+6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
+the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move
+ends a switch turn, your switch as your buttons come back doesn't stop the line-up rule, and there is
+no longer a wider line-up window after they block yours (Fearow's, the recording dropped). In 233921 (November 8, 2026) Stunfisk's
 Discharge and your Energy Ball were a CMP tie it won: your charged move followed with no play between
 (your buttons never came back; in 002722, where Greninja did sneak one after its Hydro Cannon, your
 fast move hit it first). So no sneak, and the Thunder Shock the clock had 71% done counts: 5 and 5,

@@ -80,6 +80,8 @@ TIMELINE (what the screen reader saw and did)
   1:49.75    running  Jirachi at 14
   1:50.05  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
   1:54.14    stopped  Jirachi at 42
+  1:54.41  Your HP bar shows no hit at 1:49.75: Jirachi didn't finish one more fast move
+  2:00.53  Your HP bar shows no hit at 1:49.75: Jirachi didn't finish one more fast move
   2:00.53  Jirachi used Doom Desire (42 → 2)
   2:07.15    running  Jirachi at 2
   2:07.45  Your fast move landed 0.25s after ManGo's restart: their fast moves restarted 0.40s earlier

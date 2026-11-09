@@ -345,7 +345,10 @@ public struct OpponentTracker: Sendable {
             inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished), moves - Double(finished))
             closeStretch(i, at: t, interrupted: true)
         }
-        team[i].chainStart = max(t, start)
+        // After it both sides start fresh, even one still on its switch turn: the charged move took
+        // that turn (221337: Mimikyu came in as you threw at 6:09, then 7 Shadow Claws from the
+        // restart to its Shadow Sneak, as the user counted).
+        team[i].chainStart = Rules.off("switchTurnEndsAtCharge") ? max(t, start) : t
     }
 
     /// The opponent threw a charged move on the same turn as yours (charged move priority

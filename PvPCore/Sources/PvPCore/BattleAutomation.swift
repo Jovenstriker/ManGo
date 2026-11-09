@@ -52,12 +52,6 @@ public struct BattleAutomation: Sendable {
     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
     /// your buttons come back.)
     public var faintResumeLead: TimeInterval = 0.25
-    /// Where the battle restarts relative to your buttons coming back, used with "a charged
-    /// move starts as a fast move finishes" to correct the restart guess when the opponent
-    /// throws. When the opponent shields your charged move ("BLOCKED!") the buttons come
-    /// back late (Fearow restarted 0.6s before them); otherwise, including when you shield
-    /// theirs, the restart is around them (Melmetal's straight-away Double Iron Bash
-    /// restarted about when they came back, Ninetales about 0.4s after).
     /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
     /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
     /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
@@ -81,7 +75,11 @@ public struct BattleAutomation: Sendable {
     /// GO shows about 0.65s and a first read usually lags it by about 0.15s: one that caught it
     /// fading came about this much later.
     static let fadingGoLag: TimeInterval = 0.5
-    public var restartWindowAfterShield: ClosedRange<TimeInterval> = -0.8 ... -0.2
+    /// Where the battle restarts relative to your buttons coming back, used with "a charged
+    /// move starts as a fast move finishes" to correct the restart guess when the opponent
+    /// throws: around them (Melmetal's straight-away Double Iron Bash restarted about when they
+    /// came back, Ninetales about 0.4s after), also after they blocked yours (221337: Mimikyu's
+    /// 6 Shadow Claws from 6:49.6 to its Shadow Sneak, by the user's count, not 7).
     public var restartWindow: ClosedRange<TimeInterval> = -0.5 ... 0.4
     /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
     public var assumedFastMoves: [String: String] = [:]
@@ -95,11 +93,7 @@ public struct BattleAutomation: Sendable {
     private var inProgressLandedBy: TimeInterval?
     private var goShownAtHit = false
     private var inProgressRuledOut = false
-    private var shieldedThisStop = false
     private var playerChargedThisStop = false
-    /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
-    private var opponentThrewAfterYours = false
-    private var lastResumeAfterShield = false
     /// The last stop ended with your charged move, so their fast move in progress landed as play resumed.
     private var lastResumeAfterYourChargedMove = false
     private var playerChangedSinceResume = false
@@ -348,7 +342,6 @@ public struct BattleAutomation: Sendable {
                 }
 
             case .shielded:
-                shieldedThisStop = true
                 if let i = battleRecord.charged.lastIndex(where: { $0.stop == battleRecord.stops.count }) {
                     battleRecord.charged[i].move.shielded = true
                 }
@@ -377,12 +370,7 @@ public struct BattleAutomation: Sendable {
                 awaitingYourReplacement = !awaitingGo && yourFaintThisStop
                 buttonsBackAt = t
                 readBeforeButtonsBack = previousReadTime
-                // They blocked yours, and didn't throw their own after (v11's Empoleon did: its
-                // next stretch restarted with the buttons, as after any charged move of theirs).
-                lastResumeAfterShield = shieldedThisStop && playerChargedThisStop && !opponentThrewAfterYours
                 lastResumeAfterYourChargedMove = playerChargedThisStop && !opponentThrewThisStop
-                opponentThrewAfterYours = false
-                shieldedThisStop = false
                 playerChargedThisStop = false
                 if free { freeSwitchUntil = resume + Self.afterStopWindow }
                 if !awaitingGo {
@@ -405,7 +393,6 @@ public struct BattleAutomation: Sendable {
                 if !Rules.off("restore"), tracker.restoreInProgress(ifShortOf: move.energy, at: t) {
                     note("\(name(tracker.active?.speciesId)) couldn't afford \(move.name) without its fast move in progress: it threw after yours, not on the same turn (\(short) → \(tracker.snapshot(at: t).energy))")
                 }
-                if playerChargedThisStop { opponentThrewAfterYours = true }
                 // A throw the assumed fast move couldn't have afforded, but another fast move it
                 // learns could, means it's that one: Flygon threw Twister and Sand Tomb on Mud
                 // Shot, not PvPoke's Dragon Tail (155712, 174243).
@@ -467,7 +454,11 @@ public struct BattleAutomation: Sendable {
                 // A switch/faint transition can interrupt the opponent's rhythm even
                 // while OCR still sees the dimmed buttons. It cannot justify adding a
                 // fast move by assuming the whole stretch was uninterrupted.
-                playerChangedSinceResume = true
+                // Not for a switch that shows as your buttons come back: made during the stop, it
+                // doesn't break their rhythm from the restart (221337: your Clodsire after the
+                // 6:09 charged move; Mimikyu's 7 Shadow Claws before Shadow Sneak).
+                let atRestart = !Rules.off("switchAtRestart") && !stopped && buttonsBackAt.map { t - $0 < 0.6 } == true
+                if !atRestart { playerChangedSinceResume = true }
                 playSinceTheirChargedMove = true
                 cadence = FastMoveCadence()
                 yourGaps = []
@@ -746,7 +737,7 @@ public struct BattleAutomation: Sendable {
             note("\(name(tracker.active?.speciesId))'s restart was seen, when its fast move in progress hit you: no fast move added")
             return
         }
-        let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
+        let window = restartWindow
         // The fast move it would add must have hit you: their first would have landed one stretch
         // of finished fast moves before the stop. Your HP bar steady then means it didn't. After
         // your charged move their move in progress lands as play resumes, so a hit then proves
@@ -819,10 +810,7 @@ public struct BattleAutomation: Sendable {
         goAt = nil
         awaitingGo = false
         stopped = false
-        shieldedThisStop = false
         playerChargedThisStop = false
-        opponentThrewAfterYours = false
-        lastResumeAfterShield = false
         lastResumeAfterYourChargedMove = false
         playerChangedSinceResume = false
         cadence = FastMoveCadence()
@@ -938,7 +926,11 @@ public struct BattleAutomation: Sendable {
         // Switching out right after the stop: they chose the switch, not a fast move, on the
         // turn your charged move took, so a sneak counted then didn't happen.
         if duringStop, !theirsFainted { tracker.switchingOutAfterStop() }
-        var free = stopped || time < freeSwitchUntil || quick
+        // Named only once stopped, but switched before the stop began: made in play, so it costs
+        // a turn (221337: Mimikyu for Greninja after 6:08.05, your charged move frozen at 6:08.37;
+        // still on its switch turn, so no Shadow Claw in progress, as the user counted).
+        let madeInPlay = !Rules.off("switchBeforeStop") && stopped && !theirsFainted && !opponentThrewThisStop && since < lastStopAt
+        var free = (stopped && !madeInPlay) || time < freeSwitchUntil || quick
         // After your Pokémon fainted, their switch (theirs still in) is a choice and costs a
         // turn, even straight after their charged move: Mimikyu for Turtonator after its
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.

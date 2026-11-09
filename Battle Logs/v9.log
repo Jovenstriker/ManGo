@@ -40,8 +40,8 @@ OPPONENT CHARGED MOVES
        calc: 70 = 50 left before + 1 × 20 (Incinerate); after: 70 − 50 = 20
   3  2:01.75  Mimikyu               Shadow Sneak (50)         56 → 6        7           ?     -
        calc: 56 = 0 left before + 7 × 8 (Shadow Claw); after: 56 − 50 = 6
-  4  2:27.75  Mimikyu               Shadow Sneak (50)         62 → 12       7           ?     -
-       calc: 62 = 6 left before + 7 × 8 (Shadow Claw); after: 62 − 50 = 12
+  4  2:27.75  Mimikyu               Shadow Sneak (50)         54 → 4        6           ?     -
+       calc: 54 = 6 left before + 6 × 8 (Shadow Claw); after: 54 − 50 = 4
   5  2:46.75  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           ?     -
        calc: 48 = 0 left before + 3 × 16 (Volt Switch); after: 48 − 45 = 3
 
@@ -84,9 +84,8 @@ TIMELINE (what the screen reader saw and did)
   2:09.75  You threw a charged move: Mimikyu 38 → 46 (its fast move in progress counts)
   2:19.25    running  Mimikyu at 46
   2:19.75  Your fast move landed 0.42s after ManGo's restart: their fast moves restarted 0.23s earlier
-  2:21.00  Mimikyu had finished one more fast move: the battle restarted before your buttons came back
-  2:21.00    stopped  Mimikyu at 62
-  2:27.75  Mimikyu used Shadow Sneak (62 → 12)
+  2:21.00    stopped  Mimikyu at 54
+  2:27.75  Mimikyu used Shadow Sneak (54 → 4)
   2:33.75  Opponent: Forretress (Shadow)
   2:34.25    running  Forretress (Shadow) at 16
   2:34.75  Your fast move landed 0.36s after ManGo's restart: their fast moves restarted 0.29s earlier
@@ -98,11 +97,11 @@ TIMELINE (what the screen reader saw and did)
   2:51.25  You threw a charged move: Forretress (Shadow) 3 → 19 (its fast move in progress counts)
   3:02.50  Forretress (Shadow) fainted or switched out
   3:02.50  Opponent: Mimikyu
-  3:02.75    running  Mimikyu at 12
-  3:05.75    stopped  Mimikyu at 28
-  3:08.25    running  Mimikyu at 36
+  3:02.75    running  Mimikyu at 4
+  3:05.75    stopped  Mimikyu at 20
+  3:08.25    running  Mimikyu at 28
   3:08.50  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
-  3:10.00    stopped  Mimikyu at 44
+  3:10.00    stopped  Mimikyu at 36
   3:14.00  Battle over
 
 VALIDATION: PASS (available evidence only)

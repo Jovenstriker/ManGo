@@ -74,6 +74,8 @@ TIMELINE (what the screen reader saw and did)
   1:34.44    running  Furret at 42
   1:34.70  Your buttons: acrobatics, energyball; your fast move takes 2 turns
   1:36.03    stopped  Furret at 49
+  1:36.30  Your HP bar shows no hit at 1:33.64, where its fast move in progress at your charged move would have landed: Furret didn't finish one more fast move
+  1:42.59  Your HP bar shows no hit at 1:33.64, where its fast move in progress at your charged move would have landed: Furret didn't finish one more fast move
   1:42.59  Furret used Swift (49 → 14)
   1:45.29    running  Furret at 14
   1:45.82  Your fast move landed 0.45s after ManGo's restart: their fast moves restarted 0.20s earlier

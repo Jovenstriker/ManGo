@@ -60,10 +60,12 @@ OPPONENT CHARGED MOVES
   11 6:03.79  Greninja (Shadow)     Hydro Cannon (40)         44 → 4        3           3     ✓
        calc: 44 = 2 left before + 3 × 14 (Water Shuriken); after: 44 − 40 = 4
        note: Recounted by the user on 2026-11-04: 3 Water Shurikens. Greninja sneaked one at your charged move at 5:41: your Mud Slap and its Water Shuriken are both 3-turn moves, so after a restart they always finish together and it always gets one more when you throw. ManGo measured that stretch as 1.37s, short of one Water Shuriken (1.5s), and counted 2.
-  12 6:33.12  Mimikyu               Shadow Sneak (50)         64 → 14       8           ?     -
-       calc: 64 = 0 left before + 8 × 8 (Shadow Claw); after: 64 − 50 = 14
-  13 7:03.41  Mimikyu               Shadow Sneak (50)         70 → 20       7           ?     -
-       calc: 70 = 14 left before + 7 × 8 (Shadow Claw); after: 70 − 50 = 20
+  12 6:33.12  Mimikyu               Shadow Sneak (50)         56 → 6        7           7     ✓
+       calc: 56 = 0 left before + 7 × 8 (Shadow Claw); after: 56 − 50 = 6
+       note: Counted by the user on 2026-11-09: 7 Shadow Claws. Greninja threw 1 Water Shuriken after its Hydro Cannon, then switched to Mimikyu (a 1-turn switch: Greninja still named at 6:08.05, "Go, Mimikyu!" at 6:08.32) as you threw your charged move after 1 Snarl, so Mimikyu took that turn to come in and had no Shadow Claw in progress. You switched to Clodsire for 0 turns; then 7 Shadow Claws and Shadow Sneak in a CMP tie with your charged move (Get Ready! at 6:36.55, no play between).
+  13 7:03.41  Mimikyu               Shadow Sneak (50)         54 → 4        6           6     ✓
+       calc: 54 = 6 left before + 6 × 8 (Shadow Claw); after: 54 − 50 = 4
+       note: Counted by the user on 2026-11-09: 6 Shadow Claws between 6:49 and its Shadow Sneak at 7:03.4 (no sneak at the 6:36.55 tie).
   14 8:57.11  Forretress (Shadow)   Rock Tomb (50)            100 → 50      7           ?     -
        calc: 100 = 6 left before + 7 × 16 (Volt Switch) + -18 (cap/corrections); after: 100 − 50 = 50
   15 9:07.48  Forretress (Shadow)   Rock Tomb (50)            50 → 0        0           ?     -
@@ -71,16 +73,16 @@ OPPONENT CHARGED MOVES
   16 9:41.34  Greninja (Shadow)     Brutal Swing (35)         42 → 7        3           3     ✓
        calc: 42 = 4 left before + 3 × 14 (Water Shuriken) + -4 (cap/corrections); after: 42 − 35 = 7
        note: Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.
-  17 10:25.68  Nidoqueen             Earth Power (50)          60 → 10       6           ?     -
-       calc: 60 = 10 left before + 6 × 10 (Mud Slap) + -10 (cap/corrections); after: 60 − 50 = 10
+  17 10:25.68  Nidoqueen             Earth Power (50)          50 → 0        5           ?     -
+       calc: 50 = 10 left before + 5 × 10 (Mud Slap) + -10 (cap/corrections); after: 50 − 50 = 0
   18 10:54.94  Greninja (Shadow)     Hydro Cannon (40)         49 → 9        3           3     ✓
        calc: 49 = 7 left before + 3 × 14 (Water Shuriken); after: 49 − 40 = 9
        note: Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.
 
 SUMMARY
-  4 of 4 hand-counted charged moves match ManGo's fast move count exactly.
+  6 of 6 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  14 not hand-counted.
+  12 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:39.20  Opponent: Scizor (Shadow)
@@ -172,21 +174,20 @@ TIMELINE (what the screen reader saw and did)
   6:06.72    running  Greninja (Shadow) at 4
   6:08.58  Opponent: Mimikyu
   6:08.58    stopped  Mimikyu at 0
-  6:09.12  You threw a charged move: Mimikyu 0 → 8 (its fast move in progress counts)
-  6:18.97    running  Mimikyu at 8
+  6:09.12  You threw a charged move: Mimikyu 0 → 0 (its fast move in progress counts)
+  6:18.97    running  Mimikyu at 0
   6:19.24  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
-  6:25.93    stopped  Mimikyu at 56
+  6:25.93    stopped  Mimikyu at 48
+  6:26.19  Mimikyu had finished one more fast move: the battle restarted before your buttons came back
   6:33.12  Mimikyu used Shadow Sneak (56 → 6)
   6:36.55  Your charged move came straight after theirs with no play between: a CMP tie Mimikyu won, no sneak
-  6:36.55  Mimikyu threw as a fast move finished: the one the clock had over half done counts (6 → 14)
-  6:36.55  You threw a charged move: Mimikyu 6 → 14 (its fast move in progress counts)
-  6:49.83    running  Mimikyu at 14
-  6:56.48    stopped  Mimikyu at 62
-  6:56.74  Mimikyu had finished one more fast move: the battle restarted before your buttons came back
-  7:03.41  Mimikyu used Shadow Sneak (70 → 20)
-  7:06.34    running  Mimikyu at 20
-  7:14.33    stopped  Mimikyu at 76
-  7:15.37  You threw a charged move: Mimikyu 84 → 92 (its fast move in progress counts)
+  6:36.55  You threw a charged move: Mimikyu 6 → 6 (its fast move in progress counts)
+  6:49.83    running  Mimikyu at 6
+  6:56.48    stopped  Mimikyu at 54
+  7:03.41  Mimikyu used Shadow Sneak (54 → 4)
+  7:06.34    running  Mimikyu at 4
+  7:14.33    stopped  Mimikyu at 60
+  7:15.37  You threw a charged move: Mimikyu 68 → 76 (its fast move in progress counts)
   7:25.77  Mimikyu fainted or switched out
   7:25.77  Opponent: Greninja (Shadow)
   7:26.84    running  Greninja (Shadow) at 18
@@ -232,17 +233,17 @@ TIMELINE (what the screen reader saw and did)
   9:45.33  Your fast move landed 0.78s after ManGo's restart: their fast moves restarted 0.37s earlier
   9:47.47  Opponent: Nidoqueen
   9:47.47    stopped  Nidoqueen at 0
-  9:48.26  You threw a charged move: Nidoqueen 0 → 10 (its fast move in progress counts)
-  9:57.88    running  Nidoqueen at 10
-  10:03.84    stopped  Nidoqueen at 40
-  10:04.37  You threw a charged move: Nidoqueen 40 → 50 (its fast move in progress counts)
-  10:16.36    running  Nidoqueen at 50
+  9:48.26  You threw a charged move: Nidoqueen 0 → 0 (its fast move in progress counts)
+  9:57.88    running  Nidoqueen at 0
+  10:03.84    stopped  Nidoqueen at 30
+  10:04.37  You threw a charged move: Nidoqueen 30 → 40 (its fast move in progress counts)
+  10:16.36    running  Nidoqueen at 40
   10:16.62  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
-  10:18.49    stopped  Nidoqueen at 60
-  10:25.68  Nidoqueen used Earth Power (60 → 10)
-  10:28.34    running  Nidoqueen at 10
-  10:33.40    stopped  Nidoqueen at 40
-  10:34.47  You threw a charged move: Nidoqueen 40 → 50 (its fast move in progress counts)
+  10:18.49    stopped  Nidoqueen at 50
+  10:25.68  Nidoqueen used Earth Power (50 → 0)
+  10:28.34    running  Nidoqueen at 0
+  10:33.40    stopped  Nidoqueen at 30
+  10:34.47  You threw a charged move: Nidoqueen 30 → 40 (its fast move in progress counts)
   10:44.82  Nidoqueen fainted or switched out
   10:44.82  Opponent: Greninja (Shadow)
   10:45.88    running  Greninja (Shadow) at 35

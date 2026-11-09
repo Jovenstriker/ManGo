@@ -20,6 +20,13 @@ explicitly approximate and are not used to identify moves or compute energy.
   leaving has thrown a whole number: its time on the field over its fast move, to the nearest
   (confirmed by hand six times on November 9, 2026). Not for a lead leaving before the first stop,
   whose clock starts at GO and may run ahead of a late start.
+- A switch made in play costs its turn even when the new name first shows in a stop: dated by its
+  "Go, X!" (never before a read still showing the Pokémon it replaced), before the stop began, it had
+  no fast move in progress at your charged move unless its turn was over. A charged move ends a
+  switch turn: after it, the new Pokémon starts with the restart (221337: Mimikyu for Greninja just
+  before your 6:09 charged move, then 7 Shadow Claws by its Shadow Sneak, by the user's count).
+- Your own switch as your buttons come back (made in the stop) doesn't break their rhythm from the
+  restart; one made in play does.
 - A free switch counts from when the Pokémon it replaced left. Gone from their name box before
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
@@ -43,7 +50,9 @@ explicitly approximate and are not used to identify moves or compute energy.
   Mud Slaps). Your HP bar doesn't date the lead: Stunfisk in 223847 waited about a second after its
   sixth Thunder Shock before Mud Bomb, so dated from its first hit it got 7, not the user's 6.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
-  one more. Your HP bar overrules that when it held steady where the extra one would have hit you,
+  one more, if the restart that implies is within 0.5s before to 0.4s after your buttons came back
+  (also after they blocked yours: Mimikyu in 221337 threw 6, not 7, after the 6:36 tie). Your HP bar
+  overrules that when it held steady where the extra one would have hit you,
   or, after your charged move, a fast move earlier, where their move in progress would have. And it
   doesn't apply when the restart was seen: their move in progress hitting you as play resumed.
 - On a same-turn throw (CMP) they had no fast move in progress: no sneak. Both sides throw as
@@ -71,7 +80,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 66 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 68 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

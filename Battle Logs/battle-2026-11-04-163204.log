@@ -37,8 +37,8 @@ OPPONENT CHARGED MOVES
        calc: 45 = 0 left before + 5 × 9 (Thunder Shock); after: 45 − 35 = 10
   2  1:16.65  Altaria               Flamethrower (55)         68 → 13       17          ?     -
        calc: 68 = 0 left before + 17 × 4 (Dragon Breath); after: 68 − 55 = 13
-  3  1:42.27  Altaria               Flamethrower (55)         100 → 45      24          ?     -
-       calc: 100 = 13 left before + 24 × 4 (Dragon Breath) + -9 (cap/corrections); after: 100 − 55 = 45
+  3  1:42.27  Altaria               Flamethrower (55)         100 → 45      23          ?     -
+       calc: 100 = 13 left before + 23 × 4 (Dragon Breath) + -5 (cap/corrections); after: 100 − 55 = 45
 
 SUMMARY
   0 of 0 hand-counted charged moves match ManGo's fast move count exactly.
@@ -66,7 +66,6 @@ TIMELINE (what the screen reader saw and did)
   1:21.62    stopped  Altaria at 41
   1:22.97  You threw a charged move: Altaria 49 → 53 (its fast move in progress counts)
   1:33.25    running  Altaria at 53
-  1:40.11  Altaria had finished one more fast move: the battle restarted before your buttons came back
   1:40.11    stopped  Altaria at 100
   1:42.27  Altaria used Flamethrower (100 → 45)
 

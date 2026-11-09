@@ -42,8 +42,8 @@ OPPONENT CHARGED MOVES
   2  1:05.50  Stunfisk (Galarian)   Rock Slide (45)           63 → 18       7           7     ✓
        calc: 63 = 0 left before + 7 × 9 (Mud Shot); after: 63 − 45 = 18
        note: User, 2026-11-09: 5 Mud Shots between its Mud Shot in progress hitting you as play resumed (0:52.65) and "Attack incoming!" (0:58.6); with ManGo's 1 and a sneak at your charged move at 0:43, 7 since its first Rock Slide. The line-up rule had added a 6th in that stretch, guessing play restarted earlier than the hit showed.
-  3  1:49.46  Forretress (Shadow)   Sand Tomb (45)            64 → 19       4           ?     -
-       calc: 64 = 0 left before + 4 × 16 (Volt Switch); after: 64 − 45 = 19
+  3  1:49.46  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           ?     -
+       calc: 48 = 0 left before + 3 × 16 (Volt Switch); after: 48 − 45 = 3
 
 SUMMARY
   2 of 2 hand-counted charged moves match ManGo's fast move count exactly.
@@ -73,16 +73,16 @@ TIMELINE (what the screen reader saw and did)
   1:20.54    running  Stunfisk (Galarian) at 36
   1:25.63  Opponent: Forretress (Shadow)
   1:25.63    stopped  Forretress (Shadow) at 0
-  1:26.16  You threw a charged move: Forretress (Shadow) 0 → 16 (its fast move in progress counts)
-  1:36.11    running  Forretress (Shadow) at 16
-  1:42.54    stopped  Forretress (Shadow) at 64
-  1:49.46  Forretress (Shadow) used Sand Tomb (64 → 19)
-  1:52.45    running  Forretress (Shadow) at 19
-  1:53.78    stopped  Forretress (Shadow) at 19
-  1:54.32  You threw a charged move: Forretress (Shadow) 19 → 35 (its fast move in progress counts)
-  2:03.99    running  Forretress (Shadow) at 35
-  2:05.91    stopped  Forretress (Shadow) at 35
-  2:06.45  You threw a charged move: Forretress (Shadow) 35 → 51 (its fast move in progress counts)
+  1:26.16  You threw a charged move: Forretress (Shadow) 0 → 0 (its fast move in progress counts)
+  1:36.11    running  Forretress (Shadow) at 0
+  1:42.54    stopped  Forretress (Shadow) at 48
+  1:49.46  Forretress (Shadow) used Sand Tomb (48 → 3)
+  1:52.45    running  Forretress (Shadow) at 3
+  1:53.78    stopped  Forretress (Shadow) at 3
+  1:54.32  You threw a charged move: Forretress (Shadow) 3 → 19 (its fast move in progress counts)
+  2:03.99    running  Forretress (Shadow) at 19
+  2:05.91    stopped  Forretress (Shadow) at 19
+  2:06.45  You threw a charged move: Forretress (Shadow) 19 → 35 (its fast move in progress counts)
   2:18.56  Forretress (Shadow) fainted or switched out
   2:18.56  Opponent: Melmetal
   2:19.36    running  Melmetal at 0

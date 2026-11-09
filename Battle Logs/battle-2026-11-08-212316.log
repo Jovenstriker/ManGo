@@ -60,9 +60,9 @@ TIMELINE (what the screen reader saw and did)
   0:33.61  Your buttons: icywind, nightslash; your fast move takes 2 turns
   0:36.59  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
   0:39.71  Opponent: Quagsire (Shadow)
-  0:43.88    stopped  Quagsire (Shadow) at 36
-  0:44.41  You threw a charged move: Quagsire (Shadow) 36 → 45 (its fast move in progress counts)
-  0:54.40  Quagsire (Shadow) threw on the same turn as you: no fast move in progress (45 → 36)
+  0:43.88    stopped  Quagsire (Shadow) at 27
+  0:44.41  You threw a charged move: Quagsire (Shadow) 27 → 36 (its fast move in progress counts)
+  0:54.40  Quagsire (Shadow) threw on the same turn as you, as its fast move finished: it keeps that one (36)
   1:00.51  Quagsire (Shadow) used Aqua Tail (36 → 1)
   1:03.50    running  Quagsire (Shadow) at 1
   1:03.78  Your fast move landed 0.36s after ManGo's restart: their fast moves restarted 0.29s earlier

@@ -438,6 +438,10 @@ public struct BattleScreenParser: Sendable {
                 // (not one made during a stop, like straight after their charged move).
                 if let go = recentGo[match.key], since - go < 3, !(resumedAfterChargedMove && runningSince.map { go - $0 < 1.5 } ?? false) {
                     since = min(since, go - Self.goBannerLead)
+                    // But not before a read still showing the one it replaced (221337: Greninja
+                    // named at 6:08.05, "Go, Mimikyu!" at 6:08.32, your charged move just after, so
+                    // Mimikyu was still taking its switch turn: no Shadow Claw in progress).
+                    if !Rules.off("switchAfterLastSeen"), let last = opponentShownAt, last < read.time { since = max(since, last) }
                 }
                 replaced(by: match.key, at: read.time)
                 if pendingGo?.match.key == match.key { pendingGo = nil }
@@ -459,10 +463,13 @@ public struct BattleScreenParser: Sendable {
             if !yourBoxReadable, let shown, shown.key == opponentKey {
                 myTeam.insert(go.match.key)
             } else if go.match.key != opponentKey {
+                let lastShown = opponentShownAt
                 replaced(by: go.match.key, at: nil)
                 pending = nil
                 let midBattle = !(resumedAfterChargedMove && runningSince.map { go.time - $0 < 1.5 } ?? false)
-                events.append(.opponentAppeared(go.match, since: midBattle ? go.time - Self.goBannerLead : go.time))
+                var since = midBattle ? go.time - Self.goBannerLead : go.time
+                if !Rules.off("switchAfterLastSeen"), let last = lastShown, last < go.time { since = max(since, last) }
+                events.append(.opponentAppeared(go.match, since: since))
             }
         }
         return events

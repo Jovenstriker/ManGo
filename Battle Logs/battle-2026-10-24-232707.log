@@ -36,10 +36,10 @@ OPPONENT CHARGED MOVES
   #  time     Pokémon               move (cost)               energy        fast moves  hand  match
   1  1:29.38  Forretress (Shadow)   Rock Tomb (50)            64 → 14       4           ?     -
        calc: 64 = 0 left before + 4 × 16 (Volt Switch); after: 64 − 50 = 14
-  2  2:05.29  Altaria               Sky Attack (50)           84 → 34       21          ?     -
-       calc: 84 = 0 left before + 21 × 4 (Dragon Breath); after: 84 − 50 = 34
-  3  2:24.73  Altaria               Sky Attack (50)           70 → 20       9           ?     -
-       calc: 70 = 34 left before + 9 × 4 (Dragon Breath); after: 70 − 50 = 20
+  2  2:05.29  Altaria               Sky Attack (50)           80 → 30       20          ?     -
+       calc: 80 = 0 left before + 20 × 4 (Dragon Breath); after: 80 − 50 = 30
+  3  2:24.73  Altaria               Sky Attack (50)           66 → 16       9           ?     -
+       calc: 66 = 30 left before + 9 × 4 (Dragon Breath); after: 66 − 50 = 16
   4  3:15.95  Magnezone             Wild Charge (45)          96 → 51       6           ?     -
        calc: 96 = 0 left before + 6 × 16 (Volt Switch); after: 96 − 45 = 51
   5  3:26.63  Magnezone             Wild Charge (45)          51 → 6        0           ?     -
@@ -58,27 +58,27 @@ TIMELINE (what the screen reader saw and did)
   1:07.59  You threw a charged move: Forretress (Shadow) 16 → 32 (its fast move in progress counts)
   1:17.54    running  Forretress (Shadow) at 32
   1:21.33    stopped  Forretress (Shadow) at 48
-  1:22.13  Forretress (Shadow) had finished one more fast move: the battle restarted before your buttons came back
-  1:29.38  Forretress (Shadow) used Rock Tomb (64 → 14)
+  1:29.38  Timing uncertain: Forretress (Shadow) spent 50 on Rock Tomb, but the clock counted 48; resynchronized to the observed minimum
+  1:29.38  Forretress (Shadow) used Rock Tomb (50 → 0)
   1:32.94  Your charged move came straight after theirs with no play between: a CMP tie Forretress (Shadow) won, no sneak
-  1:32.94  You threw a charged move: Forretress (Shadow) 14 → 14 (its fast move in progress counts)
+  1:32.94  Forretress (Shadow) threw as a fast move finished: the one the clock had over half done counts (0 → 14)
+  1:32.94  You threw a charged move: Forretress (Shadow) 0 → 14 (its fast move in progress counts)
   1:51.98  Forretress (Shadow) fainted or switched out
   1:51.98  Opponent: Altaria
   1:53.04    running  Altaria at 48
-  1:57.57  Altaria had finished one more fast move: the battle restarted before your buttons came back
-  1:57.57    stopped  Altaria at 84
-  2:05.29  Altaria used Sky Attack (84 → 34)
-  2:07.95    running  Altaria at 34
-  2:09.02    stopped  Altaria at 38
-  2:10.35  Your Pokémon fainted: Altaria 38 → 42 (the fast move that knocked it out landed)
-  2:13.28    running  Altaria at 42
+  1:57.57    stopped  Altaria at 80
+  2:05.29  Altaria used Sky Attack (80 → 30)
+  2:07.95    running  Altaria at 30
+  2:09.02    stopped  Altaria at 34
+  2:10.35  Your Pokémon fainted: Altaria 34 → 38 (the fast move that knocked it out landed)
+  2:13.28    running  Altaria at 38
   2:13.55  Your buttons: playrough, shadowsneak; your fast move takes 2 turns
-  2:17.01    stopped  Altaria at 70
-  2:24.73  Altaria used Sky Attack (70 → 20)
-  2:30.32    running  Altaria at 20
+  2:17.01    stopped  Altaria at 66
+  2:24.73  Altaria used Sky Attack (66 → 16)
+  2:30.32    running  Altaria at 16
   2:30.59  Your fast move landed 0.42s after ManGo's restart: their fast moves restarted 0.23s earlier
-  2:34.31    stopped  Altaria at 52
-  2:34.84  You threw a charged move: Altaria 52 → 56 (its fast move in progress counts)
+  2:34.31    stopped  Altaria at 48
+  2:34.84  You threw a charged move: Altaria 48 → 52 (its fast move in progress counts)
   2:45.76  Altaria fainted or switched out
   2:45.76  Opponent: Magnezone
   2:46.83    running  Magnezone at 0
@@ -90,6 +90,7 @@ TIMELINE (what the screen reader saw and did)
   3:26.63  Magnezone used Wild Charge (51 → 6)
   3:31.42    running  Magnezone at 6
   3:35.42    stopped  Magnezone at 22
+  3:35.68  Magnezone had finished one more fast move: the battle restarted before your buttons came back
   3:42.81  Battle over
 
 VALIDATION: PASS (available evidence only)

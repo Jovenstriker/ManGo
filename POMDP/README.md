@@ -157,31 +157,31 @@ Ablations, by player name:
 
 `python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner oracle`:
 each player plays 300 battles. Each game is 2 battles with the teams swapped, and the opponent
-style is drawn uniformly. Ties count as half a win. The full run took about 8 minutes on 8 cores.
-These numbers use the current rules (charged moves reset cooldowns); the earlier rules gave
-nearly the same table.
+style is drawn uniformly. Ties count as half a win. The run took about 4 minutes on 10 cores.
+These numbers use the current rules: charged moves reset cooldowns, and both sides choose
+simultaneously. Each change moved the table by about a standard error at most.
 
 | Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
 |---|---|---|---|---|---|
-| random | 0.353 ± 0.028 | 0.338 | 0.230 | 0.447 | 0.390 |
-| shielder | 0.555 ± 0.029 | 0.471 | 0.480 | 0.632 | 0.622 |
-| baiter | 0.557 ± 0.029 | 0.574 | 0.446 | 0.605 | 0.598 |
-| nuker | 0.448 ± 0.029 | 0.397 | 0.318 | 0.441 | 0.616 |
-| casual | 0.407 ± 0.028 | 0.338 | 0.297 | 0.441 | 0.530 |
-| planner-flat | 0.730 ± 0.026 | 0.794 | 0.541 | 0.763 | 0.817 |
-| planner-1style | 0.763 ± 0.025 | 0.765 | 0.703 | 0.789 | 0.793 |
-| **planner** | **0.753 ± 0.025** | 0.787 | 0.649 | 0.822 | 0.756 |
-| oracle | 0.907 ± 0.017 | 0.919 | 0.865 | 0.895 | 0.945 |
+| random | 0.367 ± 0.028 | 0.324 | 0.297 | 0.447 | 0.390 |
+| shielder | 0.555 ± 0.029 | 0.471 | 0.466 | 0.645 | 0.622 |
+| baiter | 0.555 ± 0.029 | 0.574 | 0.426 | 0.618 | 0.598 |
+| nuker | 0.455 ± 0.029 | 0.397 | 0.318 | 0.467 | 0.616 |
+| casual | 0.403 ± 0.028 | 0.338 | 0.297 | 0.428 | 0.530 |
+| planner-flat | 0.757 ± 0.025 | 0.838 | 0.635 | 0.750 | 0.805 |
+| planner-1style | 0.790 ± 0.024 | 0.824 | 0.716 | 0.776 | 0.841 |
+| **planner** | **0.753 ± 0.025** | 0.772 | 0.662 | 0.822 | 0.756 |
+| oracle | 0.903 ± 0.017 | 0.904 | 0.851 | 0.908 | 0.945 |
 
 What this says so far:
 
-- **Lookahead is most of the win.** Every planner beats every heuristic by about 17–20 points,
+- **Lookahead is most of the win.** Every planner beats every heuristic by about 20 points,
   including baiter, which is the planner's own rollout policy.
-- **The belief isn't paying for itself yet.** The full belief, the single-style belief and the
-  flat prior are within about one standard error of each other overall (0.73–0.76). The one
-  per-style gap that may be real is against baiters: the flat prior wins 0.54 there, against
-  0.65–0.70 for the structured ones. That hints the structured team prior helps, but each
-  per-style cell is only about 75 games.
+- **A prior over all Great League teams isn't paying for itself yet.** The full belief, the
+  single-style belief and the flat prior are within about one and a half standard errors of
+  each other (0.75–0.79). An earlier hint that the structured prior helps against baiters
+  didn't survive the rerun. When the opponent's team is known to come from a short list, the
+  belief does pay: see the Mega Great League experiment below.
 - **There's real value in information left to capture.** The oracle wins 15 points more.
   Telling apart what it gains from knowing the team and moves versus knowing the style is the
   obvious next ablation. The 1v1 solver offers a cleaner way in: with the opponent's moveset as

@@ -30,7 +30,12 @@ explicitly approximate and are not used to identify moves or compute energy.
   uncertainty marks, at the user's request).
   That does not prove an exact missing attack count. It does switch the assumed fast move when
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
-  not PvPoke's Dragon Tail).
+  not PvPoke's Dragon Tail), but not to one of the same length when the assumed move is less than
+  one fast move short: those fit the same turns, and a lag can lose one (Furret, Sucker Punch).
+- A fast move registers on its last turn (PvPoke's guide to fast move registration), so the
+  lead's first hit on your HP bar shows it began at least one fast move earlier, sometimes before
+  GO is readable. Only for the opening: after a charged move a hit already counted can show as
+  play resumes.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
   one more. Your HP bar overrules that when it held steady where the extra one would have hit you,
   or, after your charged move, a fast move earlier, where their move in progress would have.
@@ -53,7 +58,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 54 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 55 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

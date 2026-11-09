@@ -177,7 +177,9 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-53 of 54 exact hand counts match, and every energy checkpoint. On November 8, 2026 you confirmed 144330:
+53 of 55 exact hand counts match, and every energy checkpoint. In 152828 (November 8, 2026) Marowak
+threw 4 Mud Slaps as the lead, as its first hit on your HP bar shows (it began before GO was readable),
+and Furret stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
 after a CMP tie ManGo keeps the fast move it counted in progress when its clock had it more than half
 done (Melmetal's second Thunder Shock, 98%), since both sides throw as their fast moves finish. You
 also confirmed all six in 142007; Mimikyu's 3 Shadow Claws before Shadow Sneak needed the HP-bar check to look a fast move
@@ -192,9 +194,11 @@ Shadow Greninja's three sneaks in 221337 (5:41, 9:24, and 2 Water Shurikens befo
 one finished and one sneaked at 2:13) and Corviknight (9 Sand Attacks between its Paybacks) are
 counted from their fast move in progress at your charged move hitting you, which shows when play
 restarted: up to 0.8s before your buttons came back. Known limits: testV2's Ninetales paused a turn
-between Embers (6 by hand, 7 by ManGo, which can't see breaks), and 155536's Altaria had at least
-50 for its fifth Sky Attack where ManGo counts 44. Minimum-energy reconciliation keeps the second
-visible as a raw prediction failure.
+between Embers (6 by hand, 7 by ManGo, which can't see breaks); 155536's Altaria had at least 50 for
+its fifth Sky Attack where ManGo counts 44; and 152828's Furret threw 8 Sucker Punches before its
+second Swift where ManGo counts 7 (you think the game lagged; nothing in the recording shows it), so
+its third Swift comes up short. Minimum-energy reconciliation keeps those visible as raw prediction
+failures.
 
 v7 was enriched with verified HP pixels and your pokéball counts from its original video;
 its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:

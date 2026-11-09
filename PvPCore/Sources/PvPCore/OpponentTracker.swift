@@ -493,14 +493,22 @@ public struct OpponentTracker: Sendable {
     /// several do, and recount its energy. Returns the change, if any.
     ///
     /// It can only catch a guess that gives too little energy: one that gives too much
-    /// still makes every throw look possible.
+    /// still makes every throw look possible. A move as long as the assumed one fits the same
+    /// turns and only gives a little more energy each time, so it's no reason to switch when
+    /// the assumed one is less than one fast move short: the clock, or the game lagging, can lose
+    /// one in a stretch (152828: Furret's third Swift came 7 short on Sucker Punch, which the user
+    /// confirmed, not Quick Attack: ManGo had missed one during a lag). A move of another length
+    /// fits a different number into every stretch (Flygon's 2-turn Mud Shot, not 3-turn Dragon
+    /// Tail, 8 short at its second Twister).
     public mutating func reconsiderFastMove(throwing cost: Int, at now: TimeInterval) -> (from: Move, to: Move)? {
         guard let i = activeIndex, let current = team[i].fastMove, let start = team[i].chainStart else { return nil }
         let open = max(0, battleTime(at: now) - start)
         let p = team[i]
-        guard !Self.replay(p, with: current, openStretch: open, throwing: cost).possible else { return nil }
+        let assumed = Self.replay(p, with: current, openStretch: open, throwing: cost)
+        guard !assumed.possible else { return nil }
+        let oneShort = !Rules.off("reconsiderOneShort") && assumed.shortfall <= current.energyGain
         let best = data.fastMoves(for: p.speciesId)
-            .filter { $0 != current }
+            .filter { $0 != current && !(oneShort && $0.turns == current.turns) }
             .map { ($0, Self.replay(p, with: $0, openStretch: open, throwing: cost)) }
             .filter { $0.1.possible }
             .min { $0.1.slack < $1.1.slack }
@@ -513,15 +521,16 @@ public struct OpponentTracker: Sendable {
     /// Replays a Pokémon's energy with `move` as its fast move: each finished stretch
     /// gives its finished fast moves (plus the one in progress if your charged move
     /// interrupted it), capped at 100, and each charged move must have had enough.
-    /// `energy` is after the history; `slack` is how much more than needed it had in all.
+    /// `energy` is after the history; `slack` is how much more than needed it had in all;
+    /// `shortfall` is the most any charged move was short by.
     static func replay(_ p: Pokemon, with move: Move, openStretch: TimeInterval?, throwing cost: Int?)
-        -> (possible: Bool, energy: Int, slack: Int) {
+        -> (possible: Bool, energy: Int, slack: Int, shortfall: Int) {
         let duration = Double(move.turns) * turnDuration
-        var energy = p.historyBase, possible = true, slack = 0, next = 0
+        var energy = p.historyBase, possible = true, slack = 0, shortfall = 0, next = 0
         func spend(after stretches: Int) {
             while next < p.chargedMovesThrown.count, p.chargedMovesThrown[next].afterStretch == stretches {
                 let c = p.chargedMovesThrown[next].cost
-                if energy < c { possible = false }
+                if energy < c { possible = false; shortfall = max(shortfall, c - energy) }
                 slack += max(0, energy - c)
                 energy = max(0, energy - c)
                 next += 1
@@ -537,10 +546,10 @@ public struct OpponentTracker: Sendable {
         let afterHistory = energy
         if let open = openStretch, let cost {
             let atThrow = min(maxEnergy, energy + Int((open / duration + 1e-9).rounded(.down)) * move.energyGain)
-            if atThrow < cost { possible = false }
+            if atThrow < cost { possible = false; shortfall = max(shortfall, cost - atThrow) }
             slack += max(0, atThrow - cost)
         }
-        return (possible, afterHistory, slack)
+        return (possible, afterHistory, slack, shortfall)
     }
 
     /// Ends the active stretch of fast moves at battle time `t`, for the history.

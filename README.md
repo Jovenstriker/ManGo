@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **51 exact hand counts across 16 recordings** in
+There are **52 exact hand counts across 17 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -145,6 +145,7 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5, 7 |
 | battle-2026-10-23-155712 | Flygon, Corviknight, Azumarill | unknown, unknown, unknown, 5 |
 | battle-2026-10-28-002722 | Greninja (Shadow), Florges, Charjabug | unknown × 4, 3, unknown × 2 |
+| battle-2026-11-04-155536 | Altaria, Florges, Melmetal | 17, unknown × 5 |
 | battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each |
 | battle-2026-11-04-233009 | Morpeko (Full Belly), Jirachi, Azumarill | unknown, 5, unknown × 4 |
 | battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 5 |
@@ -186,10 +187,11 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-49 of 51 exact hand counts match, and every energy checkpoint. The line-up rule (their charged move
+50 of 52 exact hand counts match, and every energy checkpoint. The line-up rule (their charged move
 starts as a fast move finishes, so a late-shown restart may hide one more) no longer adds a fast move
-when ManGo saw play restart, from their move in progress hitting you: Quagsire's 6 in 212316 and
-Galarian Stunfisk's 5 after its hit at 0:52.65 in 220440, both counted by you. In 152828 (November 8, 2026) Marowak
+when ManGo saw play restart, from their move in progress hitting you: Quagsire's 6 in 212316,
+Galarian Stunfisk's 5 after its hit at 0:52.65 in 220440, and Altaria's 2 after its hit at 1:18.92
+in 155536, all counted by you. In 152828 (November 8, 2026) Marowak
 threw 4 Mud Slaps as the lead, as its first hit on your HP bar shows (it began before GO was readable),
 and Furret stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
 after a CMP tie ManGo keeps the fast move it counted in progress when its clock had it more than half

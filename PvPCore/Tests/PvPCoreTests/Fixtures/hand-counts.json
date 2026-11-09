@@ -600,6 +600,47 @@
       "flygon": "MUD_SHOT"
     }
   },
+  "battle-2026-11-04-155536": {
+    "video": "Test Videos/battle-2026-11-04-155536.mp4",
+    "description": "Phone-saved battle. Opponent: Altaria, Florges, Melmetal.",
+    "counts": [
+      17,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "altaria",
+        "moveId": "SKY_ATTACK"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "SKY_ATTACK"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "SKY_ATTACK"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      }
+    ],
+    "notes": {
+      "1": "User, 2026-11-09: 2 Dragon Breaths between its Dragon Breath in progress hitting you as play resumed (1:18.92) and its Sky Attack's \"Attack incoming!\" (1:20.8), not 3; with ManGo's 13 as the lead and 1 and a sneak at your charged move at 1:10.4, 17. The line-up rule had added a third, guessing play restarted earlier than the hit showed."
+    }
+  },
   "battle-2026-11-04-233009": {
     "video": "Test Videos/battle-2026-11-04-233009.mp4",
     "description": "Phone-saved battle, Great League: Mega Edition. Opponent: Morpeko (Full Belly), Jirachi, Azumarill.",

@@ -1,0 +1,798 @@
+Team #25 (Thievul / Cramorant / Stunfisk, Thievul leading) against PvPoke's other 47 top Mega
+Great League teams: outputs of `python3 -m experiments.top_teams ...`, as the README describes.
+Game plans summarize how the planner actually played each opponent, worst matchup first.
+
+=== 1. Against the heuristic styles
+    evaluate 25 --players baiter planner oracle planner-list --games 4 --plan
+
+Team #25: Thievul / Cramorant / Stunfisk (lead first)
+against the other 47 teams × styles shielder, baiter, nuker, casual × 4 games, 12 rollouts
+
+player                  win rate   vs shielder     vs baiter      vs nuker     vs casual    opponents beaten
+baiter             0.791 ± 0.015         0.763         0.782         0.729         0.888           41/47
+planner            0.936 ± 0.009         0.936         0.904         0.934         0.968           47/47
+oracle             0.985 ± 0.004         1.000         0.984         0.963         0.995           47/47
+planner-list       0.975 ± 0.006         0.987         0.973         0.949         0.992           47/47
+
+391s
+
+Per opponent (win rate over styles and games):
+    #  opponent                                      baiter       planner        oracle  planner-list
+   21  Tinkaton/Clodsire/Mimikyu                       0.44          0.62          0.88          0.66
+   12  Cramorant/Jumpluff/Stunfisk                     0.44          0.69          0.94          0.88
+   48  Quagsireˢ/Corsola-G/Tinkaton                    0.69          0.88          1.00          0.88
+   24  Araquanid/Fearow/Stunfisk                       0.62          1.00          1.00          0.91
+    4  Charjabug/Cradily/Empoleon                      0.62          0.81          0.94          0.94
+    7  Marowak-Aˢ/Cradily/Kingdra                      0.75          0.88          1.00          0.94
+    9  Tinkaton/Malamar/Mimikyu                        0.72          0.94          0.94          0.94
+   11  Ninetales/Kingdra/Mimikyu                       0.81          0.94          1.00          0.94
+   13  Corsola-G/Melmetal/Quagsire                     0.81          1.00          1.00          0.94
+   40  Araquanid/Dunsparce/Morpeko                     0.69          0.88          1.00          0.94
+   42  Stunfisk/Cramorant/Mimikyu                      0.75          1.00          0.94          0.94
+   45  Cramorant/Mimikyu/Thievul                       0.81          0.88          1.00          0.97
+    1  Cramorant/Hippowdon/Melmetal                    0.94          0.94          0.94          1.00
+    2  Sableye-Mega/Marowak/Melmetal                   0.88          0.94          1.00          1.00
+    3  Altaria/Corsola-G/Melmetal                      0.50          1.00          0.94          1.00
+    5  Hydreigonˢ/Clodsire/Corviknight                 0.88          0.88          1.00          1.00
+    6  Mimikyu/Corviknight/Ninetalesˢ                  1.00          1.00          1.00          1.00
+    8  Stunfisk/Empoleon/Moltres-G                     0.75          1.00          1.00          1.00
+   10  Electrode-H/Blastoise/Ninetales                 0.94          1.00          0.94          1.00
+   14  Ursalunaˢ/Araquanid/Mimikyu                     1.00          1.00          1.00          1.00
+   15  Quagsireˢ/Sableyeˢ/Tinkaton                     0.94          1.00          1.00          1.00
+   16  Charjabug/Mantine/Vigoroth                      0.62          1.00          1.00          1.00
+   17  Mimikyu/Sableyeˢ/Tinkaton                       0.94          1.00          1.00          1.00
+   18  Melmetal/Altaria/Ninetalesˢ                     1.00          1.00          1.00          1.00
+   19  Dusknoirˢ/Araquanid/Snorlaxˢ                    0.94          0.94          1.00          1.00
+   20  Drapion/Dunsparce/Jumpluffˢ                     0.38          0.94          1.00          1.00
+   22  Cramorant/Marowak/Melmetal                      1.00          0.94          1.00          1.00
+   23  Clefable/Corsola-G/Dusknoirˢ                    0.81          1.00          1.00          1.00
+   26  Cramorant/Marowak/Sableyeˢ                      0.94          1.00          1.00          1.00
+   27  Mimikyu/Empoleon/Jumpluff                       1.00          0.94          1.00          1.00
+   28  Tinkaton/Altaria/Jellicent                      0.75          0.88          1.00          1.00
+   29  Morpeko/Florges/Mimikyu                         0.75          0.94          1.00          1.00
+   30  Ninetalesˢ/Cramorant/Melmetal                   1.00          1.00          1.00          1.00
+   31  Quagsireˢ/Corsola-G/Corviknight                 0.94          1.00          1.00          1.00
+   32  Cramorant/Marowak/Tinkaton                      1.00          0.88          1.00          1.00
+   33  Melmetal/Corsola-G/Cramorant                    0.38          1.00          0.94          1.00
+   34  Sableyeˢ/Ninetalesˢ/Tinkaton                    0.81          0.97          1.00          1.00
+   35  Tinkaton/Quagsireˢ/Thievul                      0.69          0.88          1.00          1.00
+   36  Marowak/Cramorant/Mimikyu                       0.69          1.00          1.00          1.00
+   37  Araquanid/Mimikyu/Stunfisk                      0.50          0.94          1.00          1.00
+   38  Melmetal/Araquanid/Mimikyu                      1.00          1.00          1.00          1.00
+   39  Morpeko/Fearow/Quagsire                         0.94          1.00          1.00          1.00
+   41  Clodsire/Araquanid/Umbreon                      1.00          0.69          1.00          1.00
+   43  Tinkaton/Quagsireˢ/Snorlax                      0.62          0.88          0.94          1.00
+   44  Melmetal/Altaria/Mimikyu                        0.88          1.00          1.00          1.00
+   46  Altaria/Azumarill/Melmetal                      1.00          1.00          1.00          1.00
+   47  Marowak/Lickilicky/Mimikyu                      0.62          0.94          1.00          1.00
+
+Game plan, from how planner-list played each opponent:
+
+  vs #21 Tinkaton/Clodsire/Mimikyu: won 10/16
+     opening: swap to Cramorant at the start (9/16); usual line Thievul → Stunfisk → Cramorant → Thievul (6/16)
+     shields per game: Stunfisk 0.8, Thievul 0.6, Cramorant 0.6; left standing in wins: Thievul 9, Stunfisk 6, Cramorant 1
+
+  vs #12 Cramorant/Jumpluff/Stunfisk: won 14/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant → Stunfisk (10/16)
+     shields per game: Thievul 1.2, Cramorant 0.4, Stunfisk 0.2; left standing in wins: Stunfisk 10, Thievul 4
+
+  vs #48 Quagsireˢ/Corsola-G/Tinkaton: won 14/16
+     opening: stay in (swapped to Cramorant 7/16); usual line Thievul → Cramorant → Stunfisk (8/16)
+     shields per game: Stunfisk 0.9, Cramorant 0.6, Thievul 0.4; left standing in wins: Stunfisk 11, Thievul 6, Cramorant 4
+
+  vs #24 Araquanid/Fearow/Stunfisk: won 14/16
+     opening: swap to Cramorant at the start (14/16); usual line Thievul → Cramorant → Stunfisk (7/16)
+     shields per game: Stunfisk 1.3, Thievul 0.5, Cramorant 0.2; left standing in wins: Stunfisk 11, Thievul 9, Cramorant 2
+
+  vs #4 Charjabug/Cradily/Empoleon: won 15/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant → Thievul (7/16)
+     shields per game: Thievul 1.7, Stunfisk 0.3; left standing in wins: Cramorant 9, Thievul 7
+
+  vs #7 Marowak-Aˢ/Cradily/Kingdra: won 15/16
+     opening: swap to Stunfisk at the start (9/16); usual line Thievul → Stunfisk → Cramorant → Thievul (4/16)
+     shields per game: Cramorant 0.8, Thievul 0.6, Stunfisk 0.5; left standing in wins: Thievul 11, Cramorant 6, Stunfisk 6
+
+  vs #9 Tinkaton/Malamar/Mimikyu: won 15/16
+     opening: swap to Cramorant at the start (10/16); usual line Thievul → Stunfisk → Cramorant → Thievul (6/16)
+     shields per game: Thievul 0.8, Stunfisk 0.8, Cramorant 0.5; left standing in wins: Thievul 12, Stunfisk 8
+
+  vs #11 Ninetales/Kingdra/Mimikyu: won 15/16
+     opening: swap to Cramorant at the start (11/16); usual line Thievul → Cramorant → Thievul (11/16)
+     shields per game: Thievul 1.1, Cramorant 0.4, Stunfisk 0.3; left standing in wins: Thievul 14, Stunfisk 13
+
+  vs #13 Corsola-G/Melmetal/Quagsire: won 15/16
+     opening: stay in (swapped to Stunfisk 5/16); usual line Thievul → Stunfisk → Thievul (4/16)
+     shields per game: Thievul 1.3, Stunfisk 0.5, Cramorant 0.1; left standing in wins: Cramorant 11, Thievul 10, Stunfisk 5
+
+  vs #40 Araquanid/Dunsparce/Morpeko: won 15/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Thievul (6/16)
+     shields per game: Thievul 1.2, Stunfisk 0.5, Cramorant 0.2; left standing in wins: Thievul 12, Stunfisk 11
+
+  vs #42 Stunfisk/Cramorant/Mimikyu: won 15/16
+     opening: stay in (swapped to Stunfisk 3/16); usual line Thievul → Cramorant → Stunfisk (5/16)
+     shields per game: Thievul 1.1, Stunfisk 0.4, Cramorant 0.4; left standing in wins: Stunfisk 14, Thievul 7, Cramorant 6
+
+  vs #45 Cramorant/Mimikyu/Thievul: won 15/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant (8/16)
+     shields per game: Thievul 1.2, Cramorant 0.5, Stunfisk 0.2; left standing in wins: Stunfisk 9, Cramorant 6, Thievul 4
+
+  vs #1 Cramorant/Hippowdon/Melmetal: won 16/16
+     opening: stay in (swapped to Cramorant 1/16); usual line Thievul → Stunfisk → Cramorant → Stunfisk (11/16)
+     shields per game: Thievul 1.1, Cramorant 0.8, Stunfisk 0.1; left standing in wins: Stunfisk 14, Thievul 3, Cramorant 3
+
+  vs #2 Sableye-Mega/Marowak/Melmetal: won 16/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant (9/16)
+     shields per game: Thievul 1.6, Cramorant 0.3, Stunfisk 0.1; left standing in wins: Stunfisk 16, Cramorant 10, Thievul 1
+
+  vs #3 Altaria/Corsola-G/Melmetal: won 16/16
+     opening: stay in (swapped to Stunfisk 2/16); usual line Thievul → Stunfisk → Cramorant (5/16)
+     shields per game: Thievul 1.8, Stunfisk 0.2; left standing in wins: Thievul 10, Cramorant 10, Stunfisk 2
+
+  vs #5 Hydreigonˢ/Clodsire/Corviknight: won 16/16
+     opening: swap to Cramorant at the start (12/16); usual line Thievul → Cramorant → Thievul → Stunfisk (7/16)
+     shields per game: Cramorant 1.8, Stunfisk 0.2; left standing in wins: Stunfisk 12, Thievul 6, Cramorant 3
+
+  vs #6 Mimikyu/Corviknight/Ninetalesˢ: won 16/16
+     opening: stay in; usual line Thievul → Cramorant (7/16)
+     shields per game: Thievul 1.0, Cramorant 0.6, Stunfisk 0.4; left standing in wins: Cramorant 15, Thievul 12, Stunfisk 9
+
+  vs #8 Stunfisk/Empoleon/Moltres-G: won 16/16
+     opening: stay in (swapped to Stunfisk 2/16); usual line Thievul → Stunfisk → Cramorant → Stunfisk (3/16)
+     shields per game: Thievul 1.1, Stunfisk 0.4, Cramorant 0.4; left standing in wins: Stunfisk 11, Cramorant 8, Thievul 6
+
+  vs #10 Electrode-H/Blastoise/Ninetales: won 16/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant (7/16)
+     shields per game: Thievul 1.6, Stunfisk 0.2, Cramorant 0.2; left standing in wins: Cramorant 13, Stunfisk 13, Thievul 3
+
+  vs #14 Ursalunaˢ/Araquanid/Mimikyu: won 16/16
+     opening: stay in; usual line Thievul → Cramorant → Thievul (6/16)
+     shields per game: Thievul 1.4, Cramorant 0.6; left standing in wins: Stunfisk 16, Thievul 14
+
+  vs #15 Quagsireˢ/Sableyeˢ/Tinkaton: won 16/16
+     opening: swap to Cramorant at the start (8/16); usual line Thievul → Cramorant → Thievul (9/16)
+     shields per game: Thievul 0.8, Cramorant 0.8, Stunfisk 0.4; left standing in wins: Stunfisk 14, Thievul 11, Cramorant 2
+
+  vs #16 Charjabug/Mantine/Vigoroth: won 16/16
+     opening: stay in (swapped to Stunfisk 1/16); usual line Thievul → Cramorant → Stunfisk (9/16)
+     shields per game: Thievul 1.9, Cramorant 0.1; left standing in wins: Stunfisk 15, Thievul 5, Cramorant 1
+
+  vs #17 Mimikyu/Sableyeˢ/Tinkaton: won 16/16
+     opening: stay in; usual line Thievul → Cramorant (8/16)
+     shields per game: Thievul 1.2, Cramorant 0.6, Stunfisk 0.1; left standing in wins: Stunfisk 16, Thievul 10, Cramorant 7
+
+  vs #18 Melmetal/Altaria/Ninetalesˢ: won 16/16
+     opening: swap to Stunfisk at the start (13/16); usual line Thievul → Stunfisk → Cramorant → Thievul (4/16)
+     shields per game: Thievul 1.2, Stunfisk 0.4, Cramorant 0.3; left standing in wins: Thievul 12, Cramorant 10, Stunfisk 3
+
+  vs #19 Dusknoirˢ/Araquanid/Snorlaxˢ: won 16/16
+     opening: stay in; usual line Thievul → Cramorant (16/16)
+     shields per game: Thievul 1.5, Cramorant 0.4; left standing in wins: Thievul 16, Cramorant 16, Stunfisk 16
+
+  vs #20 Drapion/Dunsparce/Jumpluffˢ: won 16/16
+     opening: swap to Stunfisk at the start (14/16); usual line Thievul → Stunfisk → Cramorant → Thievul (9/16)
+     shields per game: Cramorant 1.6, Stunfisk 0.3, Thievul 0.1; left standing in wins: Thievul 15, Cramorant 5, Stunfisk 2
+
+  vs #22 Cramorant/Marowak/Melmetal: won 16/16
+     opening: stay in (swapped to Cramorant 1/16); usual line Thievul → Stunfisk → Cramorant → Stunfisk (8/16)
+     shields per game: Thievul 1.1, Cramorant 0.6, Stunfisk 0.2; left standing in wins: Stunfisk 13, Cramorant 6, Thievul 2
+
+  vs #23 Clefable/Corsola-G/Dusknoirˢ: won 16/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Thievul (12/16)
+     shields per game: Cramorant 1.0, Thievul 0.7; left standing in wins: Stunfisk 15, Thievul 13
+
+  vs #26 Cramorant/Marowak/Sableyeˢ: won 16/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant (6/16)
+     shields per game: Thievul 1.4, Cramorant 0.6; left standing in wins: Stunfisk 16, Cramorant 8, Thievul 4
+
+  vs #27 Mimikyu/Empoleon/Jumpluff: won 16/16
+     opening: stay in; usual line Thievul → Stunfisk → Thievul → Cramorant (9/16)
+     shields per game: Thievul 1.2, Stunfisk 0.7, Cramorant 0.1; left standing in wins: Cramorant 16, Stunfisk 5, Thievul 2
+
+  vs #28 Tinkaton/Altaria/Jellicent: won 16/16
+     opening: swap to Cramorant at the start (11/16); usual line Thievul → Cramorant → Thievul (10/16)
+     shields per game: Thievul 0.9, Stunfisk 0.4, Cramorant 0.2; left standing in wins: Thievul 15, Stunfisk 11
+
+  vs #29 Morpeko/Florges/Mimikyu: won 16/16
+     opening: stay in; usual line Thievul → Cramorant → Thievul → Stunfisk (5/16)
+     shields per game: Thievul 1.2, Cramorant 0.6, Stunfisk 0.2; left standing in wins: Thievul 11, Stunfisk 10, Cramorant 5
+
+  vs #30 Ninetalesˢ/Cramorant/Melmetal: won 16/16
+     opening: stay in (swapped to Cramorant 6/16); usual line Thievul → Stunfisk (10/16)
+     shields per game: Thievul 0.9, Cramorant 0.5, Stunfisk 0.5; left standing in wins: Stunfisk 16, Thievul 12, Cramorant 10
+
+  vs #31 Quagsireˢ/Corsola-G/Corviknight: won 16/16
+     opening: stay in (swapped to Cramorant 5/16); usual line Thievul → Cramorant → Stunfisk (5/16)
+     shields per game: Thievul 0.9, Cramorant 0.7, Stunfisk 0.4; left standing in wins: Stunfisk 11, Cramorant 8, Thievul 8
+
+  vs #32 Cramorant/Marowak/Tinkaton: won 16/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant (13/16)
+     shields per game: Thievul 1.4, Stunfisk 0.3, Cramorant 0.2; left standing in wins: Stunfisk 16, Cramorant 11, Thievul 2
+
+  vs #33 Melmetal/Corsola-G/Cramorant: won 16/16
+     opening: swap to Stunfisk at the start (12/16); usual line Thievul → Stunfisk → Thievul → Cramorant (7/16)
+     shields per game: Thievul 1.4, Stunfisk 0.6, Cramorant 0.1; left standing in wins: Cramorant 13, Thievul 8, Stunfisk 2
+
+  vs #34 Sableyeˢ/Ninetalesˢ/Tinkaton: won 16/16
+     opening: stay in; usual line Thievul → Cramorant → Thievul (6/16)
+     shields per game: Thievul 1.6, Cramorant 0.2; left standing in wins: Stunfisk 15, Thievul 14, Cramorant 5
+
+  vs #35 Tinkaton/Quagsireˢ/Thievul: won 16/16
+     opening: swap to Cramorant at the start (9/16); usual line Thievul → Stunfisk → Cramorant → Thievul (7/16)
+     shields per game: Cramorant 0.9, Thievul 0.6, Stunfisk 0.5; left standing in wins: Thievul 14, Stunfisk 8
+
+  vs #36 Marowak/Cramorant/Mimikyu: won 16/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Thievul (11/16)
+     shields per game: Cramorant 1.4, Thievul 0.6; left standing in wins: Thievul 16, Stunfisk 11
+
+  vs #37 Araquanid/Mimikyu/Stunfisk: won 16/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Stunfisk → Thievul (6/16)
+     shields per game: Thievul 0.9, Stunfisk 0.6, Cramorant 0.4; left standing in wins: Thievul 13, Stunfisk 10
+
+  vs #38 Melmetal/Araquanid/Mimikyu: won 16/16
+     opening: swap to Stunfisk at the start (12/16); usual line Thievul → Stunfisk → Cramorant (5/16)
+     shields per game: Thievul 0.9, Stunfisk 0.6, Cramorant 0.5; left standing in wins: Thievul 13, Cramorant 9, Stunfisk 4
+
+  vs #39 Morpeko/Fearow/Quagsire: won 16/16
+     opening: stay in; usual line Thievul → Cramorant (10/16)
+     shields per game: Thievul 1.0, Cramorant 1.0; left standing in wins: Thievul 15, Stunfisk 13, Cramorant 9
+
+  vs #41 Clodsire/Araquanid/Umbreon: won 16/16
+     opening: stay in; usual line Thievul → Cramorant → Thievul → Stunfisk (6/16)
+     shields per game: Thievul 1.8, Cramorant 0.2; left standing in wins: Stunfisk 16, Thievul 10, Cramorant 2
+
+  vs #43 Tinkaton/Quagsireˢ/Snorlax: won 16/16
+     opening: swap to Cramorant at the start (11/16); usual line Thievul → Cramorant → Thievul (9/16)
+     shields per game: Thievul 0.8, Cramorant 0.7, Stunfisk 0.4; left standing in wins: Thievul 11, Stunfisk 11, Cramorant 4
+
+  vs #44 Melmetal/Altaria/Mimikyu: won 16/16
+     opening: swap to Stunfisk at the start (14/16); usual line Thievul → Stunfisk → Thievul (9/16)
+     shields per game: Thievul 1.3, Stunfisk 0.6; left standing in wins: Thievul 16, Cramorant 10
+
+  vs #46 Altaria/Azumarill/Melmetal: won 16/16
+     opening: stay in (swapped to Stunfisk 4/16); usual line Thievul → Cramorant → Thievul → Stunfisk (7/16)
+     shields per game: Thievul 1.0, Cramorant 0.8, Stunfisk 0.2; left standing in wins: Stunfisk 11, Thievul 7, Cramorant 2
+
+  vs #47 Marowak/Lickilicky/Mimikyu: won 16/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Thievul (9/16)
+     shields per game: Cramorant 1.6, Thievul 0.3, Stunfisk 0.1; left standing in wins: Thievul 14, Stunfisk 12
+
+
+=== 2. Against the planner, which knows the list too
+    evaluate 25 --players planner planner-list --opponents planner-list --games 16 --plan
+
+Team #25: Thievul / Cramorant / Stunfisk (lead first)
+against the other 47 teams × styles planner-list × 16 games, 12 rollouts
+
+player                  win ratevs planner-list    opponents beaten
+planner            0.638 ± 0.017         0.638           34/47
+planner-list       0.719 ± 0.016         0.719           42/47
+
+435s
+
+Per opponent (win rate over styles and games):
+    #  opponent                                     planner  planner-list
+   12  Cramorant/Jumpluff/Stunfisk                     0.12          0.00
+   35  Tinkaton/Quagsireˢ/Thievul                      0.25          0.25
+   21  Tinkaton/Clodsire/Mimikyu                       0.62          0.31
+   45  Cramorant/Mimikyu/Thievul                       0.50          0.44
+   43  Tinkaton/Quagsireˢ/Snorlax                      0.25          0.50
+    9  Tinkaton/Malamar/Mimikyu                        0.44          0.53
+   18  Melmetal/Altaria/Ninetalesˢ                     0.81          0.53
+    4  Charjabug/Cradily/Empoleon                      0.56          0.56
+   23  Clefable/Corsola-G/Dusknoirˢ                    0.12          0.56
+   40  Araquanid/Dunsparce/Morpeko                     0.38          0.56
+   37  Araquanid/Mimikyu/Stunfisk                      0.56          0.59
+    8  Stunfisk/Empoleon/Moltres-G                     0.75          0.62
+   11  Ninetales/Kingdra/Mimikyu                       0.38          0.62
+   15  Quagsireˢ/Sableyeˢ/Tinkaton                     0.81          0.62
+   28  Tinkaton/Altaria/Jellicent                      0.75          0.69
+   33  Melmetal/Corsola-G/Cramorant                    0.69          0.69
+   48  Quagsireˢ/Corsola-G/Tinkaton                    0.47          0.69
+   32  Cramorant/Marowak/Tinkaton                      0.56          0.72
+   38  Melmetal/Araquanid/Mimikyu                      0.94          0.72
+    1  Cramorant/Hippowdon/Melmetal                    0.44          0.75
+    3  Altaria/Corsola-G/Melmetal                      0.59          0.75
+   26  Cramorant/Marowak/Sableyeˢ                      0.81          0.75
+   27  Mimikyu/Empoleon/Jumpluff                       0.56          0.75
+   41  Clodsire/Araquanid/Umbreon                      0.81          0.75
+   42  Stunfisk/Cramorant/Mimikyu                      0.66          0.75
+   44  Melmetal/Altaria/Mimikyu                        0.62          0.75
+   20  Drapion/Dunsparce/Jumpluffˢ                     0.44          0.78
+   17  Mimikyu/Sableyeˢ/Tinkaton                       0.81          0.81
+   19  Dusknoirˢ/Araquanid/Snorlaxˢ                    0.81          0.81
+   22  Cramorant/Marowak/Melmetal                      0.50          0.81
+   29  Morpeko/Florges/Mimikyu                         0.84          0.81
+   36  Marowak/Cramorant/Mimikyu                       0.94          0.81
+   46  Altaria/Azumarill/Melmetal                      0.88          0.81
+    6  Mimikyu/Corviknight/Ninetalesˢ                  0.88          0.88
+    7  Marowak-Aˢ/Cradily/Kingdra                      0.75          0.88
+   13  Corsola-G/Melmetal/Quagsire                     0.62          0.88
+   16  Charjabug/Mantine/Vigoroth                      0.59          0.88
+   31  Quagsireˢ/Corsola-G/Corviknight                 0.78          0.88
+   34  Sableyeˢ/Ninetalesˢ/Tinkaton                    0.50          0.88
+   39  Morpeko/Fearow/Quagsire                         0.88          0.88
+   47  Marowak/Lickilicky/Mimikyu                      0.81          0.88
+    5  Hydreigonˢ/Clodsire/Corviknight                 0.66          0.94
+   10  Electrode-H/Blastoise/Ninetales                 0.75          0.94
+   14  Ursalunaˢ/Araquanid/Mimikyu                     0.81          0.94
+   24  Araquanid/Fearow/Stunfisk                       0.75          0.94
+   30  Ninetalesˢ/Cramorant/Melmetal                   0.88          0.94
+    2  Sableye-Mega/Marowak/Melmetal                   0.62          1.00
+
+Game plan, from how planner-list played each opponent:
+
+  vs #12 Cramorant/Jumpluff/Stunfisk: won 0/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant → Stunfisk (11/16)
+     shields per game: Thievul 1.2, Cramorant 0.5, Stunfisk 0.3
+
+  vs #35 Tinkaton/Quagsireˢ/Thievul: won 4/16
+     opening: swap to Stunfisk at the start (10/16); usual line Thievul → Stunfisk → Thievul → Cramorant (5/16)
+     shields per game: Stunfisk 1.4, Cramorant 0.4, Thievul 0.2; left standing in wins: Thievul 4, Stunfisk 2
+
+  vs #21 Tinkaton/Clodsire/Mimikyu: won 5/16
+     opening: swap to Cramorant at the start (10/16); usual line Thievul → Cramorant → Stunfisk → Thievul (6/16)
+     shields per game: Cramorant 1.5, Stunfisk 0.4, Thievul 0.1; left standing in wins: Thievul 3, Stunfisk 2, Cramorant 1
+
+  vs #45 Cramorant/Mimikyu/Thievul: won 7/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant (6/16)
+     shields per game: Cramorant 0.8, Thievul 0.8, Stunfisk 0.4; left standing in wins: Stunfisk 4, Thievul 2, Cramorant 1
+
+  vs #43 Tinkaton/Quagsireˢ/Snorlax: won 8/16
+     opening: swap to Stunfisk at the start (8/16); usual line Thievul → Cramorant → Stunfisk → Thievul (8/16)
+     shields per game: Stunfisk 1.2, Cramorant 0.6, Thievul 0.1; left standing in wins: Thievul 6, Cramorant 2
+
+  vs #9 Tinkaton/Malamar/Mimikyu: won 7/16
+     opening: swap to Cramorant at the start (8/16); usual line Thievul → Stunfisk → Thievul → Cramorant (8/16)
+     shields per game: Stunfisk 1.0, Cramorant 0.7, Thievul 0.2; left standing in wins: Stunfisk 4, Cramorant 3, Thievul 2
+
+  vs #18 Melmetal/Altaria/Ninetalesˢ: won 8/16
+     opening: swap to Stunfisk at the start (9/16); usual line Thievul → Stunfisk → Cramorant → Thievul (5/16)
+     shields per game: Thievul 1.4, Stunfisk 0.5, Cramorant 0.1; left standing in wins: Cramorant 6, Thievul 4, Stunfisk 1
+
+  vs #4 Charjabug/Cradily/Empoleon: won 8/16
+     opening: stay in; usual line Thievul → Stunfisk → Thievul → Cramorant (7/16)
+     shields per game: Thievul 1.9, Stunfisk 0.1; left standing in wins: Cramorant 5, Thievul 2, Stunfisk 1
+
+  vs #23 Clefable/Corsola-G/Dusknoirˢ: won 9/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Thievul → Stunfisk (8/16)
+     shields per game: Cramorant 0.9, Thievul 0.8, Stunfisk 0.4; left standing in wins: Thievul 7, Stunfisk 3
+
+  vs #40 Araquanid/Dunsparce/Morpeko: won 9/16
+     opening: swap to Cramorant at the start (15/16); usual line Thievul → Cramorant → Stunfisk → Thievul (7/16)
+     shields per game: Stunfisk 0.8, Thievul 0.8, Cramorant 0.4; left standing in wins: Thievul 7, Stunfisk 5
+
+  vs #37 Araquanid/Mimikyu/Stunfisk: won 9/16
+     opening: swap to Cramorant at the start (12/16); usual line Thievul → Cramorant → Stunfisk → Thievul (8/16)
+     shields per game: Stunfisk 0.9, Thievul 0.6, Cramorant 0.3; left standing in wins: Thievul 7, Stunfisk 5
+
+  vs #8 Stunfisk/Empoleon/Moltres-G: won 10/16
+     opening: stay in (swapped to Stunfisk 2/16); usual line Thievul → Stunfisk → Cramorant (5/16)
+     shields per game: Thievul 1.4, Stunfisk 0.5, Cramorant 0.1; left standing in wins: Cramorant 6, Thievul 5, Stunfisk 2
+
+  vs #11 Ninetales/Kingdra/Mimikyu: won 10/16
+     opening: swap to Cramorant at the start (13/16); usual line Thievul → Cramorant → Thievul → Stunfisk (12/16)
+     shields per game: Thievul 1.5, Stunfisk 0.4, Cramorant 0.1; left standing in wins: Stunfisk 8, Cramorant 1, Thievul 1
+
+  vs #15 Quagsireˢ/Sableyeˢ/Tinkaton: won 10/16
+     opening: swap to Cramorant at the start (10/16); usual line Thievul → Cramorant → Thievul → Stunfisk (5/16)
+     shields per game: Cramorant 1.1, Stunfisk 0.6, Thievul 0.3; left standing in wins: Stunfisk 6, Thievul 4
+
+  vs #28 Tinkaton/Altaria/Jellicent: won 11/16
+     opening: swap to Cramorant at the start (10/16); usual line Thievul → Cramorant → Thievul → Stunfisk (8/16)
+     shields per game: Stunfisk 1.0, Cramorant 0.6, Thievul 0.4; left standing in wins: Thievul 6, Stunfisk 6
+
+  vs #33 Melmetal/Corsola-G/Cramorant: won 11/16
+     opening: swap to Stunfisk at the start (13/16); usual line Thievul → Stunfisk → Thievul → Cramorant (13/16)
+     shields per game: Thievul 1.3, Cramorant 0.4; left standing in wins: Cramorant 10, Thievul 1, Stunfisk 1
+
+  vs #48 Quagsireˢ/Corsola-G/Tinkaton: won 11/16
+     opening: swap to Cramorant at the start (9/16); usual line Thievul → Cramorant → Thievul → Stunfisk (7/16)
+     shields per game: Thievul 1.1, Cramorant 0.7, Stunfisk 0.2; left standing in wins: Stunfisk 10, Thievul 7
+
+  vs #32 Cramorant/Marowak/Tinkaton: won 11/16
+     opening: stay in (swapped to Stunfisk 1/16); usual line Thievul → Stunfisk → Cramorant → Stunfisk (5/16)
+     shields per game: Thievul 1.0, Cramorant 0.6, Stunfisk 0.4; left standing in wins: Stunfisk 6, Cramorant 6, Thievul 1
+
+  vs #38 Melmetal/Araquanid/Mimikyu: won 11/16
+     opening: stay in (swapped to Cramorant 7/16); usual line Thievul → Cramorant → Thievul → Stunfisk (5/16)
+     shields per game: Thievul 1.0, Stunfisk 0.8, Cramorant 0.2; left standing in wins: Stunfisk 7, Thievul 4, Cramorant 3
+
+  vs #1 Cramorant/Hippowdon/Melmetal: won 12/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant → Stunfisk (12/16)
+     shields per game: Thievul 1.2, Cramorant 0.8; left standing in wins: Stunfisk 12
+
+  vs #3 Altaria/Corsola-G/Melmetal: won 12/16
+     opening: stay in (swapped to Cramorant 4/16); usual line Thievul → Stunfisk → Cramorant → Stunfisk (10/16)
+     shields per game: Thievul 1.8, Cramorant 0.1; left standing in wins: Stunfisk 8, Thievul 4, Cramorant 1
+
+  vs #26 Cramorant/Marowak/Sableyeˢ: won 12/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant → Stunfisk (8/16)
+     shields per game: Thievul 1.1, Cramorant 0.6, Stunfisk 0.1; left standing in wins: Stunfisk 12, Cramorant 3, Thievul 1
+
+  vs #27 Mimikyu/Empoleon/Jumpluff: won 11/16
+     opening: stay in (swapped to Stunfisk 4/16); usual line Thievul → Stunfisk → Cramorant → Thievul (4/16)
+     shields per game: Stunfisk 0.9, Thievul 0.9, Cramorant 0.1; left standing in wins: Stunfisk 7, Cramorant 5, Thievul 2
+
+  vs #41 Clodsire/Araquanid/Umbreon: won 12/16
+     opening: swap to Cramorant at the start (15/16); usual line Thievul → Cramorant → Thievul → Stunfisk (8/16)
+     shields per game: Cramorant 1.9, Stunfisk 0.1, Thievul 0.1; left standing in wins: Stunfisk 9, Thievul 3, Cramorant 1
+
+  vs #42 Stunfisk/Cramorant/Mimikyu: won 12/16
+     opening: stay in (swapped to Stunfisk 3/16); usual line Thievul → Stunfisk → Cramorant (4/16)
+     shields per game: Stunfisk 1.2, Thievul 0.5, Cramorant 0.2; left standing in wins: Cramorant 8, Stunfisk 6, Thievul 4
+
+  vs #44 Melmetal/Altaria/Mimikyu: won 12/16
+     opening: swap to Stunfisk at the start (9/16); usual line Thievul → Stunfisk → Thievul → Cramorant (7/16)
+     shields per game: Thievul 1.2, Stunfisk 0.6, Cramorant 0.1; left standing in wins: Cramorant 10, Thievul 3
+
+  vs #20 Drapion/Dunsparce/Jumpluffˢ: won 12/16
+     opening: swap to Stunfisk at the start (16/16); usual line Thievul → Stunfisk → Thievul → Cramorant (11/16)
+     shields per game: Cramorant 1.2, Stunfisk 0.6, Thievul 0.1; left standing in wins: Cramorant 8, Thievul 4
+
+  vs #17 Mimikyu/Sableyeˢ/Tinkaton: won 13/16
+     opening: swap to Cramorant at the start (13/16); usual line Thievul → Cramorant → Stunfisk → Thievul (9/16)
+     shields per game: Stunfisk 0.9, Cramorant 0.6, Thievul 0.6; left standing in wins: Thievul 11, Stunfisk 3
+
+  vs #19 Dusknoirˢ/Araquanid/Snorlaxˢ: won 13/16
+     opening: swap to Stunfisk at the start (9/16); usual line Thievul → Stunfisk → Thievul → Cramorant (4/16)
+     shields per game: Thievul 0.9, Stunfisk 0.6, Cramorant 0.3; left standing in wins: Thievul 8, Stunfisk 6, Cramorant 5
+
+  vs #22 Cramorant/Marowak/Melmetal: won 13/16
+     opening: stay in (swapped to Cramorant 1/16); usual line Thievul → Stunfisk → Cramorant → Stunfisk (10/16)
+     shields per game: Thievul 1.1, Cramorant 0.8, Stunfisk 0.1; left standing in wins: Stunfisk 11, Thievul 2, Cramorant 1
+
+  vs #29 Morpeko/Florges/Mimikyu: won 13/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Stunfisk → Thievul (12/16)
+     shields per game: Stunfisk 1.4, Thievul 0.3, Cramorant 0.2; left standing in wins: Thievul 13, Stunfisk 3
+
+  vs #36 Marowak/Cramorant/Mimikyu: won 13/16
+     opening: swap to Cramorant at the start (15/16); usual line Thievul → Cramorant → Thievul (6/16)
+     shields per game: Cramorant 1.1, Thievul 0.6, Stunfisk 0.2; left standing in wins: Thievul 10, Stunfisk 9, Cramorant 1
+
+  vs #46 Altaria/Azumarill/Melmetal: won 13/16
+     opening: stay in (swapped to Cramorant 5/16); usual line Thievul → Cramorant → Thievul → Stunfisk (3/16)
+     shields per game: Thievul 0.9, Stunfisk 0.6, Cramorant 0.5; left standing in wins: Stunfisk 8, Cramorant 4, Thievul 4
+
+  vs #6 Mimikyu/Corviknight/Ninetalesˢ: won 14/16
+     opening: stay in (swapped to Stunfisk 7/16); usual line Thievul → Stunfisk → Cramorant → Thievul (4/16)
+     shields per game: Cramorant 0.8, Stunfisk 0.7, Thievul 0.4; left standing in wins: Thievul 8, Stunfisk 6, Cramorant 4
+
+  vs #7 Marowak-Aˢ/Cradily/Kingdra: won 14/16
+     opening: swap to Stunfisk at the start (15/16); usual line Thievul → Stunfisk → Cramorant → Thievul (9/16)
+     shields per game: Stunfisk 1.1, Cramorant 0.6, Thievul 0.4; left standing in wins: Thievul 9, Cramorant 6
+
+  vs #13 Corsola-G/Melmetal/Quagsire: won 14/16
+     opening: stay in (swapped to Stunfisk 3/16); usual line Thievul → Stunfisk → Cramorant → Thievul (7/16)
+     shields per game: Thievul 0.8, Stunfisk 0.6, Cramorant 0.5; left standing in wins: Thievul 12, Stunfisk 7, Cramorant 4
+
+  vs #16 Charjabug/Mantine/Vigoroth: won 14/16
+     opening: stay in; usual line Thievul → Stunfisk → Thievul → Cramorant (5/16)
+     shields per game: Thievul 1.9, Stunfisk 0.1; left standing in wins: Stunfisk 6, Cramorant 5, Thievul 4
+
+  vs #31 Quagsireˢ/Corsola-G/Corviknight: won 14/16
+     opening: swap to Stunfisk at the start (10/16); usual line Thievul → Stunfisk → Cramorant → Thievul (4/16)
+     shields per game: Thievul 0.8, Cramorant 0.6, Stunfisk 0.6; left standing in wins: Thievul 8, Cramorant 7, Stunfisk 2
+
+  vs #34 Sableyeˢ/Ninetalesˢ/Tinkaton: won 14/16
+     opening: swap to Cramorant at the start (13/16); usual line Thievul → Cramorant → Thievul → Stunfisk (8/16)
+     shields per game: Thievul 0.9, Cramorant 0.6, Stunfisk 0.6; left standing in wins: Stunfisk 8, Thievul 8
+
+  vs #39 Morpeko/Fearow/Quagsire: won 14/16
+     opening: stay in (swapped to Cramorant 1/16); usual line Thievul → Cramorant → Thievul → Stunfisk (3/16)
+     shields per game: Thievul 1.3, Cramorant 0.4, Stunfisk 0.2; left standing in wins: Stunfisk 10, Thievul 9, Cramorant 8
+
+  vs #47 Marowak/Lickilicky/Mimikyu: won 14/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Stunfisk → Thievul (7/16)
+     shields per game: Cramorant 1.8, Thievul 0.2; left standing in wins: Thievul 8, Stunfisk 8
+
+  vs #5 Hydreigonˢ/Clodsire/Corviknight: won 15/16
+     opening: swap to Stunfisk at the start (9/16); usual line Thievul → Stunfisk → Cramorant → Thievul (5/16)
+     shields per game: Cramorant 1.1, Stunfisk 0.6, Thievul 0.3; left standing in wins: Thievul 11, Cramorant 5, Stunfisk 3
+
+  vs #10 Electrode-H/Blastoise/Ninetales: won 15/16
+     opening: swap to Cramorant at the start (15/16); usual line Thievul → Cramorant → Thievul (9/16)
+     shields per game: Thievul 1.2, Stunfisk 0.6, Cramorant 0.2; left standing in wins: Stunfisk 13, Thievul 10, Cramorant 1
+
+  vs #14 Ursalunaˢ/Araquanid/Mimikyu: won 15/16
+     opening: swap to Cramorant at the start (16/16); usual line Thievul → Cramorant → Stunfisk → Thievul (9/16)
+     shields per game: Thievul 1.4, Stunfisk 0.2; left standing in wins: Thievul 12, Stunfisk 6
+
+  vs #24 Araquanid/Fearow/Stunfisk: won 15/16
+     opening: swap to Cramorant at the start (15/16); usual line Thievul → Cramorant → Stunfisk → Thievul (8/16)
+     shields per game: Stunfisk 1.1, Thievul 0.7, Cramorant 0.1; left standing in wins: Thievul 11, Stunfisk 8, Cramorant 1
+
+  vs #30 Ninetalesˢ/Cramorant/Melmetal: won 14/16
+     opening: stay in (swapped to Cramorant 3/16); usual line Thievul → Cramorant → Thievul → Stunfisk (4/16)
+     shields per game: Thievul 1.1, Stunfisk 0.7, Cramorant 0.2; left standing in wins: Thievul 8, Cramorant 8, Stunfisk 7
+
+  vs #2 Sableye-Mega/Marowak/Melmetal: won 16/16
+     opening: stay in; usual line Thievul → Stunfisk → Cramorant → Stunfisk (6/16)
+     shields per game: Thievul 1.8, Cramorant 0.2; left standing in wins: Stunfisk 16, Cramorant 2, Thievul 2
+
+
+=== 3. Opening book (the "stay in" column is the planner's own opening, which almost always stays in)
+    book 25 --games 8
+
+Opening book for team #25 (Thievul / Cramorant / Stunfisk, lead first), against planner-list, 8 games per opponent per opening
+
+  their lead               teams               stay in     swap to Cramorant      swap to Stunfisk   book
+  Cramorant                    6                  0.52                  0.29                  0.48   stay in
+  Tinkaton                     5                  0.53                  0.69                  0.36   swap to Cramorant
+  Melmetal                     4                  0.84                  0.59                  0.48   stay in
+  Mimikyu                      3                  0.79                  0.88                  0.42   stay in
+  Quagsire (Shadow)            3                  0.75                  0.42                  0.25   stay in
+  Araquanid                    3                  0.75                  0.92                  0.17   swap to Cramorant
+  Altaria                      2                  0.62                  0.88                  0.41   swap to Cramorant
+  Charjabug                    2                  0.81                  0.06                  0.31   stay in
+  Stunfisk                     2                  0.72                  0.75                  0.53   stay in
+  Morpeko (Full Belly)         2                  0.66                  0.81                  0.44   swap to Cramorant
+  Marowak                      2                  0.88                  0.88                  0.59   stay in
+  Sableye (Mega)               1                  0.88                  0.25                  0.50   stay in
+  Hydreigon (Shadow)           1                  1.00                  0.50                  0.88   stay in
+  Marowak (Alolan) (Shadow)     1                  1.00                  0.50                  0.88   stay in
+  Electrode (Hisuian)          1                  0.62                  0.62                  0.62   stay in
+  Ninetales                    1                  0.62                  0.88                  0.88   swap to Cramorant
+  Corsola (Galarian)           1                  0.75                  0.62                  0.69   stay in
+  Ursaluna (Shadow)            1                  1.00                  1.00                  0.88   stay in
+  Dusknoir (Shadow)            1                  0.75                  0.75                  0.75   stay in
+  Drapion                      1                  0.56                  0.62                  0.75   swap to Stunfisk
+  Clefable                     1                  0.62                  0.38                  0.50   stay in
+  Ninetales (Shadow)           1                  0.88                  0.62                  0.75   stay in
+  Sableye (Shadow)             1                  0.75                  1.00                  0.25   swap to Cramorant
+  Clodsire                     1                  0.88                  0.88                  0.62   stay in
+
+70s. Wrote data/openings_25.json.
+
+
+=== 4. The book on held-out games (paired with planner-list's games)
+    evaluate 25 --players planner-list planner-book --book data/openings_25.json --opponents planner-list --games 16 --plan
+
+Team #25: Thievul / Cramorant / Stunfisk (lead first)
+against the other 47 teams × styles planner-list × 16 games, 12 rollouts
+
+player                  win ratevs planner-list    opponents beaten
+planner-list       0.719 ± 0.016         0.719           42/47
+planner-book       0.735 ± 0.016         0.735           42/47
+
+109s
+
+Per opponent (win rate over styles and games):
+    #  opponent                                planner-list  planner-book
+   12  Cramorant/Jumpluff/Stunfisk                     0.00          0.00
+   21  Tinkaton/Clodsire/Mimikyu                       0.31          0.25
+    9  Tinkaton/Malamar/Mimikyu                        0.53          0.38
+   45  Cramorant/Mimikyu/Thievul                       0.44          0.44
+   28  Tinkaton/Altaria/Jellicent                      0.69          0.50
+   18  Melmetal/Altaria/Ninetalesˢ                     0.53          0.53
+    4  Charjabug/Cradily/Empoleon                      0.56          0.56
+   23  Clefable/Corsola-G/Dusknoirˢ                    0.56          0.56
+   46  Altaria/Azumarill/Melmetal                      0.81          0.59
+    8  Stunfisk/Empoleon/Moltres-G                     0.62          0.62
+   15  Quagsireˢ/Sableyeˢ/Tinkaton                     0.62          0.62
+   39  Morpeko/Fearow/Quagsire                         0.88          0.62
+   20  Drapion/Dunsparce/Jumpluffˢ                     0.78          0.69
+   33  Melmetal/Corsola-G/Cramorant                    0.69          0.69
+   35  Tinkaton/Quagsireˢ/Thievul                      0.25          0.69
+   43  Tinkaton/Quagsireˢ/Snorlax                      0.50          0.69
+   48  Quagsireˢ/Corsola-G/Tinkaton                    0.69          0.69
+   32  Cramorant/Marowak/Tinkaton                      0.72          0.72
+   38  Melmetal/Araquanid/Mimikyu                      0.72          0.72
+    1  Cramorant/Hippowdon/Melmetal                    0.75          0.75
+   11  Ninetales/Kingdra/Mimikyu                       0.62          0.75
+   26  Cramorant/Marowak/Sableyeˢ                      0.75          0.75
+   27  Mimikyu/Empoleon/Jumpluff                       0.75          0.75
+   41  Clodsire/Araquanid/Umbreon                      0.75          0.75
+   42  Stunfisk/Cramorant/Mimikyu                      0.75          0.75
+   44  Melmetal/Altaria/Mimikyu                        0.75          0.75
+   17  Mimikyu/Sableyeˢ/Tinkaton                       0.81          0.81
+   19  Dusknoirˢ/Araquanid/Snorlaxˢ                    0.81          0.81
+   22  Cramorant/Marowak/Melmetal                      0.81          0.81
+   36  Marowak/Cramorant/Mimikyu                       0.81          0.81
+   40  Araquanid/Dunsparce/Morpeko                     0.56          0.81
+    6  Mimikyu/Corviknight/Ninetalesˢ                  0.88          0.88
+    7  Marowak-Aˢ/Cradily/Kingdra                      0.88          0.88
+   13  Corsola-G/Melmetal/Quagsire                     0.88          0.88
+   16  Charjabug/Mantine/Vigoroth                      0.88          0.88
+   31  Quagsireˢ/Corsola-G/Corviknight                 0.88          0.88
+   34  Sableyeˢ/Ninetalesˢ/Tinkaton                    0.88          0.88
+   47  Marowak/Lickilicky/Mimikyu                      0.88          0.88
+    3  Altaria/Corsola-G/Melmetal                      0.75          0.94
+    5  Hydreigonˢ/Clodsire/Corviknight                 0.94          0.94
+   10  Electrode-H/Blastoise/Ninetales                 0.94          0.94
+   14  Ursalunaˢ/Araquanid/Mimikyu                     0.94          0.94
+   29  Morpeko/Florges/Mimikyu                         0.81          0.94
+   30  Ninetalesˢ/Cramorant/Melmetal                   0.94          0.94
+   37  Araquanid/Mimikyu/Stunfisk                      0.59          0.94
+    2  Sableye-Mega/Marowak/Melmetal                   1.00          1.00
+   24  Araquanid/Fearow/Stunfisk                       0.94          1.00
+
+Game plan, from how planner-book played each opponent:
+
+  vs #12 Cramorant/Jumpluff/Stunfisk: won 0/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (11/16)
+     shields per game: Thievul 1.2, Cramorant 0.5, Stunfisk 0.3
+
+  vs #21 Tinkaton/Clodsire/Mimikyu: won 4/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Thievul → Stunfisk (9/16)
+     shields per game: Cramorant 1.8, Thievul 0.2; left standing in wins: Stunfisk 3, Thievul 1
+
+  vs #9 Tinkaton/Malamar/Mimikyu: won 6/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (9/16)
+     shields per game: Cramorant 1.2, Thievul 0.4, Stunfisk 0.2; left standing in wins: Stunfisk 6, Thievul 1
+
+  vs #45 Cramorant/Mimikyu/Thievul: won 7/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Cramorant (6/16)
+     shields per game: Cramorant 0.8, Thievul 0.8, Stunfisk 0.4; left standing in wins: Stunfisk 4, Thievul 2, Cramorant 1
+
+  vs #28 Tinkaton/Altaria/Jellicent: won 8/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Thievul → Stunfisk (10/16)
+     shields per game: Thievul 1.0, Cramorant 0.7, Stunfisk 0.3; left standing in wins: Stunfisk 8, Thievul 2
+
+  vs #18 Melmetal/Altaria/Ninetalesˢ: won 8/16
+     opening: swap to Stunfisk at the start (9/16), then usually Thievul → Stunfisk → Thievul → Cramorant (5/9)
+     shields per game: Thievul 1.4, Stunfisk 0.5, Cramorant 0.1; left standing in wins: Cramorant 6, Thievul 4, Stunfisk 1
+
+  vs #4 Charjabug/Cradily/Empoleon: won 8/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Thievul → Cramorant (7/16)
+     shields per game: Thievul 1.9, Stunfisk 0.1; left standing in wins: Cramorant 5, Thievul 2, Stunfisk 1
+
+  vs #23 Clefable/Corsola-G/Dusknoirˢ: won 9/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Thievul → Stunfisk (8/16)
+     shields per game: Cramorant 0.9, Thievul 0.8, Stunfisk 0.4; left standing in wins: Thievul 7, Stunfisk 3
+
+  vs #46 Altaria/Azumarill/Melmetal: won 9/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (11/16)
+     shields per game: Stunfisk 1.2, Cramorant 0.4, Thievul 0.4; left standing in wins: Stunfisk 5, Thievul 4
+
+  vs #8 Stunfisk/Empoleon/Moltres-G: won 10/16
+     opening: stay in (12/16), then usually Thievul → Stunfisk → Cramorant (5/12)
+     shields per game: Thievul 1.4, Stunfisk 0.5, Cramorant 0.1; left standing in wins: Cramorant 6, Thievul 5, Stunfisk 2
+
+  vs #15 Quagsireˢ/Sableyeˢ/Tinkaton: won 10/16
+     opening: swap to Cramorant at the start (10/16), then usually Thievul → Cramorant → Thievul → Stunfisk (5/10)
+     shields per game: Cramorant 1.1, Stunfisk 0.6, Thievul 0.3; left standing in wins: Stunfisk 6, Thievul 4
+
+  vs #39 Morpeko/Fearow/Quagsire: won 10/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Thievul → Stunfisk (13/16)
+     shields per game: Thievul 1.1, Cramorant 0.5, Stunfisk 0.4; left standing in wins: Stunfisk 10, Thievul 1
+
+  vs #20 Drapion/Dunsparce/Jumpluffˢ: won 10/16
+     opening: swap to Stunfisk at the start (16/16), then usually Thievul → Stunfisk → Thievul → Cramorant (9/16)
+     shields per game: Cramorant 1.4, Stunfisk 0.5, Thievul 0.1; left standing in wins: Thievul 5, Cramorant 5
+
+  vs #33 Melmetal/Corsola-G/Cramorant: won 11/16
+     opening: swap to Stunfisk at the start (13/16), then usually Thievul → Stunfisk → Thievul → Cramorant (13/13)
+     shields per game: Thievul 1.3, Cramorant 0.4; left standing in wins: Cramorant 10, Thievul 1, Stunfisk 1
+
+  vs #35 Tinkaton/Quagsireˢ/Thievul: won 11/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (12/16)
+     shields per game: Cramorant 1.1, Stunfisk 0.6, Thievul 0.4; left standing in wins: Thievul 7, Stunfisk 4
+
+  vs #43 Tinkaton/Quagsireˢ/Snorlax: won 11/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (10/16)
+     shields per game: Cramorant 1.1, Stunfisk 0.7, Thievul 0.2; left standing in wins: Thievul 6, Stunfisk 6
+
+  vs #48 Quagsireˢ/Corsola-G/Tinkaton: won 11/16
+     opening: swap to Cramorant at the start (9/16), then usually Thievul → Cramorant → Thievul → Stunfisk (6/9)
+     shields per game: Thievul 1.1, Cramorant 0.7, Stunfisk 0.2; left standing in wins: Stunfisk 10, Thievul 7
+
+  vs #32 Cramorant/Marowak/Tinkaton: won 11/16
+     opening: stay in (15/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (5/15)
+     shields per game: Thievul 1.0, Cramorant 0.6, Stunfisk 0.4; left standing in wins: Stunfisk 6, Cramorant 6, Thievul 1
+
+  vs #38 Melmetal/Araquanid/Mimikyu: won 11/16
+     opening: swap to Cramorant at the start (7/16), then usually Thievul → Cramorant → Thievul → Stunfisk (3/7)
+     shields per game: Thievul 1.0, Stunfisk 0.8, Cramorant 0.2; left standing in wins: Stunfisk 7, Thievul 4, Cramorant 3
+
+  vs #1 Cramorant/Hippowdon/Melmetal: won 12/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (12/16)
+     shields per game: Thievul 1.2, Cramorant 0.8; left standing in wins: Stunfisk 12
+
+  vs #11 Ninetales/Kingdra/Mimikyu: won 12/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Thievul → Stunfisk (14/16)
+     shields per game: Thievul 1.7, Stunfisk 0.2, Cramorant 0.1; left standing in wins: Stunfisk 11, Thievul 2
+
+  vs #26 Cramorant/Marowak/Sableyeˢ: won 12/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (8/16)
+     shields per game: Thievul 1.1, Cramorant 0.6, Stunfisk 0.1; left standing in wins: Stunfisk 12, Cramorant 3, Thievul 1
+
+  vs #27 Mimikyu/Empoleon/Jumpluff: won 11/16
+     opening: stay in (9/16), then usually Thievul → Cramorant → Stunfisk (3/9)
+     shields per game: Stunfisk 0.9, Thievul 0.9, Cramorant 0.1; left standing in wins: Stunfisk 7, Cramorant 5, Thievul 2
+
+  vs #41 Clodsire/Araquanid/Umbreon: won 12/16
+     opening: swap to Cramorant at the start (15/16), then usually Thievul → Cramorant → Thievul → Stunfisk (8/15)
+     shields per game: Cramorant 1.9, Stunfisk 0.1, Thievul 0.1; left standing in wins: Stunfisk 9, Thievul 3, Cramorant 1
+
+  vs #42 Stunfisk/Cramorant/Mimikyu: won 12/16
+     opening: stay in (12/16), then usually Thievul → Stunfisk → Cramorant (4/12)
+     shields per game: Stunfisk 1.2, Thievul 0.5, Cramorant 0.2; left standing in wins: Cramorant 8, Stunfisk 6, Thievul 4
+
+  vs #44 Melmetal/Altaria/Mimikyu: won 12/16
+     opening: swap to Stunfisk at the start (9/16), then usually Thievul → Stunfisk → Thievul → Cramorant (5/9)
+     shields per game: Thievul 1.2, Stunfisk 0.6, Cramorant 0.1; left standing in wins: Cramorant 10, Thievul 3
+
+  vs #17 Mimikyu/Sableyeˢ/Tinkaton: won 13/16
+     opening: swap to Cramorant at the start (13/16), then usually Thievul → Cramorant → Stunfisk → Thievul (9/13)
+     shields per game: Stunfisk 0.9, Cramorant 0.6, Thievul 0.6; left standing in wins: Thievul 11, Stunfisk 3
+
+  vs #19 Dusknoirˢ/Araquanid/Snorlaxˢ: won 13/16
+     opening: swap to Stunfisk at the start (9/16), then usually Thievul → Stunfisk → Thievul → Cramorant (4/9)
+     shields per game: Thievul 0.9, Stunfisk 0.6, Cramorant 0.3; left standing in wins: Thievul 8, Stunfisk 6, Cramorant 5
+
+  vs #22 Cramorant/Marowak/Melmetal: won 13/16
+     opening: stay in (15/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (10/15)
+     shields per game: Thievul 1.1, Cramorant 0.8, Stunfisk 0.1; left standing in wins: Stunfisk 11, Thievul 2, Cramorant 1
+
+  vs #36 Marowak/Cramorant/Mimikyu: won 13/16
+     opening: swap to Cramorant at the start (15/16), then usually Thievul → Cramorant → Thievul (6/15)
+     shields per game: Cramorant 1.1, Thievul 0.6, Stunfisk 0.2; left standing in wins: Thievul 10, Stunfisk 9, Cramorant 1
+
+  vs #40 Araquanid/Dunsparce/Morpeko: won 13/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (7/16)
+     shields per game: Stunfisk 1.0, Thievul 0.8; left standing in wins: Thievul 10, Stunfisk 7
+
+  vs #6 Mimikyu/Corviknight/Ninetalesˢ: won 14/16
+     opening: stay in (8/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (2/8)
+     shields per game: Cramorant 0.8, Stunfisk 0.7, Thievul 0.4; left standing in wins: Thievul 8, Stunfisk 6, Cramorant 4
+
+  vs #7 Marowak-Aˢ/Cradily/Kingdra: won 14/16
+     opening: swap to Stunfisk at the start (15/16), then usually Thievul → Stunfisk → Cramorant → Thievul (9/15)
+     shields per game: Stunfisk 1.1, Cramorant 0.6, Thievul 0.4; left standing in wins: Thievul 9, Cramorant 6
+
+  vs #13 Corsola-G/Melmetal/Quagsire: won 14/16
+     opening: stay in (12/16), then usually Thievul → Stunfisk → Cramorant → Thievul (4/12)
+     shields per game: Thievul 0.8, Stunfisk 0.6, Cramorant 0.5; left standing in wins: Thievul 12, Stunfisk 7, Cramorant 4
+
+  vs #16 Charjabug/Mantine/Vigoroth: won 14/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Thievul → Cramorant (5/16)
+     shields per game: Thievul 1.9, Stunfisk 0.1; left standing in wins: Stunfisk 6, Cramorant 5, Thievul 4
+
+  vs #31 Quagsireˢ/Corsola-G/Corviknight: won 14/16
+     opening: swap to Stunfisk at the start (10/16), then usually Thievul → Stunfisk → Thievul → Cramorant (4/10)
+     shields per game: Thievul 0.8, Cramorant 0.6, Stunfisk 0.6; left standing in wins: Thievul 8, Cramorant 7, Stunfisk 2
+
+  vs #34 Sableyeˢ/Ninetalesˢ/Tinkaton: won 14/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (6/16)
+     shields per game: Thievul 1.0, Cramorant 0.8, Stunfisk 0.2; left standing in wins: Stunfisk 10, Thievul 9
+
+  vs #47 Marowak/Lickilicky/Mimikyu: won 14/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (7/16)
+     shields per game: Cramorant 1.8, Thievul 0.2; left standing in wins: Thievul 8, Stunfisk 8
+
+  vs #3 Altaria/Corsola-G/Melmetal: won 15/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (10/16)
+     shields per game: Thievul 1.4, Cramorant 0.2, Stunfisk 0.1; left standing in wins: Thievul 12, Stunfisk 6
+
+  vs #5 Hydreigonˢ/Clodsire/Corviknight: won 15/16
+     opening: swap to Stunfisk at the start (9/16), then usually Thievul → Stunfisk → Thievul (3/9)
+     shields per game: Cramorant 1.1, Stunfisk 0.6, Thievul 0.3; left standing in wins: Thievul 11, Cramorant 5, Stunfisk 3
+
+  vs #10 Electrode-H/Blastoise/Ninetales: won 15/16
+     opening: swap to Cramorant at the start (15/16), then usually Thievul → Cramorant → Thievul (9/15)
+     shields per game: Thievul 1.2, Stunfisk 0.6, Cramorant 0.2; left standing in wins: Stunfisk 13, Thievul 10, Cramorant 1
+
+  vs #14 Ursalunaˢ/Araquanid/Mimikyu: won 15/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (9/16)
+     shields per game: Thievul 1.4, Stunfisk 0.2; left standing in wins: Thievul 12, Stunfisk 6
+
+  vs #29 Morpeko/Florges/Mimikyu: won 15/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Thievul → Stunfisk (7/16)
+     shields per game: Thievul 1.0, Stunfisk 0.5, Cramorant 0.2; left standing in wins: Thievul 9, Stunfisk 9
+
+  vs #30 Ninetalesˢ/Cramorant/Melmetal: won 14/16
+     opening: stay in (12/16), then usually Thievul → Stunfisk (4/12)
+     shields per game: Thievul 1.1, Stunfisk 0.7, Cramorant 0.2; left standing in wins: Thievul 8, Cramorant 8, Stunfisk 7
+
+  vs #37 Araquanid/Mimikyu/Stunfisk: won 15/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (10/16)
+     shields per game: Thievul 1.2, Stunfisk 0.7, Cramorant 0.1; left standing in wins: Thievul 12, Stunfisk 8
+
+  vs #2 Sableye-Mega/Marowak/Melmetal: won 16/16
+     opening: stay in (16/16), then usually Thievul → Stunfisk → Cramorant → Stunfisk (6/16)
+     shields per game: Thievul 1.8, Cramorant 0.2; left standing in wins: Stunfisk 16, Cramorant 2, Thievul 2
+
+  vs #24 Araquanid/Fearow/Stunfisk: won 16/16
+     opening: swap to Cramorant at the start (16/16), then usually Thievul → Cramorant → Stunfisk → Thievul (7/16)
+     shields per game: Stunfisk 1.2, Thievul 0.4, Cramorant 0.2; left standing in wins: Thievul 12, Stunfisk 11
+

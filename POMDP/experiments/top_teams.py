@@ -6,6 +6,9 @@
     python3 -m experiments.top_teams evaluate 3            # team 3 (CSV row) vs the other 47
     python3 -m experiments.top_teams evaluate 3 --lead 2   # lead with its second Pokémon instead
     python3 -m experiments.top_teams evaluate 3 --plan     # plus a game plan per opponent
+    python3 -m experiments.top_teams book 3                # the best opening against each lead
+    python3 -m experiments.top_teams evaluate 3 --players planner-list planner-book \
+        --book data/openings_3.json --opponents planner-list
 
 The teams are data/mega_great_league_top_teams.csv, PvPoke's top teams export, numbered by row.
 Opponents lead with the first Pokémon listed, the way the export lists them, and play one of the
@@ -21,14 +24,17 @@ team and style outright.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import random
 import time
 import zlib
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
 from mango_pomdp import gamedata
+from mango_pomdp.battle import SWITCH
 from mango_pomdp.match import PLAYERS, make_player, play
 from mango_pomdp.policies import STYLES, Heuristic
 from mango_pomdp.team_prior import TeamPrior
@@ -64,16 +70,56 @@ def heuristic_game(job):
     return i, j, (1 - s) if game % 2 else s
 
 
+class Opening:
+    """Plays a fixed first action chosen from the opponent's lead (an opening book), then hands
+    every decision to the planner. `book` maps their lead to the bench slot to swap to, or 0 to
+    let the planner choose its own opening (as it does for leads the book doesn't list)."""
+
+    def __init__(self, planner, book: dict[str, int], name: str):
+        self.planner, self.book, self.name, self.first = planner, book, name, True
+
+    def start(self, side):
+        self.planner.start(side)
+
+    def observe(self, events):
+        self.planner.observe(events)
+
+    def act(self, view):
+        if self.first:
+            self.first = False
+            slot = self.book.get(view.foe_species.id, 0)
+            if slot and view.can_switch and slot in view.me.bench():
+                return SWITCH(slot)
+        return self.planner.act(view)
+
+    def shield(self, view, move):
+        return self.planner.shield(view, move)
+
+    def replace(self, view):
+        return self.planner.replace(view)
+
+
 def planned_game(job):
-    player, mine, lead, j, style, game, (rollouts, foe_rollouts) = job
+    """`player` is a match.PLAYERS name, "open:K" (planner-list that opens by swapping to slot K
+    whatever they lead; 0 is the planner's own opening), or "planner-book" (planner-list with `book`)."""
+    player, mine, lead, j, style, game, (rollouts, foe_rollouts), book = job
     gd = gamedata.use(FORMAT)
     prior = TeamPrior(gd)
-    rng = random.Random(zlib.crc32(repr((player, mine, lead, j, style, game)).encode()))
+    # planner-book plays the same games as planner-list (common random numbers): wherever the book
+    # doesn't step in, the game is identical, so the comparison is paired.
+    key = "planner-list" if player == "planner-book" else player
+    rng = random.Random(zlib.crc32(repr((key, mine, lead, j, style, game)).encode()))
     others = [t for k, t in enumerate(gd.teams) if k != mine]
     ours, theirs = rotate(gd.teams[mine].spec, lead), list(gd.teams[j].spec)
     side = game % 2
-    me = make_player(player, gd, prior, rng.randrange(1 << 30), truth=theirs,
+    base = "planner-list" if player.startswith("open:") or player == "planner-book" else player
+    me = make_player(base, gd, prior, rng.randrange(1 << 30), truth=theirs,
                      truth_style=style if style in STYLES else "baiter", rollouts=rollouts, teams=others)
+    if player.startswith("open:"):
+        slot = int(player[5:])
+        me = Opening(me, {t.species[0]: slot for t in gd.teams}, player)
+    elif player == "planner-book":
+        me = Opening(me, book, player)
     if style in STYLES:
         foe = Heuristic(style, seed=rng.randrange(1 << 30))
     else:   # a planner opponent, which knows the list as well (every team but its own)
@@ -137,11 +183,43 @@ def rank(gd, games: int, workers, show: int = 48):
     return rows
 
 
-def run_eval(gd, players, mine, leads, styles, games, rollouts, workers):
+def run_eval(gd, players, mine, leads, styles, games, rollouts, workers, book=None):
     n = len(gd.teams)
-    jobs = [(p, mine, lead, j, st, g, rollouts) for p in players for lead in leads
+    jobs = [(p, mine, lead, j, st, g, rollouts, book) for p in players for lead in leads
             for j in range(n) if j != mine for st in styles for g in range(games)]
     return list(pool_map(planned_game, jobs, workers))
+
+
+def build_book(gd, mine: int, lead: int, styles, games, rollouts, workers, margin: float, out: Path):
+    """For each lead the opponents can show, the opening (the planner's own, or a swap to either
+    bench slot on turn 0) that wins most against the listed teams with that lead. The planner
+    plays everything after it."""
+    ours = rotate(gd.teams[mine].spec, lead)
+    names = [gd.species[s].name for s, _, _ in ours]
+    print(f"Opening book for team #{mine + 1} ({' / '.join(names)}, lead first), against "
+          f"{', '.join(styles)}, {games} games per opponent per opening\n")
+    start = time.time()
+    results = run_eval(gd, ["open:0", "open:1", "open:2"], mine, [lead], styles, games, rollouts, workers)
+    per = defaultdict(list)   # (opening, opponent) -> scores
+    for r in results:
+        per[int(r[0][5:]), r[3]].append(r[5])
+    leads = defaultdict(list)
+    for j, t in enumerate(gd.teams):
+        if j != mine:
+            leads[t.species[0]].append(j)
+    book = {}
+    label = ["planner's choice", f"swap to {names[1]}", f"swap to {names[2]}"]
+    print(f"  {'their lead':<24}{'teams':>6}" + "".join(f"{x:>22}" for x in label) + "   book")
+    for sid, js in sorted(leads.items(), key=lambda kv: -len(kv[1])):
+        means = [sum(sum(per[k, j]) / len(per[k, j]) for j in js) / len(js) for k in range(3)]
+        k = max(range(3), key=lambda i: means[i])
+        if means[k] < means[0] + margin:
+            k = 0   # only override the planner when a swap is clearly better
+        book[sid] = k
+        print(f"  {gd.species[sid].name:<24}{len(js):>6}" + "".join(f"{m:>22.2f}" for m in means) + f"   {label[k]}")
+    out.write_text(json.dumps({"team": mine + 1, "lead": lead, "opponents": list(styles), "games": games,
+                               "book": book}, indent=1) + "\n")
+    print(f"\n{time.time() - start:.0f}s. Wrote {out}.")
 
 
 def mean_se(xs):
@@ -181,7 +259,7 @@ def select(gd, shortlist: int, games: int, rollouts: int, workers):
           f"{short(gd, gd.teams[best[1]])}, leading with {gd.species[gd.teams[best[1]].species[best[2] - 1]].name}.")
 
 
-def evaluate(gd, mine: int, lead: int, players, styles, games, rollouts, workers, plan: bool):
+def evaluate(gd, mine: int, lead: int, players, styles, games, rollouts, workers, plan: bool, book=None):
     team = gd.teams[mine]
     ours = rotate(team.spec, lead)
     print(f"Team #{mine + 1}: {' / '.join(gd.species[s].name for s, _, _ in ours)} (lead first)")
@@ -189,7 +267,7 @@ def evaluate(gd, mine: int, lead: int, players, styles, games, rollouts, workers
           f"{rollouts[0]} rollouts" + (f" (opponent planners {rollouts[1]})" if rollouts[1] != rollouts[0] else "")
           + "\n")
     start = time.time()
-    results = run_eval(gd, players, mine, [lead], styles, games, rollouts, workers)
+    results = run_eval(gd, players, mine, [lead], styles, games, rollouts, workers, book)
     print(f"{'player':<16}{'win rate':>16}" + "".join(f"{'vs ' + s:>14}" for s in styles) + f"{'opponents beaten':>20}")
     per = {p: defaultdict(list) for p in players}
     for r in results:
@@ -226,17 +304,16 @@ def game_plan(gd, results, opps):
     for j in opps:
         rs = by[j]
         wins = [r for r in rs if r[5] == 1.0]
-        line = Counter(" → ".join(name(s) for s in r[6]) for r in rs).most_common(1)[0]
-        swaps = Counter(r[7] for r in rs)
-        swap, k = max(((s, c) for s, c in swaps.items() if s), key=lambda x: x[1], default=(None, 0))
+        # The usual opening (stay in, or an early swap), then the usual line among games that opened that way.
+        swap, k = Counter(r[7] for r in rs).most_common(1)[0]
+        line, n = Counter(" → ".join(name(s) for s in r[6]) for r in rs if r[7] == swap).most_common(1)[0]
         shields = Counter()
         for r in rs:
             shields.update(r[8])
         closers = Counter(s for r in wins for s in r[9])
-        opener = (f"swap to {name(swap)} at the start ({k}/{len(rs)})" if swap and k * 2 >= len(rs)
-                  else "stay in" + (f" (swapped to {name(swap)} {k}/{len(rs)})" if swap else ""))
+        opener = f"swap to {name(swap)} at the start" if swap else "stay in"
         print(f"\n  vs #{j + 1} {short(gd, gd.teams[j])}: won {len(wins)}/{len(rs)}")
-        print(f"     opening: {opener}; usual line {line[0]} ({line[1]}/{len(rs)})")
+        print(f"     opening: {opener} ({k}/{len(rs)}), then usually {line} ({n}/{k})")
         print("     shields per game: " + ", ".join(f"{name(s)} {c / len(rs):.1f}" for s, c in shields.most_common())
               + (f"; left standing in wins: " + ", ".join(f"{name(s)} {c}" for s, c in closers.most_common())
                  if closers else ""))
@@ -254,14 +331,24 @@ def main():
     e = sub.add_parser("evaluate")
     e.add_argument("team", type=int, help="CSV row, from 1")
     e.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
-    e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"], choices=PLAYERS)
+    e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"],
+                   choices=(*PLAYERS, "planner-book"), help="planner-book is planner-list with --book")
+    e.add_argument("--book", type=Path, help="opening book from the book command")
     e.add_argument("--opponents", nargs="+", default=list(STYLES), choices=(*STYLES, "planner", "planner-list"),
                    help="heuristic styles, or planners (which know the list too)")
     e.add_argument("--games", type=int, default=4, help="games per opponent per style")
     e.add_argument("--rollouts", type=int, default=12)
     e.add_argument("--opponent-rollouts", type=int, default=12, help="for planner opponents")
     e.add_argument("--plan", action="store_true", help="print a game plan per opponent")
-    for p in (r, s, e):
+    b = sub.add_parser("book")
+    b.add_argument("team", type=int, help="CSV row, from 1")
+    b.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
+    b.add_argument("--opponents", nargs="+", default=["planner-list"], choices=(*STYLES, "planner", "planner-list"))
+    b.add_argument("--games", type=int, default=8, help="games per opponent per opening")
+    b.add_argument("--rollouts", type=int, default=12)
+    b.add_argument("--margin", type=float, default=0.1, help="how much better a swap must be than staying in")
+    b.add_argument("--out", type=Path, default=None, help="default data/openings_<team>.json")
+    for p in (r, s, e, b):
         p.add_argument("--workers", type=int, default=None)
     args = ap.parse_args()
     gd = gamedata.use(FORMAT)
@@ -269,10 +356,16 @@ def main():
         rank(gd, args.games, args.workers)
     elif args.cmd == "select":
         select(gd, args.shortlist, args.games, args.rollouts, args.workers)
+    elif args.cmd == "book":
+        out = args.out or gamedata.DATA_DIR / f"openings_{args.team}.json"
+        build_book(gd, args.team - 1, args.lead, args.opponents, args.games, (args.rollouts, args.rollouts),
+                   args.workers, args.margin, out)
     else:
+        book = json.loads(args.book.read_text())["book"] if args.book else None
+        if "planner-book" in args.players and not book:
+            ap.error("planner-book needs --book")
         evaluate(gd, args.team - 1, args.lead, args.players, args.opponents, args.games,
-                 (args.rollouts, args.opponent_rollouts),
-                 args.workers, args.plan)
+                 (args.rollouts, args.opponent_rollouts), args.workers, args.plan, book)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,8 @@ counting that `belief.EnergyCounter` does here.
     python3 -m experiments.meta --top 12                       # every 1v1 among the top 12
     python3 -m experiments.demo --seed 3 --opponent nuker      # a 3v3 battle, narrated
     python3 -m experiments.tournament --games 150              # 3v3 win rates
+    python3 -m experiments.top_teams select                    # pick a top Mega Great League team
+    python3 -m experiments.top_teams evaluate 25 --plan        # and a game plan against the rest
     python3 -m unittest discover tests
 
 The work starts with 1v1s, which can be solved exactly, then builds up to full 3v3 battles with
@@ -188,32 +190,120 @@ What this says so far:
   replacements, and rollout opponents built from the opponent's own belief about you rather
   than a fixed style.
 
+## Picking a team from PvPoke's top Mega Great League teams
+
+`data/mega_great_league_top_teams.csv` is PvPoke's export of its 48 top Mega Great League teams
+(1500 CP, Mega Evolutions allowed). The task: pick one, and find a way to play it that beats
+the other 47. `experiments/top_teams.py` does it, and `results/mega_team25.txt` has the full
+outputs, including a game plan for every opponent.
+
+**What it needed.**
+
+- *Data.* `data/mega_great_league.json` comes from PvPoke's Mega Great League rankings, keeping
+  every Pokémon and move on the listed teams. The export abbreviates moves ("DbI", "WBF").
+  `trim_data.py` decodes them with PvPoke's own abbreviations: the game master's, else the
+  initials of the move id. Each decodes to exactly one move in that species' movepool.
+- *Form changes.* 14 of the 48 teams run Mimikyu and 11 run Cramorant, so the simulator now has
+  Disguise, Gulp Missile and Hunger Switch (Morpeko), as PvPoke's Battle.js implements them.
+- *A belief over the list.* With `TeamListPrior`, the opponent brings one of the other 47 teams,
+  weighted by usage. Seeing their lead narrows it to the teams that fit. `planner-list` is the
+  3v3 planner with that belief.
+- *Simultaneous choices.* Both sides now choose from the start-of-turn state. Before, the second
+  side saw the first side's switch on the same turn, and the planner's belief hadn't seen the
+  new Pokémon yet. The tournament above always seated the planner first, so it never hit this.
+
+**Picking the team** (`top_teams rank`, then `select`):
+
+1. *Round robin with heuristic play* (all pairs, both sides the same style). Thievul / Cramorant
+   / Stunfisk (#25) is strongest: it wins 0.67 and beats 35 of 47. PvPoke's team rating barely
+   agrees with simulated strength; its top-rated team (#1) comes 29th.
+2. *The planner against the heuristic styles*, with each of the top 6 teams and each lead. This
+   doesn't separate them: all score 0.93–0.98, and every one beats all 47.
+3. *The tiebreak is a stronger opponent:* the same planner, which also knows the list. Here #25
+   leading Thievul is best, 8 games per opponent:
+
+| Team, best lead | vs heuristic styles | vs the planner | Beaten (of 47) vs the planner |
+|---|---|---|---|
+| **#25 Thievul / Cramorant / Stunfisk** | 0.983 | **0.741** | **38** |
+| #33 Melmetal / Corsola-G / Cramorant | 0.981 | 0.729 | 37 |
+| #26 Sableyeˢ / Cramorant / Marowak | 0.971 | 0.638 | 29 |
+| #32 Tinkaton / Cramorant / Marowak | 0.965 | 0.634 | 33 |
+| #36 Cramorant / Marowak / Mimikyu | 0.968 | 0.577 | 23 |
+| #45 Cramorant / Mimikyu / Thievul | 0.967 | 0.556 | 25 |
+
+Leading with Cramorant (0.697) or Stunfisk (0.710) instead does worse. Giving our planner 32
+rollouts against the opponent's 12 doesn't help either (0.750).
+
+**Team #25, leading Thievul.** Against the heuristic styles, 4 games per opponent per style;
+against the planner, 16 games per opponent:
+
+| Our player | vs heuristic styles | Beaten | vs the planner | Beaten |
+|---|---|---|---|---|
+| baiter heuristic | 0.791 ± 0.015 | 41 | | |
+| planner (format prior) | 0.936 ± 0.009 | 47 | 0.638 ± 0.017 | 34 |
+| **planner-list** | **0.975 ± 0.006** | **47** | **0.719 ± 0.016** | **42** |
+| planner-list + opening book | | | 0.735 ± 0.016 | 42 |
+| oracle (knows team and style) | 0.985 ± 0.004 | 47 | | |
+
+The opening book is learned (`top_teams book 25`). For each lead the opponents can show, it
+plays every opening against every listed team with that lead: the planner's own opening, a
+swap to Cramorant on turn 0, or a swap to Stunfisk. It keeps a swap only if the swap wins 0.1
+more. The result: swap to Cramorant against Tinkaton, Araquanid, Altaria, Morpeko, Ninetales
+and Sableyeˢ leads; swap to Stunfisk against Drapion; let the planner choose against the rest.
+The planner stays in against most leads, and on its own swaps to Stunfisk against Melmetal.
+The book was then measured on games it wasn't built from.
+
+What this says:
+
+- **Against heuristic opponents, the strategy beats every team.** planner-list wins 97.5%,
+  within a point of the oracle, and its worst matchup (#21) is 0.66. The same team played by
+  the baiter heuristic wins 79% and fails to beat 6 teams.
+- **Knowing the list pays most against a strong opponent:** 8 points against the planner
+  (0.719 vs 0.638), 4 against the heuristics.
+- **Against an equally strong opponent, nothing found beats all 47.** #12 Cramorant / Jumpluff
+  / Stunfisk wins all 16 games. Jumpluff beats both Stunfisk and Cramorant, and Thievul (Icy
+  Wind) is the only answer, but the planner spends Thievul on their lead Cramorant. No opening
+  fixes it, and neither do more rollouts. A search deep enough to save Thievul for Jumpluff
+  (POMCP, below) is the next step. #21 Tinkaton / Clodsire / Mimikyu (0.25–0.31) and #45
+  (0.44) are the other losses.
+- **The opening book adds 1.6 points, about one standard error.** It helps where one opening
+  suits every team with that lead: #35 goes from 0.25 to 0.69, #37 from 0.59 to 0.94. It
+  hurts where teams sharing a lead want different openings: #28 and #46 lose about 0.2.
+
 ## Layout
 
     data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves
+    data/mega_great_league.json          the same for Mega Great League, plus its top teams, decoded
+    data/mega_great_league_top_teams.csv PvPoke's top Mega Great League teams export
+    data/openings_25.json      the opening book for team #25 (top_teams book 25)
+    results/mega_team25.txt    team #25's full results and per-opponent game plans
     scripts/update_data.sh     re-download and trim PvPoke's data (scripts/trim_data.py)
     mango_pomdp/gamedata.py    types, moves, damage formula
     mango_pomdp/battle.py      the simulator and the player's View
     mango_pomdp/duel.py        the exact 1v1 solver, the player that plays its solution, and CDuel
     mango_pomdp/duel.c         the same solver in C
     mango_pomdp/timeline.py    a battle drawn as text, like PvPoke's timeline
-    mango_pomdp/team_prior.py  the structured team and moveset prior
+    mango_pomdp/team_prior.py  the structured team and moveset prior, and the prior over a list of teams
     mango_pomdp/policies.py    opponent styles, matchup heuristics, baselines
     mango_pomdp/belief.py      energy counting and the particle belief (plus the Oracle)
     mango_pomdp/planner.py     the rollout planner
     mango_pomdp/match.py       building players by name, playing one battle
     experiments/               duel.py (one 1v1, solved), meta.py (every 1v1 among the top N),
-                               tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle)
+                               tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle),
+                               top_teams.py (pick one of PvPoke's top teams and plan against the rest)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps
 
-- **Mechanics.** No Charged Attack minigame (every charged move hits at full power), no
-  form changes (Aegislash, Morpeko), no mega moves, and no waiting (a free Pokémon always acts).
-  Everyone uses PvPoke's default CP 1500 IVs. The 1v1 solver ignores the 4-minute clock.
-- **Opponents.** Opponents are the four heuristic styles, so "hard to exploit" is only tested
-  against them: the lowest per-style win rate is a crude exploitability number. Next steps are
-  playing the planner against itself, and running a best-response search against it.
+- **Mechanics.** No Charged Attack minigame (every charged move hits at full power), no mega
+  moves (the "+" moves; no listed team runs one), and no waiting (a free Pokémon always acts).
+  The 3v3 simulator has PvPoke's form changes for Mimikyu, Cramorant and Morpeko, but not
+  Aegislash or Minior, and the 1v1 solver has none. Everyone uses PvPoke's default CP 1500
+  IVs. The 1v1 solver ignores the 4-minute clock.
+- **Opponents.** In the Great League tournament, opponents are the four heuristic styles, so
+  "hard to exploit" is only tested against them: the lowest per-style win rate is a crude
+  exploitability number. The Mega Great League experiment also plays the planner against
+  itself. A best-response search against it is the next step.
 - **Planner.** It decides one action at a time with fixed rollout policies. POMCP (a search
   tree over action–observation histories) or longer open-loop sequences would make it look
   further ahead, for example to bait now in order to nuke later.

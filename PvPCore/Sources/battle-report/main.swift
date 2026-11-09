@@ -65,6 +65,9 @@ for read in reads {
     let snap = tracker.snapshot(at: read.time)
     timeline += automation.logThisRead.map { "\(clock(read.time))  \($0)" }
     throwsSeen += automation.throwsThisRead
+    if let revised = automation.throwRevisedThisRead, let k = throwsSeen.lastIndex(where: { $0.time == revised.time }) {
+        throwsSeen[k] = revised
+    }
     for (i, point) in checkpoints.enumerated() where !checkedPoints.contains(i) && read.time >= point.time {
         checkedPoints.insert(i)
         if read.time - point.time >= 0.5 || snap.pokemon?.possibleSpeciesIds.contains(point.speciesId) != true || snap.energy != point.energy {

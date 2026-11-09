@@ -60,7 +60,8 @@ TIMELINE (what the screen reader saw and did)
   0:36.99  Your HP bar shows no hit at 0:30.33: Cramorant didn't finish one more fast move
   0:43.61  Your HP bar shows no hit at 0:30.33: Cramorant didn't finish one more fast move
   0:43.61  Cramorant used Dive (40 → 0)
-  0:47.07  You threw a charged move: Cramorant 0 → 8 (its fast move in progress counts)
+  0:47.07  Your charged move came straight after theirs with no play between: a CMP tie Cramorant won, no sneak
+  0:47.07  You threw a charged move: Cramorant 0 → 0 (its fast move in progress counts)
   0:58.88  Opponent: Melmetal
   0:59.68    running  Melmetal at 0
   0:59.95  Your buttons: icywind, nightslash; your fast move takes 2 turns

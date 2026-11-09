@@ -62,7 +62,8 @@ public struct OpponentTracker: Sendable {
     /// A stretch of back-to-back fast moves, ended by a charged move or a switch.
     public struct Stretch: Sendable, Hashable {
         public var length: TimeInterval
-        /// Ended by your charged move, so the fast move in progress counted too.
+        /// Ended by your charged move (or by theirs winning a tie with yours), so the fast move in
+        /// progress counted too.
         public var interrupted: Bool
         /// An observed spend proves at least this much energy existed. This is a
         /// reconciliation constraint, not an invented fast move or elapsed time.
@@ -368,6 +369,29 @@ public struct OpponentTracker: Sendable {
             team[i].history[last].interrupted = false
         }
         return false
+    }
+
+    /// Your charged move came straight after theirs with no play between: the same turn, and theirs
+    /// went first (charged move priority). Both of you threw as your fast moves finished, so they'd
+    /// finished a whole number. As in a tie yours won (`opponentThrewOnSameTurn`), the one the clock
+    /// had in progress at their charged move counts if it was at least half done: it had landed and
+    /// the clock was behind (233921: Stunfisk's fifth Thunder Shock, 71% done by the clock, so 5
+    /// before Discharge, not 4). Returns the energy it added (their charged move was already spent).
+    @discardableResult
+    public mutating func theyWonSameTurnTie() -> Int {
+        guard !Rules.off("tieRounds"), let i = activeIndex, let fast = team[i].fastMove,
+              let thrown = team[i].chargedMovesThrown.last, thrown.afterStretch == team[i].history.count else { return 0 }
+        let previousEnd = team[i].chargedMovesThrown.dropLast().last?.afterStretch ?? 0
+        // The stretch their charged move ended (a reconciliation adds an empty one after it).
+        guard let k = team[i].history.indices.last(where: { $0 >= previousEnd && team[i].history[$0].length > 0 }),
+              !team[i].history[k].interrupted else { return 0 }
+        let moves = team[i].history[k].length / (Double(fast.turns) * turnDuration) + 1e-9
+        guard moves - moves.rounded(.down) >= 0.5 else { return 0 }
+        let before = Self.replay(team[i], with: fast, openStretch: nil, throwing: nil).energy
+        team[i].history[k].interrupted = true
+        let added = max(0, Self.replay(team[i], with: fast, openStretch: nil, throwing: nil).energy - before)
+        team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + added)
+        return added
     }
 
     /// They switch out right after the stop: a sneak counted at your charged move didn't

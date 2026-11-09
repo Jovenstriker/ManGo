@@ -60,7 +60,8 @@ TIMELINE (what the screen reader saw and did)
   1:21.33    stopped  Forretress (Shadow) at 48
   1:22.13  Forretress (Shadow) had finished one more fast move: the battle restarted before your buttons came back
   1:29.38  Forretress (Shadow) used Rock Tomb (64 → 14)
-  1:32.94  You threw a charged move: Forretress (Shadow) 14 → 30 (its fast move in progress counts)
+  1:32.94  Your charged move came straight after theirs with no play between: a CMP tie Forretress (Shadow) won, no sneak
+  1:32.94  You threw a charged move: Forretress (Shadow) 14 → 14 (its fast move in progress counts)
   1:51.98  Forretress (Shadow) fainted or switched out
   1:51.98  Opponent: Altaria
   1:53.04    running  Altaria at 48

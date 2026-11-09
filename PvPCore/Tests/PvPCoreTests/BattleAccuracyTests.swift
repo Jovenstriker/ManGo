@@ -60,6 +60,9 @@ private func replayForAccuracy(_ name: String) throws -> (throwsSeen: [BattleAut
     for read in reads {
         automation.process(read, tracker: &tracker)
         throwsSeen += automation.throwsThisRead
+        if let revised = automation.throwRevisedThisRead, let k = throwsSeen.lastIndex(where: { $0.time == revised.time }) {
+            throwsSeen[k] = revised
+        }
         for (i, point) in points.enumerated() where checkpoints[i] == nil && read.time >= point.time {
             // First read at the checkpoint; don't wait for a later, conveniently matching species.
             #expect(read.time - point.time < 0.5, "\(name): no timely read at \(point.time)s")
@@ -75,8 +78,8 @@ private func replayForAccuracy(_ name: String) throws -> (throwsSeen: [BattleAut
 @Test func handEvidenceInventoryIsComplete() throws {
     let all = try evidence()
     #expect(recordedFixtures.count >= 24)
-    #expect(all.values.filter { $0.counts.contains { $0 != nil } }.count == 21)
-    #expect(all.values.flatMap(\.counts).compactMap { $0 }.count == 60)
+    #expect(all.values.filter { $0.counts.contains { $0 != nil } }.count == 22)
+    #expect(all.values.flatMap(\.counts).compactMap { $0 }.count == 66)
     for (name, entry) in all {
         #expect(recordedFixtures.contains(name), "Missing recording for \(name)")
         if !entry.counts.isEmpty { #expect(entry.countTargets?.count == entry.counts.count, "\(name): label identities missing") }

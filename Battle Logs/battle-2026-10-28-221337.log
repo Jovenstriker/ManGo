@@ -60,10 +60,10 @@ OPPONENT CHARGED MOVES
   11 6:03.79  Greninja (Shadow)     Hydro Cannon (40)         44 → 4        3           3     ✓
        calc: 44 = 2 left before + 3 × 14 (Water Shuriken); after: 44 − 40 = 4
        note: Recounted by the user on 2026-11-04: 3 Water Shurikens. Greninja sneaked one at your charged move at 5:41: your Mud Slap and its Water Shuriken are both 3-turn moves, so after a restart they always finish together and it always gets one more when you throw. ManGo measured that stretch as 1.37s, short of one Water Shuriken (1.5s), and counted 2.
-  12 6:33.12  Mimikyu               Shadow Sneak (50)         56 → 6        7           ?     -
-       calc: 56 = 0 left before + 7 × 8 (Shadow Claw); after: 56 − 50 = 6
-  13 7:03.41  Mimikyu               Shadow Sneak (50)         70 → 20       8           ?     -
-       calc: 70 = 6 left before + 8 × 8 (Shadow Claw); after: 70 − 50 = 20
+  12 6:33.12  Mimikyu               Shadow Sneak (50)         64 → 14       8           ?     -
+       calc: 64 = 0 left before + 8 × 8 (Shadow Claw); after: 64 − 50 = 14
+  13 7:03.41  Mimikyu               Shadow Sneak (50)         70 → 20       7           ?     -
+       calc: 70 = 14 left before + 7 × 8 (Shadow Claw); after: 70 − 50 = 20
   14 8:57.11  Forretress (Shadow)   Rock Tomb (50)            100 → 50      7           ?     -
        calc: 100 = 6 left before + 7 × 16 (Volt Switch) + -18 (cap/corrections); after: 100 − 50 = 50
   15 9:07.48  Forretress (Shadow)   Rock Tomb (50)            50 → 0        0           ?     -
@@ -177,6 +177,8 @@ TIMELINE (what the screen reader saw and did)
   6:19.24  Your buttons: earthquake, stoneedge; your fast move takes 2 turns
   6:25.93    stopped  Mimikyu at 56
   6:33.12  Mimikyu used Shadow Sneak (56 → 6)
+  6:36.55  Your charged move came straight after theirs with no play between: a CMP tie Mimikyu won, no sneak
+  6:36.55  Mimikyu threw as a fast move finished: the one the clock had over half done counts (6 → 14)
   6:36.55  You threw a charged move: Mimikyu 6 → 14 (its fast move in progress counts)
   6:49.83    running  Mimikyu at 14
   6:56.48    stopped  Mimikyu at 62

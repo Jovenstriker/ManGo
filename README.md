@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **60 exact hand counts across 21 recordings** in
+There are **66 exact hand counts across 22 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -156,6 +156,7 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | battle-2026-11-08-212316 | Ninetales (Alolan), Quagsire (Shadow), Jumpluff | unknown, 6, 6, unknown, 3 |
 | battle-2026-11-08-220414 | Forretress (Shadow), Carbink, Marowak | 24, 7, 5 |
 | battle-2026-11-08-223847 | Stunfisk, Annihilape, Fearow | 6, 5 |
+| battle-2026-11-08-233921 | Wigglytuff, Stunfisk, Quagsire (Shadow) | 6, 5, 5, 8, 1, 6 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -191,7 +192,11 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-58 of 60 exact hand counts match, and every energy checkpoint. The lead starts 0.2s after GO is
+64 of 66 exact hand counts match, and every energy checkpoint. In 233921 (November 8, 2026) Stunfisk's
+Discharge and your Energy Ball were a CMP tie it won: your charged move followed with no play between
+(your buttons never came back; in 002722, where Greninja did sneak one after its Hydro Cannon, your
+fast move hit it first). So no sneak, and the Thunder Shock the clock had 71% done counts: 5 and 5,
+as you counted, not 4 and 6. The lead starts 0.2s after GO is
 first read, the only start after the countdown that fits every lead's count; when that first read
 caught GO already growing as it fades, it came late and the start is 0.5s earlier. Your HP bar
 doesn't date the lead: in 223847 (November 8, 2026) Stunfisk threw 6 Thunder Shocks, not 7. Dated from

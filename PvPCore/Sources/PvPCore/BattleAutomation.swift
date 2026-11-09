@@ -12,19 +12,23 @@ public struct BattleAutomation: Sendable {
     /// Diagnostics emitted by the latest process call, independent of the bounded UI log.
     public private(set) var logThisRead: [String] = []
     public private(set) var throwsThisRead: [ChargedMoveObservation] = []
+    /// An earlier charged move of theirs, recounted by what this read showed (a tie it won with
+    /// yours): it replaces the observation with the same `time`.
+    public private(set) var throwRevisedThisRead: ChargedMoveObservation?
+    private var lastTheirThrow: ChargedMoveObservation?
 
     public struct ChargedMoveObservation: Sendable {
         public let time: TimeInterval
         public let speciesId: String
         public let move: Move
         public let fastMove: Move?
-        public let energyBefore: Int
-        public let energyAfter: Int
+        public internal(set) var energyBefore: Int
+        public internal(set) var energyAfter: Int
         /// The raw estimate before an observed spend forced reconciliation.
-        public let energyBeforeReconciliation: Int
+        public internal(set) var energyBeforeReconciliation: Int
         /// Modelled fast moves since this Pokémon's previous charged move, including
         /// moves before switching out. Unlike energy differences, this survives the cap.
-        public let fastMoveCount: Int?
+        public internal(set) var fastMoveCount: Int?
     }
 
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
@@ -124,6 +128,11 @@ public struct BattleAutomation: Sendable {
     private var resumedAt: TimeInterval = -.infinity
     private var freeSwitchUntil: TimeInterval = -.infinity
     private var opponentThrewThisStop = false
+    /// Play ran between their charged move and now, in this stop: your fast move hit them after
+    /// their banner had gone, or your next Pokémon came out.
+    private var playSinceTheirChargedMove = false
+    /// A hit on their Pokémon was showing on the last read.
+    private var hitOverThemLastRead = false
     /// Your Pokémon fainted in this stop ("Switch in a new Pokémon?").
     private var yourFaintThisStop = false
     /// Red pokéballs in their name box (Pokémon left): the latest count, when it was read,
@@ -197,6 +206,7 @@ public struct BattleAutomation: Sendable {
     public mutating func process(_ read: ScreenRead, tracker: inout OpponentTracker) {
         logThisRead = []
         throwsThisRead = []
+        throwRevisedThisRead = nil
         guard read.time > lastTime else { return }
         if lastTime.isFinite, read.time - lastTime > 1, !stopped, !isBattleOver, tracker.active != nil {
             tracker.markEnergyUncertain("Screen reads delayed; timing uncertain")
@@ -240,6 +250,14 @@ public struct BattleAutomation: Sendable {
             goShownAtHit = goShown
         }
         hitOverYouLastRead = hitOverYou
+        // Your fast move hitting them once their banner has gone means play ran after their
+        // charged move (002722: "NOT VERY EFFECTIVE..." over Greninja at 0:41.92, after Hydro Cannon).
+        let hitOverThem = read.lines.contains(where: Self.isHitOnThem)
+        if stopped, opponentThrewThisStop, hitOverThem, !hitOverThemLastRead,
+           !read.lines.contains(where: { $0.text.contains(" used ") }) {
+            playSinceTheirChargedMove = true
+        }
+        hitOverThemLastRead = hitOverThem
         if let n = read.opponentAlive {
             if let before = opponentAlive, n < before { aliveDroppedAt = t }
             opponentAlive = n
@@ -410,12 +428,15 @@ public struct BattleAutomation: Sendable {
                                 + (stretch.interrupted ? 1 : 0)
                         }
                     }
-                    throwsThisRead.append(ChargedMoveObservation(
+                    let observation = ChargedMoveObservation(
                         time: t, speciesId: pokemon.speciesId, move: move, fastMove: pokemon.fastMove,
                         energyBefore: before, energyAfter: tracker.snapshot(at: t).energy,
-                        energyBeforeReconciliation: raw, fastMoveCount: count))
+                        energyBeforeReconciliation: raw, fastMoveCount: count)
+                    throwsThisRead.append(observation)
+                    lastTheirThrow = observation
                 }
                 opponentThrewThisStop = true
+                playSinceTheirChargedMove = false
                 chargedMoveThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
                 if battleRecord.start != nil {
@@ -431,6 +452,8 @@ public struct BattleAutomation: Sendable {
 
             case .yourPokemonFainted:
                 yourFaintThisStop = true
+                // Yours can't throw once fainted: a charged move after this is your next Pokémon's.
+                playSinceTheirChargedMove = true
                 if battleRecord.start != nil {
                     battleRecord.markers.append((battleRecord.stops.count, .init(side: .you, time: 0, kind: .fainted)))
                 }
@@ -445,6 +468,7 @@ public struct BattleAutomation: Sendable {
                 // while OCR still sees the dimmed buttons. It cannot justify adding a
                 // fast move by assuming the whole stretch was uninterrupted.
                 playerChangedSinceResume = true
+                playSinceTheirChargedMove = true
                 cadence = FastMoveCadence()
                 yourGaps = []
                 // A switch, not the Pokémon you sent in after yours fainted.
@@ -467,7 +491,29 @@ public struct BattleAutomation: Sendable {
                 chargedMoveThisStop = true
                 playerChargedThisStop = true
                 let energyBefore = tracker.snapshot(at: t).energy
-                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: opponentThrewThisStop)
+                // Straight after theirs with no play between (no hit on them, your buttons never
+                // back), both of you threw on the same turn and theirs won the tie: they weren't in
+                // a fast move, so no sneak (233921: Stunfisk's Discharge, then your Energy Ball at
+                // 1:22.2; 5 Thunder Shocks before its Mud Bomb, not 6).
+                let tieTheyWon = opponentThrewThisStop && !playSinceTheirChargedMove && !Rules.off("cmpAfterTheirs")
+                if tieTheyWon {
+                    note("Your charged move came straight after theirs with no play between: a CMP tie \(name(tracker.active?.speciesId)) won, no sneak")
+                    let added = tracker.theyWonSameTurnTie()
+                    if added > 0, var revised = lastTheirThrow, revised.speciesId == tracker.active?.speciesId {
+                        note("\(name(tracker.active?.speciesId)) threw as a fast move finished: the one the clock had over half done counts (\(revised.energyAfter) → \(tracker.snapshot(at: t).energy))")
+                        revised.fastMoveCount = revised.fastMoveCount.map { $0 + 1 }
+                        revised.energyBeforeReconciliation += revised.fastMove?.energyGain ?? 0
+                        revised.energyBefore = max(revised.energyBefore, min(100, revised.energyBeforeReconciliation))
+                        revised.energyAfter = tracker.snapshot(at: t).energy
+                        throwRevisedThisRead = revised
+                        lastTheirThrow = revised
+                        if let k = battleRecord.charged.lastIndex(where: { $0.move.side == .them }) {
+                            battleRecord.charged[k].move.energyBefore = revised.energyBefore
+                            battleRecord.charged[k].move.energyAfter = revised.energyAfter
+                        }
+                    }
+                }
+                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: opponentThrewThisStop && !tieTheyWon)
                 if tracker.active != nil {
                     note("You threw a charged move: \(name(tracker.active?.speciesId)) \(energyBefore) → \(tracker.snapshot(at: t).energy) (its fast move in progress counts)")
                 }
@@ -637,6 +683,12 @@ public struct BattleAutomation: Sendable {
     /// "NOT VERY EFFECTIVE..." or "SUPER EFFECTIVE!" over your Pokémon: their move hit you.
     private static func isHitOnYou(_ line: RecognizedText) -> Bool {
         NameMatcher.normalize(line.text).contains("effective") && line.box.midX < 0.45 && (0.12...0.7).contains(line.box.midY)
+    }
+
+    /// "NOT VERY EFFECTIVE..." or "SUPER EFFECTIVE!" over their Pokémon: your move hit them. A
+    /// charged move's shows about mid-screen (0.50-0.54 across), so only well to the right.
+    private static func isHitOnThem(_ line: RecognizedText) -> Bool {
+        NameMatcher.normalize(line.text).contains("effective") && line.box.midX > 0.6 && (0.12...0.7).contains(line.box.midY)
     }
 
     /// The opponent's fast moves landing on your HP bar in the opening stretch, GO to the

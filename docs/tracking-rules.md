@@ -52,6 +52,12 @@ explicitly approximate and are not used to identify moves or compute energy.
   done (it had landed and the clock was behind). That shows when both charged moves play out;
   if yours knocks theirs out first, theirs never shows, and neither does the tie, but its energy
   no longer matters.
+- When theirs goes first and yours follows in the same stop with no play between (no hit on their
+  Pokémon after their banner has gone, your buttons never back, your Pokémon not out), it was the
+  same turn and theirs won the tie: no sneak, and the move the clock had in progress at theirs
+  counts if over half done (233921: Stunfisk's Discharge and your Energy Ball at 1:22.2; 5 Thunder
+  Shocks before it and 5 before its Mud Bomb, by the user's count). A sneak after their charged move
+  needs play between (002722: your Mandibuzz's fast move hit Greninja after its Hydro Cannon).
 - After your charged move, their fast move in progress finishes as play resumes: its hit on you
   ("…EFFECTIVE" over your Pokémon, fresh in the stop) shows play had restarted by that read, often
   before your buttons are readable. Not if it knocked yours out: play then waits for your next
@@ -65,7 +71,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 60 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 66 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

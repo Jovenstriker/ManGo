@@ -1025,5 +1025,65 @@
       "all": "User, 2026-11-08: ManGo's counts are right except the lead's; the others are taken as hand counts (the checkpoints: 3 Thunder Shocks and one in progress at your 1:12.3 charged move, 1 Low Kick that knocked yours out, 5 Pecks and one in progress at your 1:36.8 charged move).",
       "1": "User, 2026-11-08: as the lead Stunfisk threw 6 Thunder Shocks before Mud Bomb (0:34.1), not 7. GO showed from about 0:26.85 to 0:27.5 and was first read at 0:27.01."
     }
+  },
+  "battle-2026-11-08-233921": {
+    "video": "Test Videos/battle-2026-11-08-233921.mp4",
+    "description": "Phone-saved battle. You: Thievul, Jumpluff, Blaziken. Opponent: Wigglytuff, Stunfisk, Quagsire (Shadow).",
+    "counts": [
+      6,
+      5,
+      5,
+      8,
+      1,
+      6
+    ],
+    "countTargets": [
+      {
+        "speciesId": "wigglytuff",
+        "moveId": "ICY_WIND"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      },
+      {
+        "speciesId": "wigglytuff",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "wigglytuff",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 111.0,
+        "speciesId": "stunfisk",
+        "energy": 41
+      },
+      {
+        "time": 170.0,
+        "speciesId": "wigglytuff",
+        "energy": 37
+      },
+      {
+        "time": 200.0,
+        "speciesId": "quagsire_shadow",
+        "energy": 27
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-08: ManGo's counts are right except Stunfisk's first two; the others are taken as hand counts (the checkpoints: 3 Thunder Shocks and one in progress at your 1:49.5 charged move, 3 Charms and one in progress at your 2:47.9 one, 2 Mud Shots and one in progress at your 3:18.0 one).",
+      "2": "User, 2026-11-08: Stunfisk threw 5 Thunder Shocks before Discharge (1:18.9), not 4; ManGo's 4 couldn't pay for it.",
+      "3": "User, 2026-11-08: Discharge and your Jumpluff's Energy Ball (Get Ready! at 1:22.2) were a CMP tie that Stunfisk won, so no sneak at yours: 5 before Mud Bomb (1:44.0), not 6. Your buttons never came back between the two charged moves."
+    }
   }
 }

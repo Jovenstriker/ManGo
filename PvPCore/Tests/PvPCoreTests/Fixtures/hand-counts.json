@@ -1221,5 +1221,20 @@
     "notes": {
       "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 0:30.9 and 0:56.8, with the fast move in progress counted."
     }
+  },
+  "battle-2026-11-09-010753": {
+    "video": "Test Videos/battle-2026-11-09-010753.mp4",
+    "description": "Phone-saved battle. You: Thievul, Jumpluff, Blaziken. Opponent: Empoleon, Nidoqueen, Forretress (Shadow).",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 150.3,
+        "speciesId": "nidoqueen",
+        "energy": 10
+      }
+    ],
+    "notes": {
+      "checkpoint": "User, 2026-11-09: Nidoqueen came in on your Blaziken for the fainted Forretress (\"Go, Nidoqueen!\" at 2:27.1) and you threw your charged move straight away (Get Ready! at 2:29.8): Nidoqueen sneaked a Mud Slap. It came in with 0 (it had spent its 40 on Poison Fang at 1:51 and switched out), so 10. ManGo had given it none: your buttons never showed between, so it hadn't seen play resume."
+    }
   }
 }

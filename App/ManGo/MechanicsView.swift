@@ -36,6 +36,7 @@ struct MechanicsView: View {
                     "The exception: if they throw a charged move on the same turn as you, they weren't in a fast move, so there's no extra one.",
                     "If you throw just after their charged move, once play is back, they start a fast move on your charged move's turn (a sneak), and it counts. Unless they switch out right after: then they chose the switch, not a fast move.",
                     "If your charged move follows theirs with no play in between, you both threw on the same turn and theirs won the tie: no sneak.",
+                    "Throwing as soon as a replacement for their fainted Pokémon comes in gives it a sneak too: your charged move takes the first turn of play, and it starts a fast move on it.",
                 ])
 
                 topic("Shields", "shield", [

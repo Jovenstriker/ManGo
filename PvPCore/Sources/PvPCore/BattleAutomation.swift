@@ -125,6 +125,8 @@ public struct BattleAutomation: Sendable {
     /// Play ran between their charged move and now, in this stop: your fast move hit them after
     /// their banner had gone, or your next Pokémon came out.
     private var playSinceTheirChargedMove = false
+    /// Their Pokémon fainted in this stop and its replacement came in.
+    private var theirFaintThisStop = false
     /// A hit on their Pokémon was showing on the last read.
     private var hitOverThemLastRead = false
     /// Your Pokémon fainted in this stop ("Switch in a new Pokémon?").
@@ -323,6 +325,7 @@ public struct BattleAutomation: Sendable {
                 stopped = true
                 opponentThrewThisStop = false
                 yourFaintThisStop = false
+                theirFaintThisStop = false
                 chargedMoveThisStop = false
                 inProgressLandedBy = nil
                 inProgressRuledOut = false
@@ -479,6 +482,11 @@ public struct BattleAutomation: Sendable {
                     lastStopAt = t - before
                     tracker.pause(at: lastStopAt)
                 }
+                // The first charged move after a faint, before ManGo saw play resume: you can only
+                // throw once it has, so yours took its first turn and they started a fast move on
+                // it, a sneak (010753: Nidoqueen in for the fainted Forretress at 2:27.1, your
+                // charged move straight away at 2:29.8; the user saw it sneak a Mud Slap).
+                let afterFaint = !Rules.off("sneakAfterFaint") && !chargedMoveThisStop && (theirFaintThisStop || yourFaintThisStop)
                 chargedMoveThisStop = true
                 playerChargedThisStop = true
                 let energyBefore = tracker.snapshot(at: t).energy
@@ -504,7 +512,7 @@ public struct BattleAutomation: Sendable {
                         }
                     }
                 }
-                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: opponentThrewThisStop && !tieTheyWon)
+                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: (opponentThrewThisStop && !tieTheyWon) || afterFaint)
                 if tracker.active != nil {
                     note("You threw a charged move: \(name(tracker.active?.speciesId)) \(energyBefore) → \(tracker.snapshot(at: t).energy) (its fast move in progress counts)")
                 }
@@ -920,6 +928,7 @@ public struct BattleAutomation: Sendable {
                 unconfirmedFaint = (id, lastStopAt)
             }
             tracker.markActiveFainted(at: time)
+            if stopped { theirFaintThisStop = true }
         }
         // A name change during a stop is a faint replacement or a switch right after their
         // charged move: both take 0 turns, as does a quick switch (above).

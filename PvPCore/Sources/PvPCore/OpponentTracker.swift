@@ -325,8 +325,8 @@ public struct OpponentTracker: Sendable {
         // Only if they've had a turn since their chain began: not when you throw straight
         // after their own charged move, or as they come in.
         if t <= start + 1e-6, afterTheirChargedMove, !Rules.off("sneakAfterTheirs") {
-            // Straight after their charged move, in the same stop: your charged move takes
-            // the next turn, and they start a fast move on it (a sneak), so it counts.
+            // Straight after their charged move (or a faint), in the same stop: your charged move
+            // takes the next turn, and they start a fast move on it (a sneak), so it counts.
             // (Shadow Greninja's Water Shuriken after its Hydro Cannon and your Mandibuzz's
             // throw: without it, its third Hydro Cannon had 32 of 40.)
             let before = team[i].bankedEnergy

@@ -31,6 +31,10 @@ explicitly approximate and are not used to identify moves or compute energy.
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
   (play restarts around your buttons then, even when you shield).
+- After a faint, your first charged move gives them a sneak, even if your buttons never showed
+  play resuming: you can only throw once it has, so yours took its first turn and they started a
+  fast move on it (010753: Nidoqueen in for the fainted Forretress, your charged move at 2:29.8; the
+  user saw it sneak a Mud Slap). Unlike a switch made in play, a replacement has no switch turn.
 - After a faint, neither side attacks until the replacement is out. Dimmed move labels
   can remain on screen during this transition. Confirmed player pokéball loss overrides them.
 - Benched Pokémon keep their energy. Form clarification must preserve their history.

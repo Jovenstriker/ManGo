@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **68 exact hand counts across 22 recordings** in
+There are **71 exact hand counts across 23 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -140,15 +140,16 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | testV3 (Fantasy Cup) | Mimikyu, Turtonator, Granbull | 5, 0, 7 |
 | v7 | Azumarill, Empoleon, Magnezone | unknown, 4, 10, 1 |
 | v8 | Azumarill, Lucario, Mawile | 8, 1, 6, 5, 4 |
+| v9 | Turtonator, Mimikyu, Forretress (Shadow) | unknown × 3, 6 |
 | v11 | Altaria, Mimikyu, Empoleon | 13, 7, unknown, 5, 5 |
 | battle-2026-10-23-132243 | Doublade, Togetic, Stunfisk | 7 |
 | battle-2026-10-24-171449 | Corviknight, Azumarill, Turtonator | unknown × 4, 4, unknown |
 | battle-2026-10-24-172648 | Hydreigon (Shadow), Stunfisk (Galarian), Melmetal | unknown × 3, 10 |
-| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5, 7 |
+| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5, 7, 3 |
 | battle-2026-10-23-155712 | Flygon, Corviknight, Azumarill | unknown, unknown, unknown, 5 |
 | battle-2026-10-28-002722 | Greninja (Shadow), Florges, Charjabug | unknown × 4, 3, unknown × 2 |
 | battle-2026-11-04-155536 | Altaria, Florges, Melmetal | 17, unknown × 5 |
-| battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each; throws 12, 13: 7, 6 |
+| battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each; throws 12, 13: 7, 6; throw 17: 5 |
 | battle-2026-11-04-233009 | Morpeko (Full Belly), Jirachi, Azumarill | unknown, 5, unknown × 4 |
 | battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 6 |
 | battle-2026-11-08-144330 | Cramorant, Melmetal, Clodsire | 5, 8, 2, 10, 1 |
@@ -192,7 +193,7 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-66 of 68 exact hand counts match, and every energy checkpoint. In 221337 you counted Mimikyu's (November 9,
+69 of 71 exact hand counts match, and every energy checkpoint. In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
 the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move

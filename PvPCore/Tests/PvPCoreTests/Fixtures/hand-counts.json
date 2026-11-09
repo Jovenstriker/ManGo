@@ -158,6 +158,37 @@
       "empoleon": "WATERFALL"
     }
   },
+  "gbl-battle-2026-10-20-v9": {
+    "video": "Test Videos/v9.mov",
+    "description": "Screen recording. You: Altaria and Mimikyu among others. Opponent: Turtonator, Mimikyu, Forretress (Shadow).",
+    "counts": [
+      null,
+      null,
+      null,
+      6
+    ],
+    "countTargets": [
+      {
+        "speciesId": "turtonator",
+        "moveId": "DRAGON_CLAW"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "DRAGON_CLAW"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      }
+    ],
+    "notes": {
+      "4": "User, 2026-11-09: 6 Shadow Claws before Shadow Sneak (2:27.8): 4 and one in progress at your charged move (2:04.8 to 2:09.0), then 1 from 2:18.8 to 2:20.6 after they blocked yours. ManGo had added a 7th with a wider line-up window after a block, since dropped."
+    }
+  },
   "gbl-battle-2026-10-20-v8": {
     "video": "Test Videos/v8.mov",
     "description": "Eighth battle, with ManGo on screen. Opponent: Azumarill, Lucario, Mawile.",
@@ -427,9 +458,11 @@
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Stunfisk (Galarian), Forretress (Shadow), Melmetal.",
     "counts": [
       5,
-      7
+      7,
+      3
     ],
     "notes": {
+      "3": "User, 2026-11-09: 3 Volt Switches before Sand Tomb (1:49.5). Forretress switched in for Stunfisk in play (Stunfisk still named at 1:25.10, \"Go, Forretress!\" at 1:25.36 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 1:26.2): none in progress, then 3 from 1:35.9 to 1:42.1.",
       "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that.",
       "2": "User, 2026-11-09: 5 Mud Shots between its Mud Shot in progress hitting you as play resumed (0:52.65) and \"Attack incoming!\" (0:58.6); with ManGo's 1 and a sneak at your charged move at 0:43, 7 since its first Rock Slide. The line-up rule had added a 6th in that stretch, guessing play restarted earlier than the hit showed."
     },
@@ -441,6 +474,10 @@
       {
         "speciesId": "stunfisk_galarian",
         "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
       }
     ],
     "energyCheckpoints": [
@@ -532,7 +569,7 @@
       null,
       null,
       3,
-      null,
+      5,
       3
     ],
     "countTargets": [
@@ -616,6 +653,7 @@
       "16": "Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.",
       "12": "Counted by the user on 2026-11-09: 7 Shadow Claws. Greninja threw 1 Water Shuriken after its Hydro Cannon, then switched to Mimikyu (a 1-turn switch: Greninja still named at 6:08.05, \"Go, Mimikyu!\" at 6:08.32) as you threw your charged move after 1 Snarl, so Mimikyu took that turn to come in and had no Shadow Claw in progress. You switched to Clodsire for 0 turns; then 7 Shadow Claws and Shadow Sneak in a CMP tie with your charged move (Get Ready! at 6:36.55, no play between).",
       "13": "Counted by the user on 2026-11-09: 6 Shadow Claws between 6:49 and its Shadow Sneak at 7:03.4 (no sneak at the 6:36.55 tie).",
+      "17": "User, 2026-11-09: 5 before Earth Power (10:25.7). Nidoqueen switched in for Greninja in play (Greninja still named at 9:46.93, Nidoqueen at 9:47.20 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 9:48.3): none in progress. Then 3 and one in progress at your charged move (9:57.6 to 10:03.5), and 1 (10:16.1 to 10:18.4).",
       "18": "Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.",
       "end": "The battle ended at 11:07.9 (\"GOOD EFFORT!\", read as two lines \"GOOD\" and \"EFFORT!\", which ManGo missed). At 11:02 \"Attack incoming!\" showed but its banner was hidden by a \"Surrender and exit?\" prompt. The user: nothing happened between 11:01 and 13:40; no Hydro Cannon was thrown. At 13:40 ManGo read its own app's event line \"Greninja (Shadow) used Hydro Cannon (28 \u2192 0)\" as a banner."
     },

@@ -42,13 +42,13 @@ OPPONENT CHARGED MOVES
   2  1:05.50  Stunfisk (Galarian)   Rock Slide (45)           63 → 18       7           7     ✓
        calc: 63 = 0 left before + 7 × 9 (Mud Shot); after: 63 − 45 = 18
        note: User, 2026-11-09: 5 Mud Shots between its Mud Shot in progress hitting you as play resumed (0:52.65) and "Attack incoming!" (0:58.6); with ManGo's 1 and a sneak at your charged move at 0:43, 7 since its first Rock Slide. The line-up rule had added a 6th in that stretch, guessing play restarted earlier than the hit showed.
-  3  1:49.46  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           ?     -
+  3  1:49.46  Forretress (Shadow)   Sand Tomb (45)            48 → 3        3           3     ✓
        calc: 48 = 0 left before + 3 × 16 (Volt Switch); after: 48 − 45 = 3
+       note: User, 2026-11-09: 3 Volt Switches before Sand Tomb (1:49.5). Forretress switched in for Stunfisk in play (Stunfisk still named at 1:25.10, "Go, Forretress!" at 1:25.36 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 1:26.2): none in progress, then 3 from 1:35.9 to 1:42.1.
 
 SUMMARY
-  2 of 2 hand-counted charged moves match ManGo's fast move count exactly.
+  3 of 3 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  1 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:22.97  Opponent: Stunfisk

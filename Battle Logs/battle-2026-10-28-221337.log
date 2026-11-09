@@ -73,16 +73,17 @@ OPPONENT CHARGED MOVES
   16 9:41.34  Greninja (Shadow)     Brutal Swing (35)         42 → 7        3           3     ✓
        calc: 42 = 4 left before + 3 × 14 (Water Shuriken) + -4 (cap/corrections); after: 42 − 35 = 7
        note: Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.
-  17 10:25.68  Nidoqueen             Earth Power (50)          50 → 0        5           ?     -
+  17 10:25.68  Nidoqueen             Earth Power (50)          50 → 0        5           5     ✓
        calc: 50 = 10 left before + 5 × 10 (Mud Slap) + -10 (cap/corrections); after: 50 − 50 = 0
+       note: User, 2026-11-09: 5 before Earth Power (10:25.7). Nidoqueen switched in for Greninja in play (Greninja still named at 9:46.93, Nidoqueen at 9:47.20 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 9:48.3): none in progress. Then 3 and one in progress at your charged move (9:57.6 to 10:03.5), and 1 (10:16.1 to 10:18.4).
   18 10:54.94  Greninja (Shadow)     Hydro Cannon (40)         49 → 9        3           3     ✓
        calc: 49 = 7 left before + 3 × 14 (Water Shuriken); after: 49 − 40 = 9
        note: Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.
 
 SUMMARY
-  6 of 6 hand-counted charged moves match ManGo's fast move count exactly.
+  7 of 7 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  12 not hand-counted.
+  11 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:39.20  Opponent: Scizor (Shadow)

@@ -180,6 +180,8 @@ class Heuristic:
 
     def shield(self, view: View, move: Move) -> bool:
         mon = view.mon
+        if mon.form == "disguised":
+            return False   # Mimikyu's Disguise takes this one for free
         full = damage(move, view.foe_species, mon.species, view.foe_stages[0], mon.def_stage)
         p = shield_prob(self.style, ShieldContext(mon.hp, mon.max_hp, full, view.me.shields), self.eps)
         return self.rng.random() < p

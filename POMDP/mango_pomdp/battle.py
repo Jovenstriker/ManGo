@@ -15,6 +15,16 @@ Each turn:
      knocks out its user, and a Pokémon knocked out by the first charged move doesn't throw its own.
   5. Faints: both sides stop attacking, the fainted side picks a replacement (no switch timer).
 
+Form changes, as PvPoke implements them (Battle.js), for species whose data has an "ability":
+  disguise       Mimikyu: the first charged move it takes without shielding deals 1 damage. It's
+                 then Busted, with −1 defense that a switch doesn't clear.
+  gulp_missile   Cramorant: Dive or Surf makes it catch an Arrokuda (above half HP) or a Pikachu.
+                 The next charged move that hits it unshielded makes it spit the catch back
+                 instantly, even if that hit knocks it out: 15% of the attacker's max HP plus −1
+                 defense (Arrokuda) or −2 attack (Pikachu). A switch drops the catch.
+  hunger_switch  Morpeko: every charged move toggles Full Belly / Hangry, and Aura Wheel is
+                 Electric or Dark to match. A switch resets it to Full Belly.
+
 The battle clock (4 minutes) stops during charged moves. At time-out the side with more Pokémon
 left wins, then the one with more HP left.
 
@@ -24,17 +34,26 @@ Energy is never in a view; `belief.EnergyCounter` counts it the way ManGo does.
 """
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from .gamedata import MAX_ENERGY, MAX_STAGE, Move, Species, damage, stage_multiplier
+
+if TYPE_CHECKING:
+    from .gamedata import GameData
 
 TIME_LIMIT_TURNS = 480     # 4 minutes
 SWITCH_TURNS = 90          # 45 seconds (PvPoke Player.switchTime)
 SHIELDS = 2
 
 FAST = ("fast", 0)
+
+GULP_TRIGGERS = ("DIVE", "SURF")
+# PvPoke's GULP_MISSILE_ARROKUDA / _PIKACHU: 15% of the target's max HP, then (attack, defense) stages.
+GULP_POWER = 0.15
+GULP_MISSILE = {"gulping": (0, -1), "gorging": (-2, 0)}
 
 
 def CHARGED(i: int) -> tuple[str, int]:
@@ -46,9 +65,10 @@ def SWITCH(i: int) -> tuple[str, int]:
 
 
 class Mon:
-    __slots__ = ("species", "fast", "charged", "hp", "energy", "atk_stage", "def_stage")
+    __slots__ = ("species", "fast", "charged", "hp", "energy", "atk_stage", "def_stage", "form", "native", "alt")
 
-    def __init__(self, species: Species, fast: Move, charged: tuple[Move, ...], hp: int | None = None, energy: int = 0):
+    def __init__(self, species: Species, fast: Move, charged: tuple[Move, ...], hp: int | None = None, energy: int = 0,
+                 alt: dict[str, Move] | None = None):
         self.species = species
         self.fast = fast
         self.charged = charged
@@ -56,19 +76,52 @@ class Mon:
         self.energy = energy
         self.atk_stage = 0
         self.def_stage = 0
+        # Public, like HP: "disguised"/"busted" (Mimikyu), "gulping"/"gorging" (Cramorant), "hangry" (Morpeko).
+        self.form = "disguised" if species.ability == "disguise" else ""
+        self.native = (0, 0)     # stat stages the form keeps through switches
+        self.alt = alt or {}     # move id -> the other form's version of it
+
+    @classmethod
+    def build(cls, gd: GameData, species_id: str, fast: str, charged: tuple[str, ...]) -> Mon:
+        sp = gd.species[species_id]
+        alt = {}
+        for a, b in sp.form_moves:
+            if a in gd.moves and b in gd.moves:
+                alt[a], alt[b] = gd.moves[b], gd.moves[a]
+        return cls(sp, gd.moves[fast], tuple(gd.moves[c] for c in charged), alt=alt)
 
     @property
     def max_hp(self) -> int:
         return self.species.hp
 
+    def set_form(self, form: str) -> None:
+        if self.species.ability == "hunger_switch" and (form == "hangry") != (self.form == "hangry"):
+            self.charged = tuple(self.alt.get(m.id, m) for m in self.charged)
+        if self.species.ability == "disguise" and form == "busted" and self.form != "busted":
+            self.native = (0, -1)
+            self.def_stage = _clamp(self.def_stage - 1)
+        self.form = form
+
+    def base_move(self, move: Move) -> Move:
+        """The move as its default form knows it (Morpeko's Aura Wheel is listed as Electric)."""
+        return self.alt.get(move.id, move) if self.form == "hangry" else move
+
+    def leave(self) -> None:
+        """Going to the bench: buffs reset to the form's own, and Cramorant and Morpeko revert."""
+        if self.species.ability in ("gulp_missile", "hunger_switch"):
+            self.set_form("")
+        self.atk_stage, self.def_stage = self.native
+
     def clone(self) -> Mon:
         m = Mon.__new__(Mon)
         m.species, m.fast, m.charged = self.species, self.fast, self.charged
         m.hp, m.energy, m.atk_stage, m.def_stage = self.hp, self.energy, self.atk_stage, self.def_stage
+        m.form, m.native, m.alt = self.form, self.native, self.alt
         return m
 
     def __repr__(self) -> str:
-        return f"{self.species.name}({self.hp}/{self.max_hp} hp, {self.energy} energy)"
+        form = f", {self.form}" if self.form else ""
+        return f"{self.species.name}({self.hp}/{self.max_hp} hp, {self.energy} energy{form})"
 
 
 class Side:
@@ -106,7 +159,7 @@ class Event:
     """Something both players see happen. Never carries energy."""
     turn: int
     side: int
-    kind: str                  # enter, fast, charged, faint
+    kind: str                  # enter, fast, charged, gulp (Cramorant's Gulp Missile), faint
     species: str
     move: Move | None = None
     info: dict = field(default_factory=dict)
@@ -183,11 +236,10 @@ class Battle:
             return
         t = self.turn
         queued: list[tuple[int, int]] = []
-        for s in (0, 1):
+        # Both sides choose from the start-of-turn state, so neither sees the other's choice.
+        choices = [(s, controllers[s].act(View(self, s))) for s in (0, 1) if self.sides[s].busy_until <= t]
+        for s, (kind, arg) in choices:
             side = self.sides[s]
-            if side.busy_until > t:
-                continue
-            kind, arg = controllers[s].act(View(self, s))
             if kind == "switch" and side.switch_timer == 0 and arg in side.bench():
                 self._switch_in(s, arg, timer=True)
             elif kind == "charged" and 0 <= arg < len(side.mon.charged) and side.mon.energy >= side.mon.charged[arg].energy:
@@ -236,20 +288,32 @@ class Battle:
             shield = False
         if shield:
             foe.shields -= 1
-        target.hp = max(0, target.hp - (1 if shield else full))
+        target_form = target.form
+        disguise = not shield and target_form == "disguised"
+        dealt = 1 if shield or disguise else full
+        target.hp = max(0, target.hp - dealt)
         if move.buff_chance and self.rng.random() < move.buff_chance:
             mon.atk_stage = _clamp(mon.atk_stage + move.buff_self[0])
             mon.def_stage = _clamp(mon.def_stage + move.buff_self[1])
             target.atk_stage = _clamp(target.atk_stage + move.buff_opponent[0])
             target.def_stage = _clamp(target.def_stage + move.buff_opponent[1])
-        self.seen[s][mon.species.id]["charged"].add(move.id)
+        if disguise:
+            target.set_form("busted")
+        shown = mon.base_move(move)
+        if mon.species.ability == "gulp_missile" and move.id in GULP_TRIGGERS:
+            mon.set_form("gulping" if mon.hp > mon.max_hp / 2 else "gorging")
+        elif mon.species.ability == "hunger_switch":
+            mon.set_form("" if mon.form == "hangry" else "hangry")
+        self.seen[s][mon.species.id]["charged"].add(shown.id)
         for x in self.sides:   # every cooldown resets: both act again next turn
             x.busy_until = t + 1
             x.fast_due = -1
-        self._event(s, "charged", mon.species.id, move, {
-            "shielded": shield, "damage": 1 if shield else full, "full_damage": full,
+        self._event(s, "charged", mon.species.id, shown, {
+            "shielded": shield, "damage": dealt, "full_damage": full, "disguise": disguise,
             "target": target.species.id, "target_hp": hp_before, "target_shields": shields_before,
-            "attacker_hp": mon.hp})
+            "target_form": target_form, "attacker_hp": mon.hp, "type": move.type})
+        if not shield and target_form in GULP_MISSILE:
+            self._gulp(1 - s)
         return True
 
     def handle_faints(self, controllers: list[Controller]) -> None:
@@ -266,9 +330,10 @@ class Battle:
         for side in self.sides:
             side.fast_due = -1
             side.busy_until = self.turn + 1
-        for s in fainted:
+        # After a double knockout, both pick before either replacement comes in.
+        picks = [(s, controllers[s].replace(View(self, s))) for s in fainted]
+        for s, pick in picks:
             bench = self.sides[s].bench()
-            pick = controllers[s].replace(View(self, s))
             self._switch_in(s, pick if pick in bench else bench[0], timer=False)
 
     def end_turn(self, charged_used: bool) -> None:
@@ -307,10 +372,24 @@ class Battle:
             "damage": dmg, "target": target.species.id, "target_hp": target.hp + dmg,
             "target_shields": foe.shields, "started": started})
 
+    def _gulp(self, s: int) -> None:
+        """Side s's Cramorant took a charged move holding its catch, and spits it back."""
+        mon, target = self.sides[s].mon, self.sides[1 - s].mon
+        catch = mon.form
+        atk, df = GULP_MISSILE[catch]
+        dmg = math.floor(GULP_POWER * target.max_hp) + 1
+        hp_before = target.hp
+        target.hp = max(0, target.hp - dmg)
+        target.atk_stage = _clamp(target.atk_stage + atk)
+        target.def_stage = _clamp(target.def_stage + df)
+        mon.set_form("")
+        self._event(s, "gulp", mon.species.id, None, {
+            "catch": catch, "damage": dmg, "target": target.species.id, "target_hp": hp_before})
+
     def _switch_in(self, s: int, i: int, timer: bool) -> None:
         side = self.sides[s]
         out = side.mon
-        out.atk_stage = out.def_stage = 0
+        out.leave()
         side.active = i
         side.entered = self.turn
         side.busy_until = self.turn + 1
@@ -407,6 +486,13 @@ class View:
     def foe_seen(self) -> dict[str, dict]:
         """Species id -> {"fast": Move or None, "charged": set of move ids} for every opponent seen."""
         return self._b.seen[1 - self.side]
+
+    def foe_form_of(self, species_id: str) -> str:
+        """An opponent Pokémon's form, which the screen shows like its HP."""
+        for m in self._b.sides[1 - self.side].mons:
+            if m.species.id == species_id:
+                return m.form
+        return ""
 
     def foe_hp_of(self, species_id: str) -> int | None:
         """HP of an opponent Pokémon you've seen (the game shows it when it's out; you remember it after)."""

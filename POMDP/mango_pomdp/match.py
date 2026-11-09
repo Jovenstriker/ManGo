@@ -2,17 +2,19 @@
 from __future__ import annotations
 
 from .battle import Battle
-from .gamedata import GameData
+from .gamedata import GameData, TopTeam
 from .planner import Planner
 from .policies import STYLES, Heuristic, RandomPlayer
-from .team_prior import TeamPrior, TeamSpec, build_team
+from .team_prior import TeamListPrior, TeamPrior, TeamSpec, build_team
 
-PLAYERS = ("random", *STYLES, "planner", "planner-flat", "planner-1style", "oracle")
+PLAYERS = ("random", *STYLES, "planner", "planner-flat", "planner-1style", "planner-list", "oracle")
 
 
 def make_player(name: str, gd: GameData, prior: TeamPrior, seed: int,
-                truth: TeamSpec | None = None, truth_style: str | None = None, rollouts: int = 12):
-    """`truth` and `truth_style` (the opponent's real team and style) are only read by "oracle"."""
+                truth: TeamSpec | None = None, truth_style: str | None = None, rollouts: int = 12,
+                teams: list[TopTeam] | None = None):
+    """`truth` and `truth_style` (the opponent's real team and style) are only read by "oracle".
+    `teams` is the list of teams "planner-list" knows the opponent picks from."""
     if name == "random":
         return RandomPlayer(seed)
     if name in STYLES:
@@ -25,6 +27,8 @@ def make_player(name: str, gd: GameData, prior: TeamPrior, seed: int,
         return Planner(gd, flat, rollouts=rollouts, styles=("baiter",), seed=seed, name=name)
     if name == "planner-1style":
         return Planner(gd, prior, rollouts=rollouts, styles=("baiter",), seed=seed, name=name)
+    if name == "planner-list":
+        return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts, seed=seed, name=name)
     if name == "oracle":
         return Planner(gd, prior, rollouts=rollouts, seed=seed, oracle=(truth, truth_style), name=name)
     raise ValueError(f"unknown player {name!r}; pick from {PLAYERS}")

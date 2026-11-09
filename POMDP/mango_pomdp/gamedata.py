@@ -1,9 +1,14 @@
-"""Great League game data and the damage formula, following PvPoke's DamageCalculator.
+"""Game data for a 1500 CP format and the damage formula, following PvPoke's DamageCalculator.
 
     damage = floor(power × STAB × attack / defense × effectiveness × 0.5 × 1.3) + 1
 
 Attack and defense include buff stages ((4 + s) / 4 up, 4 / (4 − s) down) and the shadow
-multipliers, which data/great_league.json already folds into each shadow's stats.
+multipliers, which the data files already fold into each shadow's stats.
+
+One file per format, built by scripts/update_data.sh:
+  great_league        PvPoke's Great League rankings (the default)
+  mega_great_league   PvPoke's Mega Great League rankings, plus its top teams
+`use(name)` switches the format `load()` returns, for code that doesn't pass a GameData around.
 """
 from __future__ import annotations
 
@@ -13,7 +18,8 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-DATA = Path(__file__).resolve().parent.parent / "data" / "great_league.json"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA = DATA_DIR / "great_league.json"
 
 BONUS = 1.2999999523162841796875
 STAB = 1.2000000476837158203125
@@ -79,6 +85,17 @@ class Move:
 
 
 @dataclass(frozen=True, slots=True)
+class TopTeam:
+    spec: tuple[tuple[str, str, tuple[str, ...]], ...]   # ((species id, fast id, (charged ids)), ...)
+    rating: float     # PvPoke's team rating
+    usage: float      # share of PvPoke's training battles
+
+    @property
+    def species(self) -> tuple[str, ...]:
+        return tuple(sid for sid, _, _ in self.spec)
+
+
+@dataclass(frozen=True, slots=True)
 class Species:
     id: str
     name: str
@@ -92,6 +109,8 @@ class Species:
     charged_usage: tuple[tuple[str, int], ...]
     moveset: tuple[str, ...]                    # PvPoke's recommended [fast, charged, charged]
     counters: tuple[str, ...] = field(default=())
+    ability: str = ""                           # a form change: disguise, gulp_missile, hunger_switch
+    form_moves: tuple[tuple[str, str], ...] = ()   # (move, the other form's version of it)
 
     @property
     def weaknesses(self) -> frozenset[str]:
@@ -110,8 +129,13 @@ class GameData:
         for p in raw["pokemon"]:
             self.species[p["id"]] = Species(
                 p["id"], p["name"], p["dex"], p["rank"], tuple(p["types"]), p["atk"], p["def"], p["hp"],
-                tuple(p["fast"].items()), tuple(p["charged"].items()), tuple(p["moveset"]), tuple(p["counters"]))
+                tuple(p["fast"].items()), tuple(p["charged"].items()), tuple(p["moveset"]), tuple(p["counters"]),
+                p.get("ability", ""), tuple(p.get("formMoves", {}).items()))
         self.ranked = sorted(self.species.values(), key=lambda s: s.rank)
+        # A format's top teams, when its file has them: lead first, as the export lists them.
+        self.teams: list[TopTeam] = [
+            TopTeam(tuple((m["id"], m["fast"], tuple(m["charged"])) for m in t["members"]), t["rating"], t["usage"])
+            for t in raw.get("teams", [])]
 
     def recommended(self, species_id: str) -> tuple[Move, tuple[Move, ...]]:
         s = self.species[species_id]
@@ -126,11 +150,20 @@ def damage(move: Move, attacker: Species, defender: Species, atk_stage: int = 0,
     return math.floor(move.power * stab * atk / df * effectiveness(move.type, defender.types) * 0.5 * BONUS) + 1
 
 
-_default: GameData | None = None
+_loaded: dict[str, GameData] = {}
+_current = "great_league"
 
 
-def load() -> GameData:
-    global _default
-    if _default is None:
-        _default = GameData()
-    return _default
+def load(name: str | None = None) -> GameData:
+    """A format's data (the current one by default), loaded once per process."""
+    name = name or _current
+    if name not in _loaded:
+        _loaded[name] = GameData(DATA_DIR / f"{name}.json")
+    return _loaded[name]
+
+
+def use(name: str) -> GameData:
+    """Makes `name` the format `load()` returns, and returns it."""
+    global _current
+    _current = name
+    return load(name)

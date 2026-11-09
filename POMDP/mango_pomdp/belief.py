@@ -104,6 +104,8 @@ class Belief:
         self.counter.observe(e)
 
     def _foe_shield_decision(self, e: Event) -> None:
+        if e.info.get("target_form") == "disguised":
+            return   # no style shields into Mimikyu's Disguise, so it says nothing
         target = self.gd.species[e.info["target"]]
         ctx = ShieldContext(e.info["target_hp"], target.hp, e.info["full_damage"], e.info["target_shields"])
         shielded = e.info["shielded"]
@@ -215,10 +217,11 @@ class Belief:
         mons = []
         for sid in order:
             fast, charged = p.moves[sid]
-            m = Mon(gd.species[sid], gd.moves[fast], tuple(gd.moves[c] for c in charged))
+            m = Mon.build(gd, sid, fast, charged)
             if sid in self.revealed:
                 m.hp = view.foe_hp_of(sid)
                 m.energy = self.counter.energy.get(sid, 0)
+                m.set_form(view.foe_form_of(sid))
             mons.append(m)
         foe = Side(mons, view.foe_shields)
         foe.active = order.index(view.foe_species.id)

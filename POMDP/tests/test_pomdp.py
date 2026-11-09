@@ -5,6 +5,7 @@ import unittest
 from mango_pomdp.battle import CHARGED, FAST, SWITCH, SWITCH_TURNS, Battle, Mon
 from mango_pomdp.belief import Belief
 from mango_pomdp.duel import CDuel, Duel, DuelPlayer, Fighter, _library, play_out, solve_matrix
+from mango_pomdp import gamedata
 from mango_pomdp.gamedata import IMMUNE, SE, damage, effectiveness, load
 from mango_pomdp.match import make_player, play
 from mango_pomdp.policies import Heuristic
@@ -114,6 +115,20 @@ class BattleTests(unittest.TestCase):
         self.assertEqual(b.sides[0].switch_timer, SWITCH_TURNS - 1)
         self.assertFalse(b.view(0).can_switch)
 
+    def test_choices_are_simultaneous(self):
+        # Side 1 decides turn 0 without seeing side 0's switch on that same turn.
+        seen = []
+
+        class Watcher(Scripted):
+            def act(self, view):
+                seen.append(view.foe_species.id)
+                return FAST
+
+        b = Battle([[mon("medicham"), mon("azumarill")], [mon("swampert")]], seed=0)
+        b.step([Scripted([SWITCH(1)]), Watcher()])
+        self.assertEqual(seen, ["medicham"])
+        self.assertEqual(b.sides[0].mon.species.id, "azumarill")
+
     def test_battles_finish_and_are_reproducible(self):
         rng = random.Random(3)
         teams = [prior.sample_team(rng), prior.sample_team(rng)]
@@ -190,6 +205,115 @@ class PlannerTests(unittest.TestCase):
                                               make_player("random", gd, prior, g)], seed=g)
                 score += {0: 1, -1: 0.5, 1: 0}[b.winner]
         self.assertGreaterEqual(score / 12, 0.7)
+
+
+mega = load("mega_great_league")
+
+
+def mega_mon(sid, fast, *charged):
+    return Mon.build(mega, sid, fast, charged)
+
+
+class FormTests(unittest.TestCase):
+    """Form changes, checked against PvPoke's Battle.js."""
+
+    def test_disguise_blocks_the_first_charged_move_and_stays_busted(self):
+        mimikyu = mega_mon("mimikyu", "SHADOW_CLAW", "SHADOW_SNEAK", "PLAY_ROUGH")
+        melmetal = mega_mon("melmetal", "THUNDER_SHOCK", "DOUBLE_IRON_BASH", "DYNAMIC_PUNCH")
+        melmetal.energy = 100
+        b = Battle([[melmetal], [mimikyu, mega_mon("altaria", "DRAGON_BREATH", "FLAMETHROWER", "MOONBLAST")]], seed=0)
+        hp = mimikyu.hp
+        self.assertFalse(Heuristic("shielder", eps=0).shield(b.view(1), melmetal.charged[0]))
+        b.step([Scripted([CHARGED(0)]), Scripted()])
+        self.assertEqual(hp - mimikyu.hp, 1)       # Melmetal threw instead of fast moving: just the block
+        self.assertEqual((mimikyu.form, mimikyu.def_stage), ("busted", -1))
+        self.assertEqual(b.sides[1].shields, 2)    # Disguise isn't a shield
+        b.step([Scripted([CHARGED(0)]), Scripted()])
+        self.assertGreater(hp - 1 - mimikyu.hp, 1)
+        b.step([Scripted(), Scripted([SWITCH(1)])])
+        self.assertEqual(mimikyu.def_stage, -1)    # a switch doesn't clear Busted's −1 defense
+
+    def test_cramorant_spits_its_catch_at_whoever_hits_it(self):
+        for hp_share, catch, stages in ((1.0, "gulping", (0, -1)), (0.4, "gorging", (-2, 0))):
+            cramorant = mega_mon("cramorant", "PECK", "DIVE", "FLY")
+            melmetal = mega_mon("melmetal", "THUNDER_SHOCK", "DOUBLE_IRON_BASH", "DYNAMIC_PUNCH")
+            cramorant.hp = int(cramorant.max_hp * hp_share)
+            cramorant.energy = melmetal.energy = 100
+            b = Battle([[cramorant], [melmetal]], seed=0)
+            b.step([Scripted([CHARGED(0)]), Scripted()])
+            self.assertEqual(cramorant.form, catch)
+            b.step([Scripted(), Scripted([CHARGED(0)])])
+            gulp = [e for e in b.log if e.kind == "gulp"]
+            self.assertEqual(len(gulp), 1)
+            self.assertEqual(gulp[0].info["damage"], int(0.15 * melmetal.max_hp) + 1)
+            self.assertEqual(gulp[0].info["target_hp"] - melmetal.hp, gulp[0].info["damage"])
+            self.assertEqual((melmetal.atk_stage, melmetal.def_stage), stages)
+            self.assertEqual(cramorant.form, "")
+
+    def test_shielding_keeps_cramorants_catch(self):
+        cramorant = mega_mon("cramorant", "PECK", "DIVE", "FLY")
+        melmetal = mega_mon("melmetal", "THUNDER_SHOCK", "DOUBLE_IRON_BASH", "DYNAMIC_PUNCH")
+        cramorant.energy = melmetal.energy = 100
+        b = Battle([[cramorant], [melmetal]], seed=0)
+        b.step([Scripted([CHARGED(0)]), Scripted()])
+        b.step([Scripted(shields=True), Scripted([CHARGED(0)])])
+        self.assertEqual(cramorant.form, "gulping")
+        self.assertFalse(any(e.kind == "gulp" for e in b.log))
+
+    def test_morpeko_alternates_aura_wheel_types(self):
+        morpeko = mega_mon("morpeko_full_belly", "THUNDER_SHOCK", "AURA_WHEEL_ELECTRIC", "PSYCHIC_FANGS")
+        quagsire = mega_mon("quagsire", "MUD_SHOT", "AQUA_TAIL", "STONE_EDGE")
+        quagsire.hp = 10_000
+        morpeko.energy = 100
+        b = Battle([[morpeko, mega_mon("altaria", "DRAGON_BREATH", "FLAMETHROWER", "MOONBLAST")], [quagsire]], seed=0)
+        types = []
+        for _ in range(2):
+            b.step([Scripted([CHARGED(0)]), Scripted()])
+            types.append(next(e for e in reversed(b.log) if e.kind == "charged").info["type"])
+        self.assertEqual(types, ["electric", "dark"])
+        self.assertEqual(morpeko.form, "")
+        morpeko.energy = 100
+        b.step([Scripted([CHARGED(0)]), Scripted()])
+        self.assertEqual(morpeko.form, "hangry")
+        b.step([Scripted([SWITCH(1)]), Scripted()])
+        self.assertEqual((morpeko.form, morpeko.charged[0].id), ("", "AURA_WHEEL_ELECTRIC"))
+        self.assertEqual({e.move.id for e in b.log if e.kind == "charged"}, {"AURA_WHEEL_ELECTRIC"})
+
+
+class TopTeamTests(unittest.TestCase):
+    def test_every_team_decodes_to_legal_moves(self):
+        self.assertEqual(len(mega.teams), 48)
+        for t in mega.teams:
+            self.assertEqual(len(t.spec), 3)
+            for sid, f, cs in t.spec:
+                self.assertTrue(mega.moves[f].is_fast)
+                self.assertEqual(len(cs), 2)
+                self.assertTrue(all(not mega.moves[c].is_fast for c in cs))
+
+    def test_list_prior_narrows_to_teams_with_that_lead(self):
+        from mango_pomdp.team_prior import TeamListPrior
+        listed = TeamListPrior(mega, mega.teams, fallback=TeamPrior(mega))
+        rng = random.Random(0)
+        leads = [listed.complete_team(rng, ["cramorant"]) for _ in range(300)]
+        fits = {tuple(t.species) for t in mega.teams if "cramorant" in t.species}
+        self.assertTrue(all(any(set(team) == set(f) for f in fits) for team in leads))
+        led = sum(any(team == list(f) for f in fits if f[0] == "cramorant") for team in leads)
+        self.assertGreater(led / len(leads), 0.7)
+        # Nothing listed fits: the structured prior fills it in instead.
+        self.assertEqual(len(listed.complete_team(rng, ["carbink"])), 3)
+
+    def test_planner_with_the_list_plays_either_side(self):
+        gamedata.use("mega_great_league")
+        try:
+            for g in range(2):
+                mine, theirs = list(mega.teams[24].spec), list(mega.teams[g].spec)
+                me = make_player("planner-list", mega, TeamPrior(mega), g, rollouts=4, teams=mega.teams[:24])
+                teams, players = ([mine, theirs], [me, Heuristic("baiter", seed=g)]) if g == 0 else \
+                    ([theirs, mine], [Heuristic("baiter", seed=g), me])
+                b = play(mega, teams, players, seed=g)
+                self.assertTrue(b.done)
+        finally:
+            gamedata.use("great_league")
 
 
 def payoff(battle, duel):

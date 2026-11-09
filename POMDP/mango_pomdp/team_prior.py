@@ -24,7 +24,7 @@ import math
 import random
 
 from .battle import Mon
-from .gamedata import TYPES, GameData, Species
+from .gamedata import TYPES, GameData, Species, TopTeam
 
 TeamSpec = list[tuple[str, str, tuple[str, ...]]]   # [(species id, fast id, (charged ids))]
 
@@ -112,8 +112,62 @@ class TeamPrior:
         return [(sid, *self.sample_moveset(rng, sid)) for sid in ids]
 
 
+class TeamListPrior:
+    """The opponent brings one of a known list of teams (a format's top teams), weighted by usage.
+
+    Each reveal narrows it to the teams that fit. The lead is taken to be the team's first
+    Pokémon with probability `lead_as_listed`, since that's how the export lists them. Movesets
+    come from the listed teams that have the species. A team or moveset the list doesn't explain
+    falls back to the structured prior, so a surprise doesn't break the belief.
+    """
+
+    def __init__(self, gd: GameData, teams: list[TopTeam], fallback: TeamPrior | None = None,
+                 lead_as_listed: float = 0.9):
+        self.gd = gd
+        self.teams = list(teams)
+        self.fallback = fallback or TeamPrior(gd)
+        self.pool = self.fallback.pool
+        self.structured = True
+        self.lead_as_listed = lead_as_listed
+
+    def fits(self, known: list[str]) -> list[tuple[TopTeam, float]]:
+        """Listed teams consistent with the species seen so far (lead first), with their weights."""
+        out = []
+        for t in self.teams:
+            if not set(known) <= set(t.species):
+                continue
+            w = max(t.usage, 1e-4)
+            if known:
+                w *= self.lead_as_listed if t.species[0] == known[0] else 1 - self.lead_as_listed
+            out.append((t, w))
+        return out
+
+    def complete_team(self, rng: random.Random, known: list[str]) -> list[str]:
+        if len(known) >= 3:
+            return list(known)[:3]
+        fits = self.fits(known)
+        if not fits:
+            return self.fallback.complete_team(rng, known)
+        team = rng.choices([t for t, _ in fits], [w for _, w in fits])[0]
+        return list(known) + [s for s in team.species if s not in known]
+
+    def sample_moveset(self, rng: random.Random, species_id: str, fast: str | None = None,
+                       charged: tuple[str, ...] | set[str] = ()) -> tuple[str, tuple[str, ...]]:
+        options = [(f, cs) for t in self.teams for sid, f, cs in t.spec
+                   if sid == species_id and (fast is None or f == fast) and set(charged) <= set(cs)]
+        weights = [max(t.usage, 1e-4) for t in self.teams for sid, f, cs in t.spec
+                   if sid == species_id and (fast is None or f == fast) and set(charged) <= set(cs)]
+        if not options:
+            return self.fallback.sample_moveset(rng, species_id, fast, charged)
+        return rng.choices(options, weights)[0]
+
+    def sample_team(self, rng: random.Random) -> TeamSpec:
+        team = rng.choices(self.teams, [max(t.usage, 1e-4) for t in self.teams])[0]
+        return list(team.spec)
+
+
 def build_team(gd: GameData, spec: TeamSpec) -> list[Mon]:
-    return [Mon(gd.species[sid], gd.moves[f], tuple(gd.moves[c] for c in cs)) for sid, f, cs in spec]
+    return [Mon.build(gd, sid, f, cs) for sid, f, cs in spec]
 
 
 def describe(gd: GameData, spec: TeamSpec) -> str:

@@ -3,6 +3,7 @@
     ■       a 1-turn fast move           ●  a charged move
     [==]    a longer one, start to hit   ◆  a shield
     X       a faint                      ◉  a charged move and a shield on the same turn
+    D       Mimikyu's Disguise blocks    G  Cramorant's Gulp Missile fires back
 
 A fast move a charged move interrupted is drawn up to the turn it registered.
 """
@@ -28,6 +29,10 @@ def render(battle: Battle, names: tuple[str, str], width: int = WIDTH) -> str:
             if e.info["shielded"]:
                 other = rows[1 - e.side]
                 other[e.turn] = "◉" if other[e.turn] == "●" else "◆"
+            elif e.info.get("disguise"):
+                rows[1 - e.side][e.turn] = "D"
+        elif e.kind == "gulp":
+            row[e.turn] = "G"
         elif e.kind == "faint":
             row[e.turn] = "X"
     label = max(len(n) for n in names) + 2

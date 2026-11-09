@@ -342,6 +342,86 @@
       "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pok\u00e9balls stayed red (opponentAlive added from the video with screen-log --balls)."
     }
   },
+  "battle-2026-10-24-171449": {
+    "video": "Test Videos/battle-2026-10-24-171449.mp4",
+    "description": "Phone-saved battle. Opponent: Corviknight, Azumarill, Turtonator.",
+    "counts": [
+      null,
+      null,
+      null,
+      null,
+      4,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "corviknight",
+        "moveId": "AIR_CUTTER"
+      },
+      {
+        "speciesId": "corviknight",
+        "moveId": "PAYBACK"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "HYDRO_PUMP"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "BRUTAL_SWING"
+      }
+    ],
+    "notes": {
+      "5": "User, 2026-11-09: 2 Incinerates after play resumed at 2:37.4 (its Incinerate in progress hit you) before switching to Corviknight at 2:43.1 (4.7s, close to 2), not 1. With ManGo's sneak at your charged move at 2:27.8 and 1 after it came back at 3:14.6: 4."
+    }
+  },
+  "battle-2026-10-24-172648": {
+    "video": "Test Videos/battle-2026-10-24-172648.mp4",
+    "description": "Phone-saved battle. Opponent: Hydreigon (Shadow), Stunfisk (Galarian), Melmetal. Galarian Stunfisk threw Earthquake after your charged move; exact energy checkpoint.",
+    "counts": [
+      null,
+      null,
+      null,
+      10
+    ],
+    "throwEnergy": [
+      {
+        "ordinal": 3,
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE",
+        "exact": 71
+      }
+    ],
+    "countTargets": [
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE"
+      },
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      }
+    ],
+    "notes": {
+      "4": "User, 2026-11-09: 3 Dragon Breaths after play resumed at 0:55.4 before switching to Stunfisk at 0:57.0 (1.6s), not 2. With ManGo's count after it came back at 2:36.9 (4, 1 that knocked your Pokémon out, then 2): 10."
+    }
+  },
   "battle-2026-10-24-220440": {
     "video": "Test Videos/battle-2026-10-24-220440.mp4",
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Stunfisk (Galarian), Forretress (Shadow), Melmetal.",
@@ -576,19 +656,6 @@
       }
     ]
   },
-  "battle-2026-10-24-172648": {
-    "video": "Test Videos/battle-2026-10-24-172648.mp4",
-    "description": "Galarian Stunfisk threw Earthquake after your charged move; exact energy checkpoint.",
-    "counts": [],
-    "throwEnergy": [
-      {
-        "ordinal": 3,
-        "speciesId": "stunfisk_galarian",
-        "moveId": "EARTHQUAKE",
-        "exact": 71
-      }
-    ]
-  },
   "battle-2026-10-24-174243": {
     "video": "Test Videos/battle-2026-10-24-174243.mp4",
     "description": "Phone-saved battle. Opponent: Flygon, Melmetal, Turtonator.",
@@ -638,6 +705,7 @@
       }
     ],
     "notes": {
+      "5": "User, 2026-11-09: 3 Dragon Breaths after play resumed at 1:57.8 before switching to Florges at 1:59.4 (1.6s), not 2. Still, ManGo has 44 for this Sky Attack (50): another stretch since its second Sky Attack is short too; not hand-counted.",
       "1": "User, 2026-11-09: 2 Dragon Breaths between its Dragon Breath in progress hitting you as play resumed (1:18.92) and its Sky Attack's \"Attack incoming!\" (1:20.8), not 3; with ManGo's 13 as the lead and 1 and a sneak at your charged move at 1:10.4, 17. The line-up rule had added a third, guessing play restarted earlier than the hit showed."
     }
   },
@@ -724,7 +792,7 @@
       4,
       8,
       3,
-      5
+      6
     ],
     "countTargets": [
       {
@@ -754,6 +822,7 @@
     ],
     "notes": {
       "2": "User, 2026-11-08: at 1:46 Mimikyu threw 3 Shadow Claws and Shadow Sneak; everything else ManGo counted in this battle is right. ManGo's line-up rule added a 4th: after Mimikyu blocked your Energy Ball, its window put the restart before your buttons. Your HP bar (146 px) held from 1:40.4 and fell at 1:41.35, 1:42.37 and 1:43.39: the first is its Shadow Claw in progress at your Energy Ball, landing as play resumed, which an earlier restart would have put at 1:40.4.",
+      "6": "User, 2026-11-09: Florges threw 4 Fairy Winds after its Chilling Water at 3:05.3 before switching to Mimikyu at 3:12.3, not 3, then 2 after coming back: 6 (ManGo had 5; the switch came as the fourth finished, more than half done by the clock).",
       "sableye": "User, 2026-11-08: Sableye threw on the same turn as your Blaze Kick at 4:11 (CMP), so it had no fast move in progress: 48, not ManGo's 56. Your Blaze Kick knocked it out, so its charged move never showed and its energy no longer mattered; nothing on screen shows the tie."
     }
   },
@@ -856,7 +925,7 @@
       6,
       6,
       null,
-      null
+      3
     ],
     "countTargets": [
       {
@@ -881,8 +950,41 @@
       }
     ],
     "notes": {
+      "5": "User, 2026-11-09: 3 Mud Shots after play resumed at 1:28.8 before switching to Ninetales at 1:31.8 (3.0s: 3 Mud Shots), none after coming back at 2:23.1. ManGo had 2: the switch waits for the fast move in progress, which the clock had more than half done.",
       "2": "User, 2026-11-08: Quagsire threw 6 Mud Shots: 4 and a sneak at your charged move at 1:08.2, then 1, then Aqua Tail (no sneak at its own). ManGo's line-up rule (their charged move starts as a fast move finishes) used to add a 7th, guessing play restarted before your buttons; but its Mud Shot in progress had hit you by 1:17.02, which showed when play restarted, so the rule no longer second-guesses it. (The first GBL battle's Fearow, whose 6 needed that extra, was dropped with its missing video.)",
       "3": "User, 2026-11-08: Alolan Ninetales threw 4 Powder Snows as the lead, not 5; with the 2 ManGo counts after it came back at 1:31.8, 6 before Chilling Water. The opening rule had taken the big \"GO\" covering your HP bar at 0:34.4 (202 px, then 244 again) for its first hit; its first hit was at 0:35.54."
+    }
+  },
+  "battle-2026-11-08-220414": {
+    "video": "Test Videos/battle-2026-11-08-220414.mp4",
+    "description": "Phone-saved battle. You: Blaziken and others. Opponent: Forretress (Shadow), Carbink, Marowak.",
+    "counts": [
+      24,
+      7,
+      5
+    ],
+    "countTargets": [
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "ROCK_TOMB"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      }
+    ],
+    "observedFastMoves": {
+      "forretress_shadow": "BUG_BITE"
+    },
+    "notes": {
+      "all": "User, 2026-11-08: ManGo's counts are right except the lead's, and Forretress used Bug Bite, which ManGo found from the rhythm of its hits on your HP bar (PvPoke recommends Volt Switch).",
+      "1": "User, 2026-11-09: as the lead Forretress threw 10 Bug Bites and a sneak, not 13 and a sneak: you threw 5 Sucker Punches (10 turns) and then Night Slash. ManGo had dated its start from its first hit (0:57.31) with 4-turn Volt Switch, 2s before; with 1-turn Bug Bite it's 0:56.81. Then 11 after play resumed (1:12.1) and 2 after your Pokémon fainted: 24 before Rock Tomb.",
+      "2": "User, 2026-11-09: right (4 after switching in for Carbink, a sneak at your charged move at 1:58.5, then 2).",
+      "3": "User, 2026-11-09: a sneak at your charged move at 2:23.1, then 2 Mud Slaps before switching to Carbink at 2:36.4 (ManGo had 1: the switch came as the second finished, 97% done by the clock), then 2 after coming back when Carbink fainted: 5."
     }
   }
 }

@@ -16,6 +16,10 @@ explicitly approximate and are not used to identify moves or compute energy.
 - A normal switch costs one turn. Replacing a fainted Pokémon is free. Either side can
   switch freely as a charged move ends; once play has resumed, the normal switch turn applies.
   Choosing to switch out after the other side fainted costs one turn.
+- A switch in play waits for the fast move in progress, like a charged move, so the Pokémon
+  leaving has thrown a whole number: its time on the field over its fast move, to the nearest
+  (confirmed by hand six times on November 9, 2026). Not for a lead leaving before the first stop,
+  whose clock starts at GO and may run ahead of a late start.
 - A free switch counts from when the Pokémon it replaced left. Gone from their name box before
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
@@ -35,7 +39,9 @@ explicitly approximate and are not used to identify moves or compute energy.
 - A fast move registers on its last turn (PvPoke's guide to fast move registration), so the
   lead's first hit on your HP bar shows it began at least one fast move earlier, sometimes before
   GO is readable. Only for the opening: after a charged move a hit already counted can show as
-  play resumes.
+  play resumes. If the rhythm of its hits then shows another fast move, the start is dated again
+  with that move's length. A dip the bar climbs back from within a second isn't a hit (the "GO"
+  banner can cover it).
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
   one more. Your HP bar overrules that when it held steady where the extra one would have hit you,
   or, after your charged move, a fast move earlier, where their move in progress would have. And it
@@ -59,7 +65,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 52 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 58 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

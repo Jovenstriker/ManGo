@@ -66,6 +66,9 @@ public struct BattleAutomation: Sendable {
     private var leadStartChecked = false
     /// When the lead's first fast move began, as counted.
     private var leadStartedAt: TimeInterval?
+    /// The lead's first hit on your HP bar, its start before that hit moved it, and the length (in
+    /// turns) of the fast move it was dated with.
+    private var leadHit: (at: TimeInterval, before: TimeInterval, turns: Int)?
     /// This stretch's restart was seen (their move in progress hit you), not guessed from your buttons.
     private var restartSeen = false
     /// This stretch's start was checked against their first hit on your HP bar.
@@ -220,6 +223,7 @@ public struct BattleAutomation: Sendable {
         if let first = fillSamples.first, t - first[0] > 20 { fillSamples.removeAll { t - $0[0] > 20 } }
         if !stopped { checkRestartAgainstYourFastMoves(before: max(t, fillSamples.last?[0] ?? t), tracker: &tracker) }
         if !stopped { checkStartAgainstTheirHits(tracker: &tracker) }
+        if !stopped, !Rules.off("revisitLeadStart") { revisitLeadStart(tracker: &tracker) }
         if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         // After your charged move their fast move in progress finishes as play resumes, often
@@ -300,6 +304,7 @@ public struct BattleAutomation: Sendable {
                     tracker.setEnergy(0, at: start)
                     leadStartedAt = start
                 }
+                leadHit = nil
                 theirHitsChecked = false
 
             case .stopped:
@@ -775,11 +780,27 @@ public struct BattleAutomation: Sendable {
             return
         }
         theirHitsChecked = true
+        leadHit = (hit, start, fast.turns)
         let latest = hit - move
         guard start - latest > 0.05 else { return }
         tracker.setEnergy(0, at: latest)
         leadStartedAt = latest
         note("Your HP bar fell at \(clockString(hit)): \(name(tracker.active?.speciesId))'s first fast move began by \(clockString(latest)), not \(clockString(start))")
+    }
+
+    /// The lead's start was dated from its first hit with the fast move assumed then. If the
+    /// rhythm of its hits has since shown another fast move, date it again with that one's length
+    /// (220414: Shadow Forretress, assumed on 4-turn Volt Switch, hit you at 0:57.31, so "began by
+    /// 0:55.31"; it was 1-turn Bug Bite, so by 0:56.81: 10 before your Night Slash, not 13).
+    private mutating func revisitLeadStart(tracker: inout OpponentTracker) {
+        guard let h = leadHit, let fast = tracker.active?.fastMove, fast.turns != h.turns,
+              let go = goAt, lastStopAt < go, tracker.team.count == 1 else { return }
+        leadHit = (h.at, h.before, fast.turns)
+        let start = min(h.before, h.at - Double(fast.turns) * turnDuration)
+        guard let current = leadStartedAt, abs(current - start) > 0.05 else { return }
+        tracker.setEnergy(0, at: start)
+        leadStartedAt = start
+        note("\(name(tracker.active?.speciesId)) uses \(fast.name): its first hit at \(clockString(h.at)) puts its start at \(clockString(start)), not \(clockString(current))")
     }
 
     /// Their fast moves visibly hit you in this stretch (your bar fell), so a hit would have shown:
@@ -842,6 +863,7 @@ public struct BattleAutomation: Sendable {
         freeSwitchUntil = -.infinity
         leadStartChecked = false
         leadStartedAt = nil
+        leadHit = nil
         restartSeen = false
         theirHitsChecked = true
         opponentAlive = nil
@@ -947,8 +969,10 @@ public struct BattleAutomation: Sendable {
                 : (stopped ? battleRecord.stops.count : nil, .init(side: .them, time: tracker.battleClock(at: time), kind: .switched, pokemon: name(speciesId))))
         }
         cadence = FastMoveCadence()
+        // A lead leaving before the first stop: its clock only has GO to go on.
+        let leadInOpening = tracker.team.count == 1 && goAt.map { lastStopAt < $0 } == true
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
-                          seenAt: isLead ? nil : leftDuringStop ? time : since)
+                          seenAt: isLead ? nil : leftDuringStop ? time : since, outgoingWaitsForFastMove: !leadInOpening)
         if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
         // Name confirmation arrives after the switch. Replay the verified samples
         // belonging to the incoming Pokémon instead of discarding its first hit.

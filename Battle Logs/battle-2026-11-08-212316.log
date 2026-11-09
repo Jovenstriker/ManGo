@@ -46,13 +46,14 @@ OPPONENT CHARGED MOVES
        note: User, 2026-11-08: Alolan Ninetales threw 4 Powder Snows as the lead, not 5; with the 2 ManGo counts after it came back at 1:31.8, 6 before Chilling Water. The opening rule had taken the big "GO" covering your HP bar at 0:34.4 (202 px, then 244 again) for its first hit; its first hit was at 0:35.54.
   4  2:04.06  Ninetales (Alolan)    Weather Ball (Ice) (35)   35 → 0        4           ?     -
        calc: 35 = 3 left before + 4 × 8 (Powder Snow); after: 35 − 35 = 0
-  5  2:30.85  Quagsire (Shadow)     Aqua Tail (35)            38 → 3        2           ?     -
-       calc: 38 = 20 left before + 2 × 9 (Mud Shot); after: 38 − 35 = 3
+  5  2:30.85  Quagsire (Shadow)     Aqua Tail (35)            47 → 12       3           3     ✓
+       calc: 47 = 20 left before + 3 × 9 (Mud Shot); after: 47 − 35 = 12
+       note: User, 2026-11-09: 3 Mud Shots after play resumed at 1:28.8 before switching to Ninetales at 1:31.8 (3.0s: 3 Mud Shots), none after coming back at 2:23.1. ManGo had 2: the switch waits for the fast move in progress, which the clock had more than half done.
 
 SUMMARY
-  2 of 2 hand-counted charged moves match ManGo's fast move count exactly.
+  3 of 3 hand-counted charged moves match ManGo's fast move count exactly.
   0 raw estimates below the observed move cost (reconciled after the spend).
-  3 not hand-counted.
+  2 not hand-counted.
 
 TIMELINE (what the screen reader saw and did)
   0:33.09  Opponent: Ninetales (Shadow)
@@ -94,9 +95,9 @@ TIMELINE (what the screen reader saw and did)
   2:12.41  You threw a charged move: Ninetales (Alolan) 8 → 16 (its fast move in progress counts)
   2:23.12  Ninetales (Alolan) fainted or switched out
   2:23.12  Opponent: Quagsire (Shadow)
-  2:23.92    running  Quagsire (Shadow) at 38
-  2:24.72    stopped  Quagsire (Shadow) at 38
-  2:30.85  Quagsire (Shadow) used Aqua Tail (38 → 3)
+  2:23.92    running  Quagsire (Shadow) at 47
+  2:24.72    stopped  Quagsire (Shadow) at 47
+  2:30.85  Quagsire (Shadow) used Aqua Tail (47 → 12)
   2:35.37  Opponent: Jumpluff
   2:35.64    running  Jumpluff at 0
   2:35.90  Your buttons: acrobatics, energyball; your fast move takes 2 turns

@@ -136,14 +136,29 @@ public struct OpponentTracker: Sendable {
     /// `freeSwitch` makes the switch take 0 turns, e.g. right after a faint.
     public mutating func setActive(
         speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false,
-        seenAt: TimeInterval? = nil
+        seenAt: TimeInterval? = nil, outgoingWaitsForFastMove: Bool = true
     ) {
         let t = battleTime(at: now)
         let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
         if let i = activeIndex {
-            team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
-            closeStretch(i, at: t)
+            // A switch in play waits for the fast move in progress, like a charged move, so the
+            // one leaving has thrown a whole number: if the clock had its latest more than half
+            // done, it had landed (220414: Marowak, 2 Mud Slaps after your charged move at 2:23.1
+            // before switching to Carbink, the second 97% done by the clock; 142007: Florges, 4
+            // Fairy Winds before switching to Mimikyu). Not before its first: it may have switched
+            // instead of attacking (125109's Mightyena lead, 0). Nor a lead leaving in the opening
+            // (`outgoingWaitsForFastMove` false): its clock starts at GO, and leads often start
+            // late, so a half-done move there may not have begun (v7: Azumarill, 1 Bubble).
+            var left = t
+            if !isPaused, outgoingWaitsForFastMove, !Rules.off("switchRounds"), let fast = team[i].fastMove, let start = team[i].chainStart, t > start {
+                let duration = Double(fast.turns) * turnDuration
+                let moves = (t - start) / duration
+                let finished = (moves + 1e-9).rounded(.down)
+                if finished >= 1, moves - finished >= 0.5 { left = start + (finished + 1) * duration }
+            }
+            team[i].bankedEnergy = energy(of: team[i], atBattleTime: left)
+            closeStretch(i, at: left)
             team[i].chainStart = nil
         }
 

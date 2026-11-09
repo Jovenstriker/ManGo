@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **52 exact hand counts across 17 recordings** in
+There are **58 exact hand counts across 20 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -142,16 +142,19 @@ and charged move so a missed or misattributed throw cannot silently shift the la
 | v8 | Azumarill, Lucario, Mawile | 8, 1, 6, 5, 4 |
 | v11 | Altaria, Mimikyu, Empoleon | 13, 7, unknown, 5, 5 |
 | battle-2026-10-23-132243 | Doublade, Togetic, Stunfisk | 7 |
+| battle-2026-10-24-171449 | Corviknight, Azumarill, Turtonator | unknown × 4, 4, unknown |
+| battle-2026-10-24-172648 | Hydreigon (Shadow), Stunfisk (Galarian), Melmetal | unknown × 3, 10 |
 | battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5, 7 |
 | battle-2026-10-23-155712 | Flygon, Corviknight, Azumarill | unknown, unknown, unknown, 5 |
 | battle-2026-10-28-002722 | Greninja (Shadow), Florges, Charjabug | unknown × 4, 3, unknown × 2 |
 | battle-2026-11-04-155536 | Altaria, Florges, Melmetal | 17, unknown × 5 |
 | battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each |
 | battle-2026-11-04-233009 | Morpeko (Full Belly), Jirachi, Azumarill | unknown, 5, unknown × 4 |
-| battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 5 |
+| battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 6 |
 | battle-2026-11-08-144330 | Cramorant, Melmetal, Clodsire | 5, 8, 2, 10, 1 |
 | battle-2026-11-08-152828 | Marowak, Furret, Talonflame | unknown, 8, unknown × 3 |
-| battle-2026-11-08-212316 | Ninetales (Alolan), Quagsire (Shadow), Jumpluff | unknown, 6, 6, unknown × 2 |
+| battle-2026-11-08-212316 | Ninetales (Alolan), Quagsire (Shadow), Jumpluff | unknown, 6, 6, unknown, 3 |
+| battle-2026-11-08-220414 | Forretress (Shadow), Carbink, Marowak | 24, 7, 5 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -187,7 +190,11 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-50 of 52 exact hand counts match, and every energy checkpoint. The line-up rule (their charged move
+56 of 58 exact hand counts match, and every energy checkpoint. A Pokémon switching out in play has
+thrown a whole number of fast moves (the switch waits for the one in progress, like a charged move):
+your counts on November 9, 2026 put Marowak, Florges, Quagsire, Turtonator, Hydreigon and Altaria at
+their time on the field over their fast move, to the nearest, except a lead leaving the opening
+(v7's Azumarill, 1). The line-up rule (their charged move
 starts as a fast move finishes, so a late-shown restart may hide one more) no longer adds a fast move
 when ManGo saw play restart, from their move in progress hitting you: Quagsire's 6 in 212316,
 Galarian Stunfisk's 5 after its hit at 0:52.65 in 220440, and Altaria's 2 after its hit at 1:18.92

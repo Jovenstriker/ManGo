@@ -47,8 +47,9 @@ OPPONENT CHARGED MOVES
        calc: 72 = 0 left before + 8 × 9 (Fairy Wind); after: 72 − 50 = 22
   5  3:05.32  Florges               Chilling Water (45)       49 → 4        3           3     ✓
        calc: 49 = 22 left before + 3 × 9 (Fairy Wind); after: 49 − 45 = 4
-  6  3:37.93  Florges               Chilling Water (45)       49 → 4        5           5     ✓
-       calc: 49 = 4 left before + 5 × 9 (Fairy Wind); after: 49 − 45 = 4
+  6  3:37.93  Florges               Chilling Water (45)       58 → 13       6           6     ✓
+       calc: 58 = 4 left before + 6 × 9 (Fairy Wind); after: 58 − 45 = 13
+       note: User, 2026-11-09: Florges threw 4 Fairy Winds after its Chilling Water at 3:05.3 before switching to Mimikyu at 3:12.3, not 3, then 2 after coming back: 6 (ManGo had 5; the switch came as the fourth finished, more than half done by the clock).
 
 SUMMARY
   6 of 6 hand-counted charged moves match ManGo's fast move count exactly.
@@ -101,14 +102,14 @@ TIMELINE (what the screen reader saw and did)
   3:13.94  You threw a charged move: Mimikyu 2 → 10 (its fast move in progress counts)
   3:25.59  Mimikyu fainted or switched out
   3:25.59  Opponent: Florges
-  3:26.11    running  Florges at 31
-  3:28.52    stopped  Florges at 49
-  3:30.65    running  Florges at 49
+  3:26.11    running  Florges at 40
+  3:28.52    stopped  Florges at 58
+  3:30.65    running  Florges at 58
   3:30.90  Your buttons: aurasphere, blazekick; your fast move takes 2 turns
-  3:31.48    stopped  Florges at 49
-  3:37.93  Florges used Chilling Water (49 → 4)
-  3:40.60    running  Florges at 4
-  3:44.89    stopped  Florges at 40
+  3:31.48    stopped  Florges at 58
+  3:37.93  Florges used Chilling Water (58 → 13)
+  3:40.60    running  Florges at 13
+  3:44.89    stopped  Florges at 49
   3:45.69  Florges fainted or switched out
   3:45.69  Opponent: Sableye (Shadow)
   3:47.32    running  Sableye (Shadow) at 0

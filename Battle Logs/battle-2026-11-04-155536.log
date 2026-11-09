@@ -45,9 +45,10 @@ OPPONENT CHARGED MOVES
        calc: 45 = 0 left before + 5 × 9 (Fairy Wind); after: 45 − 45 = 0
   4  2:35.86  Florges               Chilling Water (45)       45 → 0        5           ?     -
        calc: 45 = 0 left before + 5 × 9 (Fairy Wind); after: 45 − 45 = 0
-  5  3:08.63  Altaria               Sky Attack (50)           50 → 0        9           ?     -
-       calc: 50 = 4 left before + 9 × 4 (Dragon Breath) + 10 (cap/corrections); after: 50 − 50 = 0
-       inferred minimum: raw estimate 40, observed spend requires 50. Timing remains uncertain; no exact missing move count was inferred.
+  5  3:08.63  Altaria               Sky Attack (50)           50 → 0        10          ?     -
+       calc: 50 = 4 left before + 10 × 4 (Dragon Breath) + 6 (cap/corrections); after: 50 − 50 = 0
+       inferred minimum: raw estimate 44, observed spend requires 50. Timing remains uncertain; no exact missing move count was inferred.
+       note: User, 2026-11-09: 3 Dragon Breaths after play resumed at 1:57.8 before switching to Florges at 1:59.4 (1.6s), not 2. Still, ManGo has 44 for this Sky Attack (50): another stretch since its second Sky Attack is short too; not hand-counted.
   6  3:47.02  Melmetal              Double Iron Bash (35)     81 → 46       9           ?     -
        calc: 81 = 0 left before + 9 × 9 (Thunder Shock); after: 81 − 35 = 46
 
@@ -89,9 +90,9 @@ TIMELINE (what the screen reader saw and did)
   2:53.97  Florges fainted or switched out
   2:53.97  Opponent: Altaria
   2:56.86  Their fast move in progress hit you at 2:56.60, before your buttons came back: the battle had restarted
-  2:56.86    running  Altaria at 12
-  3:00.89    stopped  Altaria at 40
-  3:08.63  Timing uncertain: Altaria spent 50 on Sky Attack, but the clock counted 40; resynchronized to the observed minimum
+  2:56.86    running  Altaria at 16
+  3:00.89    stopped  Altaria at 44
+  3:08.63  Timing uncertain: Altaria spent 50 on Sky Attack, but the clock counted 44; resynchronized to the observed minimum
   3:08.63  Altaria used Sky Attack (50 → 0)
   3:11.26    running  Altaria at 0
   3:11.51  Opponent: Melmetal

@@ -5,23 +5,100 @@ Pokémon GO trainer battle as a POMDP and plan against an opponent whose team, m
 and play style are hidden.
 
 It's separate from the app. Nothing here is imported by `App/`, `PvPCore/` or `Extension/`,
-and nothing there is changed. It's plain Python (3.10+, standard library only) with its own
-copy of PvPoke's data in `data/`. The link to ManGo is conceptual: ManGo's screen reader
-produces the observations a player gets, and its `OpponentTracker` does the energy counting
-that `belief.EnergyCounter` does here.
+and nothing there is changed. It's Python 3.10+ (standard library only; `python3` on a Mac can
+be the system 3.9) with one C file for speed, compiled automatically when a C compiler is around.
+It has its own copy of PvPoke's data in `data/`. The link to ManGo is conceptual: ManGo's screen
+reader produces the observations a player gets, and its `OpponentTracker` does the energy
+counting that `belief.EnergyCounter` does here.
 
     cd POMDP
-    python3 -m experiments.demo --seed 3 --opponent nuker      # one battle, narrated
-    python3 -m experiments.tournament --games 150               # win rates
+    python3 -m experiments.duel medicham azumarill             # a 1v1, solved
+    python3 -m experiments.duel medicham azumarill --grid      # all 9 shield scenarios
+    python3 -m experiments.meta --top 12                       # every 1v1 among the top 12
+    python3 -m experiments.demo --seed 3 --opponent nuker      # a 3v3 battle, narrated
+    python3 -m experiments.tournament --games 150              # 3v3 win rates
     python3 -m unittest discover tests
 
-## The model
+The work starts with 1v1s, which can be solved exactly, then builds up to full 3v3 battles with
+hidden teams.
+
+## Solving 1v1 matchups
+
+A 1v1 like PvPoke's sandbox has both movesets known and 0–2 shields each. Both Pokémon fast
+move to build energy. Each time a fast move finishes, its player picks one more fast move or a
+charged move it can afford now; holding energy is just picking the fast move again. When a charged
+move comes in, the defender picks whether to shield. Winning is pacing: how many fast moves
+before each throw, which move to throw, and which hits to shield.
+
+**Rules.** `battle.py` follows PvPoke's
+[guide to fast move registration](https://pvpoke.com/articles/strategy/guide-to-fast-move-registration/):
+
+- A fast move's damage and energy register on its last turn, duration − 1 turns after it's
+  used. A 1-turn move registers on the turn it's used.
+- A charged move interrupts every fast move in progress. Each one registers on the spot,
+  including one the opponent starts that same turn (a "sneak"). Then both cooldowns reset, so
+  both Pokémon act again on the next turn. Interrupting a long fast move early grants its user
+  "free" turns; throwing on the turn it registers grants none.
+- Charged moves thrown on the same turn go in CMP order (higher attack first). A charged move
+  fails if a fast move registering that turn knocks out its user.
+
+**The game.** With energy counted (ManGo's job), nothing is hidden in a 1v1. But both players
+choose each turn's action at the same time, which makes it a finite zero-sum stochastic game.
+Because cooldowns reset after every charged move, a state is just HP, energy, shields and buff
+stages for both sides, plus where the turn falls in the fast-move rhythm (turns since the last
+charged move, mod the lcm of the two durations). `duel.py` solves it by memoized backward
+induction:
+
+- a max/min node when only one side can choose;
+- a matrix game, solved for its mixed equilibrium, when both can;
+- a max/min node for each shield decision;
+- chance nodes for buff rolls and CMP ties.
+
+The payoff is 0.9 × result + 0.1 × HP% margin. Any win beats any loss, and among wins, more HP
+left is better. PvPoke's battle rating is 500 + 500 × margin, so the two line up.
+
+**Speed.** `duel.c` is the same solver in C. It's compiled on first use and cached in
+`~/Library/Caches/ManGo-pomdp`; without a compiler, `make_duel` falls back to Python. The tests
+require the two to agree exactly.
+
+| Matchup | States | C | Python |
+|---|---|---|---|
+| Medicham vs Azumarill, 1-1 shields | 0.4M | 0.2 s | 50 s |
+| Medicham vs Azumarill, all 9 shield scenarios | 1.8M | 1.1 s | about 280 s |
+| Melmetal vs Altaria, 2-2 (the heaviest so far; random buffs multiply states) | 23M | 17 s | — |
+
+**Checks.** Playing the solution in the simulator reproduces the solver's value exactly. The
+solution also can't be exploited: against every heuristic style and a random player, from
+either side, it scores at least the game value.
+
+**What it finds.**
+
+- *Medicham vs Azumarill, 1-1:* Azumarill wins either way. But optimal Medicham holds its energy
+  for 11 turns and throws Dynamic Punch at 100, finishing at a 335 rating against the baiter
+  heuristic's 291.
+- *Medicham vs Azumarill, 2-0:* optimal play wins (730) where the heuristic loses (416).
+- *All 66 pairs among the top 12, 1-1 shields* (`experiments.meta --top 12`):
+  - Optimal play changes the winner in 12 of 66 matchups, compared with both sides playing the
+    baiter heuristic.
+  - A solved player facing the heuristic gains 46 rating points on average (median 12, max 456).
+  - Only 2 matchups need a mixed strategy on the optimal line; the rest are pure.
+- *The biggest swing, Corviknight vs Shadow Hydreigon:* 650 with optimal play, 194 with the
+  heuristic. Both sides farm to 100 energy and throw back to back. Corviknight resists Dragon
+  Breath and Fly, so it survives the exchange. The heuristic spends its energy baiting with Air
+  Cutter instead.
+
+**Next for 1v1.** The opponent's moveset is the hidden information left (until they throw).
+Each moveset hypothesis is its own solved game. So the natural next step is a QMDP-style player
+that weights each hypothesis's action values by the belief. The same per-hypothesis values also
+measure what knowing their moves is worth.
+
+## 3v3 battles as a POMDP
 
 | POMDP piece | Here |
 |---|---|
 | State | Both teams' HP, energy and buff stages, shields, switch timers, who is mid fast move, the battle clock, plus the opponent's hidden team, movesets and play style |
 | Actions | When your fast move finishes: fast move, a charged move you can afford, or a switch. When a charged move comes in: shield or not. After a faint: which Pokémon to bring in |
-| Transitions | `battle.py`: deterministic 0.5s turns following PvPoke's `Battle.js` (damage formula, CMP, charged-move lag, floating fast moves, 45s switch timer, 4-minute clock). Randomness comes only from buff chances, CMP ties, and the opponent's policy |
+| Transitions | `battle.py`: deterministic 0.5s turns following PvPoke's `Battle.js` and its fast move registration guide (damage formula, fast moves register on their last turn, charged moves interrupt fast moves and reset cooldowns, CMP, 45s switch timer, 4-minute clock). Randomness comes only from buff chances, CMP ties, and the opponent's policy |
 | Observations | `battle.View`: your team in full; the opponent's active Pokémon, its HP and buff stages, shields, Pokémon left, and every move they've used. Never their energy, bench or unused moves |
 | Reward | +1 win, −1 loss, 0 tie, at the end |
 
@@ -50,7 +127,7 @@ hypothesis: three species, their movesets, and a style.
   each particle's style: fast moving when they could have thrown, which move they threw, and
   whether they shielded.
 
-## The planner
+## The 3v3 planner
 
 `planner.py` is online lookahead with rollouts (Kochenderfer et al., *Algorithms for Decision
 Making*, ch. 22). At each decision that matters:
@@ -74,37 +151,42 @@ Ablations, by player name:
 | `planner-flat` | Flat prior (uniform over the top 100 species, uniform moves) and one style |
 | `oracle` | Same planner, but knows the opponent's real team and style. An upper bound, and not legal |
 
-## Results
+## 3v3 results
 
 `python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner oracle`:
 each player plays 300 battles. Each game is 2 battles with the teams swapped, and the opponent
-style is drawn uniformly. Ties count as half a win. The full run took 8.5 minutes on 8 cores.
+style is drawn uniformly. Ties count as half a win. The full run took about 8 minutes on 8 cores.
+These numbers use the current rules (charged moves reset cooldowns); the earlier rules gave
+nearly the same table.
 
 | Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
 |---|---|---|---|---|---|
-| random | 0.333 ± 0.027 | 0.331 | 0.230 | 0.401 | 0.366 |
-| shielder | 0.545 ± 0.029 | 0.485 | 0.432 | 0.625 | 0.622 |
-| baiter | 0.555 ± 0.029 | 0.559 | 0.453 | 0.599 | 0.604 |
-| nuker | 0.465 ± 0.029 | 0.412 | 0.372 | 0.421 | 0.634 |
-| casual | 0.400 ± 0.028 | 0.368 | 0.311 | 0.414 | 0.494 |
-| planner-flat | 0.763 ± 0.025 | 0.824 | 0.662 | 0.724 | 0.841 |
-| planner-1style | 0.753 ± 0.025 | 0.794 | 0.662 | 0.730 | 0.823 |
-| **planner** | **0.765 ± 0.024** | 0.824 | 0.642 | 0.789 | 0.805 |
-| oracle | 0.887 ± 0.018 | 0.897 | 0.811 | 0.921 | 0.915 |
+| random | 0.353 ± 0.028 | 0.338 | 0.230 | 0.447 | 0.390 |
+| shielder | 0.555 ± 0.029 | 0.471 | 0.480 | 0.632 | 0.622 |
+| baiter | 0.557 ± 0.029 | 0.574 | 0.446 | 0.605 | 0.598 |
+| nuker | 0.448 ± 0.029 | 0.397 | 0.318 | 0.441 | 0.616 |
+| casual | 0.407 ± 0.028 | 0.338 | 0.297 | 0.441 | 0.530 |
+| planner-flat | 0.730 ± 0.026 | 0.794 | 0.541 | 0.763 | 0.817 |
+| planner-1style | 0.763 ± 0.025 | 0.765 | 0.703 | 0.789 | 0.793 |
+| **planner** | **0.753 ± 0.025** | 0.787 | 0.649 | 0.822 | 0.756 |
+| oracle | 0.907 ± 0.017 | 0.919 | 0.865 | 0.895 | 0.945 |
 
 What this says so far:
 
-- **Lookahead is most of the win.** Every planner beats every heuristic by about 20 points,
-  including baiter, which is the planner's own rollout policy. Its worst matchup is against
-  baiters (0.64).
+- **Lookahead is most of the win.** Every planner beats every heuristic by about 17–20 points,
+  including baiter, which is the planner's own rollout policy.
 - **The belief isn't paying for itself yet.** The full belief, the single-style belief and the
-  flat prior are within one standard error of each other. Style inference does help against
-  nukers (0.79 vs 0.72–0.73), but that's not significant at this sample size.
-- **There's real value in information left to capture.** The oracle wins 12 points more.
+  flat prior are within about one standard error of each other overall (0.73–0.76). The one
+  per-style gap that may be real is against baiters: the flat prior wins 0.54 there, against
+  0.65–0.70 for the structured ones. That hints the structured team prior helps, but each
+  per-style cell is only about 75 games.
+- **There's real value in information left to capture.** The oracle wins 15 points more.
   Telling apart what it gains from knowing the team and moves versus knowing the style is the
-  obvious next ablation. Candidate improvements: more rollouts per decision; reweighting on
-  switches and replacements; and rollout opponents built from the opponent's own belief about
-  you, rather than a fixed style.
+  obvious next ablation. The 1v1 solver offers a cleaner way in: with the opponent's moveset as
+  the only hidden information, it can measure exactly what knowing their moves is worth.
+  Other candidate improvements: more rollouts per decision, reweighting on switches and
+  replacements, and rollout opponents built from the opponent's own belief about you rather
+  than a fixed style.
 
 ## Layout
 
@@ -112,19 +194,23 @@ What this says so far:
     scripts/update_data.sh     re-download and trim PvPoke's data (scripts/trim_data.py)
     mango_pomdp/gamedata.py    types, moves, damage formula
     mango_pomdp/battle.py      the simulator and the player's View
+    mango_pomdp/duel.py        the exact 1v1 solver, the player that plays its solution, and CDuel
+    mango_pomdp/duel.c         the same solver in C
+    mango_pomdp/timeline.py    a battle drawn as text, like PvPoke's timeline
     mango_pomdp/team_prior.py  the structured team and moveset prior
     mango_pomdp/policies.py    opponent styles, matchup heuristics, baselines
     mango_pomdp/belief.py      energy counting and the particle belief (plus the Oracle)
     mango_pomdp/planner.py     the rollout planner
     mango_pomdp/match.py       building players by name, playing one battle
-    experiments/               tournament.py (win rates), demo.py (one narrated battle)
-    tests/                     simulator, prior, belief and planner checks
+    experiments/               duel.py (one 1v1, solved), meta.py (every 1v1 among the top N),
+                               tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle)
+    tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps
 
 - **Mechanics.** No Charged Attack minigame (every charged move hits at full power), no
-  form changes (Aegislash, Morpeko), no mega moves. Fast moves in progress land when a charged
-  move is thrown rather than on the following turn. Everyone uses PvPoke's default CP 1500 IVs.
+  form changes (Aegislash, Morpeko), no mega moves, and no waiting (a free Pokémon always acts).
+  Everyone uses PvPoke's default CP 1500 IVs. The 1v1 solver ignores the 4-minute clock.
 - **Opponents.** Opponents are the four heuristic styles, so "hard to exploit" is only tested
   against them: the lowest per-style win rate is a crude exploitability number. Next steps are
   playing the planner against itself, and running a best-response search against it.

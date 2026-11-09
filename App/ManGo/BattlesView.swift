@@ -109,9 +109,12 @@ struct BattleSummaryView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Charged moves").font(.headline).padding(.bottom, 6)
-                    ForEach(Array(battle.chargedMoves.enumerated()), id: \.offset) { i, move in
-                        ChargedMoveRow(number: i + 1, move: move)
+                    Text("Actions").font(.headline).padding(.bottom, 6)
+                    ForEach(Array(BattleAction.list(battle).enumerated()), id: \.offset) { i, action in
+                        switch action {
+                        case .charged(let move): ChargedMoveRow(number: i + 1, move: move)
+                        case .marker(let marker): MarkerRow(number: i + 1, marker: marker)
+                        }
                         Divider()
                     }
                 }
@@ -120,6 +123,73 @@ struct BattleSummaryView: View {
         }
         .navigationTitle("Battle")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// A charged move, a switch or a faint, in the order they happened.
+private enum BattleAction {
+    case charged(BattleSummary.ChargedMove)
+    case marker(BattleSummary.Marker)
+
+    /// A switch or faint at a stop goes after that stop's charged moves: it came after them.
+    static func list(_ battle: BattleSummary) -> [BattleAction] {
+        let charged = battle.chargedMoves.map { (time: $0.time, action: BattleAction.charged($0)) }
+        let markers = battle.markers.map { (time: $0.time + 0.001, action: BattleAction.marker($0)) }
+        return (charged + markers).enumerated()
+            .sorted { ($0.element.time, $0.offset) < ($1.element.time, $1.offset) }
+            .map(\.element.action)
+    }
+}
+
+/// "They: Florges → Charjabug", with the energy Florges left with and a 0-turn switch called out.
+private struct MarkerRow: View {
+    let number: Int
+    let marker: BattleSummary.Marker
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text("\(number)").font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 20, alignment: .trailing)
+            Image(systemName: marker.kind == .switched ? "arrow.up.arrow.down" : "xmark")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(marker.kind == .fainted ? Color.red : Color.secondary)
+                .frame(width: 12, height: 12)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(marker.side == .you ? "You" : "They"): \(title)").font(.subheadline)
+                if let detail { Text(detail).font(.caption).foregroundStyle(.secondary) }
+            }
+            Spacer()
+            if marker.kind == .switched, marker.turns == 0 {
+                Text("0-turn switch").font(.caption.weight(.semibold))
+                    .padding(.horizontal, 7).padding(.vertical, 3)
+                    .background(Color.accentColor.opacity(0.15), in: Capsule())
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    private var title: String {
+        switch (marker.kind, marker.side) {
+        case (.switched, .you): "switched"
+        case (.switched, .them):
+            if let out = marker.other, let into = marker.pokemon { "\(out) → \(into)" } else { "switched to \(marker.pokemon ?? "another Pokémon")" }
+        case (.fainted, .you): "fainted"
+        case (.fainted, .them): "\(marker.pokemon ?? "their Pokémon") fainted"
+        }
+    }
+
+    private var detail: String? {
+        var parts: [String] = []
+        switch marker.kind {
+        case .switched:
+            if let out = marker.energyOut { parts.append("\(marker.other ?? "It") left with \(out) energy") }
+            if let back = marker.energyIn { parts.append("\(marker.pokemon ?? "The other") came back with \(back)") }
+            if marker.turns == 1 { parts.append("1-turn switch") }
+        case .fainted:
+            if marker.side == .them, let next = marker.other {
+                parts.append(marker.energyIn.map { "\(next) came back in with \($0) energy" } ?? "\(next) came in")
+            }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
 

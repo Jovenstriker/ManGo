@@ -39,6 +39,14 @@ public struct BattleSummary: Codable, Sendable, Hashable, Identifiable {
         public var kind: Kind
         /// Who came in (a switch) or went down (a faint), if known.
         public var pokemon: String?
+        /// A switch: who went out. A faint of theirs: who they sent in next.
+        public var other: String? = nil
+        /// Theirs: the energy the one going out had, which it keeps on the bench.
+        public var energyOut: Int? = nil
+        /// Theirs: the energy the one coming in brought back, if it had been in before.
+        public var energyIn: Int? = nil
+        /// The turns the switch took: 0 in a stop or right after a charged move, else 1.
+        public var turns: Int? = nil
     }
 
     public var id = UUID()
@@ -108,10 +116,17 @@ struct BattleSummaryRecord {
                 }
             }
         }
+        // A banner read cut short names part of yours ("ken" for Blaziken): it's the whole name.
+        func full(_ name: String?) -> String? {
+            name.map { n in yourTeam.first { $0.count > n.count && $0.localizedCaseInsensitiveContains(n) } ?? n }
+        }
+        var team: [String] = []
+        for n in yourTeam.compactMap(full) where !team.contains(n) { team.append(n) }
         let charged = self.charged.compactMap { c -> BattleSummary.ChargedMove? in
             guard let t = at(c.stop) else { return nil }
             var m = c.move
             m.time = t - origin
+            if m.side == .you { m.pokemon = full(m.pokemon) }
             return m
         }
         var markers = self.markers.map { m -> BattleSummary.Marker in
@@ -130,7 +145,7 @@ struct BattleSummaryRecord {
         return BattleSummary(
             result: result,
             opponentTeam: tracker.team.map { tracker.data.species[$0.speciesId]?.speciesName ?? $0.speciesId },
-            yourTeam: yourTeam,
+            yourTeam: team,
             duration: max(0, end - origin),
             fastMoves: fast.sorted { $0.start < $1.start },
             chargedMoves: charged,

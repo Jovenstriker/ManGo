@@ -59,6 +59,28 @@ private func summaries(of name: String) throws -> [BattleSummary] {
     #expect((45...55).contains(s.duration))
 }
 
+/// Their switches, as you counted them: who went out with what energy, and whether it took a turn.
+@Test func summaryRecordsTheirSwitchesWithEnergyAndTurns() throws {
+    func switches(_ s: BattleSummary) -> [BattleSummary.Marker] { s.markers.filter { $0.side == .them && $0.kind == .switched } }
+    // 221337: Guzzlord blocked your Clodsire's Stone Edge and they switched straight to
+    // Nidoqueen, a 0-turn switch, with Guzzlord on 50.
+    let first = try #require(try summaries(of: "battle-2026-10-28-221337").first)
+    let guzzlord = try #require(switches(first).first)
+    #expect((guzzlord.other, guzzlord.pokemon, guzzlord.energyOut, guzzlord.turns) == ("Guzzlord", "Nidoqueen", 50, 0))
+    // Nidoqueen fainted and Guzzlord came back with its 50.
+    #expect(first.markers.contains { $0.kind == .fainted && $0.pokemon == "Nidoqueen" && $0.other == "Guzzlord" && $0.energyIn == 50 })
+    // 002722: after you shielded Florges' Chilling Water they switched straight to Charjabug.
+    let florges = try #require(try summaries(of: "battle-2026-10-28-002722").flatMap(switches).first)
+    #expect((florges.other, florges.pokemon, florges.energyOut, florges.turns) == ("Florges", "Charjabug", 0, 0))
+    // 125109: Mightyena came back in for Charjabug as your Blaze Kick ended, a 0-turn switch,
+    // with the 0 it left with.
+    let third = try #require(try summaries(of: "battle-2026-11-06-125109").first)
+    let mightyena = try #require(switches(third).first { $0.pokemon == "Mightyena (Shadow)" })
+    #expect((mightyena.other, mightyena.energyIn, mightyena.turns) == ("Charjabug", 0, 0))
+    // A banner read cut short ("ken") is Blaziken, not a fourth Pokémon of yours.
+    #expect(third.yourTeam == ["Blaziken", "Jumpluff"])
+}
+
 @Test func summaryRoundTripsThroughJSON() throws {
     let s = try #require(try summaries(of: "battle-2026-11-08-144330").first)
     let back = try JSONDecoder().decode(BattleSummary.self, from: JSONEncoder().encode(s))

@@ -248,6 +248,7 @@ public struct BattleAutomation: Sendable {
                     note("\(name(f.speciesId)) switched out, not fainted: \(n) pokéballs still red")
                     if let i = battleRecord.markers.lastIndex(where: { $0.marker.kind == .fainted && $0.marker.pokemon == name(f.speciesId) }) {
                         battleRecord.markers[i].marker.kind = .switched
+                        battleRecord.markers[i].marker.other = name(f.speciesId)
                         battleRecord.markers[i].marker.pokemon = name(tracker.active?.speciesId)
                     }
                 }
@@ -560,6 +561,10 @@ public struct BattleAutomation: Sendable {
         summaryButtonLabels = labels
         summaryPendingLabels = nil
         battleRecord.yourMoves.append((from: first ? start : pending.at, turns: move.turns, type: move.type, switchTurn: !first && pending.inPlay))
+        if !first, let i = battleRecord.markers.lastIndex(where: { $0.marker.side == .you && $0.marker.kind == .switched }),
+           battleRecord.markers[i].marker.turns == nil, abs(battleRecord.markers[i].marker.time - pending.at) < 3 {
+            battleRecord.markers[i].marker.turns = pending.inPlay ? 1 : 0
+        }
         note("Your buttons: \(labels.sorted().joined(separator: ", ")); your fast move takes \(move.turns) turn\(move.turns == 1 ? "" : "s")")
     }
 
@@ -922,16 +927,28 @@ public struct BattleAutomation: Sendable {
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
         if !Rules.off("yourFaintTurn"), yourFaintThisStop, !theirsFainted { free = false }
         let isLead = tracker.active == nil
+        var marker: Int?
         if battleRecord.start != nil, let old = tracker.active {
             // A faint goes on the stop it happened in (still stopped, or the one just ended).
             let stop = stopped ? battleRecord.stops.count : duringStop ? battleRecord.stops.count - 1 : nil
             battleRecord.markers.append(theirsFainted
-                ? (stop, .init(side: .them, time: tracker.battleClock(at: time), kind: .fainted, pokemon: name(old.speciesId)))
-                : (stopped ? battleRecord.stops.count : nil, .init(side: .them, time: tracker.battleClock(at: time), kind: .switched, pokemon: name(speciesId))))
+                ? (stop, .init(side: .them, time: tracker.battleClock(at: time), kind: .fainted, pokemon: name(old.speciesId), other: name(speciesId)))
+                : (stopped ? battleRecord.stops.count : nil, .init(side: .them, time: tracker.battleClock(at: time), kind: .switched,
+                                                                   pokemon: name(speciesId), other: name(old.speciesId))))
+            marker = battleRecord.markers.count - 1
         }
         cadence = FastMoveCadence()
-        tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
-                          seenAt: isLead ? nil : leftDuringStop ? time : since)
+        let outgoing = tracker.activeIndex
+        let returning = tracker.team.contains { $0.speciesId == speciesId }
+        let switchTurns = tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
+                                            seenAt: isLead ? nil : leftDuringStop ? time : since)
+        if let m = marker {
+            // What it left with is what it keeps on the bench (kept for a faint too, in case the
+            // pokéballs show it was a switch after all).
+            battleRecord.markers[m].marker.turns = switchTurns
+            battleRecord.markers[m].marker.energyOut = outgoing.map { tracker.team[$0].bankedEnergy }
+            battleRecord.markers[m].marker.energyIn = returning ? tracker.active?.bankedEnergy : nil
+        }
         if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
         // Name confirmation arrives after the switch. Replay the verified samples
         // belonging to the incoming Pokémon instead of discarding its first hit.

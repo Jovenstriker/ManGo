@@ -134,10 +134,12 @@ public struct OpponentTracker: Sendable {
     /// `assumeFastMove` fills in a fast move that hasn't been seen yet (e.g. PvPoke's
     /// recommended one), so counting starts without a tap. `identifyFastMove` corrects it.
     /// `freeSwitch` makes the switch take 0 turns, e.g. right after a faint.
+    /// Returns the turns the switch took.
+    @discardableResult
     public mutating func setActive(
         speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false,
         seenAt: TimeInterval? = nil
-    ) {
+    ) -> Int {
         let t = battleTime(at: now)
         let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
@@ -170,6 +172,7 @@ public struct OpponentTracker: Sendable {
             let seen = seenAt.map { max(t, battleTime(at: $0) - Self.seenSlack) } ?? t
             team[i].stint = Stint(start: seen + Double(switchTurns) * turnDuration, entryEnergy: team[i].bankedEnergy)
         }
+        return switchTurns
     }
 
     /// Corrects the active Pokémon's form (e.g. Ninetales -> Alolan Ninetales) without

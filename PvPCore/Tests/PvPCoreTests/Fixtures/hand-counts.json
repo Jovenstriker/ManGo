@@ -1299,5 +1299,71 @@
       "all": "User, 2026-11-09: ManGo's counts are right except Pangoro's lead; taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:08.0, 1:32.0 and 3:14.0.",
       "2": "User, 2026-11-09: as the lead Pangoro threw 1 Karate Chop, then switched to Dunsparce (Pangoro still named at 0:49.65, Dunsparce at 0:49.95), not 2: 8 before Rock Slide (2:36.5), not 9. ManGo starts it at GO + 0.2 (0:47.38), 2.6s before the switch, and its first Karate Chop hit about 0:48.4 in the video, as you switched Thievul to Blaziken: the start was right. The user thinks it paused a turn after that first one, which ManGo can't see. At 2:24-2:28 ManGo showed 63 where Pangoro had 72: the Karate Chop that knocked out your Blaziken came 0.09s after ManGo dated the stop, and with no faint prompt read it stayed in progress until play resumed with Jumpluff (2:28.0)."
     }
+  },
+  "battle-2026-11-09-020853": {
+    "video": "Test Videos/battle-2026-11-09-020853.mp4",
+    "description": "Phone-saved battle, ended early. Opponent: Persian.",
+    "counts": [
+      10
+    ],
+    "countTargets": [
+      {
+        "speciesId": "persian",
+        "moveId": "NIGHT_SLASH"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 59.5,
+        "speciesId": "persian",
+        "energy": 25
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoint is ManGo's energy at your charged move at 0:59.3."
+    }
+  },
+  "battle-2026-11-09-021018": {
+    "video": "Test Videos/battle-2026-11-09-021018.mp4",
+    "description": "Phone-saved battle. Opponent: Miltank, Forretress (Shadow), Marowak.",
+    "counts": [
+      4,
+      4
+    ],
+    "countTargets": [
+      {
+        "speciesId": "miltank",
+        "moveId": "BODY_SLAM"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 51.6,
+        "speciesId": "miltank",
+        "energy": 64
+      },
+      {
+        "time": 93.3,
+        "speciesId": "forretress_shadow",
+        "energy": 51
+      },
+      {
+        "time": 108.0,
+        "speciesId": "marowak",
+        "energy": 10
+      },
+      {
+        "time": 138.9,
+        "speciesId": "marowak",
+        "energy": 90
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 0:51.3, 1:33.0, 1:47.7 and 2:18.6. At 1:47.7 Marowak had just come in for the fainted Forretress and you threw straight away: it sneaked a Mud Slap (0 to 10), the rule from 010753."
+    }
   }
 }

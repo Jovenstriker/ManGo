@@ -343,7 +343,7 @@
       }
     ],
     "notes": {
-      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short. It has 60 now that the restart comes from its Sand Attack in progress hitting you.",
+      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short. It has 60 now that the restart comes from its Sand Attack in progress hitting you.",
       "4": "Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13. On 2026-11-06: you threw 3 Dragon Breaths (3 turns) before that charged move, so it finished 1 Bubble and sneaked 1. ManGo started the stretch at 2:11.19, 0.25s before your button labels were readable (2:11.44), and saw 1.2s, short of a Bubble. Its Bubble in progress at your 2:01 charged move hit your Altaria by 2:10.64 (\"NOT VERY EFFECTIVE..\"), so play was back then; restarting there it counts 5.",
       "flygon": "Flygon used Mud Shot, not PvPoke's Dragon Tail (\"it is mud shot\", user, Oct 2026). Its shortfall at a throw is the moveset, not timing."
     },
@@ -370,7 +370,7 @@
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Corviknight, Turtonator, Mimikyu.",
     "counts": [],
     "notes": {
-      "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pok\u00e9balls stayed red (opponentAlive added from the video with screen-log --balls)."
+      "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pokéballs stayed red (opponentAlive added from the video with screen-log --balls)."
     }
   },
   "battle-2026-10-24-171449": {
@@ -655,7 +655,7 @@
       "13": "Counted by the user on 2026-11-09: 6 Shadow Claws between 6:49 and its Shadow Sneak at 7:03.4 (no sneak at the 6:36.55 tie).",
       "17": "User, 2026-11-09: 5 before Earth Power (10:25.7). Nidoqueen switched in for Greninja in play (Greninja still named at 9:46.93, Nidoqueen at 9:47.20 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 9:48.3): none in progress. Then 3 and one in progress at your charged move (9:57.6 to 10:03.5), and 1 (10:16.1 to 10:18.4).",
       "18": "Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.",
-      "end": "The battle ended at 11:07.9 (\"GOOD EFFORT!\", read as two lines \"GOOD\" and \"EFFORT!\", which ManGo missed). At 11:02 \"Attack incoming!\" showed but its banner was hidden by a \"Surrender and exit?\" prompt. The user: nothing happened between 11:01 and 13:40; no Hydro Cannon was thrown. At 13:40 ManGo read its own app's event line \"Greninja (Shadow) used Hydro Cannon (28 \u2192 0)\" as a banner."
+      "end": "The battle ended at 11:07.9 (\"GOOD EFFORT!\", read as two lines \"GOOD\" and \"EFFORT!\", which ManGo missed). At 11:02 \"Attack incoming!\" showed but its banner was hidden by a \"Surrender and exit?\" prompt. The user: nothing happened between 11:01 and 13:40; no Hydro Cannon was thrown. At 13:40 ManGo read its own app's event line \"Greninja (Shadow) used Hydro Cannon (28 → 0)\" as a banner."
     },
     "throwEnergy": [
       {
@@ -1490,6 +1490,29 @@
     ],
     "notes": {
       "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:07.6, 1:23.2, 1:49.1, 2:03.6 and 2:19.9."
+    }
+  },
+  "battle-2026-11-09-211526": {
+    "video": "Test Videos/battle-2026-11-09-211526.mp4",
+    "description": "Phone-saved battle, ended early. Opponent: Mimikyu, Quagsire (Shadow).",
+    "counts": [
+      7
+    ],
+    "countTargets": [
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "STONE_EDGE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 61.4,
+        "speciesId": "quagsire_shadow",
+        "energy": 8
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: Quagsire threw Stone Edge (0:57.9) on 7 Mud Shots. Your charged move after it (Get Ready! at 1:01.2) was a CMP tie Quagsire won; 6 Mud Shots (54) couldn't pay for Stone Edge (55), so the clock's seventh, in progress, had landed. The checkpoint is ManGo's energy at your charged move."
     }
   }
 }

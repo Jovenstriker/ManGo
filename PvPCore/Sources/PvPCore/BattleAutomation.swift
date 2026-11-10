@@ -497,7 +497,15 @@ public struct BattleAutomation: Sendable {
                 let tieTheyWon = opponentThrewThisStop && !playSinceTheirChargedMove && !Rules.off("cmpAfterTheirs")
                 if tieTheyWon {
                     note("Your charged move came straight after theirs with no play between: a CMP tie \(name(tracker.active?.speciesId)) won, no sneak")
-                    let added = tracker.theyWonSameTurnTie()
+                    // The clock's move in progress at theirs counts only when its finished ones
+                    // couldn't pay for their charged move: then the clock was behind (233921's
+                    // Stunfisk, 232707's Forretress, 211526's Quagsire). When they could, nothing
+                    // says it was, however done it had the next (211824: Hydreigon's Brutal Swing
+                    // on 14 Dragon Breaths, the 15th 99% done by the clock; Melmetal's Double Iron
+                    // Bash on 4 Thunder Shocks, the 5th 87% done).
+                    let clockShort = Rules.off("tieNeedsUnderpay")
+                        || lastTheirThrow.map { $0.speciesId == tracker.active?.speciesId && $0.energyBeforeReconciliation < $0.move.energy } == true
+                    let added = clockShort ? tracker.theyWonSameTurnTie() : 0
                     if added > 0, var revised = lastTheirThrow, revised.speciesId == tracker.active?.speciesId {
                         note("\(name(tracker.active?.speciesId)) threw as a fast move finished: the one the clock had over half done counts (\(revised.energyAfter) → \(tracker.snapshot(at: t).energy))")
                         revised.fastMoveCount = revised.fastMoveCount.map { $0 + 1 }

@@ -74,6 +74,10 @@ for read in reads {
             evidenceFailures.append("At \(point.time)s expected \(point.speciesId) energy \(point.energy); observed \(snap.pokemon?.speciesId ?? "unknown") energy \(snap.energy) at \(read.time)s")
         }
     }
+    // TRACE=from-to (seconds) prints the opponent's energy at every read in that window.
+    if let w = env["TRACE"]?.split(separator: "-").compactMap({ Double($0) }), w.count == 2, (w[0]...w[1]).contains(read.time) {
+        FileHandle.standardError.write("\(clock(read.time)) \(tracker.isPaused ? "stopped" : "running") \(name(snap.pokemon?.speciesId)) \(snap.energy)\n".data(using: .utf8)!)
+    }
     if tracker.isPaused != wasPaused, let p = snap.pokemon {
         timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.energy)")
         wasPaused = tracker.isPaused

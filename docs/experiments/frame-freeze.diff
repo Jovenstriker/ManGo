@@ -1,0 +1,98 @@
+diff --git a/PvPCore/Sources/PvPCore/BattleAutomation.swift b/PvPCore/Sources/PvPCore/BattleAutomation.swift
+index 2532d56..2ef8378 100644
+--- a/PvPCore/Sources/PvPCore/BattleAutomation.swift
++++ b/PvPCore/Sources/PvPCore/BattleAutomation.swift
+@@ -46,6 +46,13 @@ public struct BattleAutomation: Sendable {
+     /// For your charged moves, the battle runs on while your fast move finishes and
+     /// freezes this long before "Get Ready!" is read (if that's after the buttons vanish).
+     public var playerFreezeBeforeCue: TimeInterval = 0.75
++    /// From your buttons' frames ("frameFreeze"): your charged move freezes this long after your
++    /// fast move in progress at your tap lands...
++    public var freezeAfterLanding: TimeInterval = 0.05
++    /// ...if "Get Ready!" is read at least this long after that; if not, the frames missed something.
++    public var cueAfterFrameFreeze: TimeInterval = 0.5
++    /// When your buttons vanished at the latest stop, if their frames showed it.
++    private var vanishedAt: TimeInterval?
+     /// The battle resumes this long before your buttons are read again after a charged move...
+     public var resumeLead: TimeInterval = 0.25
+     /// ...and this long after a faint, when the next Pokémon comes in. (Fearow after
+@@ -332,6 +339,7 @@ public struct BattleAutomation: Sendable {
+                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
+                 checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
+                 let stop = max(observation.first - stopLead, observation.previous, resumedAt)
++                vanishedAt = Rules.off("frameFreeze") ? nil : vanishFrame(after: observation.previous, by: observation.first)
+                 learnYourFastMove(between: buttonsResumedAt, and: observation.first)
+                 restartChecked = true
+                 awaitingYourReplacement = false
+@@ -476,7 +484,14 @@ public struct BattleAutomation: Sendable {
+             case .playerChargedMove:
+                 // Their fast move in progress pays out; they start fresh after your move.
+                 let before = playerFreezeBeforeCue
+-                if !Rules.off("runOn"), t - before > lastStopAt, t - lastStopAt < 2.5, tracker.isPaused {
++                // Your buttons' frames date it better, when they show your fast move in progress.
++                let landed = vanishedAt.flatMap { yourFreeze(tap: $0) }.flatMap { $0 <= t - cueAfterFrameFreeze ? $0 : nil }
++                if !Rules.off("runOn"), let freeze = landed, freeze > lastStopAt, t - lastStopAt < 2.5, tracker.isPaused {
++                    note("Your fast move in progress at your charged move landed at \(clockString(freeze - freezeAfterLanding)): the battle froze then")
++                    tracker.resume(at: lastStopAt)
++                    lastStopAt = freeze
++                    tracker.pause(at: lastStopAt)
++                } else if !Rules.off("runOn"), t - before > lastStopAt, t - lastStopAt < 2.5, tracker.isPaused {
+                     // The battle ran on while your fast move finished: move the freeze later.
+                     tracker.resume(at: lastStopAt)
+                     lastStopAt = t - before
+@@ -635,6 +650,26 @@ public struct BattleAutomation: Sendable {
+         YourFastMoves.landings(in: fillSamples.filter { $0[0] >= start && $0[0] <= end })
+     }
+ 
++    /// The frame your buttons vanished on: the start of the run of frames with a button empty (as
++    /// hidden ones read) through the first read without them, if after the last read with them.
++    /// A shorter run is flicker.
++    private func vanishFrame(after previous: TimeInterval, by first: TimeInterval) -> TimeInterval? {
++        let empty = { (s: [Double]) in min(s[1], s[2]) <= 0.02 }
++        guard let j = fillSamples.lastIndex(where: { $0[0] <= first }), fillSamples[j][0] > previous, empty(fillSamples[j]) else { return nil }
++        var start = j, end = j
++        while start > 0, empty(fillSamples[start - 1]) { start -= 1 }
++        while end + 1 < fillSamples.count, empty(fillSamples[end + 1]) { end += 1 }
++        guard start > 0, fillSamples[start][0] > previous, fillSamples[end][0] - fillSamples[start][0] >= 0.1 else { return nil }
++        return fillSamples[start][0]
++    }
++
++    /// Your charged move waits for your fast move in progress at the tap: it lands one of your fast
++    /// moves after the last one your buttons showed, if none was missed since (a full one can't rise).
++    private func yourFreeze(tap: TimeInterval) -> TimeInterval? {
++        guard let move = yourFastMove, let last = yourLandings(from: buttonsResumedAt, to: tap).last, tap - last <= move else { return nil }
++        return last + move + freezeAfterLanding
++    }
++
+     /// The gaps between your fast moves landing in a stretch of play tell your fast move's length.
+     private mutating func learnYourFastMove(between start: TimeInterval, and end: TimeInterval) {
+         guard !Rules.off("yourClock"), end > start else { return }
+@@ -832,6 +867,7 @@ public struct BattleAutomation: Sendable {
+         cadence = FastMoveCadence()
+         recentVerifiedHP = []
+         fillSamples = []
++        vanishedAt = nil
+         yourGaps = []
+         buttonsResumedAt = -.infinity
+         restartChecked = true
+diff --git a/PvPCore/Sources/battle-report/main.swift b/PvPCore/Sources/battle-report/main.swift
+index f2d6ed6..0d5f911 100644
+--- a/PvPCore/Sources/battle-report/main.swift
++++ b/PvPCore/Sources/battle-report/main.swift
+@@ -47,6 +47,8 @@ if let v = env["STOP_LEAD"].flatMap(Double.init) { automation.stopLead = v }
+ if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
+ if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
+ if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
++if let v = env["FREEZE_AFTER_LANDING"].flatMap(Double.init) { automation.freezeAfterLanding = v }
++if let v = env["CUE_AFTER_FRAME_FREEZE"].flatMap(Double.init) { automation.cueAfterFrameFreeze = v }
+ if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
+ if let off = env["RULES_OFF"] { Rules.disabled = Set(off.split(separator: ",").map(String.init)) }
+ if env["HIT_TEXT"] == "0" { automation.useFirstHitText = false }
+@@ -122,6 +124,7 @@ out.append("SETTINGS (heuristic timing; not proof of accuracy)")
+ out.append(String(format: "  The battle starts %.3fs after \"GO\" is first read.", automation.goDelay))
+ out.append(String(format: "  Battle stops %.3fs before your buttons are first read as gone.", automation.stopLead))
+ out.append(String(format: "  Your charged move freezes the battle %.3fs before \"Get Ready!\" is read.", automation.playerFreezeBeforeCue))
++out.append(String(format: "  Or, from your buttons' frames, %.3fs after your fast move in progress lands (if %.3fs or more before \"Get Ready!\").", automation.freezeAfterLanding, automation.cueAfterFrameFreeze))
+ out.append(String(format: "  Battle resumes %.3fs before your buttons are read again (%.3fs after a faint).", automation.resumeLead, automation.faintResumeLead))
+ out.append("")
+ out.append("OPPONENT FAST MOVES ASSUMED (PvPoke recommended)")

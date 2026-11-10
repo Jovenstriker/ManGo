@@ -1514,5 +1514,62 @@
     "notes": {
       "all": "User, 2026-11-09: Quagsire threw Stone Edge (0:57.9) on 7 Mud Shots. Your charged move after it (Get Ready! at 1:01.2) was a CMP tie Quagsire won; 6 Mud Shots (54) couldn't pay for Stone Edge (55), so the clock's seventh, in progress, had landed. The checkpoint is ManGo's energy at your charged move."
     }
+  },
+  "battle-2026-11-09-211824": {
+    "video": "Test Videos/battle-2026-11-09-211824.mp4",
+    "description": "Phone-saved battle; you surrendered at 2:45. Opponent: Hydreigon (Shadow), Melmetal, Azumarill.",
+    "counts": [
+      14,
+      null,
+      4,
+      6,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 34.3,
+        "speciesId": "hydreigon_shadow",
+        "energy": 21
+      },
+      {
+        "time": 86.4,
+        "speciesId": "melmetal",
+        "energy": 1
+      }
+    ],
+    "notes": {
+      "0": "User, 2026-11-09: 14 Dragon Breaths before Brutal Swing (0:31.1). Your Icy Wind after it (Get Ready! at 0:34.3) was a CMP tie Hydreigon won: no sneak, and no extra Dragon Breath though the clock had the 15th 99% done (the count could pay). The checkpoint is its energy at your Icy Wind.",
+      "2": "User: 4 Thunder Shocks before Double Iron Bash (1:23.1); your Acrobatics after it (1:26.4) was a CMP tie Melmetal won, no extra one. The checkpoint is its energy at your Acrobatics.",
+      "3": "User: 6 before its second Double Iron Bash (1:48.6).",
+      "unknown": "Hydreigon's 10 (0:55.1), 9 (2:19.3) and 3 (2:33.2) were too hazy for the user to count.",
+      "switch": "User: Melmetal threw 5 Thunder Shocks from the restart at 2:01 to its switch to Hydreigon (named at 2:06.22), not ManGo's 6 (83 on the bench): the clock had the 6th 61% done there and counted it as landing before the switch. Not fixed: that rule is needed in 172648, 142007 and 220414, whose fractions overlap. Melmetal didn't come back."
+    }
   }
 }

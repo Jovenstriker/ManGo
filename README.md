@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **98 exact hand counts across 32 recordings** in
+There are **101 exact hand counts across 33 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -173,6 +173,7 @@ only run where they are.
 | battle-2026-11-09-021617 | Sandslash (Alolan), Marowak, Carbink | 5, 9, 23, 1 |
 | battle-2026-11-09-022052 | Corsola (Galarian), Ursaluna, Tinkaton | 17, 2, 5, 9 |
 | battle-2026-11-09-211526 | Mimikyu, Quagsire (Shadow) | 7 |
+| battle-2026-11-09-211824 | Hydreigon (Shadow), Melmetal, Azumarill | 14, unknown, 4, 6, unknown × 2 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -209,7 +210,7 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-95 of 98 exact hand counts match, and every energy checkpoint. The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
+98 of 101 exact hand counts match, and every energy checkpoint. The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
 the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move

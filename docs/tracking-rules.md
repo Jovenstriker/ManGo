@@ -30,7 +30,12 @@ explicitly approximate and are not used to identify moves or compute energy.
 - A free switch counts from when the Pokémon it replaced left. Gone from their name box before
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
-  (play restarts around your buttons then, even when you shield).
+  (play restarts around your buttons then, even when you shield). After theirs, a new one whose
+  "Go, X!" was read before the restart was already out when play resumed and starts with it
+  (012748: "Go, Stunfisk!" at 2:57.16, the restart 2:57.18; 5 Thunder Shocks and a sneak by your
+  3:03 charged move, by the user's count). One read after it was sent out as play resumed and
+  starts with your buttons (013324: "Go, Pangoro!" at 1:55.00, after the 1:54.66 restart your
+  fast move dated).
 - After a faint, your first charged move gives them a sneak, even if your buttons never showed
   play resuming: you can only throw once it has, so yours took its first turn and they started a
   fast move on it (010753: Nidoqueen in for the fainted Forretress, your charged move at 2:29.8; the
@@ -47,6 +52,14 @@ explicitly approximate and are not used to identify moves or compute energy.
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
   not PvPoke's Dragon Tail), but not to one of the same length when the assumed move is less than
   one fast move short: those fit the same turns, and a lag can lose one (Furret, Sucker Punch).
+- A GO (or "CO") read sooner after a countdown digit than the countdown can get there (1.5s
+  after its "3", 0.8s after its "2") is that digit misread (014321: "co" 0.26s after the "3";
+  the real GO came 2.7s later). In every other recording GO came 2.46s or more after a "3" and
+  1.30s after a "2".
+- A "Go, X!" within 1.5s of your buttons changing to moves X learns is your switch, even with
+  your name box covered (014321: "Go, Jumpluff!" as your buttons became Energy Ball and
+  Acrobatics, while Cramorant's box went blank for its Dive; taken for theirs, it made Machamp a
+  fourth Pokémon and started a new battle, resetting their energy).
 - The lead starts 0.2s after GO is first read: of the starts tried after the countdown on
   November 8, 2026, the only one that fits every lead's hand count. GO stands about 0.65s, then
   grows as it fades; a first read that caught it fading (taller than it stands) came most of that
@@ -87,7 +100,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 101 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 103 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

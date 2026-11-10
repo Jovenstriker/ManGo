@@ -93,6 +93,8 @@ public struct BattleAutomation: Sendable {
     private var inProgressLandedBy: TimeInterval?
     private var goShownAtHit = false
     private var inProgressRuledOut = false
+    /// When each "Go, X!" was first read this stop (by normalized name).
+    private var sentOutAt: [String: TimeInterval] = [:]
     private var playerChargedThisStop = false
     /// The last stop ended with your charged move, so their fast move in progress landed as play resumed.
     private var lastResumeAfterYourChargedMove = false
@@ -236,6 +238,12 @@ public struct BattleAutomation: Sendable {
         // (221337: Clodsire after Nidoqueen's Poison Jab at 3:07.3, play back at 3:09.4).
         let hitOverYou = read.lines.contains(where: Self.isHitOnYou)
         let goShown = read.lines.contains { $0.text.lowercased().hasPrefix("go,") }
+        if stopped {
+            for line in read.lines where line.text.lowercased().hasPrefix("go,") {
+                let key = NameMatcher.normalize(String(line.text.dropFirst(3)))
+                if sentOutAt[key] == nil { sentOutAt[key] = t }
+            }
+        }
         if stopped, let hit = inProgressLandedBy, hit < t,
            (goShown && !goShownAtHit) || read.lines.contains(where: { NameMatcher.normalize($0.text).contains("switchinanewpokemon") }) {
             inProgressLandedBy = nil
@@ -329,6 +337,7 @@ public struct BattleAutomation: Sendable {
                 chargedMoveThisStop = false
                 inProgressLandedBy = nil
                 inProgressRuledOut = false
+                sentOutAt = [:]
                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
                 checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
                 let stop = max(observation.first - stopLead, observation.previous, resumedAt)
@@ -898,8 +907,16 @@ public struct BattleAutomation: Sendable {
         // move came after theirs, the switch is still timed from the restart but costs a
         // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
         // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
+        // Its "Go, X!" read before the restart: it was out when play resumed, so it starts with
+        // the restart, as the one it replaced would have (012748: "Go, Stunfisk!" at 2:57.16
+        // after Ninetales' Weather Ball, the restart 2:57.18, 0.25s before your buttons; 5
+        // Thunder Shocks and a sneak by your charged move at 3:03, by the user's count, not 4
+        // and one). Read after it, it was sent out as play resumed and starts with your buttons
+        // (013324: "Go, Pangoro!" at 1:55.00, after the restart your fast move dated to 1:54.66).
         if !Rules.off("freeSwitchBackdate"), opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
-            time = max(resumedAt, min(time, back))
+            let baseName = data.species[best.speciesId]?.speciesName.split(separator: "(").first.map(String.init) ?? ""
+            let outBeforeRestart = !Rules.off("sentOutBeforeRestart") && sentOutAt[NameMatcher.normalize(baseName)].map { $0 < resumedAt } == true
+            time = outBeforeRestart ? resumedAt : max(resumedAt, min(time, back))
         }
         if tracker.active == nil {
             // The lead: counting starts at "GO" (or when the countdown says it will be).

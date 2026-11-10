@@ -1571,5 +1571,71 @@
       "unknown": "Hydreigon's 10 (0:55.1), 9 (2:19.3) and 3 (2:33.2) were too hazy for the user to count.",
       "switch": "User: Melmetal threw 5 Thunder Shocks from the restart at 2:01 to its switch to Hydreigon (named at 2:06.22), not ManGo's 6 (83 on the bench): the clock had the 6th 61% done there and counted it as landing before the switch. Not fixed: that rule is needed in 172648, 142007 and 220414, whose fractions overlap. Melmetal didn't come back."
     }
+  },
+  "battle-2026-11-10-012748": {
+    "video": "Test Videos/battle-2026-11-10-012748.mp4",
+    "description": "Phone-saved battle. Opponent: Ninetales (Shadow), Ursaluna, Stunfisk.",
+    "counts": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      9,
+      0
+    ],
+    "countTargets": [
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ursaluna",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 183.2,
+        "speciesId": "stunfisk",
+        "energy": 54
+      },
+      {
+        "time": 194.4,
+        "speciesId": "stunfisk",
+        "energy": 72
+      },
+      {
+        "time": 221.7,
+        "speciesId": "stunfisk",
+        "energy": 1
+      }
+    ],
+    "notes": {
+      "5": "User, 2026-11-10: Stunfisk came in on a 0-turn switch for Ninetales at 2:56 (\"Go, Stunfisk!\" at 2:57.16, before your buttons at 2:57.43), and threw 5 Thunder Shocks and sneaked 1 on your charged move at 3:03, not 4 and 1; then 1 and a sneak (3:14), and 1: 9 before Discharge (3:31.4). ManGo had 8, so its second Discharge (3:41.5), after under half a second of play, looked unaffordable (32).",
+      "6": "None between the two Discharges: 41 left after the first paid for the second.",
+      "unknown": "Ninetales' and Ursaluna's counts weren't given.",
+      "checkpoints": "ManGo's energy at your charged moves (3:03.1, 3:14.3) and after the second Discharge."
+    }
   }
 }

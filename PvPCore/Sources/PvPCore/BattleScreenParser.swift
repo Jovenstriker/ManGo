@@ -62,6 +62,10 @@ public struct BattleScreenParser: Sendable {
 
     public let matcher: NameMatcher
     private let chargedMoveNames: Set<String>
+    /// Charged move ID -> normalized name (as your buttons read).
+    private let chargedMoveNameById: [String: String]
+    /// When your buttons last changed to another Pokémon's.
+    private var yourButtonsChangedAt: TimeInterval?
     /// Reads in a row a name must appear in before it counts.
     public var requiredReads = 2
 
@@ -112,6 +116,11 @@ public struct BattleScreenParser: Sendable {
     /// GO stands about 0.12-0.14 of the screen high; it grows past that only as it fades out.
     static let fadingGoHeight = 0.15
     private var countdownSeen = false
+    /// The latest countdown digit read (3, 2 or 1) and when, before GO.
+    private var countdownDigit: (digit: Int, at: TimeInterval)?
+    /// GO can't show sooner than this after each digit is first read: the countdown takes about a
+    /// second a digit (in every recording GO came 2.46s or more after a "3", 1.30s after a "2").
+    static let goAfterDigit: [Int: TimeInterval] = [3: 1.5, 2: 0.8, 1: 0]
     private var ended = false
     private var searching = false
 
@@ -137,6 +146,7 @@ public struct BattleScreenParser: Sendable {
     public init(data: GameData) {
         matcher = NameMatcher(data: data)
         chargedMoveNames = Set(data.moves.values.filter { !$0.isFast && $0.energy > 0 }.map { NameMatcher.normalize($0.name) })
+        chargedMoveNameById = Dictionary(data.moves.values.filter { !$0.isFast }.map { ($0.moveId, NameMatcher.normalize($0.name)) }, uniquingKeysWith: { a, _ in a })
     }
 
     public mutating func process(_ read: ScreenRead) -> [BattleEvent] {
@@ -178,8 +188,14 @@ public struct BattleScreenParser: Sendable {
                 endOfBattle()
                 return events
             }
+            if line.box.height > 0.12, !started, let digit = Int(line.text.trimmingCharacters(in: .whitespaces)), (1...3).contains(digit) {
+                countdownDigit = (digit, read.time)
+            }
             // The stylized "GO" often reads as "CO". The countdown's "2" comes ~1.6s before it.
-            if line.box.height > 0.08, key == "go" || key == "co", !started {
+            // Read too soon after a digit, it's that digit misread (014321: "co" 0.26s after the
+            // "3", the real GO 2.7s later; counting from it started Cramorant 2.4s early).
+            let tooSoon = !Rules.off("goAfterCountdown") && countdownDigit.map { read.time - $0.at < (Self.goAfterDigit[$0.digit] ?? 0) } == true
+            if line.box.height > 0.08, key == "go" || key == "co", !started, !tooSoon {
                 started = true
                 goReadFading = line.box.height >= Self.fadingGoHeight
                 events.append(.battleStarted)
@@ -282,6 +298,7 @@ public struct BattleScreenParser: Sendable {
                 pendingButtonLabels = (labels, count)
                 if count >= requiredReads {
                     yourButtonLabels = labels
+                    yourButtonsChangedAt = read.time
                     pendingButtonLabels = nil
                     events.append(.playerChangedPokemon)
                 }
@@ -406,6 +423,9 @@ public struct BattleScreenParser: Sendable {
                     pending = nil
                     events.append(.opponentAppeared(match, since: read.time))
                 }
+            } else if goIsYours(match, at: read.time) {
+                myTeam.insert(match.key)
+                if pendingGo?.match.key == match.key { pendingGo = nil }
             } else if match.key != opponentKey, pendingGo?.match.key != match.key,
                       !(yourCurrent?.key == match.key && read.time - yourCurrent!.time < 1.5) {
                 // A species you have too is theirs only while your box shows something else.
@@ -460,7 +480,9 @@ public struct BattleScreenParser: Sendable {
         if let go = pendingGo, read.time - go.time >= 0.75 {
             pendingGo = nil
             let yourBoxReadable = yourCurrent.map { read.time - $0.time < 1.0 } ?? false
-            if !yourBoxReadable, let shown, shown.key == opponentKey {
+            if goIsYours(go.match, at: go.time) {
+                myTeam.insert(go.match.key)
+            } else if !yourBoxReadable, let shown, shown.key == opponentKey {
                 myTeam.insert(go.match.key)
             } else if go.match.key != opponentKey {
                 let lastShown = opponentShownAt
@@ -473,6 +495,18 @@ public struct BattleScreenParser: Sendable {
             }
         }
         return events
+    }
+
+    /// "Go, X!" as your buttons change to moves X learns: your switch, not theirs, even with your
+    /// name box covered (014321: "Go, Jumpluff!" at 1:08.0, your buttons Energy Ball and Acrobatics
+    /// from 1:07.7, while Cramorant's box went blank for its Dive; taken for theirs, Jumpluff made
+    /// Machamp a fourth Pokémon, a new battle that reset their energy).
+    private func goIsYours(_ match: NameMatcher.Match, at time: TimeInterval) -> Bool {
+        guard !Rules.off("goMatchesYourButtons"), !yourButtonLabels.isEmpty,
+              let changed = yourButtonsChangedAt, abs(time - changed) <= 1.5 else { return false }
+        return match.candidates.contains { species in
+            yourButtonLabels.isSubset(of: Set(species.chargedMoves.compactMap { chargedMoveNameById[$0] }))
+        }
     }
 
     /// Their Pokémon is now `key` (shown in their name box at `shownAt`, if it was).
@@ -494,6 +528,7 @@ public struct BattleScreenParser: Sendable {
         stopObservation = nil
         lastScreenTime = nil
         started = false
+        countdownDigit = nil
         goNames = []
         myTeam = []
         yourCurrent = nil
@@ -535,12 +570,13 @@ public struct BattleScreenParser: Sendable {
     }
 
     public mutating func reset() {
-        self = BattleScreenParser(matcher: matcher, chargedMoveNames: chargedMoveNames, requiredReads: requiredReads)
+        self = BattleScreenParser(matcher: matcher, chargedMoveNames: chargedMoveNames, chargedMoveNameById: chargedMoveNameById, requiredReads: requiredReads)
     }
 
-    private init(matcher: NameMatcher, chargedMoveNames: Set<String>, requiredReads: Int) {
+    private init(matcher: NameMatcher, chargedMoveNames: Set<String>, chargedMoveNameById: [String: String], requiredReads: Int) {
         self.matcher = matcher
         self.chargedMoveNames = chargedMoveNames
+        self.chargedMoveNameById = chargedMoveNameById
         self.requiredReads = requiredReads
     }
 

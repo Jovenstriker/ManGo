@@ -211,7 +211,13 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-100 of 103 exact hand counts match, and every energy checkpoint. The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
+99 of 103 exact hand counts match. The fourth miss, from November 10, 2026: in 012748 Stunfisk
+came in on a 0-turn switch for Ninetales after its Weather Ball and threw 5 Thunder Shocks and a
+sneak by your 3:03 charged move; ManGo starts it with your buttons (2:57.43) and counts 4 and a
+sneak, so 8 before its first Discharge, not 9, and its second Discharge looks unaffordable (its
+three energy checkpoints miss too). Starting it at the restart instead fixed it, but a review
+showed that only worked by read timing: 013324's Pangoro, the same switch on screen, then gets
+one too many. The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
 the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move

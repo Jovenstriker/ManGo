@@ -30,12 +30,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - A free switch counts from when the Pokémon it replaced left. Gone from their name box before
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
-  (play restarts around your buttons then, even when you shield). After theirs, a new one whose
-  "Go, X!" was read before the restart was already out when play resumed and starts with it
-  (012748: "Go, Stunfisk!" at 2:57.16, the restart 2:57.18; 5 Thunder Shocks and a sneak by your
-  3:03 charged move, by the user's count). One read after it was sent out as play resumed and
-  starts with your buttons (013324: "Go, Pangoro!" at 1:55.00, after the 1:54.66 restart your
-  fast move dated).
+  (play restarts around your buttons then, even when you shield).
 - After a faint, your first charged move gives them a sneak, even if your buttons never showed
   play resuming: you can only throw once it has, so yours took its first turn and they started a
   fast move on it (010753: Nidoqueen in for the fainted Forretress, your charged move at 2:29.8; the

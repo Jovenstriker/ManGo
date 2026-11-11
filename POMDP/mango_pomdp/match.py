@@ -21,8 +21,8 @@ def make_player(name: str, gd: GameData, prior: TeamPrior, seed: int,
     """`truth` and `truth_style` (the opponent's real team and style) are only read by "oracle".
     `teams` is the list of teams "planner-list" knows the opponent picks from.
 
-    A planner's name can end in "@start", "@zero-turn" or "@any" for when it considers switching
-    (planner.SWITCH_AT); the default is zero-turn."""
+    A planner's name can end in "@start", "@zero-turn", "@catch" or "@any" for when it considers
+    switching (planner.SWITCH_AT); the default is catch."""
     name, _, switch_at = name.partition("@")
     kw = {"switch_at": switch_at} if switch_at else {}
     if name == "random":

@@ -2,7 +2,7 @@
 import random
 import unittest
 
-from mango_pomdp.battle import CHARGED, FAST, SWITCH, SWITCH_TURNS, Battle, Mon
+from mango_pomdp.battle import CHARGED, FAST, SWITCH, SWITCH_TURNS, WAIT, Battle, Mon
 from mango_pomdp.belief import Belief
 from mango_pomdp.duel import CDuel, Duel, DuelPlayer, Fighter, _library, play_out, solve_matrix
 from mango_pomdp import gamedata
@@ -115,6 +115,18 @@ class BattleTests(unittest.TestCase):
         self.assertEqual(b.sides[0].switch_timer, SWITCH_TURNS - 1)
         self.assertFalse(b.view(0).can_switch)
 
+    def test_waiting_stays_free_and_a_switch_catches_the_throw(self):
+        b = Battle([[mon("medicham"), mon("registeel")], [mon("azumarill")]], seed=0)
+        b.sides[1].mon.energy = 100
+        b.step([Scripted([WAIT]), Scripted([WAIT])])
+        self.assertEqual((b.sides[0].mon.energy, b.sides[0].busy_until), (0, 1))   # idle, free next turn
+        registeel = b.sides[0].mons[1]
+        hp = registeel.hp
+        b.step([Scripted([SWITCH(1)]), Scripted([CHARGED(0)])])   # switch the turn they throw
+        hit = next(e for e in b.log if e.kind == "charged")
+        self.assertEqual(hit.info["target"], "registeel")
+        self.assertLess(registeel.hp, hp)
+
     def test_choices_are_simultaneous(self):
         # Side 1 decides turn 0 without seeing side 0's switch on that same turn.
         seen = []
@@ -201,7 +213,7 @@ class PlannerTests(unittest.TestCase):
         b.turn = 30   # well into the matchup
         view = b.view(0)
         for switch_at, after_charged, later in (("start", False, False), ("zero-turn", True, False),
-                                                ("any", True, True)):
+                                                ("catch", True, False), ("any", True, True)):
             p = Planner(gd, prior, switch_at=switch_at)
             p.last_charged = 29   # a charged move last turn: cooldowns just reset
             self.assertEqual(p.may_switch(view), after_charged, switch_at)
@@ -209,6 +221,37 @@ class PlannerTests(unittest.TestCase):
             self.assertEqual(p.may_switch(view), later, switch_at)
         b.sides[0].switch_timer = 10
         self.assertFalse(Planner(gd, prior, switch_at="any").may_switch(view))   # the timer still rules
+
+    def test_turns_to_throw_reads_energy_cooldown_and_style(self):
+        from mango_pomdp.planner import turns_to_throw
+        b = Battle([[mon("medicham")], [mon("azumarill")]], seed=0)   # Azumarill: Bubble, 3 turns
+        azu = b.sides[1].mon
+        cheap = min(c.energy for c in azu.charged)
+        azu.energy = cheap
+        self.assertEqual(turns_to_throw(b, 1, "baiter"), 0)            # free, and can afford it
+        b.sides[1].busy_until, b.sides[1].fast_due = 2, 1               # mid Bubble: free on turn 2
+        self.assertEqual(turns_to_throw(b, 1, "baiter"), 2)
+        azu.energy = 0
+        self.assertIsNone(turns_to_throw(b, 1, "baiter"))               # one Bubble won't get there
+
+    def test_planner_waits_to_catch(self):
+        # Azumarill can throw next turn, when its Bubble ends. Medicham (Psycho Cut: 2 turns) can't
+        # both fast move and be free then; Registeel on the bench resists Ice Beam. Waiting, then
+        # switching on the throw turn, catches it.
+        from mango_pomdp.planner import Planner
+        b = Battle([[mon("medicham"), mon("registeel")], [mon("azumarill", charged=["ICE_BEAM", "HYDRO_PUMP"])]],
+                   seed=0)
+        b.sides[1].mon.energy = 55
+        b.sides[1].busy_until, b.sides[1].fast_due = 1, 0
+        p = Planner(gd, prior, rollouts=4, seed=1, styles=("baiter",))
+        p.start(0)
+        p.observe(b.log)
+        p.belief.counter.energy["azumarill"] = 55
+        cands = []
+        p._best = lambda view, c, *a, **k: cands.extend(c) or c[0]
+        p.act(b.view(0))
+        self.assertIn(("catch", 1), cands)
+        self.assertIn(SWITCH(1), cands)
 
     def test_planner_beats_random(self):
         rng = random.Random(7)

@@ -232,7 +232,10 @@ class Belief:
                 active.charged = (incoming,) + active.charged[1:]
             active.energy = max(active.energy, incoming.energy)
         foe.switch_timer = max(0, self.counter.switch_ready - view.turn)
-        foe.busy_until = view.turn
+        # Their fast move in progress, as the screen shows it: they can't throw until it's done.
+        wait, lands = view.foe_timer
+        foe.busy_until = view.turn + wait
+        foe.fast_due = view.turn + lands if lands >= 0 else -1
         foe.entered = view.foe_entered
         sides = [view.me.clone(), foe] if view.side == 0 else [foe, view.me.clone()]
         return Battle.from_sides(sides, view.turn, view.clock, view.seen_copy(), seed)

@@ -17,10 +17,18 @@ policy; with the test, one-step lookahead keeps its policy-improvement property 
 A rollout scores +1 / 0 / −1 for the result plus `margin_weight` × the HP difference left
 (as a fraction of each team's total), which separates close wins from blowouts.
 
-When a switch is a candidate (`switch_at`), whenever the switch timer allows one:
+Switching is legal on any turn the switch timer allows; `switch_at` decides when the planner
+spends rollouts on it:
   "start"      within 2 turns of a new matchup
   "zero-turn"  that, and the turn right after any charged move (thrown, shielded or taken), when
                cooldowns have just reset: a 0-turn switch, which costs no fast move
+  "catch"      that, and catching (the default). Whenever their counted energy is within one
+               fast move of a charged move, it also weighs switching now, and for each bench
+               Pokémon "wait, then switch to it the turn they throw", so the throw lands on the
+               new Pokémon. Waiting keeps it free to switch that turn instead of being locked
+               into a fast move. Choices are simultaneous, so the throw turn is a prediction:
+               in each rollout `turns_to_throw` gets it from the counted energy and the style
+               sampled from the belief.
   "any"        every turn
 
 This is the "lookahead with rollouts" online method for POMDPs (Kochenderfer et al.,
@@ -32,13 +40,62 @@ from __future__ import annotations
 
 import random
 
-from .battle import FAST, Battle, View
+from .battle import FAST, SWITCH, WAIT, Battle, View
 from .belief import Belief, Oracle
-from .gamedata import GameData, Move
-from .policies import STYLES, Heuristic
+from .gamedata import MAX_ENERGY, GameData, Move
+from .policies import STYLES, Heuristic, ThrowContext, preferred_throw
 from .team_prior import TeamPrior, TeamSpec
 
-SWITCH_AT = ("start", "zero-turn", "any")
+SWITCH_AT = ("start", "zero-turn", "catch", "any")
+
+
+def turns_to_throw(b: Battle, s: int, style: str) -> int | None:
+    """Turns until side s throws a charged move, if it plays `style` and throws within its next
+    fast move; None if it won't be ready that soon. Reads s's real energy, so in a rollout
+    (a determinized belief state) that is the counted energy."""
+    side, other = b.sides[s], b.sides[1 - s]
+    mon, target, t = side.mon, other.mon, b.turn
+
+    def throws(energy: int) -> bool:
+        ctx = ThrowContext(mon.species, mon.charged, min(energy, MAX_ENERGY), mon.atk_stage,
+                           target.species, target.hp, target.def_stage, other.shields)
+        return preferred_throw(style, ctx) is not None
+
+    if side.busy_until <= t:   # free now: throws now, or fast moves once more first
+        if throws(mon.energy):
+            return 0
+        return mon.fast.turns if throws(mon.energy + mon.fast.energy_gain) else None
+    gain = mon.fast.energy_gain if side.fast_due >= t else 0
+    return side.busy_until - t if throws(mon.energy + gain) else None
+
+
+class _Catch:
+    """Rollout policy for "stay free, then switch to `slot` the turn they throw". It fast moves
+    (or throws) while that leaves it free again in time, waits when a fast move would still be
+    going on the turn they throw, and switches on that turn. Then it hands over to `then`."""
+
+    def __init__(self, slot: int, then, battle: Battle, side: int, style: str, patience: int = 12):
+        self.slot, self.then, self.b, self.side, self.style = slot, then, battle, side, style
+        self.until = battle.turn + patience
+
+    def act(self, view):
+        if self.slot is None or not view.can_switch or self.slot not in view.me.bench() or view.turn > self.until:
+            self.slot = None
+            return self.then.act(view)
+        when = turns_to_throw(self.b, 1 - self.side, self.style)
+        if when == 0:
+            slot, self.slot = self.slot, None
+            return SWITCH(slot)
+        if when is not None and view.mon.fast.turns > when:
+            return WAIT
+        a = self.then.act(view)
+        return FAST if a[0] == "switch" else a
+
+    def shield(self, view, move):
+        return self.then.shield(view, move)
+
+    def replace(self, view):
+        return self.then.replace(view)
 
 
 class _First:
@@ -64,7 +121,7 @@ class Planner:
     def __init__(self, gd: GameData, prior: TeamPrior, rollouts: int = 12, particles: int = 200,
                  styles: tuple[str, ...] = STYLES, eps: float = 0.1, rollout_style: str = "baiter",
                  seed: int | None = None, oracle: tuple[TeamSpec, str] | None = None, name: str = "planner",
-                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "zero-turn"):
+                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "catch"):
         if switch_at not in SWITCH_AT:
             raise ValueError(f"switch_at must be one of {SWITCH_AT}")
         self.switch_at = switch_at
@@ -104,18 +161,32 @@ class Planner:
             return False
         if self.switch_at == "any" or max(view.me.entered, view.foe_entered) >= view.turn - 2:
             return True
-        return self.switch_at == "zero-turn" and view.turn == self.last_charged + 1
+        return self.switch_at != "start" and view.turn == self.last_charged + 1
+
+    def catch_window(self, view: View) -> bool:
+        """Their counted energy is within one fast move of the cheapest charged move they might have."""
+        if self.switch_at != "catch" or not view.can_switch:
+            return False
+        sid = view.foe_species.id
+        costs = [self.gd.moves[m].energy for m, w in self.belief.moves_posterior(sid) if w > 0 and m in self.gd.moves]
+        fast = view.foe_seen().get(sid, {}).get("fast")
+        gain = fast.energy_gain if fast else max(m.energy_gain for m in self.gd.moves.values())
+        return bool(costs) and self.belief.counter.energy.get(sid, 0) + gain >= min(costs)
 
     def act(self, view: View) -> tuple[str, int]:
         cands = [a for a in view.legal_actions() if a[0] == "fast" or a[0] == "charged"]
+        switches = [a for a in view.legal_actions() if a[0] == "switch"]
         if self.may_switch(view):
-            cands += [a for a in view.legal_actions() if a[0] == "switch"]
+            cands += switches
+        if switches and self.catch_window(view):
+            cands += [a for a in switches if a not in cands] + [("catch", a[1]) for a in switches]
         if len(cands) == 1:
             return FAST
         default = self.default.act(view)
         if default not in cands:
             cands.append(default)
-        return self._best(view, cands, lambda b, a, ctrls: None, cands.index(default), first=True)
+        best = self._best(view, cands, lambda b, a, ctrls: None, cands.index(default), first=True)
+        return WAIT if best[0] == "catch" else best
 
     def shield(self, view: View, move: Move) -> bool:
         if view.me.shields == 0:
@@ -139,9 +210,11 @@ class Planner:
 
     # Rollouts -----------------------------------------------------------------------------
 
-    def _controllers(self, first, seed: int, style: str):
+    def _controllers(self, first, seed: int, style: str, b: Battle):
         mine = Heuristic(self.rollout_style, eps=0.0, seed=seed)
-        if first is not None:
+        if first is not None and first[0] == "catch":
+            mine = _First(WAIT, _Catch(first[1], mine, b, self.side, style))
+        elif first is not None:
             mine = _First(first, mine)
         theirs = Heuristic(style, eps=self.eps, seed=seed + 1)
         return [mine, theirs] if self.side == 0 else [theirs, mine]
@@ -160,7 +233,7 @@ class Planner:
             root = self.belief.determinize(view, p, incoming=incoming)
             for j, c in enumerate(cands):
                 b = root.clone(seed)
-                ctrls = self._controllers(c if first else None, seed, p.style)
+                ctrls = self._controllers(c if first else None, seed, p.style, b)
                 apply(b, c, ctrls)
                 b.play(ctrls)
                 values[j].append(self._value(b))

@@ -339,7 +339,7 @@ def main():
     e.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
     e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"], type=player_name,
                    help="match.PLAYERS, or planner-book (planner-list with --book); planners take @start, "
-                        "@zero-turn (the default) or @any for when they consider switching")
+                        "@zero-turn, @catch (the default) or @any for when they consider switching")
     e.add_argument("--book", type=Path, help="opening book from the book command")
     e.add_argument("--opponents", nargs="+", default=list(STYLES), type=player_name,
                    help="heuristic styles, or planners (which know the list too)")

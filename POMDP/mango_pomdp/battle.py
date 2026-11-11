@@ -3,8 +3,11 @@ move registration (pvpoke.com/articles/strategy/guide-to-fast-move-registration)
 
 Each turn:
   1. Every side whose Pokémon isn't mid fast move picks an action: a fast move, a charged move
-     it has the energy for, or a switch (once its 45s switch timer has run out).
-  2. Switches happen first. The incoming Pokémon takes any fast move that lands this turn.
+     it has the energy for, a switch (once its 45s switch timer has run out), or waiting (doing
+     nothing, so it's free again next turn). Both choose from the start-of-turn state.
+  2. Switches happen first. The incoming Pokémon takes any fast move that lands this turn, and
+     any charged move thrown this turn: switching the turn they throw "catches" it, which takes
+     being free that turn (hence waiting) and predicting the throw from their counted energy.
   3. Fast moves register on their last turn (duration − 1 turns after they're used): damage to
      the opponent, energy to the user. A 1-turn move registers the turn it's used.
   4. Charged moves resolve in CMP order (higher attack first). A charged move interrupts every
@@ -49,6 +52,7 @@ SWITCH_TURNS = 90          # 45 seconds (PvPoke Player.switchTime)
 SHIELDS = 2
 
 FAST = ("fast", 0)
+WAIT = ("wait", 0)   # do nothing this turn and stay free, e.g. to switch the turn they throw
 
 GULP_TRIGGERS = ("DIVE", "SURF")
 # PvPoke's GULP_MISSILE_ARROKUDA / _PIKACHU: 15% of the target's max HP, then (attack, defense) stages.
@@ -244,6 +248,8 @@ class Battle:
                 self._switch_in(s, arg, timer=True)
             elif kind == "charged" and 0 <= arg < len(side.mon.charged) and side.mon.energy >= side.mon.charged[arg].energy:
                 queued.append((s, arg))
+            elif kind == "wait":
+                side.busy_until = t + 1   # idle: free again next turn
             else:
                 side.fast_due = t + side.mon.fast.turns - 1
                 side.busy_until = t + side.mon.fast.turns
@@ -438,7 +444,7 @@ class View:
         acts = [FAST] + [CHARGED(i) for i, c in enumerate(me.mon.charged) if me.mon.energy >= c.energy]
         if me.switch_timer == 0:
             acts += [SWITCH(i) for i in me.bench()]
-        return acts
+        return acts + [WAIT]
 
     # The battle, as the screen shows it.
     @property

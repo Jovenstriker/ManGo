@@ -22,7 +22,7 @@ import math
 import random
 from dataclasses import dataclass
 
-from .battle import CHARGED, FAST, SWITCH, Mon, View
+from .battle import CHARGED, FAST, SWITCH, WAIT, Mon, View
 from .gamedata import Move, Species, damage, load
 
 STYLES = ("shielder", "baiter", "nuker", "casual")
@@ -199,7 +199,7 @@ class RandomPlayer:
         self.rng = random.Random(seed)
 
     def act(self, view: View) -> tuple[str, int]:
-        return self.rng.choice(view.legal_actions())
+        return self.rng.choice([a for a in view.legal_actions() if a != WAIT])   # never idles, like the styles
 
     def shield(self, view: View, move: Move) -> bool:
         return self.rng.random() < 0.5

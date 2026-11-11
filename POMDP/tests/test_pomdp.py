@@ -234,6 +234,19 @@ class PlannerTests(unittest.TestCase):
         azu.energy = 0
         self.assertIsNone(turns_to_throw(b, 1, "baiter"))               # one Bubble won't get there
 
+    def test_rollout_policy_catches_a_big_hit_on_a_resist(self):
+        from mango_pomdp.planner import _Catcher
+        b = Battle([[mon("medicham"), mon("registeel")], [mon("azumarill", charged=["ICE_BEAM", "HYDRO_PUMP"])]],
+                   seed=0)
+        b.sides[1].mon.energy = 55   # Ice Beam, which a baiter throws now while we have shields
+        catcher = _Catcher(Heuristic("baiter", eps=0), b, 0, "baiter")
+        self.assertEqual(catcher.act(b.view(0)), SWITCH(1))
+        b.sides[1].busy_until, b.sides[1].fast_due = 1, 0   # mid Bubble: throws next turn
+        self.assertEqual(catcher.act(b.view(0)), WAIT)       # Psycho Cut would still be going then
+        b.sides[1].mon.energy = 0
+        b.turn = 10   # mid-matchup, where the baiter heuristic itself doesn't switch
+        self.assertNotIn(catcher.act(b.view(0)), (WAIT, SWITCH(1)))   # nothing coming: plays on
+
     def test_planner_waits_to_catch(self):
         # Azumarill can throw next turn, when its Bubble ends. Medicham (Psycho Cut: 2 turns) can't
         # both fast move and be free then; Registeel on the bench resists Ice Beam. Waiting, then

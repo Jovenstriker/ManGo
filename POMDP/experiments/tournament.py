@@ -19,7 +19,7 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 
 from mango_pomdp.gamedata import load
-from mango_pomdp.match import PLAYERS, make_player, play
+from mango_pomdp.match import PLAYERS, make_player, play, valid_player
 from mango_pomdp.policies import STYLES, Heuristic
 from mango_pomdp.team_prior import TeamPrior
 
@@ -41,10 +41,17 @@ def run_game(job):
     return player, out
 
 
+def player_name(name: str) -> str:
+    if valid_player(name):
+        return name
+    raise argparse.ArgumentTypeError(f"unknown player {name!r}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--games", type=int, default=100)
-    ap.add_argument("--players", nargs="+", default=["random", "baiter", "planner", "oracle"], choices=PLAYERS)
+    ap.add_argument("--players", nargs="+", default=["random", "baiter", "planner", "oracle"], type=player_name,
+                    help=f"{PLAYERS}; planners take @start, @zero-turn, @catch (the default) or @any")
     ap.add_argument("--opponents", nargs="+", default=list(STYLES), choices=STYLES)
     ap.add_argument("--rollouts", type=int, default=12)
     ap.add_argument("--seed", type=int, default=0)

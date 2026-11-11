@@ -31,6 +31,11 @@ spends rollouts on it:
                sampled from the belief.
   "any"        every turn
 
+With "catch" or "any", our side's rollout policy catches too (`_Catcher`, unless
+`rollout_catch=False`): the baiter heuristic, except that when the opponent is about to throw a
+big hit that a bench Pokémon takes much less of, it stays free and switches on the throw turn.
+So a rollout values a catch the planner would make later, not only one it starts now.
+
 This is the "lookahead with rollouts" online method for POMDPs (Kochenderfer et al.,
 Algorithms for Decision Making, ch. 22), with the opponent's play folded into the transition
 model through the belief over styles. Swapping `Belief` for `Oracle` gives the same planner
@@ -42,31 +47,88 @@ import random
 
 from .battle import FAST, SWITCH, WAIT, Battle, View
 from .belief import Belief, Oracle
-from .gamedata import MAX_ENERGY, GameData, Move
+from .gamedata import MAX_ENERGY, GameData, Move, damage
 from .policies import STYLES, Heuristic, ThrowContext, preferred_throw
 from .team_prior import TeamPrior, TeamSpec
 
 SWITCH_AT = ("start", "zero-turn", "catch", "any")
 
 
-def turns_to_throw(b: Battle, s: int, style: str) -> int | None:
-    """Turns until side s throws a charged move, if it plays `style` and throws within its next
-    fast move; None if it won't be ready that soon. Reads s's real energy, so in a rollout
-    (a determinized belief state) that is the counted energy."""
+def next_throw(b: Battle, s: int, style: str) -> tuple[int, Move] | None:
+    """(turns until side s throws a charged move, which move), if it plays `style` and throws
+    within its next fast move; None if it won't be ready that soon. Reads s's real energy, so in a
+    rollout (a determinized belief state) that is the counted energy."""
     side, other = b.sides[s], b.sides[1 - s]
     mon, target, t = side.mon, other.mon, b.turn
 
-    def throws(energy: int) -> bool:
+    def throw(energy: int) -> Move | None:
         ctx = ThrowContext(mon.species, mon.charged, min(energy, MAX_ENERGY), mon.atk_stage,
                            target.species, target.hp, target.def_stage, other.shields)
-        return preferred_throw(style, ctx) is not None
+        i = preferred_throw(style, ctx)
+        return None if i is None else mon.charged[i]
 
     if side.busy_until <= t:   # free now: throws now, or fast moves once more first
-        if throws(mon.energy):
-            return 0
-        return mon.fast.turns if throws(mon.energy + mon.fast.energy_gain) else None
+        now = throw(mon.energy)
+        if now:
+            return 0, now
+        later = throw(mon.energy + mon.fast.energy_gain)
+        return (mon.fast.turns, later) if later else None
     gain = mon.fast.energy_gain if side.fast_due >= t else 0
-    return side.busy_until - t if throws(mon.energy + gain) else None
+    later = throw(mon.energy + gain)
+    return (side.busy_until - t, later) if later else None
+
+
+def turns_to_throw(b: Battle, s: int, style: str) -> int | None:
+    nxt = next_throw(b, s, style)
+    return None if nxt is None else nxt[0]
+
+
+class _Catcher:
+    """Our rollout policy: the baiter heuristic, plus catching. When the opponent (playing the
+    sampled style, with the counted energy) is about to throw a move that would take at least
+    `big` of our Pokémon's HP, and a bench Pokémon would take at most `ratio` of that damage,
+    it stays free (fast moving only if that ends in time, else waiting) and switches to that
+    Pokémon the turn they throw."""
+
+    def __init__(self, base, battle: Battle, side: int, style: str, ratio: float = 0.6, big: float = 0.25):
+        self.base, self.b, self.side, self.style, self.ratio, self.big = base, battle, side, style, ratio, big
+
+    def target(self, view) -> tuple[int, int] | None:
+        """(bench slot to catch with, turns until the throw), or None."""
+        if not view.can_switch:
+            return None
+        nxt = next_throw(self.b, 1 - self.side, self.style)
+        if nxt is None:
+            return None
+        when, move = nxt
+        foe = self.b.sides[1 - self.side].mon
+        mine = view.mon
+        hit = damage(move, foe.species, mine.species, foe.atk_stage, mine.def_stage)
+        if hit < self.big * mine.hp:
+            return None
+        bench = view.me.bench()
+        taken = {i: damage(move, foe.species, view.me.mons[i].species, foe.atk_stage, view.me.mons[i].native[1])
+                 for i in bench}
+        slot = min(bench, key=lambda i: (taken[i], -view.me.mons[i].hp))
+        return (slot, when) if taken[slot] <= self.ratio * hit else None
+
+    def act(self, view):
+        plan = self.target(view)
+        if plan is None:
+            return self.base.act(view)
+        slot, when = plan
+        if when == 0:
+            return SWITCH(slot)
+        if view.mon.fast.turns > when:
+            return WAIT
+        a = self.base.act(view)
+        return FAST if a[0] == "switch" else a
+
+    def shield(self, view, move):
+        return self.base.shield(view, move)
+
+    def replace(self, view):
+        return self.base.replace(view)
 
 
 class _Catch:
@@ -121,10 +183,12 @@ class Planner:
     def __init__(self, gd: GameData, prior: TeamPrior, rollouts: int = 12, particles: int = 200,
                  styles: tuple[str, ...] = STYLES, eps: float = 0.1, rollout_style: str = "baiter",
                  seed: int | None = None, oracle: tuple[TeamSpec, str] | None = None, name: str = "planner",
-                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "catch"):
+                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "catch",
+                 rollout_catch: bool = True):
         if switch_at not in SWITCH_AT:
             raise ValueError(f"switch_at must be one of {SWITCH_AT}")
         self.switch_at = switch_at
+        self.rollout_catch = rollout_catch
         self.last_charged = -10   # turn of the last charged move either side threw
         self.gd, self.prior = gd, prior
         self.rollouts, self.particles, self.styles, self.eps = rollouts, particles, styles, eps
@@ -212,6 +276,8 @@ class Planner:
 
     def _controllers(self, first, seed: int, style: str, b: Battle):
         mine = Heuristic(self.rollout_style, eps=0.0, seed=seed)
+        if self.rollout_catch and self.switch_at in ("catch", "any"):
+            mine = _Catcher(mine, b, self.side, style)
         if first is not None and first[0] == "catch":
             mine = _First(WAIT, _Catch(first[1], mine, b, self.side, style))
         elif first is not None:

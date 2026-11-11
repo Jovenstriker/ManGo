@@ -17,6 +17,12 @@ policy; with the test, one-step lookahead keeps its policy-improvement property 
 A rollout scores +1 / 0 / −1 for the result plus `margin_weight` × the HP difference left
 (as a fraction of each team's total), which separates close wins from blowouts.
 
+When a switch is a candidate (`switch_at`), whenever the switch timer allows one:
+  "start"      within 2 turns of a new matchup
+  "zero-turn"  that, and the turn right after any charged move (thrown, shielded or taken), when
+               cooldowns have just reset: a 0-turn switch, which costs no fast move
+  "any"        every turn
+
 This is the "lookahead with rollouts" online method for POMDPs (Kochenderfer et al.,
 Algorithms for Decision Making, ch. 22), with the opponent's play folded into the transition
 model through the belief over styles. Swapping `Belief` for `Oracle` gives the same planner
@@ -31,6 +37,8 @@ from .belief import Belief, Oracle
 from .gamedata import GameData, Move
 from .policies import STYLES, Heuristic
 from .team_prior import TeamPrior, TeamSpec
+
+SWITCH_AT = ("start", "zero-turn", "any")
 
 
 class _First:
@@ -56,7 +64,11 @@ class Planner:
     def __init__(self, gd: GameData, prior: TeamPrior, rollouts: int = 12, particles: int = 200,
                  styles: tuple[str, ...] = STYLES, eps: float = 0.1, rollout_style: str = "baiter",
                  seed: int | None = None, oracle: tuple[TeamSpec, str] | None = None, name: str = "planner",
-                 z: float = 1.0, margin_weight: float = 0.2):
+                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "zero-turn"):
+        if switch_at not in SWITCH_AT:
+            raise ValueError(f"switch_at must be one of {SWITCH_AT}")
+        self.switch_at = switch_at
+        self.last_charged = -10   # turn of the last charged move either side threw
         self.gd, self.prior = gd, prior
         self.rollouts, self.particles, self.styles, self.eps = rollouts, particles, styles, eps
         self.rollout_style = rollout_style
@@ -72,6 +84,7 @@ class Planner:
 
     def start(self, side: int) -> None:
         self.side = side
+        self.last_charged = -10
         seed = self.rng.randrange(1 << 30)
         if self.oracle:
             self.belief = Oracle(self.gd, self.prior, side, *self.oracle, seed=seed)
@@ -79,13 +92,23 @@ class Planner:
             self.belief = Belief(self.gd, self.prior, side, self.particles, self.styles, self.eps, seed=seed)
 
     def observe(self, events) -> None:
+        for e in events:
+            if e.kind == "charged":
+                self.last_charged = e.turn
         self.belief.observe(events)
 
     # Decisions ----------------------------------------------------------------------------
 
+    def may_switch(self, view: View) -> bool:
+        if not view.can_switch:
+            return False
+        if self.switch_at == "any" or max(view.me.entered, view.foe_entered) >= view.turn - 2:
+            return True
+        return self.switch_at == "zero-turn" and view.turn == self.last_charged + 1
+
     def act(self, view: View) -> tuple[str, int]:
         cands = [a for a in view.legal_actions() if a[0] == "fast" or a[0] == "charged"]
-        if view.can_switch and max(view.me.entered, view.foe_entered) >= view.turn - 2:
+        if self.may_switch(view):
             cands += [a for a in view.legal_actions() if a[0] == "switch"]
         if len(cands) == 1:
             return FAST

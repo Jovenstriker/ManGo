@@ -35,7 +35,7 @@ from pathlib import Path
 
 from mango_pomdp import gamedata
 from mango_pomdp.battle import SWITCH
-from mango_pomdp.match import PLAYERS, make_player, play
+from mango_pomdp.match import PLAYERS, make_player, play, valid_player
 from mango_pomdp.policies import STYLES, Heuristic
 from mango_pomdp.team_prior import TeamPrior
 
@@ -107,18 +107,18 @@ def planned_game(job):
     prior = TeamPrior(gd)
     # planner-book plays the same games as planner-list (common random numbers): wherever the book
     # doesn't step in, the game is identical, so the comparison is paired.
-    key = "planner-list" if player == "planner-book" else player
+    key = player.replace("planner-book", "planner-list")
     rng = random.Random(zlib.crc32(repr((key, mine, lead, j, style, game)).encode()))
     others = [t for k, t in enumerate(gd.teams) if k != mine]
     ours, theirs = rotate(gd.teams[mine].spec, lead), list(gd.teams[j].spec)
     side = game % 2
-    base = "planner-list" if player.startswith("open:") or player == "planner-book" else player
+    base = "planner-list" if player.startswith("open:") else key
     me = make_player(base, gd, prior, rng.randrange(1 << 30), truth=theirs,
                      truth_style=style if style in STYLES else "baiter", rollouts=rollouts, teams=others)
     if player.startswith("open:"):
         slot = int(player[5:])
         me = Opening(me, {t.species[0]: slot for t in gd.teams}, player)
-    elif player == "planner-book":
+    elif player.startswith("planner-book"):
         me = Opening(me, book, player)
     if style in STYLES:
         foe = Heuristic(style, seed=rng.randrange(1 << 30))
@@ -319,6 +319,12 @@ def game_plan(gd, results, opps):
                  if closers else ""))
 
 
+def player_name(name: str) -> str:
+    if valid_player(name.replace("planner-book", "planner-list")):
+        return name
+    raise argparse.ArgumentTypeError(f"unknown player {name!r}; pick from {PLAYERS} or planner-book")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -331,10 +337,11 @@ def main():
     e = sub.add_parser("evaluate")
     e.add_argument("team", type=int, help="CSV row, from 1")
     e.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
-    e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"],
-                   choices=(*PLAYERS, "planner-book"), help="planner-book is planner-list with --book")
+    e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"], type=player_name,
+                   help="match.PLAYERS, or planner-book (planner-list with --book); planners take @start, "
+                        "@zero-turn (the default) or @any for when they consider switching")
     e.add_argument("--book", type=Path, help="opening book from the book command")
-    e.add_argument("--opponents", nargs="+", default=list(STYLES), choices=(*STYLES, "planner", "planner-list"),
+    e.add_argument("--opponents", nargs="+", default=list(STYLES), type=player_name,
                    help="heuristic styles, or planners (which know the list too)")
     e.add_argument("--games", type=int, default=4, help="games per opponent per style")
     e.add_argument("--rollouts", type=int, default=12)
@@ -343,7 +350,7 @@ def main():
     b = sub.add_parser("book")
     b.add_argument("team", type=int, help="CSV row, from 1")
     b.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
-    b.add_argument("--opponents", nargs="+", default=["planner-list"], choices=(*STYLES, "planner", "planner-list"))
+    b.add_argument("--opponents", nargs="+", default=["planner-list"], type=player_name)
     b.add_argument("--games", type=int, default=8, help="games per opponent per opening")
     b.add_argument("--rollouts", type=int, default=12)
     b.add_argument("--margin", type=float, default=0.1, help="how much better a swap must be than staying in")
@@ -362,7 +369,7 @@ def main():
                    args.workers, args.margin, out)
     else:
         book = json.loads(args.book.read_text())["book"] if args.book else None
-        if "planner-book" in args.players and not book:
+        if any(p.startswith("planner-book") for p in args.players) and not book:
             ap.error("planner-book needs --book")
         evaluate(gd, args.team - 1, args.lead, args.players, args.opponents, args.games,
                  (args.rollouts, args.opponent_rollouts), args.workers, args.plan, book)

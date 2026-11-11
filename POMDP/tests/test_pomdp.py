@@ -195,6 +195,21 @@ class BeliefTests(unittest.TestCase):
 
 
 class PlannerTests(unittest.TestCase):
+    def test_zero_turn_switches_are_candidates_mid_matchup(self):
+        from mango_pomdp.planner import Planner
+        b = Battle([[mon("medicham"), mon("azumarill"), mon("registeel")], [mon("swampert")]], seed=0)
+        b.turn = 30   # well into the matchup
+        view = b.view(0)
+        for switch_at, after_charged, later in (("start", False, False), ("zero-turn", True, False),
+                                                ("any", True, True)):
+            p = Planner(gd, prior, switch_at=switch_at)
+            p.last_charged = 29   # a charged move last turn: cooldowns just reset
+            self.assertEqual(p.may_switch(view), after_charged, switch_at)
+            p.last_charged = 20
+            self.assertEqual(p.may_switch(view), later, switch_at)
+        b.sides[0].switch_timer = 10
+        self.assertFalse(Planner(gd, prior, switch_at="any").may_switch(view))   # the timer still rules
+
     def test_planner_beats_random(self):
         rng = random.Random(7)
         score = 0.0

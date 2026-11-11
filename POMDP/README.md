@@ -18,7 +18,7 @@ counting that `belief.EnergyCounter` does here.
     python3 -m experiments.demo --seed 3 --opponent nuker      # a 3v3 battle, narrated
     python3 -m experiments.tournament --games 150              # 3v3 win rates
     python3 -m experiments.top_teams select                    # pick a top Mega Great League team
-    python3 -m experiments.top_teams evaluate 25 --plan        # and a game plan against the rest
+    python3 -m experiments.top_teams evaluate 25 --lead 2 --plan   # and a game plan against the rest
     python3 -m unittest discover tests
 
 The work starts with 1v1s, which can be solved exactly, then builds up to full 3v3 battles with
@@ -143,6 +143,47 @@ The planner keeps the rollout policy's own choice unless a paired test says anot
 better by more than one standard error. Without that test, in an earlier run, the planner lost
 to its own rollout policy (0.52 vs baiter's 0.58). With it, the planner beats baiter clearly.
 
+**Switching, waiting and catching.** Switching is legal on any turn the 45-second switch timer
+allows, and a Pokémon can also wait: do nothing for a turn and stay free. A switch on the turn
+the opponent throws takes the throw on the incoming Pokémon ("catching" it). Both sides choose
+blind, so catching means predicting the throw turn from counted energy, and waiting keeps a
+Pokémon with a multi-turn fast move free for that turn. Rollouts are the expensive part, so the
+planner only weighs a switch at some moments. Its `switch_at` option sets them; append
+`@start`, `@zero-turn`, `@catch` or `@any` to a planner's name:
+
+| `switch_at` | The planner weighs a switch |
+|---|---|
+| `start` | within 2 turns of a new matchup |
+| `zero-turn` | that, and the turn right after any charged move (thrown, shielded or taken): a 0-turn switch, which costs no fast move |
+| `catch` (default) | that, and whenever their counted energy is within one fast move of a charged move: switching now, or waiting and switching the turn they throw |
+| `any` | every turn |
+
+With `catch`, our own rollout policy catches too: it stays free and switches when the
+predicted throw is a big hit that a bench Pokémon takes much less of. Measured on paired games:
+
+| Switching | Great League tournament | #25 vs heuristic styles | #25 vs the planner (`@start`) | Catches per game |
+|---|---|---|---|---|
+| `start` | 0.798 ± 0.023 | 0.961 | 0.721 | 0.00–0.01 |
+| `zero-turn` | 0.807 ± 0.023 | | | |
+| `catch`, plain rollouts | | 0.963 | 0.697 | 0.05–0.06 |
+| `catch` (default) | 0.803 ± 0.023 | 0.960 | 0.676 | 0.07–0.09 |
+
+Head to head, the same planner (`planner-list`) on 250 random pairs of the listed Mega Great
+League teams, each played from both sides so team strength cancels:
+
+| Matchup | Win rate |
+|---|---|
+| `catch` vs `start` | 0.512 ± 0.021 |
+| `zero-turn` vs `start` | 0.532 ± 0.018 |
+
+The planner does use these options. With `catch` it waits about 0.1–0.2 times a game, and about
+half of its catches land on a Pokémon that resists the move. They don't change the win rate,
+though. The switch timer allows only about one switch a game, and without these options the
+planner spends it at the start of a matchup anyway. Team #25's dip against the planner
+(rightmost column, 376 games each, about ±0.023) doesn't show up head to head. The bug fix that
+came with catching mattered more: rollouts now know when the opponent is mid fast move. That
+fix alone took the planner from 0.753 to 0.798 on the tournament's games.
+
 Ablations, by player name:
 
 | Player | What it is |
@@ -158,8 +199,8 @@ Ablations, by player name:
 `python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner oracle`:
 each player plays 300 battles. Each game is 2 battles with the teams swapped, and the opponent
 style is drawn uniformly. Ties count as half a win. The run took about 4 minutes on 10 cores.
-These numbers use the current rules: charged moves reset cooldowns, and both sides choose
-simultaneously. Each change moved the table by about a standard error at most.
+These numbers use the current rules and planner: charged moves reset cooldowns, both sides
+choose simultaneously, and the planner can wait and catch (above).
 
 | Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
 |---|---|---|---|---|---|
@@ -168,21 +209,20 @@ simultaneously. Each change moved the table by about a standard error at most.
 | baiter | 0.555 ± 0.029 | 0.574 | 0.426 | 0.618 | 0.598 |
 | nuker | 0.455 ± 0.029 | 0.397 | 0.318 | 0.467 | 0.616 |
 | casual | 0.403 ± 0.028 | 0.338 | 0.297 | 0.428 | 0.530 |
-| planner-flat | 0.757 ± 0.025 | 0.838 | 0.635 | 0.750 | 0.805 |
-| planner-1style | 0.790 ± 0.024 | 0.824 | 0.716 | 0.776 | 0.841 |
-| **planner** | **0.753 ± 0.025** | 0.772 | 0.662 | 0.822 | 0.756 |
-| oracle | 0.903 ± 0.017 | 0.904 | 0.851 | 0.908 | 0.945 |
+| planner-flat | 0.780 ± 0.024 | 0.794 | 0.743 | 0.737 | 0.841 |
+| planner-1style | 0.795 ± 0.023 | 0.846 | 0.743 | 0.763 | 0.829 |
+| **planner** | **0.803 ± 0.023** | 0.794 | 0.662 | 0.868 | 0.878 |
+| oracle | 0.900 ± 0.017 | 0.912 | 0.797 | 0.934 | 0.951 |
 
 What this says so far:
 
-- **Lookahead is most of the win.** Every planner beats every heuristic by about 20 points,
-  including baiter, which is the planner's own rollout policy.
+- **Lookahead is most of the win.** Every planner beats every heuristic by about 22–25
+  points, including baiter, which is the planner's own rollout policy.
 - **A prior over all Great League teams isn't paying for itself yet.** The full belief, the
-  single-style belief and the flat prior are within about one and a half standard errors of
-  each other (0.75–0.79). An earlier hint that the structured prior helps against baiters
-  didn't survive the rerun. When the opponent's team is known to come from a short list, the
-  belief does pay: see the Mega Great League experiment below.
-- **There's real value in information left to capture.** The oracle wins 15 points more.
+  single-style belief and the flat prior are within about one standard error of each other
+  (0.78–0.80). When the opponent's team is known to come from a short list, the belief does
+  pay: see the Mega Great League experiment below.
+- **There's real value in information left to capture.** The oracle wins 10 points more.
   Telling apart what it gains from knowing the team and moves versus knowing the style is the
   obvious next ablation. The 1v1 solver offers a cleaner way in: with the opponent's moveset as
   the only hidden information, it can measure exactly what knowing their moves is worth.
@@ -218,64 +258,66 @@ outputs, including a game plan for every opponent.
    / Stunfisk (#25) is strongest: it wins 0.67 and beats 35 of 47. PvPoke's team rating barely
    agrees with simulated strength; its top-rated team (#1) comes 29th.
 2. *The planner against the heuristic styles*, with each of the top 6 teams and each lead. This
-   doesn't separate them: all score 0.93–0.98, and every one beats all 47.
-3. *The tiebreak is a stronger opponent:* the same planner, which also knows the list. Here #25
-   leading Thievul is best, 8 games per opponent:
+   doesn't separate them: every team's best lead scores 0.955–0.979 and beats all 47.
+3. *The tiebreak is a stronger opponent:* the same planner, which also knows the list. Each
+   team with its best lead, 8 games per opponent:
 
-| Team, best lead | vs heuristic styles | vs the planner | Beaten (of 47) vs the planner |
+| Team, lead | vs heuristic styles | vs the planner | Beaten (of 47) vs the planner |
 |---|---|---|---|
-| **#25 Thievul / Cramorant / Stunfisk** | 0.983 | **0.741** | **38** |
-| #33 Melmetal / Corsola-G / Cramorant | 0.981 | 0.729 | 37 |
-| #26 Sableyeˢ / Cramorant / Marowak | 0.971 | 0.638 | 29 |
-| #32 Tinkaton / Cramorant / Marowak | 0.965 | 0.634 | 33 |
-| #36 Cramorant / Marowak / Mimikyu | 0.968 | 0.577 | 23 |
-| #45 Cramorant / Mimikyu / Thievul | 0.967 | 0.556 | 25 |
+| #25 Thievul / Cramorant / Stunfisk, Cramorant lead | 0.969 | 0.649 | 30 |
+| #33 Melmetal / Corsola-G / Cramorant, Melmetal lead | 0.975 | 0.644 | 36 |
+| #26 Cramorant / Marowak / Sableyeˢ, Cramorant lead | 0.971 | 0.577 | 25 |
+| #33 again, Cramorant lead | 0.979 | 0.574 | 27 |
+| #32 Cramorant / Marowak / Tinkaton, Cramorant lead | 0.959 | 0.564 | 25 |
+| #36 Cramorant / Marowak / Mimikyu, Cramorant lead | 0.964 | 0.533 | 23 |
+| #45 Cramorant / Mimikyu / Thievul, Cramorant lead | 0.955 | 0.505 | 18 |
 
-Leading with Cramorant (0.697) or Stunfisk (0.710) instead does worse. Giving our planner 32
-rollouts against the opponent's 12 doesn't help either (0.750).
+The top two are close, so they were rerun at 16 games per opponent: #25 with a Cramorant lead
+wins 0.638 ± 0.017 and beats 35. #33 with a Melmetal lead wins 0.630 ± 0.018 and also beats
+35. #25 with a Thievul lead wins 0.624 ± 0.018 and beats 31. It's a near tie. #25 with a
+Cramorant lead edges it on win rate, and it beats #33 head to head (#33 wins 0.06). With the
+earlier planner (before waiting, catching and the rollout timing fix), #25 led by Thievul came
+first, at 0.741 against that planner.
 
-**Team #25, leading Thievul.** Against the heuristic styles, 4 games per opponent per style;
-against the planner, 16 games per opponent:
+**Team #25, Cramorant / Thievul / Stunfisk, leading Cramorant.** Against the heuristic styles,
+4 games per opponent per style; against the planner, 16 games per opponent:
 
 | Our player | vs heuristic styles | Beaten | vs the planner | Beaten |
 |---|---|---|---|---|
-| baiter heuristic | 0.791 ± 0.015 | 41 | | |
-| planner (format prior) | 0.936 ± 0.009 | 47 | 0.638 ± 0.017 | 34 |
-| **planner-list** | **0.975 ± 0.006** | **47** | **0.719 ± 0.016** | **42** |
-| planner-list + opening book | | | 0.735 ± 0.016 | 42 |
-| oracle (knows team and style) | 0.985 ± 0.004 | 47 | | |
+| baiter heuristic | 0.676 ± 0.017 | 33 | | |
+| planner (format prior) | 0.894 ± 0.011 | 45 | 0.557 ± 0.018 | 26 |
+| **planner-list** | **0.961 ± 0.007** | **47** | **0.638 ± 0.017** | **35** |
+| planner-list + opening book | | | 0.640 ± 0.017 | 35 |
+| oracle (knows team and style) | 0.987 ± 0.004 | 47 | | |
 
-The opening book is learned (`top_teams book 25`). For each lead the opponents can show, it
-plays every opening against every listed team with that lead: the planner's own opening, a
-swap to Cramorant on turn 0, or a swap to Stunfisk. It keeps a swap only if the swap wins 0.1
-more. The result: swap to Cramorant against Tinkaton, Araquanid, Altaria, Morpeko, Ninetales
-and Sableyeˢ leads; swap to Stunfisk against Drapion; let the planner choose against the rest.
-The planner stays in against most leads, and on its own swaps to Stunfisk against Melmetal.
-The book was then measured on games it wasn't built from.
+The opening book is learned (`top_teams book 25 --lead 2`). For each lead the opponents can
+show, it plays every opening against every listed team with that lead: the planner's own
+opening, or a swap to either bench Pokémon on turn 0. It keeps a swap only if the swap wins 0.1
+more. It swaps to Stunfisk against Araquanid, Marowak, Ninetales and Sableyeˢ leads, and to
+Thievul against Charjabug, Ursalunaˢ and Dusknoirˢ. Against the rest the planner chooses. It
+was then measured on games it wasn't built from.
 
 What this says:
 
-- **Against heuristic opponents, the strategy beats every team.** planner-list wins 97.5%,
-  within a point of the oracle, and its worst matchup (#21) is 0.66. The same team played by
-  the baiter heuristic wins 79% and fails to beat 6 teams.
-- **Knowing the list pays most against a strong opponent:** 8 points against the planner
-  (0.719 vs 0.638), 4 against the heuristics.
-- **Against an equally strong opponent, nothing found beats all 47.** #12 Cramorant / Jumpluff
-  / Stunfisk wins all 16 games. Jumpluff beats both Stunfisk and Cramorant, and Thievul (Icy
-  Wind) is the only answer, but the planner spends Thievul on their lead Cramorant. No opening
-  fixes it, and neither do more rollouts. A search deep enough to save Thievul for Jumpluff
-  (POMCP, below) is the next step. #21 Tinkaton / Clodsire / Mimikyu (0.25–0.31) and #45
-  (0.44) are the other losses.
-- **The opening book adds 1.6 points, about one standard error.** It helps where one opening
-  suits every team with that lead: #35 goes from 0.25 to 0.69, #37 from 0.59 to 0.94. It
-  hurts where teams sharing a lead want different openings: #28 and #46 lose about 0.2.
+- **Against heuristic opponents, the strategy beats every team.** planner-list wins 96.1%,
+  within 3 points of the oracle. Its worst matchup is #32 Cramorant / Marowak / Tinkaton, at
+  0.56. The same team played by the baiter heuristic wins only 68% and fails to beat 14 teams.
+  The heuristic plays a Cramorant lead badly; the planner doesn't.
+- **Knowing the list pays:** 8 points against the planner (0.638 vs 0.557), 7 against the
+  heuristics (0.961 vs 0.894).
+- **Against an equally strong opponent, nothing found beats all 47.** #25 beats 35. #17
+  Mimikyu / Sableyeˢ / Tinkaton wins 15 of 16 games. #10, #12, #29 and #32 each win 12 of 16.
+- **The opening book adds nothing** (0.640 vs 0.638).
+- **A better planner helps both sides.** The waiting, catching and timing fix improved the
+  opponent planner as much as ours. Against an equally strong opponent, the best team's win
+  rate fell from 0.72 to 0.64, so team choice matters less once both sides play well.
 
 ## Layout
 
     data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves
     data/mega_great_league.json          the same for Mega Great League, plus its top teams, decoded
     data/mega_great_league_top_teams.csv PvPoke's top Mega Great League teams export
-    data/openings_25.json      the opening book for team #25 (top_teams book 25)
+    data/openings_25.json      the opening book for team #25, Cramorant leading (top_teams book 25 --lead 2)
     results/mega_team25.txt    team #25's full results and per-opponent game plans
     scripts/update_data.sh     re-download and trim PvPoke's data (scripts/trim_data.py)
     mango_pomdp/gamedata.py    types, moves, damage formula
@@ -295,8 +337,9 @@ What this says:
 
 ## Simplifications and next steps
 
-- **Mechanics.** No Charged Attack minigame (every charged move hits at full power), no mega
-  moves (the "+" moves; no listed team runs one), and no waiting (a free Pokémon always acts).
+- **Mechanics.** No Charged Attack minigame (every charged move hits at full power) and no
+  mega moves (the "+" moves; no listed team runs one). Only the planner waits; the heuristic
+  styles always act when free.
   The 3v3 simulator has PvPoke's form changes for Mimikyu, Cramorant and Morpeko, but not
   Aegislash or Minior, and the 1v1 solver has none. Everyone uses PvPoke's default CP 1500
   IVs. The 1v1 solver ignores the 4-minute clock.
@@ -304,7 +347,8 @@ What this says:
   "hard to exploit" is only tested against them: the lowest per-style win rate is a crude
   exploitability number. The Mega Great League experiment also plays the planner against
   itself. A best-response search against it is the next step.
-- **Planner.** It decides one action at a time with fixed rollout policies. POMCP (a search
+- **Planner.** It decides one action at a time with fixed rollout policies, and its catches
+  rely on the opponent throwing when its style model says it will. POMCP (a search
   tree over action–observation histories) or longer open-loop sequences would make it look
   further ahead, for example to bait now in order to nuke later.
 - **Real battles.** ManGo's battle logs (`../Battle Logs/`) record the opponent's moves and the

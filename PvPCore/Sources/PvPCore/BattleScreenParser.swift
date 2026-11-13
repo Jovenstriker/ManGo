@@ -113,8 +113,12 @@ public struct BattleScreenParser: Sendable {
     /// GO was first read already growing as it fades (taller than it stands), so it had been up
     /// most of its time on screen: the reads before missed it.
     public private(set) var goReadFading = false
-    /// GO stands about 0.12-0.14 of the screen high; it grows past that only as it fades out.
+    /// GO stands about 0.12-0.14 of the screen high and 0.56-0.67 wide; it grows past both only
+    /// as it fades out (152828's first read 0.70 by 0.16). A box taller but no wider is the text
+    /// read loosely, not GO growing (192819: 0.60 by 0.16 twice while it stood; taken for fading,
+    /// it started Quagsire 0.5s early, 6 Mud Shots before Aqua Tail, not 5).
     static let fadingGoHeight = 0.15
+    static let fadingGoWidth = 0.68
     private var countdownSeen = false
     /// The latest countdown digit read (3, 2 or 1) and when, before GO.
     private var countdownDigit: (digit: Int, at: TimeInterval)?
@@ -198,6 +202,7 @@ public struct BattleScreenParser: Sendable {
             if line.box.height > 0.08, key == "go" || key == "co", !started, !tooSoon {
                 started = true
                 goReadFading = line.box.height >= Self.fadingGoHeight
+                    && (Rules.off("fadingGoWider") || line.box.width >= Self.fadingGoWidth)
                 events.append(.battleStarted)
             }
             if line.box.height > 0.12, line.text.trimmingCharacters(in: .whitespaces) == "2", !started, !countdownSeen {

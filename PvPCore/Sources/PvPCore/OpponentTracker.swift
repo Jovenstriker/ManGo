@@ -443,6 +443,12 @@ public struct OpponentTracker: Sendable {
         let duration = Double(fast.turns) * turnDuration
         let landed = max(1, ((t - start) / duration).rounded())
         team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + Int(landed) * fast.energyGain)
+        // Those moves took their time: if the clock hadn't run that long, it had been in longer
+        // than seen, and the cap on its energy grows to match (192819: Mimikyu's Shadow Claw
+        // knocked yours out 0.44s of play after its name showed; capped from there, it lost the
+        // Claw it sneaked on your next charged move).
+        let short = start + landed * duration - t
+        if !Rules.off("knockoutShowsTime"), short > 0 { team[i].stint?.start -= short }
         closeStretch(i, at: start + landed * duration)
         team[i].chainStart = t
     }

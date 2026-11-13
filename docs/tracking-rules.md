@@ -35,6 +35,10 @@ explicitly approximate and are not used to identify moves or compute energy.
   play resuming: you can only throw once it has, so yours took its first turn and they started a
   fast move on it (010753: Nidoqueen in for the fainted Forretress, your charged move at 2:29.8; the
   user saw it sneak a Mud Slap). Unlike a switch made in play, a replacement has no switch turn.
+- The fast move that knocks your Pokémon out took its full length: if the clock hadn't had that
+  Pokémon in that long, it came in earlier than seen, and the cap on its energy starts that much
+  earlier (192819: Mimikyu's name showed 0.44s of play before its Shadow Claw knocked yours out;
+  capped from the name, it lost the Claw it sneaked on your next charged move, 9 not 10).
 - After a faint, neither side attacks until the replacement is out. Dimmed move labels
   can remain on screen during this transition. Confirmed player pokéball loss overrides them.
 - Benched Pokémon keep their energy. Form clarification must preserve their history.
@@ -57,9 +61,10 @@ explicitly approximate and are not used to identify moves or compute energy.
   fourth Pokémon and started a new battle, resetting their energy).
 - The lead starts 0.2s after GO is first read: of the starts tried after the countdown on
   November 8, 2026, the only one that fits every lead's hand count. GO stands about 0.65s, then
-  grows as it fades; a first read that caught it fading (taller than it stands) came most of that
-  late, and the start is 0.5s earlier (152828: up from 0:43.9, first read at 0:44.56; Marowak's 4
-  Mud Slaps). Your HP bar doesn't date the lead: Stunfisk in 223847 waited about a second after its
+  grows as it fades; a first read that caught it fading (taller and wider than it stands) came
+  most of that late, and the start is 0.5s earlier (152828: up from 0:43.9, first read at 0:44.56,
+  0.70 wide by 0.16 high; Marowak's 4 Mud Slaps). Taller but no wider is the text box read
+  loosely (192819: 0.60 by 0.16 while it stood; Quagsire's 5 Mud Shots before Aqua Tail, not 6). Your HP bar doesn't date the lead: Stunfisk in 223847 waited about a second after its
   sixth Thunder Shock before Mud Bomb, so dated from its first hit it got 7, not the user's 6.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
   one more, if the restart that implies is within 0.5s before to 0.4s after your buttons came back
@@ -95,7 +100,7 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 
-`BattleAccuracyTests` enforces all 103 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 105 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

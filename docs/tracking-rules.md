@@ -99,8 +99,18 @@ explicitly approximate and are not used to identify moves or compute energy.
   occluded bars remain ambiguous; do not convert their absence into a measured zero.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
+- Their fast move's hits on you say "SUPER EFFECTIVE!" or "NOT VERY EFFECTIVE..." over your
+  Pokémon (nothing when neutral). With your Pokémon's types (from its two charged move buttons,
+  the one of your team that has both), that rules out each of their fast moves of the wrong
+  type, and any form left with none; ManGo then takes the best-ranked form that fits and its
+  recommended fast move if that fits (011620: "SUPER EFFECTIVE!" on Fearow is only Powder Snow,
+  so Alolan Ninetales, not PvPoke's top Ninetales on Ember: 48 at Weather Ball, not 54). No
+  other rule picks a ruled-out move. Only a text that first shows after the restart, your
+  switch and theirs counts, and not within 0.5s of the restart: a charged move's text shows
+  as play restarts and drifts over your Pokémon (020853, 022052, 124534), and a text stays up
+  a while (155536: Altaria's on your Mimikyu, 2s into Florges). No text is no evidence.
 
-`BattleAccuracyTests` enforces all 107 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 108 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

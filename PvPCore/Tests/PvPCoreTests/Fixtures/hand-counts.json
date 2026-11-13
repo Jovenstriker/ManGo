@@ -1677,5 +1677,35 @@
       "1": "User, 2026-11-12: 4 Mud Shots before the second Aqua Tail (1:23.5).",
       "3": "User: 4 Shadow Claws before the second Shadow Sneak (2:48.5)."
     }
+  },
+  "battle-2026-11-13-011620": {
+    "video": "Test Videos/battle-2026-11-13-011620.mp4",
+    "description": "Phone-saved battle. Opponent: Ninetales (Alolan), Annihilape.",
+    "counts": [
+      6,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "ninetales_alolan",
+        "moveId": "WEATHER_BALL_ICE"
+      },
+      {
+        "speciesId": "annihilape",
+        "moveId": "RAGE_FIST"
+      },
+      {
+        "speciesId": "annihilape",
+        "moveId": "ICE_PUNCH"
+      }
+    ],
+    "observedFastMoves": {
+      "ninetales_alolan": "POWDER_SNOW"
+    },
+    "notes": {
+      "0": "User, 2026-11-13: 6 two-turn fast moves before Weather Ball (0:50.0), not 5. It was Alolan Ninetales (white, snow on every hit on your Fearow, no Shadow aura), so Powder Snow: 48 energy, not the 54 ManGo showed as PvPoke's top Ninetales (Shadow) on Ember. Its hits read \"SUPER EFFECTIVE!\" over Fearow (Normal/Flying), which only Powder Snow could be.",
+      "unknown": "Annihilape's Rage Fist (1:18.0) and Ice Punch (1:45.6) weren't hand-counted."
+    }
   }
 }

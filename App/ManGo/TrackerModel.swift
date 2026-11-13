@@ -65,6 +65,13 @@ final class TrackerModel {
     var isBattleOver: Bool { automation?.isBattleOver ?? false }
     /// The latest thing the screen reader noticed, e.g. "Stunfisk used Discharge (81 → 41)".
     var lastEvent: String? { automation?.log.last }
+    /// A short line the card shows for a few seconds after a change it would otherwise make
+    /// silently, e.g. "−9 taken back: you won CMP".
+    var cardNote: String? {
+        guard let note = automation?.cardNote, now() - note.time < Self.cardNoteSeconds else { return nil }
+        return note.text
+    }
+    static let cardNoteSeconds: TimeInterval = 6
 
     var data: GameData? { tracker?.data }
     var isPaused: Bool { tracker?.isPaused ?? false }

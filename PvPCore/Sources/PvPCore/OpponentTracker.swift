@@ -22,6 +22,9 @@ public struct OpponentTracker: Sendable {
         public var fastMoveConfirmed = false
         /// A cadence-selected move remains a hypothesis: deliberate delays can mimic it.
         public var fastMoveBasedOnCadence = false
+        /// Fast moves its hits on you showed it can't have: the wrong type for what the game
+        /// said over your Pokémon (see `ruleOutFastMoves`). No other rule picks one of these.
+        public var ruledOutFastMoves: Set<String> = []
         /// Forms compatible with the visible base name until a move distinguishes them.
         public var possibleSpeciesIds: [String] = []
         public var energyWarning: String?
@@ -198,8 +201,10 @@ public struct OpponentTracker: Sendable {
         team[i].speciesId = speciesId
         // An assumed move the new form can't learn becomes the form's own likeliest one.
         // The battle went on the whole time, so the count is redone with it.
-        if let current = team[i].fastMove, !fast.contains(current),
-           let move = data.recommendedMoves(for: speciesId).fast ?? fast.first {
+        let allowed = fast.filter { !team[i].ruledOutFastMoves.contains($0.moveId) }
+        let recommended = data.recommendedMoves(for: speciesId).fast.flatMap { allowed.contains($0) ? $0 : nil }
+        if let current = team[i].fastMove, !allowed.contains(current),
+           let move = recommended ?? allowed.first {
             team[i].fastMove = move
             team[i].fastMoveConfirmed = fast.count == 1
             team[i].fastMoveBasedOnCadence = false
@@ -221,10 +226,27 @@ public struct OpponentTracker: Sendable {
         team[i].chainStart = t
     }
 
+    /// Its hits on you showed the active Pokémon's fast move isn't any of `moveIds`.
+    public mutating func ruleOutFastMoves(_ moveIds: Set<String>) {
+        guard let i = activeIndex else { return }
+        team[i].ruledOutFastMoves.formUnion(moveIds)
+    }
+
+    /// The active Pokémon's fast move is `move` after all: its energy is recounted with it over
+    /// everything since it came in, as when a rhythm shows it.
+    public mutating func switchFastMove(to move: Move) {
+        guard let i = activeIndex, move.isFast, team[i].fastMove != move else { return }
+        let energy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
+        team[i].fastMove = move
+        team[i].bankedEnergy = energy
+        if let start = team[i].chainStart { team[i].stint = Stint(start: start, entryEnergy: energy) }
+    }
+
     /// Recounts a previously assumed moveset when repeated HP drops identify its rhythm.
     public mutating func inferFastMoveFromCadence(_ duration: TimeInterval) -> Move? {
         guard let i = activeIndex, !team[i].fastMoveConfirmed, !team[i].fastMoveBasedOnCadence else { return nil }
-        let candidates = data.fastMoves(for: team[i].speciesId).filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 }
+        let candidates = data.fastMoves(for: team[i].speciesId)
+            .filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 && !team[i].ruledOutFastMoves.contains($0.moveId) }
         guard candidates.count == 1, let move = candidates.first else { return nil }
         let old = team[i].fastMove
         let energy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
@@ -556,7 +578,7 @@ public struct OpponentTracker: Sendable {
         guard !assumed.possible else { return nil }
         let oneShort = !Rules.off("reconsiderOneShort") && assumed.shortfall <= current.energyGain
         let best = data.fastMoves(for: p.speciesId)
-            .filter { $0 != current && !(oneShort && $0.turns == current.turns) }
+            .filter { $0 != current && !(oneShort && $0.turns == current.turns) && !p.ruledOutFastMoves.contains($0.moveId) }
             .map { ($0, Self.replay(p, with: $0, openStretch: open, throwing: cost)) }
             .filter { $0.1.possible }
             .min { $0.1.slack < $1.1.slack }

@@ -129,6 +129,19 @@ public struct BattleAutomation: Sendable {
     private var theirFaintThisStop = false
     /// A hit on their Pokémon was showing on the last read.
     private var hitOverThemLastRead = false
+    /// Your charged move buttons as last read and since when, and when the opponent's Pokémon
+    /// now in was named: a hit's text is read for type only once both have settled.
+    private var yourLabels: Set<String> = []
+    private var yourLabelsSince: TimeInterval = -.infinity
+    private var opponentSeenAt: TimeInterval = -.infinity
+    /// Since when a hit's text has shown over your Pokémon without a break, if it shows now.
+    private var hitTextSince: TimeInterval?
+    /// A charged move's text shows over the Pokémon it hit as play restarts (Persian's Night
+    /// Slash "NOT VERY EFFECTIVE..." on your Thievul, 020853; Ursaluna's Fire Punch on your
+    /// Jumpluff, 022052); a fast move started at the restart lands a turn later at the soonest.
+    static let hitTextAfterRestart: TimeInterval = 0.5
+    /// A line for the card about a change it would otherwise make silently, and when.
+    public private(set) var cardNote: (text: String, time: TimeInterval)?
     /// Your Pokémon fainted in this stop ("Switch in a new Pokémon?").
     private var yourFaintThisStop = false
     /// Red pokéballs in their name box (Pokémon left): the latest count, when it was read,
@@ -533,8 +546,78 @@ public struct BattleAutomation: Sendable {
                 appear(match, at: since, now: t, tracker: &tracker)
             }
         }
+        checkHitType(read, tracker: &tracker)
         nameYourChargedMove()
         noteYourFastMove(tracker)
+    }
+
+    /// Their fast moves' hits on you, read for type: the game says "SUPER EFFECTIVE!" or "NOT
+    /// VERY EFFECTIVE..." over your Pokémon as each lands (nothing when it's neutral). Against
+    /// your Pokémon's types, that rules out each of their fast moves of the wrong type, and any
+    /// form left with none. "SUPER EFFECTIVE!" on your Fearow (Normal/Flying) fits no Ninetales
+    /// move but Alolan Ninetales's Powder Snow, not PvPoke's top Ninetales on Ember (011620: 6
+    /// Powder Snows before Weather Ball, 48, not 54). Only a text it says counts: a hit it says
+    /// nothing over may just not have been read.
+    ///
+    /// The text must first show after the restart, your switch and theirs. It stays up a while
+    /// and hits keep it up: Altaria's Dragon Breath's "NOT VERY EFFECTIVE..." on your Mimikyu was
+    /// still showing 2s after Florges came in (155536), and Fairy Wind is neutral on Mimikyu.
+    private mutating func checkHitType(_ read: ScreenRead, tracker: inout OpponentTracker) {
+        let t = read.time
+        if parser.yourButtonLabels != yourLabels { yourLabels = parser.yourButtonLabels; yourLabelsSince = t }
+        let said = read.lines.filter(Self.isHitOnYou).map { NameMatcher.normalize($0.text) }
+        // A charged move's text starts mid-screen and follows your Pokémon left as the camera
+        // comes back (Dunsparce's Rock Slide on your Jumpluff, 124534): it's the same text there.
+        // Not one over them (`isHitOnThem`), which your hits keep up.
+        let showing = read.lines.contains {
+            NameMatcher.normalize($0.text).contains("effective") && !Self.isHitOnThem($0) && (0.12...0.7).contains($0.box.midY)
+        }
+        hitTextSince = showing ? hitTextSince ?? t : nil
+        guard !Rules.off("hitType"), !stopped, !awaitingGo, !isBattleOver, let active = tracker.active,
+              let since = hitTextSince, since > max(resumedAt + Self.hitTextAfterRestart, yourLabelsSince, opponentSeenAt) else { return }
+        let notVery = said.contains { $0.contains("not") || $0.contains("very") }
+        let superEffective = said.contains { $0.contains("uper") }
+        guard notVery != superEffective, let you = yourActivePokemon else { return }
+        let effect: TypeChart.Effect = superEffective ? .superEffective : .notVeryEffective
+        let forms = active.possibleSpeciesIds.contains(active.speciesId) ? active.possibleSpeciesIds : [active.speciesId]
+        let wrong = Set(forms.flatMap { data.fastMoves(for: $0) }
+            .filter { TypeChart.effect($0.type, against: you.types) != effect }.map(\.moveId))
+        guard !wrong.isSubset(of: active.ruledOutFastMoves) else { return }
+        let ruledOut = active.ruledOutFastMoves.union(wrong)
+        func allowed(_ id: String) -> [Move] { data.fastMoves(for: id).filter { !ruledOut.contains($0.moveId) } }
+        let fitting = forms.filter { !allowed($0).isEmpty }
+        // Nothing it could be fits: a misread, or a type ManGo has wrong. Leave it.
+        guard let first = fitting.first else { return }
+        tracker.ruleOutFastMoves(wrong)
+        let form = fitting.contains(active.speciesId) ? active.speciesId : first
+        let moves = allowed(form)
+        let move = data.recommendedMoves(for: form).fast.flatMap { moves.contains($0) ? $0 : nil } ?? moves[0]
+        if form == active.speciesId, active.fastMove == move { tracker.setPossibleForms(fitting); return }
+        let before = tracker.snapshot(at: t).energy
+        if form != active.speciesId { tracker.changeForm(to: form) }
+        tracker.setPossibleForms(fitting)
+        tracker.switchFastMove(to: move)
+        let kind = effect == .superEffective ? "super effective" : "not very effective"
+        note("Their hit on your \(you.name) was \(kind): \(name(active.speciesId)) on \(active.fastMove?.name ?? "?") wouldn't be; it's \(name(form)) on \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
+    }
+
+    /// Your Pokémon now, from its two charged move buttons: the one you've been seen with (by
+    /// name) that has both, or else the ranked ones that do, if they share their types.
+    private var yourActivePokemon: (name: String, types: [String])? {
+        let labels = parser.yourButtonLabels
+        guard labels.count == 2 else { return nil }
+        // Each label is any charged move by that name (PvPoke has a DRILL_PECK_PLUS too).
+        let named = Dictionary(grouping: data.moves.values.filter { !$0.isFast && $0.energy > 0 }) { NameMatcher.normalize($0.name) }
+        let options = labels.map { Set(named[$0]?.map(\.moveId) ?? []) }
+        guard options.allSatisfy({ !$0.isEmpty }) else { return nil }
+        let all = data.species.values.filter { s in !s.types.isEmpty && options.allSatisfy { !$0.isDisjoint(with: s.chargedMoves) } }
+        let seen = all.filter { parser.myTeam.contains(NameMatcher.baseKey($0.speciesName)) }
+        let candidates = seen.isEmpty ? all.filter { $0.rank != nil } : seen
+        guard let best = candidates.min(by: { ($0.rank ?? .max) < ($1.rank ?? .max) }),
+              candidates.allSatisfy({ Set($0.types) == Set(best.types) }) else { return nil }
+        // The base name: "Blaziken" for Shadow Blaziken too, which the buttons can't tell apart.
+        let base = best.speciesName.split(separator: "(").first.map { $0.trimmingCharacters(in: .whitespaces) } ?? best.speciesName
+        return (base, best.types)
     }
 
     // MARK: Helpers
@@ -816,6 +899,8 @@ public struct BattleAutomation: Sendable {
             note("\(name(tracker.active?.speciesId)) threw on the same turn as you, as its fast move finished: it keeps that one (\(after))")
         } else if after != before {
             note("\(name(tracker.active?.speciesId)) threw on the same turn as you: no fast move in progress (\(before) → \(after))")
+            // The card showed the sneak since your charged move; say why it's gone.
+            cardNote = ("−\(before - after) taken back: you won CMP", lastTime)
         }
     }
 
@@ -845,6 +930,11 @@ public struct BattleAutomation: Sendable {
         buttonsBackAt = nil
         readBeforeButtonsBack = nil
         hitOverYouLastRead = false
+        yourLabels = []
+        yourLabelsSince = -.infinity
+        opponentSeenAt = -.infinity
+        hitTextSince = nil
+        cardNote = nil
         inProgressLandedBy = nil
         goShownAtHit = false
         inProgressRuledOut = false
@@ -965,6 +1055,8 @@ public struct BattleAutomation: Sendable {
         let leadInOpening = tracker.team.count == 1 && goAt.map { lastStopAt < $0 } == true
         tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
                           seenAt: isLead ? nil : leftDuringStop ? time : since, outgoingWaitsForFastMove: !leadInOpening)
+        opponentSeenAt = t
+        cardNote = nil
         if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
         // Name confirmation arrives after the switch. Replay the verified samples
         // belonging to the incoming Pokémon instead of discarding its first hit.

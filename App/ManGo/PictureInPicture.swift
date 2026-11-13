@@ -68,7 +68,7 @@ final class OverlayController: NSObject {
         let stale = model.lastReadAt.map { Date.now.timeIntervalSince($0) > (model.readerIdle ? 4 : 2) } ?? true
         let reader = stale ? "• no screen reads" : model.readerIdle ? "• idle" : "• \(model.readCount) reads"
         guard let buffer = OverlayRenderer.sampleBuffer(
-            snap: snap, name: name, bench: bench, battleOver: model.isBattleOver, reader: reader, size: Self.size
+            snap: snap, name: name, bench: bench, note: model.cardNote, battleOver: model.isBattleOver, reader: reader, size: Self.size
         ) else { return }
         if displayLayer.status == .failed { displayLayer.flush() }
         displayLayer.enqueue(buffer)
@@ -122,7 +122,7 @@ extension OverlayController: AVPictureInPictureSampleBufferPlaybackDelegate {
 /// Draws the overlay card into a video frame.
 enum OverlayRenderer {
     static func sampleBuffer(
-        snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, reader: String, size: CGSize
+        snap: OpponentTracker.Snapshot, name: String?, bench: String, note: String?, battleOver: Bool, reader: String, size: CGSize
     ) -> CMSampleBuffer? {
         var pixelBuffer: CVPixelBuffer?
         let attrs = [kCVPixelBufferIOSurfacePropertiesKey: [:]] as CFDictionary
@@ -143,7 +143,7 @@ enum OverlayRenderer {
         ctx.translateBy(x: 0, y: size.height)
         ctx.scaleBy(x: 1, y: -1)
         UIGraphicsPushContext(ctx)
-        draw(snap: snap, name: name, bench: bench, battleOver: battleOver, reader: reader, size: size)
+        draw(snap: snap, name: name, bench: bench, note: note, battleOver: battleOver, reader: reader, size: size)
         UIGraphicsPopContext()
 
         var format: CMVideoFormatDescription?
@@ -167,7 +167,7 @@ enum OverlayRenderer {
         return sample
     }
 
-    private static func draw(snap: OpponentTracker.Snapshot, name: String?, bench: String, battleOver: Bool, reader: String, size: CGSize) {
+    private static func draw(snap: OpponentTracker.Snapshot, name: String?, bench: String, note: String?, battleOver: Bool, reader: String, size: CGSize) {
         let pad: CGFloat = 24
         UIColor(white: 0.08, alpha: 1).setFill()
         UIRectFill(CGRect(origin: .zero, size: size))
@@ -200,6 +200,11 @@ enum OverlayRenderer {
         if !bench.isEmpty {
             text("Bench: \(bench)", at: CGPoint(x: pad, y: size.height - pad - 64), size: 24, weight: .medium,
                  color: UIColor(white: 0.75, alpha: 1), width: size.width - pad * 2)
+        }
+        // Why the energy just changed, when it isn't obvious (a sneak taken back after CMP).
+        if let note {
+            text(note, at: CGPoint(x: pad, y: size.height - pad - 94), size: 22, weight: .semibold,
+                 color: .systemOrange, width: size.width - pad * 2)
         }
         guard snap.pokemon != nil else { return }
 

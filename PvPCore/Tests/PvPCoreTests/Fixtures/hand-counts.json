@@ -1643,9 +1643,9 @@
     "description": "Phone-saved battle. Opponent: Quagsire (Shadow), Dunsparce, Mimikyu.",
     "counts": [
       5,
-      null,
+      4,
       10,
-      null,
+      4,
       null
     ],
     "countTargets": [
@@ -1673,7 +1673,9 @@
     "notes": {
       "0": "User, 2026-11-12: 5 Mud Shots before Aqua Tail (1:00.6), not 6. The video shows mud flying at about 0:48.8, 49.6, 50.6, 51.5 and 52.5, then none before \"Attack incoming!\" (0:54.3). GO was read at 0:47.72 and 0:47.99 at 0.60 by 0.16, its standing width: not fading, so the battle started at 0:47.92.",
       "2": "User: 10 Shadow Claws before Shadow Sneak (2:25.0): the one that knocked out your Pokémon (1:53.3), 5 from the restart (1:55.4) to your charged move, the one in progress at it (2:01.3), and 3 (2:14.4-2:18.1). Mimikyu's name showed only 0.44s of play before your faint, so its stint cap starts a Claw before the faint.",
-      "unknown": "Quagsire's second Aqua Tail (4), Mimikyu's second Shadow Sneak (4) and Dunsparce's Drill Run (16) aren't hand-counted yet."
+      "unknown": "Dunsparce was on Astonish (3 turns, 10 energy), not PvPoke's Bite, so ManGo's 16 Bites before Drill Run (3:26.5) don't count; no hand count.",
+      "1": "User, 2026-11-12: 4 Mud Shots before the second Aqua Tail (1:23.5).",
+      "3": "User: 4 Shadow Claws before the second Shadow Sneak (2:48.5)."
     }
   }
 }

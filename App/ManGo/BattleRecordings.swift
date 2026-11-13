@@ -4,10 +4,13 @@ import PvPCore
 
 /// Debug builds: the battles the screen reader saved (a video and its reads each). They're
 /// moved from the App Group into Documents, which shows in Files → On My iPhone → ManGo.
-/// Only the newest few are kept, and ones already copied to the Mac are deleted:
-/// scripts/pull_battles.sh leaves their names in "pulled.txt".
+/// Ones already copied to the Mac are deleted (scripts/pull_battles.sh leaves their names in
+/// "pulled.txt"); of the rest, the newest `keep` are kept.
 enum BattleRecordings {
-    static let keep = 3
+    /// About a night's battles (20-35 MB each, so up to about 1 GB). It was 3, which deleted
+    /// most of a night's battles before they were pulled (November 12, 2026: the Persian and
+    /// Altaria battles at 22:08 and 22:11, gone by the 22:30 pull).
+    static let keep = 30
 
     static var folder: URL { URL.documentsDirectory }
 

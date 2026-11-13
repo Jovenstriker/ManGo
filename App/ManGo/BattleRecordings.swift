@@ -4,14 +4,11 @@ import PvPCore
 
 /// Debug builds: the battles the screen reader saved (a video and its reads each). They're
 /// moved from the App Group into Documents, which shows in Files → On My iPhone → ManGo.
-/// Ones already copied to the Mac are deleted (scripts/pull_battles.sh leaves their names in
-/// "pulled.txt"); of the rest, the newest `keep` are kept.
+/// Only ones already copied to the Mac are deleted (scripts/pull_battles.sh leaves their names
+/// in "pulled.txt"). The rest stay until they're pulled, however many: keeping only the newest 3
+/// lost most of a night's battles before they were pulled (November 12, 2026: the Persian and
+/// Altaria battles at 22:08 and 22:11, gone by the 22:30 pull). Each is 20-35 MB.
 enum BattleRecordings {
-    /// About a night's battles (20-35 MB each, so up to about 1 GB). It was 3, which deleted
-    /// most of a night's battles before they were pulled (November 12, 2026: the Persian and
-    /// Altaria battles at 22:08 and 22:11, gone by the 22:30 pull).
-    static let keep = 30
-
     static var folder: URL { URL.documentsDirectory }
 
     /// Collects finished recordings and returns how many battles are saved.
@@ -42,16 +39,8 @@ enum BattleRecordings {
             }
             try? fm.removeItem(at: pulled)
         }
-        // Named by when they started, so newest sorts first.
-        let battles = ((try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? [])
-            .filter { $0.lastPathComponent.hasSuffix(".reads.jsonl") }
-            .map { String($0.lastPathComponent.dropLast(".reads.jsonl".count)) }
-            .sorted(by: >)
-        for old in battles.dropFirst(keep) {
-            try? fm.removeItem(at: folder.appendingPathComponent(old + ".mp4"))
-            try? fm.removeItem(at: folder.appendingPathComponent(old + ".reads.jsonl"))
-        }
-        return min(battles.count, keep)
+        return ((try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? [])
+            .filter { $0.lastPathComponent.hasSuffix(".reads.jsonl") }.count
     }
 }
 

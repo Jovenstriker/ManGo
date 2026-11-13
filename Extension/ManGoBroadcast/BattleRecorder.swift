@@ -56,6 +56,8 @@ final class BattleRecorder {
         shifted.fillTrace = read.fillTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }
         shifted.hpTraceVerified = read.hpTraceVerified
         shifted.hpTrace = read.hpTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }
+        shifted.motionTrace = read.motionTrace?.map { [$0[0] - startedAt] + $0.dropFirst() }
+        shifted.theirColors = read.theirColors
         guard var line = try? JSONEncoder().encode(shifted) else { return }
         line.append(0x0A)
         reads.write(line)

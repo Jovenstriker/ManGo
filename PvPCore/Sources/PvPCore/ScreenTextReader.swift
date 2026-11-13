@@ -87,6 +87,11 @@ public struct ScreenRead: Codable, Sendable, Equatable {
     public var hpTrace: [[Double]]?
     /// The HP sampler verified the bar outline, rather than searching for colored sprites.
     public var hpTraceVerified: Bool?
+    /// How much the screen changed on each frame since the previous read, as [time, their
+    /// area, your area, all]: see ScreenMotion.
+    public var motionTrace: [[Double]]?
+    /// The colors where their Pokémon stands on this read's frame: see TheirColors.
+    public var theirColors: [Double]?
 
     public init(time: TimeInterval, lines: [RecognizedText]) {
         self.time = time

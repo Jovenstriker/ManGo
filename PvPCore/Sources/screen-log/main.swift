@@ -15,6 +15,11 @@ import PvPCore
 // Adds your charged move buttons' fill on every frame (fillTrace), as the phone records it,
 // to a fixture recorded before the phone did.
 //
+//   swift run screen-log <video> --motion <fixture.json>
+//
+// Adds how much the screen changed on every frame (motionTrace) and the colors where their
+// Pokémon stands on each read (theirColors), as the phone records them.
+//
 //   swift run screen-log <video> --pixels <fixture.json>
 //
 // Adds what's read from pixels rather than text (the opponent's pokéballs, your charged
@@ -32,6 +37,11 @@ if let i = args.firstIndex(of: "--hp-all"), i + 1 < args.count {
 var fillFixture: String?
 if let i = args.firstIndex(of: "--fill"), i + 1 < args.count {
     fillFixture = args[i + 1]
+    args.removeSubrange(i...(i + 1))
+}
+var motionFixture: String?
+if let i = args.firstIndex(of: "--motion"), i + 1 < args.count {
+    motionFixture = args[i + 1]
     args.removeSubrange(i...(i + 1))
 }
 var hpFixture: String?
@@ -119,6 +129,38 @@ if let fillFixture {
         while index < reads.count, reads[index].time < time { index += 1 }
         guard index < reads.count else { break }
         if let f = ChargeButtons.fill(in: pixels) { reads[index].fillTrace?.append([time, f[0], f[1]]) }
+    }
+    if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    print(String(decoding: try encoder.encode(reads), as: UTF8.self))
+    exit(0)
+}
+
+if let motionFixture {
+    // How much the screen changed on every frame of the video (motionTrace), and the colors
+    // where their Pokémon stands on each read's frame (theirColors), as the phone records them,
+    // for recordings made before it did. A recording keeps about 11 frames a second; the phone
+    // measures about 30.
+    var reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: URL(fileURLWithPath: motionFixture)))
+    let track = try await asset.loadTracks(withMediaType: .video)[0]
+    let reader = try AVAssetReader(asset: asset)
+    let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+    ])
+    output.alwaysCopiesSampleData = false
+    reader.add(output)
+    guard reader.startReading() else { throw reader.error ?? CocoaError(.fileReadUnknown) }
+    for i in reads.indices { reads[i].motionTrace = []; reads[i].theirColors = nil }
+    var motion = ScreenMotion()
+    var index = 0
+    while let sample = output.copyNextSampleBuffer() {
+        let time = CMSampleBufferGetPresentationTimeStamp(sample).seconds
+        guard let pixels = CMSampleBufferGetImageBuffer(sample) else { continue }
+        while index < reads.count, reads[index].time < time { index += 1 }
+        guard index < reads.count else { break }
+        if let moved = motion.measure(in: pixels) { reads[index].motionTrace?.append([time] + moved) }
+        if reads[index].theirColors == nil { reads[index].theirColors = TheirColors.measure(in: pixels) }
     }
     if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
     let encoder = JSONEncoder()

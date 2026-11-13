@@ -27,6 +27,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private var idleCheckedAt: CFTimeInterval = -.infinity
     /// Your buttons' fill on each frame since the last read: [time, left, right].
     private var fillTrace: [[Double]] = []
+    /// How much the screen changed on each frame since the last read (see ScreenMotion), and
+    /// the last frame's brightness to compare with. Only the frame callback touches `motion`.
+    private var motionTrace: [[Double]] = []
+    private var motion = ScreenMotion()
     /// Your HP bar on each frame since the last read: [time, fill]. Its row is found twice
     /// a second (it moves with your Pokémon); measuring it is cheap.
     private var hpTrace: [[Double]] = []
@@ -67,7 +71,12 @@ final class SampleHandler: RPBroadcastSampleHandler {
             let relocate = now - hpBarFoundAt > 0.5
             let hp = pixels.flatMap { YourHPBar.measure(in: $0, atY: relocate ? nil : hpBarY) }
             let width = pixels.map { Double(CVPixelBufferGetWidth($0)) } ?? 0
+            let moved = pixels.flatMap { motion.measure(in: $0) }
             lock.lock()
+            if let moved {
+                motionTrace.append([now] + moved)
+                if motionTrace.count > 240 { motionTrace.removeFirst(motionTrace.count - 240) }
+            }
             if let fill {
                 fillTrace.append([now, fill[0], fill[1]])
                 if fillTrace.count > 240 { fillTrace.removeFirst(fillTrace.count - 240) }
@@ -121,7 +130,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
             read.opponentAlive = NameBoxBalls.alive(in: pixels)
             read.playerAlive = NameBoxBalls.alive(in: pixels, side: .player)
             read.buttonFill = ChargeButtons.fill(in: pixels)
+            read.theirColors = TheirColors.measure(in: pixels)
             self?.lock.lock()
+            read.motionTrace = self?.motionTrace.filter { $0[0] <= now }
+            self?.motionTrace.removeAll { $0[0] <= now }
             // Frames continue arriving while OCR runs. Keep samples captured after this
             // frame for the next read instead of attaching future observations to it.
             read.fillTrace = self?.fillTrace.filter { $0[0] <= now }

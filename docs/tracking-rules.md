@@ -96,7 +96,16 @@ explicitly approximate and are not used to identify moves or compute energy.
   The opponent's count starts from it less a 0.35s reaction; restarts only ever move earlier.
 - A switch or unreadable interval breaks the premise of uninterrupted fast moves.
   A clear repeated HP-damage cadence can refine an assumed moveset. Shared durations and
-  occluded bars remain ambiguous; do not convert their absence into a measured zero.
+  occluded bars remain ambiguous; do not convert their absence into a measured zero. Nor does a
+  rhythm pick a move when a faster one the Pokémon learns divides its length: a small hit can
+  fall under the bar's resolution, so missing every other hit of the faster move looks the same
+  (005818: Altaria's Dragon Breath, a drop every 0.5s but some of only 1-2 pixels, read as Peck).
+- Their fast move in progress at your charged move hitting you before your buttons come back
+  dates the restart. Not when your charged move knocked theirs out and its replacement came in
+  after it: that one had nothing in progress, so the hit was its first fast move, a whole move
+  after the restart (155536: Altaria for the fainted Florges, its Dragon Breath over your Mimikyu
+  by 2:56.60, 12 Dragon Breaths by its Sky Attack, not 10). It landed between two reads, so
+  halfway, as a stop is dated.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
 - Their fast move's hits on you say "SUPER EFFECTIVE!" or "NOT VERY EFFECTIVE..." over your

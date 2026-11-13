@@ -91,6 +91,8 @@ public struct BattleAutomation: Sendable {
     /// The read by which their fast move in progress at your charged move had hit you this stop,
     /// whether a "Go, X!" already showed then, and whether your Pokémon went down to it after.
     private var inProgressLandedBy: TimeInterval?
+    /// The read before it, which didn't show the hit yet.
+    private var inProgressLandedAfter: TimeInterval = 0
     private var goShownAtHit = false
     private var inProgressRuledOut = false
     private var playerChargedThisStop = false
@@ -127,6 +129,8 @@ public struct BattleAutomation: Sendable {
     private var playSinceTheirChargedMove = false
     /// Their Pokémon fainted in this stop and its replacement came in.
     private var theirFaintThisStop = false
+    /// ...after your last charged move: the one in now had nothing in progress at it.
+    private var replacedSinceYourChargedMove = false
     /// A hit on their Pokémon was showing on the last read.
     private var hitOverThemLastRead = false
     /// Your charged move buttons as last read and since when, and when the opponent's Pokémon
@@ -256,6 +260,7 @@ public struct BattleAutomation: Sendable {
         }
         if stopped, playerChargedThisStop, !opponentThrewThisStop, !inProgressRuledOut, hitOverYou, !hitOverYouLastRead, inProgressLandedBy == nil {
             inProgressLandedBy = t
+            inProgressLandedAfter = previousReadTime
             goShownAtHit = goShown
         }
         hitOverYouLastRead = hitOverYou
@@ -339,6 +344,7 @@ public struct BattleAutomation: Sendable {
                 opponentThrewThisStop = false
                 yourFaintThisStop = false
                 theirFaintThisStop = false
+                replacedSinceYourChargedMove = false
                 chargedMoveThisStop = false
                 inProgressLandedBy = nil
                 inProgressRuledOut = false
@@ -374,8 +380,19 @@ public struct BattleAutomation: Sendable {
                 // your Altaria at 2:10.64, your buttons at 2:11.44; your 3 Dragon Breaths fit
                 // after it, and so did one Bubble and the one it sneaked on your next charged move).
                 if !Rules.off("inProgressHit"), !yourFaintThisStop, let hit = inProgressLandedBy, hit < resume, hit > lastStopAt {
-                    note("Their fast move in progress hit you at \(clockString(hit)), before your buttons came back: the battle had restarted")
-                    resume = hit
+                    // One sent in for theirs that fainted in this stop had no fast move in progress:
+                    // the hit was its first, a whole fast move after play resumed (155536: Altaria for
+                    // the fainted Florges, its Dragon Breath over your Mimikyu by 2:56.60).
+                    if replacedSinceYourChargedMove, !Rules.off("replacementHit"), let fast = tracker.active?.fastMove {
+                        // It landed between the read before and this one: halfway, like a stop.
+                        let landed = inProgressLandedAfter > lastStopAt ? (inProgressLandedAfter + hit) / 2 : hit
+                        let first = max(landed - Double(fast.turns) * turnDuration, lastStopAt)
+                        note("\(name(tracker.active?.speciesId))'s first fast move hit you at \(clockString(hit)), before your buttons came back: the battle had restarted at \(clockString(first))")
+                        resume = first
+                    } else {
+                        note("Their fast move in progress hit you at \(clockString(hit)), before your buttons came back: the battle had restarted")
+                        resume = hit
+                    }
                     restartSeen = true
                 }
                 resumedAt = resume
@@ -502,6 +519,7 @@ public struct BattleAutomation: Sendable {
                 let afterFaint = !Rules.off("sneakAfterFaint") && !chargedMoveThisStop && (theirFaintThisStop || yourFaintThisStop)
                 chargedMoveThisStop = true
                 playerChargedThisStop = true
+                replacedSinceYourChargedMove = false
                 let energyBefore = tracker.snapshot(at: t).energy
                 // Straight after theirs with no play between (no hit on them, your buttons never
                 // back), both of you threw on the same turn and theirs won the tie: they weren't in
@@ -1026,7 +1044,7 @@ public struct BattleAutomation: Sendable {
                 unconfirmedFaint = (id, lastStopAt)
             }
             tracker.markActiveFainted(at: time)
-            if stopped { theirFaintThisStop = true }
+            if stopped { theirFaintThisStop = true; replacedSinceYourChargedMove = true }
         }
         // A name change during a stop is a faint replacement or a switch right after their
         // charged move: both take 0 turns, as does a quick switch (above).

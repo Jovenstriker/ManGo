@@ -245,9 +245,16 @@ public struct OpponentTracker: Sendable {
     /// Recounts a previously assumed moveset when repeated HP drops identify its rhythm.
     public mutating func inferFastMoveFromCadence(_ duration: TimeInterval) -> Move? {
         guard let i = activeIndex, !team[i].fastMoveConfirmed, !team[i].fastMoveBasedOnCadence else { return nil }
-        let candidates = data.fastMoves(for: team[i].speciesId)
-            .filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 && !team[i].ruledOutFastMoves.contains($0.moveId) }
+        let allowed = data.fastMoves(for: team[i].speciesId).filter { !team[i].ruledOutFastMoves.contains($0.moveId) }
+        let candidates = allowed.filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 }
         guard candidates.count == 1, let move = candidates.first else { return nil }
+        // A small hit can fall under the HP bar's resolution, so a faster move whose length
+        // divides this one's shows the same rhythm when every other hit goes unseen (005818:
+        // Altaria's Dragon Breath, a drop every 0.5s but only some of 3 pixels, read as Peck).
+        if !Rules.off("cadenceMultiple"),
+           allowed.contains(where: { $0.turns > 0 && $0.turns < move.turns && move.turns % $0.turns == 0 }) {
+            return nil
+        }
         let old = team[i].fastMove
         let energy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
         team[i].fastMove = move

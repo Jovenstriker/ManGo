@@ -393,7 +393,9 @@ public struct BattleAutomation: Sendable {
                 // (012748: Stunfisk for Ninetales after its Weather Ball, 5 Thunder Shocks and a
                 // sneak by your Blaze Kick; 020105: Cramorant for Diggersby after its Scorching
                 // Sands, 2 Pecks and a sneak by your Icy Wind; both by the user's count). Not when
-                // theirs stayed in (010901: Ninetales after your charged move).
+                // theirs stayed in (010901: Ninetales after your charged move). Nor, as yet, for one
+                // sent in for theirs that fainted: it changed nothing at a 0.15s lead, and the lead
+                // that gave 005818's Altaria its 20 (0.4s) broke 233921 and 005151.
                 let zeroTurnSwitch = parser.currentOpponentShownAt.map { $0 < previousReadTime } ?? false
                 if !Rules.off("fadeIn"), chargedMoveThisStop, zeroTurnSwitch || Rules.off("fadeInOnlySwitch"), let fade = buttonsFadeIn(at: t) {
                     note("Your buttons began fading in at \(clockString(fade)): the battle resumed \(clockString(fade - fadeInLead))")

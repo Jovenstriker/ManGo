@@ -1778,5 +1778,25 @@
       "checkpoint": "Its energy at your Icy Wind: 2 Pecks and the one in progress, 24.",
       "unknown": "Diggersby's Scorching Sands and Forretress's Sand Tomb weren't hand-counted."
     }
+  },
+  "battle-2026-11-13-005818": {
+    "video": "Test Videos/battle-2026-11-13-005818.mp4",
+    "description": "Phone-saved battle. Opponent: Morpeko (Full Belly), Azumarill, Altaria.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 143.43,
+        "speciesId": "altaria",
+        "energy": 20
+      }
+    ],
+    "observedFastMoves": {
+      "altaria": "DRAGON_BREATH"
+    },
+    "notes": {
+      "checkpoint": "User, 2026-11-14: Altaria, in for the fainted Azumarill (\"Go, Altaria!\" at 2:20.23, your buttons at 2:21.30), threw 4 Dragon Breaths and sneaked 1 on your Acrobatics (Get Ready! at 2:23.43): 20, not ManGo's 16. With 20, its first Moonblast (2:45.5) leaves 14 and the second (3:12.1) is paid for.",
+      "fastMove": "Dragon Breath: a pink cloud on your Thievul about every half second (2:51-2:55 in the video). ManGo's HP-rhythm rule took it for Peck until 2026-11-13.",
+      "unknown": "No throw was hand-counted."
+    }
   }
 }

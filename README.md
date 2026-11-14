@@ -167,7 +167,7 @@ only run where they are.
 | battle-2026-11-09-005151 | Diggersby, Fearow, Jumpluff | 5, 5, 5, 5, 5, 9, 4 |
 | battle-2026-11-09-010443 | Clodsire, Altaria, Mimikyu | 11, 4 |
 | battle-2026-11-09-010753 | Empoleon, Nidoqueen, Forretress (Shadow) | 6, 4, 3 |
-| battle-2026-11-09-013324 | Pangoro, Dunsparce, Azumarill | 7, 8, 6 |
+| battle-2026-11-09-013324 | Pangoro, Dunsparce, Azumarill | 7, 9, 6 |
 | battle-2026-11-09-020853 | Persian | 10 |
 | battle-2026-11-09-021018 | Miltank, Forretress (Shadow), Marowak | 4, 4 |
 | battle-2026-11-09-021617 | Sandslash (Alolan), Marowak, Carbink | 5, 9, 23, 1 |
@@ -215,26 +215,24 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-105 of 110 exact hand counts match. The fourth miss, from November 10, 2026: in 012748 Stunfisk
-came in on a 0-turn switch for Ninetales after its Weather Ball and threw 5 Thunder Shocks and a
-sneak by your 3:03 charged move; ManGo starts it with your buttons (2:57.43) and counts 4 and a
-sneak, so 8 before its first Discharge, not 9, and its second Discharge looks unaffordable (its
-three energy checkpoints miss too). Starting it at the restart instead fixed it, but a review
-showed that only worked by read timing: 013324's Pangoro, the same switch on screen, then gets
-one too many. Frame timing (November 10) didn't settle it either. Dating restarts from the frame
-your buttons fade in (0.14-0.17s before it) fixed Stunfisk with no hand count breaking, but gave
-Pangoro one more Karate Chop between 1:55 and 2:00, a stretch you'd confirmed. Dating stops and
-your charged move's freeze from frames broke other counts, except as a hybrid fitted to a 0.02s
-window. Several counts sit within 0.01-0.05s of a fast move's end, so Pangoro's likely remaining
-error is the freeze at your charged move ("Get Ready!" read minus 0.75s, about 0.15s late there).
-The three experiments are kept as patches in docs/experiments/.
+107 of 110 exact hand counts match. A 0-turn switch, made right after anyone's charged move
+(thrown, received or shielded), holds your buttons back while its camera plays. When their name
+box no longer shows the Pokémon that was in by the read before your buttons come back, ManGo dates
+the restart from the frame your buttons start fading in, less 0.15s, not from their read. That
+gives 012748's Stunfisk (for Ninetales after its Weather Ball) 5 Thunder Shocks and a sneak by your
+Blaze Kick, 020105's Cramorant (for Diggersby after its Scorching Sands) 2 Pecks and a sneak by your
+Icy Wind, and 013324's Pangoro (for Azumarill after its Hydro Pump) 4 and a sneak by your 2:00
+charged move, all as you counted on November 14, 2026. Not where theirs stayed in (010901's Ninetales
+after your charged move), where the frames' restart costs an Ember. Dating stops and your charged
+move's freeze from frames broke other counts (November 10); the experiments are kept as patches in
+docs/experiments/.
 221608's Ninetales (5 Embers before its first Weather Ball; your HP bar shows all five, 1:41.76
 to 1:45.77) and 211824's Melmetal (5 Thunder Shocks, recounted on November 14, 2026) both came in
 by a switch and threw in a CMP tie they won. The clock had their 5th 70% and 87% done; it counts
 for a Pokémon switched in since play restarted, whose switch is only dated to within a read, but
 not for 211824's Hydreigon from GO (14, its 15th 99% done). Counting hits on your HP bar as a
 floor also got 221608 right but broke four other counts, where drops on your bar weren't hits.
-The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
+One miss is from 013324: Pangoro threw 1 Karate Chop as the lead before switching, not 2: the player didn't tap for a turn, which ManGo can't see, so it counts 10 before its Rock Slide, not 9. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
 the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move

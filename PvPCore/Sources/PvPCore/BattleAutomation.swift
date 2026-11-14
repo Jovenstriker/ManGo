@@ -52,6 +52,15 @@ public struct BattleAutomation: Sendable {
     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
     /// your buttons come back.)
     public var faintResumeLead: TimeInterval = 0.25
+    /// At a 0-turn switch after a charged move, when the frames show your buttons fading back in
+    /// since the last read, the battle resumed this long before the first of them (012748:
+    /// Stunfisk's 5 Thunder Shocks and a sneak after Weather Ball, not 4; 0.14-0.17s fit then).
+    public var fadeInLead: TimeInterval = 0.15
+    /// Buttons this empty look dark as they fade in, like hidden ones: no fade-in to see
+    /// (221337: Nidoqueen's 7 Mud Slaps after Guzzlord blocked yours, not 6).
+    static let fadeInMinimumFill = 0.15
+    /// This stop's restart from the frames, if they showed it.
+    private var fadeInRestart: TimeInterval?
     /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
     /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
     /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
@@ -375,7 +384,22 @@ public struct BattleAutomation: Sendable {
                 playerChangedSinceResume = false
                 cadence = FastMoveCadence()
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
-                var resume = max(t - lead, lastStopAt)
+                let readResume = max(t - lead, lastStopAt)
+                var resume = readResume
+                fadeInRestart = nil
+                // A 0-turn switch as a charged move ends: their name box no longer shows the one
+                // that was in by the read before your buttons came back. Its camera holds your
+                // buttons back, so the frames they fade in on date the restart, not their read
+                // (012748: Stunfisk for Ninetales after its Weather Ball, 5 Thunder Shocks and a
+                // sneak by your Blaze Kick; 020105: Cramorant for Diggersby after its Scorching
+                // Sands, 2 Pecks and a sneak by your Icy Wind; both by the user's count). Not when
+                // theirs stayed in (010901: Ninetales after your charged move).
+                let zeroTurnSwitch = parser.currentOpponentShownAt.map { $0 < previousReadTime } ?? false
+                if !Rules.off("fadeIn"), chargedMoveThisStop, zeroTurnSwitch || Rules.off("fadeInOnlySwitch"), let fade = buttonsFadeIn(at: t) {
+                    note("Your buttons began fading in at \(clockString(fade)): the battle resumed \(clockString(fade - fadeInLead))")
+                    resume = max(fade - fadeInLead, lastStopAt)
+                    fadeInRestart = resume
+                }
                 restartSeen = false
                 switchedInSinceRestart = false
                 // Their fast move in progress at your charged move hit you before your buttons
@@ -408,7 +432,8 @@ public struct BattleAutomation: Sendable {
                 readBeforeButtonsBack = previousReadTime
                 lastResumeAfterYourChargedMove = playerChargedThisStop && !opponentThrewThisStop
                 playerChargedThisStop = false
-                if free { freeSwitchUntil = resume + Self.afterStopWindow }
+                // Timed from your buttons' read (or a hit), not their fade-in: it was fitted so.
+                if free { freeSwitchUntil = (restartSeen ? resume : readResume) + Self.afterStopWindow }
                 if !awaitingGo {
                     // Where the stop sits on the clock of play, now it can't move any more.
                     let at = tracker.battleClock(at: resume)
@@ -739,6 +764,18 @@ public struct BattleAutomation: Sendable {
         summaryPendingLabels = nil
     }
 
+    /// Where your buttons began fading back in: walking back from the read that names them, the
+    /// first of the frames showing any fill. Only between the last read and this one, from an
+    /// empty frame (fill flickers while they're hidden), and not for nearly empty buttons.
+    private func buttonsFadeIn(at t: TimeInterval) -> TimeInterval? {
+        let frames = fillSamples.filter { $0[0] <= t && $0[0] >= max(lastStopAt, previousReadTime) }
+        func filled(_ f: [Double]) -> Bool { max(f[1], f[2]) > 0.02 }
+        guard let last = frames.last, max(last[1], last[2]) > Self.fadeInMinimumFill else { return nil }
+        var i = frames.count - 1
+        while i > 0, filled(frames[i - 1]) { i -= 1 }
+        return i > 0 ? frames[i][0] : nil
+    }
+
     private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {
         YourFastMoves.landings(in: fillSamples.filter { $0[0] >= start && $0[0] <= end })
     }
@@ -964,6 +1001,7 @@ public struct BattleAutomation: Sendable {
         goShownAtHit = false
         inProgressRuledOut = false
         resumedAt = -.infinity
+        fadeInRestart = nil
         freeSwitchUntil = -.infinity
         switchedInSinceRestart = false
         leadStartChecked = false
@@ -1014,8 +1052,9 @@ public struct BattleAutomation: Sendable {
         // move came after theirs, the switch is still timed from the restart but costs a
         // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
         // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
+        // The frames' restart, when they dated it (012748: Stunfisk for Ninetales after Weather Ball).
         if !Rules.off("freeSwitchBackdate"), opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
-            time = max(resumedAt, min(time, back))
+            time = max(resumedAt, min(time, fadeInRestart ?? back))
         }
         if tracker.active == nil {
             // The lead: counting starts at "GO" (or when the countdown says it will be).

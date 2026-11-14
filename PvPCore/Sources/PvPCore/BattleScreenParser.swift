@@ -105,6 +105,8 @@ public struct BattleScreenParser: Sendable {
     private var bannerConsumed = false
     /// When their name box last showed their current Pokémon.
     private var opponentShownAt: TimeInterval?
+    /// When their name box last showed the Pokémon ManGo has in now.
+    public var currentOpponentShownAt: TimeInterval? { opponentShownAt }
     /// When their name box last showed the Pokémon the latest `opponentAppeared` replaced (nil
     /// if it was never read): gone before the battle restarted, they switched during the stop.
     public private(set) var replacedLastShownAt: TimeInterval?

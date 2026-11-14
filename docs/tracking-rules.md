@@ -31,6 +31,13 @@ explicitly approximate and are not used to identify moves or compute energy.
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
   (play restarts around your buttons then, even when you shield).
+- A 0-turn switch, right after anyone's charged move (thrown, received or shielded), holds your
+  buttons back while its camera plays. When their name box no longer shows the Pokémon that was
+  in by the read before your buttons come back, the restart is dated from the frame your buttons
+  start fading in, less 0.15s, not from their read (012748: Stunfisk for Ninetales, 5 Thunder
+  Shocks and a sneak by your Blaze Kick; 020105: Cramorant for Diggersby, 2 Pecks and a sneak;
+  013324: Pangoro for Azumarill, 4 and a sneak; all by the user's count). Not when theirs stayed
+  in (010901: Ninetales after your charged move, an Ember short if dated from the frames).
 - After a faint, your first charged move gives them a sneak, even if your buttons never showed
   play resuming: you can only throw once it has, so yours took its first turn and they started a
   fast move on it (010753: Nidoqueen in for the fainted Forretress, your charged move at 2:29.8; the

@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **109 exact hand counts across 37 recordings** in
+There are **110 exact hand counts across 38 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -175,6 +175,7 @@ only run where they are.
 | battle-2026-11-09-211526 | Mimikyu, Quagsire (Shadow) | 7 |
 | battle-2026-11-09-211824 | Hydreigon (Shadow), Melmetal, Azumarill | 14, unknown, 5, 6, unknown × 2 |
 | battle-2026-11-10-012748 | Ninetales (Shadow), Ursaluna, Stunfisk | unknown × 5, 9, 0 |
+| battle-2026-11-10-020105 | Diggersby, Cramorant, Forretress (Shadow) | unknown, 5, unknown |
 | battle-2026-11-12-192819 | Quagsire (Shadow), Dunsparce, Mimikyu | 5, 4, 10, 4, unknown |
 | battle-2026-11-12-221608 | Cramorant, Marowak, Ninetales (Shadow) | unknown × 2, 5, unknown |
 | battle-2026-11-13-011620 | Ninetales (Alolan), Annihilape | 6, unknown × 2 |
@@ -214,7 +215,7 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-105 of 109 exact hand counts match. The fourth miss, from November 10, 2026: in 012748 Stunfisk
+105 of 110 exact hand counts match. The fourth miss, from November 10, 2026: in 012748 Stunfisk
 came in on a 0-turn switch for Ninetales after its Weather Ball and threw 5 Thunder Shocks and a
 sneak by your 3:03 charged move; ManGo starts it with your buttons (2:57.43) and counts 4 and a
 sneak, so 8 before its first Discharge, not 9, and its second Discharge looks unaffordable (its

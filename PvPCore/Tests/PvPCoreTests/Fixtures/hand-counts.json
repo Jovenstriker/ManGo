@@ -1743,5 +1743,40 @@
       "3": "Not hand-counted. In the video 3 Embers hit Jumpluff (2:06.5, 2:07.5, 2:08.5) before the second Weather Ball: with 10 left after the first, 37. Gold Ninetales with the Shadow aura, flames on every hit: Ember.",
       "unknown": "Cramorant's two Dives weren't hand-counted."
     }
+  },
+  "battle-2026-11-10-020105": {
+    "video": "Test Videos/battle-2026-11-10-020105.mp4",
+    "description": "Phone-saved battle. Opponent: Diggersby, Cramorant, Forretress (Shadow).",
+    "counts": [
+      null,
+      5,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "diggersby",
+        "moveId": "SCORCHING_SANDS"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 53.0,
+        "speciesId": "cramorant",
+        "energy": 24
+      }
+    ],
+    "notes": {
+      "1": "User, 2026-11-14: Cramorant came in on a 0-turn switch for Diggersby at 0:49, after its Scorching Sands (Diggersby last read at 0:49.19, \"Go, Cramorant!\" and your buttons at 0:50.30), and threw 2 Pecks and sneaked 1 on your Icy Wind (Get Ready! at 0:52.95), then 2 before Dive (1:12.0): 5, not 4. ManGo starts it with your buttons, so 1 and a sneak, and its Dive looked unaffordable (32).",
+      "checkpoint": "Its energy at your Icy Wind: 2 Pecks and the one in progress, 24.",
+      "unknown": "Diggersby's Scorching Sands and Forretress's Sand Tomb weren't hand-counted."
+    }
   }
 }

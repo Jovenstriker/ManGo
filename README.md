@@ -235,7 +235,8 @@ floor also got 221608 right but broke four other counts, where drops on your bar
 In 005818 Altaria came in for the fainted Azumarill and had 20 by your Acrobatics at 2:23.4 (4
 Dragon Breaths and a sneak, November 14, 2026); ManGo has 16. Your buttons fade in from 2:21.1, with
 Altaria's ball still in the air, and the 4th needs play by 2:20.77. Dating that restart from the
-fade-in, at any lead that gets 20 (0.4s), broke 233921 and 005151.
+fade-in, at any lead that gets 20 (0.4s), broke 233921 and 005151 (Stunfisk's 2 Thunder Shocks
+after its return at 3:01, Diggersby's 5 before Scorching Sands; both rechecked by you).
 One miss is from 013324: Pangoro threw 1 Karate Chop as the lead before switching, not 2: the player didn't tap for a turn, which ManGo can't see, so it counts 10 before its Rock Slide, not 9. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by

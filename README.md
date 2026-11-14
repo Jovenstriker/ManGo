@@ -230,7 +230,7 @@ The three experiments are kept as patches in docs/experiments/.
 The fifth miss, from November 12, 2026: in 221608 Ninetales switched in for Marowak and threw 5
 Embers before its first Weather Ball, by your count; your HP bar shows all five (1:41.76 to
 1:45.77). ManGo dates the switch from Marowak's last read plus a switch turn and counts 4, the
-fifth 96% done at the stop. Counting hits on your HP bar as a floor got it right (November 14)
+fifth 70% done at the stop. Counting hits on your HP bar as a floor got it right (November 14)
 but broke four other counts, where drops on your bar weren't hits.
 The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at

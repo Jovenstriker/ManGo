@@ -119,7 +119,7 @@ explicitly approximate and are not used to identify moves or compute energy.
   as play restarts and drifts over your Pokémon (020853, 022052, 124534), and a text stays up
   a while (155536: Altaria's on your Mimikyu, 2s into Florges). No text is no evidence.
 
-`BattleAccuracyTests` enforces all 108 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 109 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

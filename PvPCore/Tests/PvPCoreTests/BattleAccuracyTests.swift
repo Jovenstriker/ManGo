@@ -78,8 +78,8 @@ private func replayForAccuracy(_ name: String) throws -> (throwsSeen: [BattleAut
 @Test func handEvidenceInventoryIsComplete() throws {
     let all = try evidence()
     #expect(recordedFixtures.count >= 24)
-    #expect(all.values.filter { $0.counts.contains { $0 != nil } }.count == 36)
-    #expect(all.values.flatMap(\.counts).compactMap { $0 }.count == 108)
+    #expect(all.values.filter { $0.counts.contains { $0 != nil } }.count == 37)
+    #expect(all.values.flatMap(\.counts).compactMap { $0 }.count == 109)
     for (name, entry) in all {
         #expect(recordedFixtures.contains(name), "Missing recording for \(name)")
         if !entry.counts.isEmpty { #expect(entry.countTargets?.count == entry.counts.count, "\(name): label identities missing") }

@@ -173,7 +173,7 @@ only run where they are.
 | battle-2026-11-09-021617 | Sandslash (Alolan), Marowak, Carbink | 5, 9, 23, 1 |
 | battle-2026-11-09-022052 | Corsola (Galarian), Ursaluna, Tinkaton | 17, 2, 5, 9 |
 | battle-2026-11-09-211526 | Mimikyu, Quagsire (Shadow) | 7 |
-| battle-2026-11-09-211824 | Hydreigon (Shadow), Melmetal, Azumarill | 14, unknown, 4, 6, unknown × 2 |
+| battle-2026-11-09-211824 | Hydreigon (Shadow), Melmetal, Azumarill | 14, unknown, 5, 6, unknown × 2 |
 | battle-2026-11-10-012748 | Ninetales (Shadow), Ursaluna, Stunfisk | unknown × 5, 9, 0 |
 | battle-2026-11-12-192819 | Quagsire (Shadow), Dunsparce, Mimikyu | 5, 4, 10, 4, unknown |
 | battle-2026-11-12-221608 | Cramorant, Marowak, Ninetales (Shadow) | unknown × 2, 5, unknown |
@@ -214,7 +214,7 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-104 of 109 exact hand counts match. The fourth miss, from November 10, 2026: in 012748 Stunfisk
+105 of 109 exact hand counts match. The fourth miss, from November 10, 2026: in 012748 Stunfisk
 came in on a 0-turn switch for Ninetales after its Weather Ball and threw 5 Thunder Shocks and a
 sneak by your 3:03 charged move; ManGo starts it with your buttons (2:57.43) and counts 4 and a
 sneak, so 8 before its first Discharge, not 9, and its second Discharge looks unaffordable (its
@@ -227,11 +227,12 @@ your charged move's freeze from frames broke other counts, except as a hybrid fi
 window. Several counts sit within 0.01-0.05s of a fast move's end, so Pangoro's likely remaining
 error is the freeze at your charged move ("Get Ready!" read minus 0.75s, about 0.15s late there).
 The three experiments are kept as patches in docs/experiments/.
-The fifth miss, from November 12, 2026: in 221608 Ninetales switched in for Marowak and threw 5
-Embers before its first Weather Ball, by your count; your HP bar shows all five (1:41.76 to
-1:45.77). ManGo dates the switch from Marowak's last read plus a switch turn and counts 4, the
-fifth 70% done at the stop. Counting hits on your HP bar as a floor got it right (November 14)
-but broke four other counts, where drops on your bar weren't hits.
+221608's Ninetales (5 Embers before its first Weather Ball; your HP bar shows all five, 1:41.76
+to 1:45.77) and 211824's Melmetal (5 Thunder Shocks, recounted on November 14, 2026) both came in
+by a switch and threw in a CMP tie they won. The clock had their 5th 70% and 87% done; it counts
+for a Pokémon switched in since play restarted, whose switch is only dated to within a read, but
+not for 211824's Hydreigon from GO (14, its 15th 99% done). Counting hits on your HP bar as a
+floor also got 221608 right but broke four other counts, where drops on your bar weren't hits.
 The third miss, from November 9, 2026: in 013324 Pangoro threw 1 Karate Chop as the lead before switching, not 2: it started at GO (its first hit at about 0:48.4) and, you think, paused a turn after it. ManGo can't see a pause, so it counts 9 before its Rock Slide, not 8. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
 2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
 6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by

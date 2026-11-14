@@ -85,7 +85,11 @@ explicitly approximate and are not used to identify moves or compute energy.
   Stunfisk's Discharge and your Energy Ball at 1:22.2, 5 Thunder Shocks before it and 5 before its
   Mud Bomb, by the user's count; 211526: Quagsire's Stone Edge on 7 Mud Shots, 6 being 54). When
   they could pay, it doesn't, however done the clock had it (211824: Hydreigon's Brutal Swing on
-  14 Dragon Breaths with the 15th 99% done; the user saw a sneak at the tie). A sneak after their charged move
+  14 Dragon Breaths from GO with the 15th 99% done; the user saw a sneak at the tie). Unless it came
+  in by a switch since play last restarted: a switch is only dated to within a read or so, and its
+  hits on your bar come before the clock has them, so the half-done move counts (211824: Melmetal's
+  Double Iron Bash on 5 Thunder Shocks, the 5th 87% done; 221608: Ninetales's Weather Ball on 5
+  Embers, the 5th 70% done, both by the user's count). A sneak after their charged move
   needs play between (002722: your Mandibuzz's fast move hit Greninja after its Hydro Cannon).
 - After your charged move, their fast move in progress finishes as play resumes: its hit on you
   ("…EFFECTIVE" over your Pokémon, fresh in the stop) shows play had restarted by that read, often

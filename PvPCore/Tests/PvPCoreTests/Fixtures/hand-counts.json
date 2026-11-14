@@ -1521,7 +1521,7 @@
     "counts": [
       14,
       null,
-      4,
+      5,
       6,
       null,
       null
@@ -1561,12 +1561,12 @@
       {
         "time": 86.4,
         "speciesId": "melmetal",
-        "energy": 1
+        "energy": 10
       }
     ],
     "notes": {
-      "0": "User, 2026-11-09: 14 Dragon Breaths before Brutal Swing (0:31.1). Your Icy Wind after it (Get Ready! at 0:34.3) was a CMP tie Hydreigon won: no sneak, and no extra Dragon Breath though the clock had the 15th 99% done (the count could pay). The checkpoint is its energy at your Icy Wind.",
-      "2": "User: 4 Thunder Shocks before Double Iron Bash (1:23.1); your Acrobatics after it (1:26.4) was a CMP tie Melmetal won, no extra one. The checkpoint is its energy at your Acrobatics.",
+      "0": "User, 2026-11-09: 14 Dragon Breaths before Brutal Swing (0:31.1). Your Icy Wind after it (Get Ready! at 0:34.3) was a CMP tie Hydreigon won: no sneak, and no extra Dragon Breath though the clock had the 15th 99% done (the count could pay). The checkpoint is its energy at your Icy Wind. The user, 2026-11-14: 14 is right, but ManGo may have started Hydreigon's clock wrong (its 15th 99% done is the clock's, not the game's).",
+      "2": "User, 2026-11-14: 5 Thunder Shocks before Double Iron Bash (1:23.1), not 4 as first counted on 2026-11-09; your Acrobatics after it (1:26.4) was a CMP tie Melmetal won. So the 5th, which the clock had 87% done when your buttons vanished (1:15.77), had landed: 10 left at your Acrobatics, the checkpoint.",
       "3": "User: 6 before its second Double Iron Bash (1:48.6).",
       "unknown": "Hydreigon's 10 (0:55.1), 9 (2:19.3) and 3 (2:33.2) were too hazy for the user to count.",
       "switch": "User: Melmetal threw 5 Thunder Shocks from the restart at 2:01 to its switch to Hydreigon (named at 2:06.22), not ManGo's 6 (83 on the bench): the clock had the 6th 61% done there and counted it as landing before the switch. Not fixed: that rule is needed in 172648, 142007 and 220414, whose fractions overlap. Melmetal didn't come back."

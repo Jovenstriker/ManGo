@@ -66,6 +66,8 @@ public struct BattleAutomation: Sendable {
     private var leadStartedAt: TimeInterval?
     /// This stretch's restart was seen (their move in progress hit you), not guessed from your buttons.
     private var restartSeen = false
+    /// Their Pokémon in now came in by a switch (not a faint, not the lead) since play last restarted.
+    private var switchedInSinceRestart = false
     /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
     /// a moment before anyone can attack. (The phone-saved Doublade battle: 7 Shadow Claws,
     /// not 8.) Of the starts tried after GO on November 8, 2026, only this one fits every lead's
@@ -375,6 +377,7 @@ public struct BattleAutomation: Sendable {
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
                 var resume = max(t - lead, lastStopAt)
                 restartSeen = false
+                switchedInSinceRestart = false
                 // Their fast move in progress at your charged move hit you before your buttons
                 // came back, so play had restarted by then (155712: Azumarill's Bubble showed over
                 // your Altaria at 2:10.64, your buttons at 2:11.44; your 3 Dragon Breaths fit
@@ -528,13 +531,17 @@ public struct BattleAutomation: Sendable {
                 let tieTheyWon = opponentThrewThisStop && !playSinceTheirChargedMove && !Rules.off("cmpAfterTheirs")
                 if tieTheyWon {
                     note("Your charged move came straight after theirs with no play between: a CMP tie \(name(tracker.active?.speciesId)) won, no sneak")
-                    // The clock's move in progress at theirs counts only when its finished ones
-                    // couldn't pay for their charged move: then the clock was behind (233921's
-                    // Stunfisk, 232707's Forretress, 211526's Quagsire). When they could, nothing
-                    // says it was, however done it had the next (211824: Hydreigon's Brutal Swing
-                    // on 14 Dragon Breaths, the 15th 99% done by the clock; Melmetal's Double Iron
-                    // Bash on 4 Thunder Shocks, the 5th 87% done).
+                    // The clock's move in progress at theirs counts when its finished ones couldn't
+                    // pay for their charged move: then the clock was behind (233921's Stunfisk,
+                    // 232707's Forretress, 211526's Quagsire). Or when it came in by a switch since
+                    // play last restarted: a switch is only dated to within a read or so, and its
+                    // hits on your bar come before the clock has them (211824: Melmetal's Double
+                    // Iron Bash on 5 Thunder Shocks, the 5th 87% done; 221608: Ninetales's Weather
+                    // Ball on 5 Embers, the 5th 70% done, by the user's counts). Otherwise nothing
+                    // says it was behind, however done it had the next (211824: Hydreigon's Brutal
+                    // Swing on 14 Dragon Breaths from GO, the 15th 99% done).
                     let clockShort = Rules.off("tieNeedsUnderpay")
+                        || (switchedInSinceRestart && !Rules.off("tieAfterSwitch"))
                         || lastTheirThrow.map { $0.speciesId == tracker.active?.speciesId && $0.energyBeforeReconciliation < $0.move.energy } == true
                     let added = clockShort ? tracker.theyWonSameTurnTie() : 0
                     if added > 0, var revised = lastTheirThrow, revised.speciesId == tracker.active?.speciesId {
@@ -958,6 +965,7 @@ public struct BattleAutomation: Sendable {
         inProgressRuledOut = false
         resumedAt = -.infinity
         freeSwitchUntil = -.infinity
+        switchedInSinceRestart = false
         leadStartChecked = false
         leadStartedAt = nil
         restartSeen = false
@@ -1076,6 +1084,7 @@ public struct BattleAutomation: Sendable {
         opponentSeenAt = t
         cardNote = nil
         if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
+        switchedInSinceRestart = !isLead && !theirsFainted && !stopped
         // Name confirmation arrives after the switch. Replay the verified samples
         // belonging to the incoming Pokémon instead of discarding its first hit.
         if !stopped {

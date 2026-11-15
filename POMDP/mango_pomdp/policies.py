@@ -192,6 +192,33 @@ class Heuristic:
                    key=lambda i: matchup(view.me.mons[i], view.me.mons[i].hp, view.foe_species, view.foe_hp, seen))
 
 
+class Timed:
+    """Wraps a policy to throw on "good timing", a heuristic (sometimes throwing at once is better,
+    and the planner weighs both). A charged move registers their fast move in progress on the
+    spot and resets cooldowns, which hands them the turns they had left. So when the base policy
+    would throw while their fast move is still going, this fast moves instead if its own fast move
+    ends by the time theirs lands, or else waits, and throws on the turn theirs lands."""
+
+    def __init__(self, base):
+        self.base = base
+        self.name = getattr(base, "name", "timed")
+
+    def act(self, view: View) -> tuple[str, int]:
+        a = self.base.act(view)
+        if a[0] != "charged":
+            return a
+        _, lands = view.foe_timer
+        if lands <= 0:   # they're free, or their fast move lands this turn
+            return a
+        return FAST if view.mon.fast.turns <= lands else WAIT
+
+    def shield(self, view: View, move: Move) -> bool:
+        return self.base.shield(view, move)
+
+    def replace(self, view: View) -> int:
+        return self.base.replace(view)
+
+
 class RandomPlayer:
     name = "random"
 

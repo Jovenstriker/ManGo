@@ -51,7 +51,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--games", type=int, default=100)
     ap.add_argument("--players", nargs="+", default=["random", "baiter", "planner", "oracle"], type=player_name,
-                    help=f"{PLAYERS}; planners take @start, @zero-turn, @catch (the default) or @any")
+                    help=f"{PLAYERS}; planners take @start, @zero-turn, @catch or @any (the default)")
     ap.add_argument("--opponents", nargs="+", default=list(STYLES), choices=STYLES)
     ap.add_argument("--rollouts", type=int, default=12)
     ap.add_argument("--seed", type=int, default=0)

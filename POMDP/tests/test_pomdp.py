@@ -222,6 +222,31 @@ class PlannerTests(unittest.TestCase):
         b.sides[0].switch_timer = 10
         self.assertFalse(Planner(gd, prior, switch_at="any").may_switch(view))   # the timer still rules
 
+    def test_good_timing_holds_a_throw_until_their_fast_move_lands(self):
+        from mango_pomdp.policies import Timed
+        # Psycho Cut: 2 turns. Their Incinerate: 5 turns, already under way.
+        b = Battle([[mon("medicham")], [mon("azumarill", fast="INCINERATE")]], seed=0)
+        b.sides[0].mon.energy = 100
+        timed = Timed(Heuristic("baiter", eps=0))
+        foe = b.sides[1]
+        for busy, lands, expected in ((2, 1, WAIT), (3, 2, FAST), (1, 0, "charged")):
+            foe.busy_until, foe.fast_due = busy, lands
+            a = timed.act(b.view(0))
+            self.assertEqual(a[0] if expected == "charged" else a, expected, (busy, lands))
+
+    def test_every_free_turn_weighs_every_legal_action(self):
+        from mango_pomdp.planner import Planner
+        b = Battle([[mon("medicham"), mon("azumarill"), mon("registeel")], [mon("swampert")]], seed=0)
+        b.turn = 30   # mid-matchup, not a 0-turn moment
+        p = Planner(gd, prior, rollouts=2, seed=1)
+        p.start(0)
+        p.observe(b.log)
+        seen = {}
+        p._best = lambda view, c, *a, zs=None, **k: seen.update(zip(c, zs)) or c[0]
+        p.act(b.view(0))
+        self.assertTrue({FAST, WAIT, SWITCH(1), SWITCH(2)} <= set(seen))
+        self.assertEqual((seen[FAST], seen[WAIT], seen[SWITCH(1)]), (p.z, p.z_extra, p.z_extra))
+
     def test_turns_to_throw_reads_energy_cooldown_and_style(self):
         from mango_pomdp.planner import turns_to_throw
         b = Battle([[mon("medicham")], [mon("azumarill")]], seed=0)   # Azumarill: Bubble, 3 turns

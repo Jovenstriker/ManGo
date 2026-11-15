@@ -374,7 +374,7 @@ def main():
                    help="which teams to play: PvPoke's, the ones you faced, yours, or all")
     e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"], type=player_name,
                    help="match.PLAYERS, or planner-book (planner-list with --book); planners take @start, "
-                        "@zero-turn, @catch (the default) or @any for when they consider switching")
+                        "@zero-turn, @catch or @any (the default: every legal action every free turn)")
     e.add_argument("--book", type=Path, help="opening book from the book command")
     e.add_argument("--opponents", nargs="+", default=list(STYLES), type=player_name,
                    help="heuristic styles, or planners (which know the list too)")

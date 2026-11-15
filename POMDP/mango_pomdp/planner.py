@@ -17,19 +17,24 @@ policy; with the test, one-step lookahead keeps its policy-improvement property 
 A rollout scores +1 / 0 / −1 for the result plus `margin_weight` × the HP difference left
 (as a fraction of each team's total), which separates close wins from blowouts.
 
-Switching is legal on any turn the switch timer allows; `switch_at` decides when the planner
-spends rollouts on it:
-  "start"      within 2 turns of a new matchup
-  "zero-turn"  that, and the turn right after any charged move (thrown, shielded or taken), when
-               cooldowns have just reset: a 0-turn switch, which costs no fast move
-  "catch"      that, and catching (the default). Whenever their counted energy is within one
-               fast move of a charged move, it also weighs switching now, and for each bench
-               Pokémon "wait, then switch to it the turn they throw", so the throw lands on the
-               new Pokémon. Waiting keeps it free to switch that turn instead of being locked
-               into a fast move. Choices are simultaneous, so the throw turn is a prediction:
-               in each rollout `turns_to_throw` gets it from the counted energy and the style
-               sampled from the belief.
-  "any"        every turn
+The actions, on every turn your Pokémon is free: a fast move (which locks it in for the move's
+length), a charged move it has the energy for, a switch to either bench Pokémon (when the switch
+timer allows), or waiting. When they throw: shield or not, while you have shields. After a
+faint: which Pokémon comes in. `switch_at` decides which of those the planner weighs with
+rollouts on a given free turn (the rest of the time it fast moves):
+  "start"      fast and charged moves whenever a charged move is affordable; switches within 2
+               turns of a new matchup
+  "zero-turn"  that, and switches on the turn right after any charged move (thrown, shielded or
+               taken), when cooldowns have just reset: a 0-turn switch, which costs no fast move
+  "catch"      that, and catching. Whenever their counted energy is within one fast move of a
+               charged move, it also weighs switching now, and for each bench Pokémon "wait,
+               then switch to it the turn they throw", so the throw lands on the new Pokémon.
+               Waiting keeps it free to switch that turn instead of being locked into a fast
+               move. Choices are simultaneous, so the throw turn is a prediction: in each
+               rollout `turns_to_throw` gets it from the counted energy and the sampled style.
+  "any"        every legal action on every free turn (the default): fast, each affordable
+               charged move, each switch the timer allows, and waiting, plus the catch plans
+               above when they're near a throw
 
 With "catch" or "any", our side's rollout policy catches too (`_Catcher`, unless
 `rollout_catch=False`): the baiter heuristic, except that when the opponent is about to throw a
@@ -48,7 +53,7 @@ import random
 from .battle import FAST, SWITCH, WAIT, Battle, View
 from .belief import Belief, Oracle
 from .gamedata import MAX_ENERGY, GameData, Move, damage
-from .policies import STYLES, Heuristic, ThrowContext, preferred_throw
+from .policies import STYLES, Heuristic, ThrowContext, Timed, preferred_throw
 from .team_prior import TeamPrior, TeamSpec
 
 SWITCH_AT = ("start", "zero-turn", "catch", "any")
@@ -183,8 +188,8 @@ class Planner:
     def __init__(self, gd: GameData, prior: TeamPrior, rollouts: int = 12, particles: int = 200,
                  styles: tuple[str, ...] = STYLES, eps: float = 0.1, rollout_style: str = "baiter",
                  seed: int | None = None, oracle: tuple[TeamSpec, str] | None = None, name: str = "planner",
-                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "catch",
-                 rollout_catch: bool = True):
+                 z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "any",
+                 rollout_catch: bool = True, timing: bool = True, z_extra: float = 3.0):
         if switch_at not in SWITCH_AT:
             raise ValueError(f"switch_at must be one of {SWITCH_AT}")
         self.switch_at = switch_at
@@ -193,13 +198,19 @@ class Planner:
         self.gd, self.prior = gd, prior
         self.rollouts, self.particles, self.styles, self.eps = rollouts, particles, styles, eps
         self.rollout_style = rollout_style
-        self.default = Heuristic(rollout_style, eps=0.0, seed=seed)
-        self.z, self.margin_weight = z, margin_weight
+        self.timing = timing
+        self.default = self._ours(seed)
+        self.z, self.z_extra, self.margin_weight = z, z_extra, margin_weight
         self.rng = random.Random(seed)
         self.oracle = oracle
         self.name = name
         self.belief: Belief | None = None
         self.decisions = 0
+
+    def _ours(self, seed):
+        """Our default policy (also our rollout policy): the rollout style, throwing on good timing."""
+        base = Heuristic(self.rollout_style, eps=0.0, seed=seed)
+        return Timed(base) if self.timing else base
 
     # Match hooks --------------------------------------------------------------------------
 
@@ -229,7 +240,7 @@ class Planner:
 
     def catch_window(self, view: View) -> bool:
         """Their counted energy is within one fast move of the cheapest charged move they might have."""
-        if self.switch_at != "catch" or not view.can_switch:
+        if self.switch_at not in ("catch", "any") or not view.can_switch:
             return False
         sid = view.foe_species.id
         costs = [self.gd.moves[m].energy for m, w in self.belief.moves_posterior(sid) if w > 0 and m in self.gd.moves]
@@ -237,19 +248,35 @@ class Planner:
         gain = fast.energy_gain if fast else max(m.energy_gain for m in self.gd.moves.values())
         return bool(costs) and self.belief.counter.energy.get(sid, 0) + gain >= min(costs)
 
+    def key_moment(self, view: View) -> bool:
+        """A turn where the mechanics make a switch natural: a new matchup, or a 0-turn switch."""
+        if max(view.me.entered, view.foe_entered) >= view.turn - 2:
+            return True
+        return self.switch_at != "start" and view.turn == self.last_charged + 1
+
     def act(self, view: View) -> tuple[str, int]:
-        cands = [a for a in view.legal_actions() if a[0] == "fast" or a[0] == "charged"]
-        switches = [a for a in view.legal_actions() if a[0] == "switch"]
-        if self.may_switch(view):
+        legal = view.legal_actions()
+        cands = [a for a in legal if a[0] == "fast" or a[0] == "charged"]
+        switches = [a for a in legal if a[0] == "switch"]
+        if switches and self.key_moment(view):
             cands += switches
         if switches and self.catch_window(view):
             cands += [a for a in switches if a not in cands] + [("catch", a[1]) for a in switches]
+        zs = [self.z] * len(cands)
+        if self.switch_at == "any":
+            # Every legal action, every free turn. Switching or waiting at any other moment is rarely
+            # right, so it has to clear a higher bar: with a dozen noisy rollouts at every turn, a
+            # plain one-standard-error test would wander off the default by chance.
+            extra = [a for a in switches + [WAIT] if a not in cands]
+            cands += extra
+            zs += [self.z_extra] * len(extra)
         if len(cands) == 1:
             return FAST
         default = self.default.act(view)
         if default not in cands:
             cands.append(default)
-        best = self._best(view, cands, lambda b, a, ctrls: None, cands.index(default), first=True)
+            zs.append(self.z)
+        best = self._best(view, cands, lambda b, a, ctrls: None, cands.index(default), first=True, zs=zs)
         return WAIT if best[0] == "catch" else best
 
     def shield(self, view: View, move: Move) -> bool:
@@ -275,7 +302,7 @@ class Planner:
     # Rollouts -----------------------------------------------------------------------------
 
     def _controllers(self, first, seed: int, style: str, b: Battle):
-        mine = Heuristic(self.rollout_style, eps=0.0, seed=seed)
+        mine = self._ours(seed)
         if self.rollout_catch and self.switch_at in ("catch", "any"):
             mine = _Catcher(mine, b, self.side, style)
         if first is not None and first[0] == "catch":
@@ -290,7 +317,7 @@ class Planner:
         return b.reward(self.side) + self.margin_weight * (hp[self.side] - hp[1 - self.side])
 
     def _best(self, view: View, cands: list, apply, default: int, first: bool = False,
-              incoming: Move | None = None):
+              incoming: Move | None = None, zs: list[float] | None = None):
         self.decisions += 1
         values = [[] for _ in cands]
         for _ in range(self.rollouts):
@@ -310,6 +337,6 @@ class Planner:
             diffs = [a - d for a, d in zip(values[j], values[default])]
             mean = sum(diffs) / len(diffs)
             se = (sum((x - mean) ** 2 for x in diffs) / max(len(diffs) - 1, 1) / len(diffs)) ** 0.5
-            if mean > self.z * se and mean > best_gain:
+            if mean > (zs[j] if zs else self.z) * se and mean > best_gain:
                 best, best_gain = j, mean
         return cands[best]

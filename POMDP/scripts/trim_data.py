@@ -35,6 +35,12 @@ ap.add_argument("gamemaster", type=Path)
 ap.add_argument("rankings", type=Path)
 ap.add_argument("out", type=Path)
 ap.add_argument("--teams", type=Path, help="PvPoke top teams CSV to decode and keep")
+ap.add_argument("--species-teams", type=Path,
+                help='CSV of teams by species ("side", "team" as "A; B; C", "battles"), given '
+                     "PvPoke's recommended movesets")
+ap.add_argument("--keep", type=Path,
+                help="an earlier data file whose Pokémon and moves are kept exactly as they are; only "
+                     "what it lacks comes from this game master (so earlier results stay valid)")
 args = ap.parse_args()
 
 gm = json.loads(args.gamemaster.read_text())
@@ -52,9 +58,7 @@ def abbreviation(m):
 
 
 def decode_teams(path):
-    # Rankings name shadows ("Hydreigon (Shadow)"); the game master's names win where both exist.
-    names = {r["speciesName"]: r["speciesId"] for r in rankings}
-    names.update({p["speciesName"]: p["speciesId"] for p in gm["pokemon"]})
+    names = species_ids()
     teams = []
     for row in csv.DictReader(path.open()):
         members = []
@@ -75,8 +79,36 @@ def decode_teams(path):
     return teams
 
 
+def species_ids():
+    # Rankings name shadows ("Hydreigon (Shadow)"); the game master's names win where both exist.
+    names = {r["speciesName"]: r["speciesId"] for r in rankings}
+    names.update({p["speciesName"]: p["speciesId"] for p in gm["pokemon"]})
+    return names
+
+
+def species_teams(path):
+    """Teams known only by species (a player's own battles): PvPoke's recommended moveset each."""
+    names = species_ids()
+    out = []
+    for row in csv.DictReader(path.open()):
+        members = []
+        for name in row["team"].split(";"):
+            sid = names[name.strip()]
+            moveset = ranked[sid][1]["moveset"]
+            members.append({"id": sid, "fast": moveset[0], "charged": moveset[1:3]})
+        out.append({"members": members, "rating": 0.0, "usage": 0.0, "source": row["side"],
+                    "battles": int(row["battles"])})
+    return out
+
+
 teams = decode_teams(args.teams) if args.teams else []
-required = {m["id"]: m for t in teams for m in t["members"]}
+for t in teams:
+    t["source"] = "pvpoke"
+teams += species_teams(args.species_teams) if args.species_teams else []
+required = {}
+for t in teams:   # PvPoke's teams first, so their movesets are the ones kept for the prior
+    for m in t["members"]:
+        required.setdefault(m["id"], m)
 
 
 # Pokémon ------------------------------------------------------------------------------------
@@ -158,14 +190,22 @@ def trim_move(m):
     return out
 
 
-data = {
-    "source": f"PvPoke gamemaster {gm.get('timestamp', '')}, {args.rankings.name} (top {TOP_N}"
-              + (f", plus every Pokémon on {len(teams)} top teams" if teams else "") + ")",
-    "pokemon": pokemon,
-    "moves": [trim_move(moves_by_id[m]) for m in sorted(used_moves)],
-}
+moves = [trim_move(moves_by_id[m]) for m in sorted(used_moves)]
+source = (f"PvPoke gamemaster {gm.get('timestamp', '')}, {args.rankings.name} (top {TOP_N}"
+          + (f", plus every Pokémon on {len(teams)} teams" if teams else "") + ")")
+if args.keep:
+    kept = json.loads(args.keep.read_text())
+    old_p = {p["id"] for p in kept["pokemon"]}
+    old_m = {m["moveId"] for m in kept["moves"]}
+    added_p = [p for p in pokemon if p["id"] not in old_p]
+    added_m = [m for m in moves if m["moveId"] not in old_m]
+    pokemon = kept["pokemon"] + added_p
+    moves = kept["moves"] + added_m
+    source = (f"{kept['source']}; plus {len(added_p)} Pokémon and {len(added_m)} moves from PvPoke gamemaster "
+              f"{gm.get('timestamp', '')} for {len(teams)} teams")
+data = {"source": source, "pokemon": pokemon, "moves": moves}
 if teams:
     data["teams"] = teams
 args.out.write_text(json.dumps(data, separators=(",", ":"), ensure_ascii=False))
-print(f"{len(pokemon)} Pokémon, {len(used_moves)} moves" + (f", {len(teams)} teams" if teams else "")
+print(f"{len(pokemon)} Pokémon, {len(moves)} moves" + (f", {len(teams)} teams" if teams else "")
       + f" -> {args.out}")

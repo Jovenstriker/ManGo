@@ -89,6 +89,8 @@ class TopTeam:
     spec: tuple[tuple[str, str, tuple[str, ...]], ...]   # ((species id, fast id, (charged ids)), ...)
     rating: float     # PvPoke's team rating
     usage: float      # share of PvPoke's training battles
+    source: str = "pvpoke"   # "pvpoke" (the top teams export), "mine" or "faced" (your own battles)
+    battles: int = 0         # for "mine" and "faced": how many of your battles it was in
 
     @property
     def species(self) -> tuple[str, ...]:
@@ -132,10 +134,16 @@ class GameData:
                 tuple(p["fast"].items()), tuple(p["charged"].items()), tuple(p["moveset"]), tuple(p["counters"]),
                 p.get("ability", ""), tuple(p.get("formMoves", {}).items()))
         self.ranked = sorted(self.species.values(), key=lambda s: s.rank)
-        # A format's top teams, when its file has them: lead first, as the export lists them.
+        # A format's teams, when its file has them, lead first: PvPoke's top teams (in the export's
+        # order, so index k is CSV row k + 1), then your own teams and the teams you faced.
         self.teams: list[TopTeam] = [
-            TopTeam(tuple((m["id"], m["fast"], tuple(m["charged"])) for m in t["members"]), t["rating"], t["usage"])
+            TopTeam(tuple((m["id"], m["fast"], tuple(m["charged"])) for m in t["members"]), t["rating"], t["usage"],
+                    t.get("source", "pvpoke"), t.get("battles", 0))
             for t in raw.get("teams", [])]
+
+    def team_pool(self, source: str) -> list[int]:
+        """Indices of the teams from one source ("pvpoke", "mine", "faced"), or "all"."""
+        return [k for k, t in enumerate(self.teams) if source == "all" or t.source == source]
 
     def recommended(self, species_id: str) -> tuple[Move, tuple[Move, ...]]:
         s = self.species[species_id]

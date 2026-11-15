@@ -353,7 +353,8 @@ class FormTests(unittest.TestCase):
 
 class TopTeamTests(unittest.TestCase):
     def test_every_team_decodes_to_legal_moves(self):
-        self.assertEqual(len(mega.teams), 48)
+        self.assertEqual([len(mega.team_pool(s)) for s in ("pvpoke", "mine", "faced")], [48, 4, 63])
+        self.assertEqual(mega.team_pool("pvpoke"), list(range(48)))   # PvPoke's rows keep their numbers
         for t in mega.teams:
             self.assertEqual(len(t.spec), 3)
             for sid, f, cs in t.spec:
@@ -361,12 +362,20 @@ class TopTeamTests(unittest.TestCase):
                 self.assertEqual(len(cs), 2)
                 self.assertTrue(all(not mega.moves[c].is_fast for c in cs))
 
+    def test_your_battles_decode_to_the_right_forms(self):
+        mine = [mega.teams[k].species for k in mega.team_pool("mine")]
+        self.assertEqual(mine[0], ("thievul", "blaziken", "jumpluff"))   # the team you used most, lead first
+        faced = {s for k in mega.team_pool("faced") for s in mega.teams[k].species}
+        self.assertTrue({"stunfisk_galarian", "stunfisk", "forretress_shadow", "ninetales_alolan",
+                         "morpeko_full_belly"} <= faced)
+
     def test_list_prior_narrows_to_teams_with_that_lead(self):
         from mango_pomdp.team_prior import TeamListPrior
-        listed = TeamListPrior(mega, mega.teams, fallback=TeamPrior(mega))
+        pvpoke = [mega.teams[k] for k in mega.team_pool("pvpoke")]
+        listed = TeamListPrior(mega, pvpoke, fallback=TeamPrior(mega))
         rng = random.Random(0)
         leads = [listed.complete_team(rng, ["cramorant"]) for _ in range(300)]
-        fits = {tuple(t.species) for t in mega.teams if "cramorant" in t.species}
+        fits = {tuple(t.species) for t in pvpoke if "cramorant" in t.species}
         self.assertTrue(all(any(set(team) == set(f) for f in fits) for team in leads))
         led = sum(any(team == list(f) for f in fits if f[0] == "cramorant") for team in leads)
         self.assertGreater(led / len(leads), 0.7)

@@ -10,10 +10,17 @@
     python3 -m experiments.top_teams evaluate 3 --players planner-list planner-book \
         --book data/openings_3.json --opponents planner-list
 
-The teams are data/mega_great_league_top_teams.csv, PvPoke's top teams export, numbered by row.
-Opponents lead with the first Pokémon listed, the way the export lists them, and play one of the
-heuristic styles (policies.STYLES), or with `--opponents planner-list`, the planner itself.
-Each game is played from both sides of the board in turn.
+    python3 -m experiments.top_teams rank --pool all       # PvPoke's teams, yours, and those you faced
+    python3 -m experiments.top_teams evaluate 25 --against faced   # vs the teams you actually faced
+    python3 -m experiments.top_teams evaluate M1 --against all     # your first team vs everything
+
+Teams come from data/mega_great_league_top_teams.csv, PvPoke's top teams export, numbered by row
+(#1–#48); and from data/mega_great_league_faced_teams.csv, your own battles: your teams (M1, M2,
+…) and the full teams you faced (F1, F2, …), with PvPoke's recommended movesets. Opponents lead
+with the first Pokémon listed and play one of the heuristic styles (policies.STYLES), or with
+`--opponents planner-list`, the planner itself. Each game is played from both sides in turn.
+The planners' list of possible opponent teams is always PvPoke's export, never your battles:
+against the teams you faced, that tests whether a plan built on the export carries over.
 
 Players for our team (match.PLAYERS): a heuristic style plays the team as that style would;
 "planner" is the 3v3 POMDP planner with the format's structured team prior; "planner-list" is
@@ -41,6 +48,25 @@ from mango_pomdp.team_prior import TeamPrior
 
 FORMAT = "mega_great_league"
 SCORE = {0: 1.0, -1: 0.5, 1: 0.0}   # from side 0's point of view
+
+
+PREFIX = {"pvpoke": "#", "mine": "M", "faced": "F"}
+
+
+def label(gd, k: int) -> str:
+    """#25 for PvPoke's row 25, M1 for your first team, F3 for the third team you faced."""
+    t = gd.teams[k]
+    return f"{PREFIX[t.source]}{gd.team_pool(t.source).index(k) + 1}"
+
+
+def team_index(gd, text: str) -> int:
+    text = text.strip().upper().lstrip("#")
+    source = {"M": "mine", "F": "faced"}.get(text[0], "pvpoke")
+    pool = gd.team_pool(source)
+    n = int(text if source == "pvpoke" else text[1:])
+    if not 1 <= n <= len(pool):
+        raise SystemExit(f"no team {text}: {source} has {len(pool)}")
+    return pool[n - 1]
 
 
 def short(gd, team) -> str:
@@ -109,7 +135,7 @@ def planned_game(job):
     # doesn't step in, the game is identical, so the comparison is paired.
     key = player.replace("planner-book", "planner-list")
     rng = random.Random(zlib.crc32(repr((key, mine, lead, j, style, game)).encode()))
-    others = [t for k, t in enumerate(gd.teams) if k != mine]
+    others = [t for k, t in enumerate(gd.teams) if k != mine and t.source == "pvpoke"]
     ours, theirs = rotate(gd.teams[mine].spec, lead), list(gd.teams[j].spec)
     side = game % 2
     base = "planner-list" if player.startswith("open:") else key
@@ -122,9 +148,9 @@ def planned_game(job):
         me = Opening(me, book, player)
     if style in STYLES:
         foe = Heuristic(style, seed=rng.randrange(1 << 30))
-    else:   # a planner opponent, which knows the list as well (every team but its own)
+    else:   # a planner opponent, which knows PvPoke's list as well (every team on it but its own)
         foe = make_player(style, gd, prior, rng.randrange(1 << 30), rollouts=foe_rollouts,
-                          teams=[t for k, t in enumerate(gd.teams) if k != j])
+                          teams=[t for k, t in enumerate(gd.teams) if k != j and t.source == "pvpoke"])
     teams, players = ([ours, theirs], [me, foe]) if side == 0 else ([theirs, ours], [foe, me])
     battle = play(gd, teams, players, seed=rng.randrange(1 << 30))
     s = SCORE[battle.winner]
@@ -149,9 +175,8 @@ def pool_map(fn, jobs, workers):
 
 # Commands -----------------------------------------------------------------------------------
 
-def round_robin(gd, games: int, workers):
-    n = len(gd.teams)
-    jobs = [(i, j, st, g) for i in range(n) for j in range(i + 1, n) for st in STYLES for g in range(games)]
+def round_robin(gd, games: int, workers, teams: list[int]):
+    jobs = [(i, j, st, g) for a, i in enumerate(teams) for j in teams[a + 1:] for st in STYLES for g in range(games)]
     total = defaultdict(float)
     count = defaultdict(int)
     for i, j, s in pool_map(heuristic_game, jobs, workers):
@@ -162,31 +187,35 @@ def round_robin(gd, games: int, workers):
     return {k: total[k] / count[k] for k in total}
 
 
-def rank(gd, games: int, workers, show: int = 48):
+def rank(gd, games: int, workers, show: int | None = None, pool: str = "pvpoke"):
     start = time.time()
-    w = round_robin(gd, games, workers)
-    n = len(gd.teams)
+    teams = gd.team_pool(pool)
+    w = round_robin(gd, games, workers, teams)
+    n = len(teams)
     rows = []
-    for i in range(n):
-        vs = [w[i, j] for j in range(n) if j != i]
-        usage = sum(gd.teams[j].usage for j in range(n) if j != i)
-        weighted = sum(w[i, j] * gd.teams[j].usage for j in range(n) if j != i) / usage
-        worst = min((w[i, j], j) for j in range(n) if j != i)
+    for i in teams:
+        opp = [j for j in teams if j != i]
+        vs = [w[i, j] for j in opp]
+        usage = sum(gd.teams[j].usage for j in opp)
+        weighted = sum(w[i, j] * gd.teams[j].usage for j in opp) / usage if usage else float("nan")
+        worst = min((w[i, j], j) for j in opp)
         rows.append((sum(vs) / len(vs), weighted, sum(v > 0.5 for v in vs), worst, i))
     rows.sort(reverse=True)
-    print(f"Round robin: {n} teams, each pair {games} games per style × {len(STYLES)} styles, both sides "
-          f"playing the same heuristic style. {time.time() - start:.0f}s\n")
-    print(f"{'#':>3}  {'team':<38}{'PvPoke':>7}{'win rate':>10}{'usage-wt':>10}{'beats':>7}   worst matchup")
-    for mean, weighted, beats, (wv, wj), i in rows[:show]:
-        print(f"{i + 1:>3}  {short(gd, gd.teams[i]):<38}{gd.teams[i].rating:>7.0f}{mean:>10.3f}{weighted:>10.3f}"
-              f"{beats:>4}/{n - 1}   {wv:.2f} vs #{wj + 1} {short(gd, gd.teams[wj])}")
+    print(f"Round robin: {n} teams ({pool}), each pair {games} games per style × {len(STYLES)} styles, both sides "
+          f"playing the same heuristic style. {time.time() - start:.0f}s")
+    print("usage-wt weights opponents by PvPoke usage, so it counts only PvPoke's teams.\n")
+    print(f"{'rank':>4} {'team':>4}  {'':<38}{'PvPoke':>7}{'win rate':>10}{'usage-wt':>10}{'beats':>9}   worst matchup")
+    for place, (mean, weighted, beats, (wv, wj), i) in enumerate(rows[:show], start=1):
+        rating = f"{gd.teams[i].rating:>7.0f}" if gd.teams[i].source == "pvpoke" else f"{'':>7}"
+        print(f"{place:>4} {label(gd, i):>4}  {short(gd, gd.teams[i]):<38}{rating}{mean:>10.3f}{weighted:>10.3f}"
+              f"{beats:>5}/{n - 1}   {wv:.2f} vs {label(gd, wj)} {short(gd, gd.teams[wj])}")
     return rows
 
 
-def run_eval(gd, players, mine, leads, styles, games, rollouts, workers, book=None):
-    n = len(gd.teams)
+def run_eval(gd, players, mine, leads, styles, games, rollouts, workers, book=None, against: str = "pvpoke"):
+    opps = [j for j in gd.team_pool(against) if j != mine]
     jobs = [(p, mine, lead, j, st, g, rollouts, book) for p in players for lead in leads
-            for j in range(n) if j != mine for st in styles for g in range(games)]
+            for j in opps for st in styles for g in range(games)]
     return list(pool_map(planned_game, jobs, workers))
 
 
@@ -196,7 +225,7 @@ def build_book(gd, mine: int, lead: int, styles, games, rollouts, workers, margi
     plays everything after it."""
     ours = rotate(gd.teams[mine].spec, lead)
     names = [gd.species[s].name for s, _, _ in ours]
-    print(f"Opening book for team #{mine + 1} ({' / '.join(names)}, lead first), against "
+    print(f"Opening book for team {label(gd, mine)} ({' / '.join(names)}, lead first), against PvPoke's teams, "
           f"{', '.join(styles)}, {games} games per opponent per opening\n")
     start = time.time()
     results = run_eval(gd, ["open:0", "open:1", "open:2"], mine, [lead], styles, games, rollouts, workers)
@@ -205,7 +234,7 @@ def build_book(gd, mine: int, lead: int, styles, games, rollouts, workers, margi
         per[int(r[0][5:]), r[3]].append(r[5])
     leads = defaultdict(list)
     for j, t in enumerate(gd.teams):
-        if j != mine:
+        if j != mine and t.source == "pvpoke":
             leads[t.species[0]].append(j)
     book = {}
     label = ["planner's choice", f"swap to {names[1]}", f"swap to {names[2]}"]
@@ -217,7 +246,7 @@ def build_book(gd, mine: int, lead: int, styles, games, rollouts, workers, margi
             k = 0   # only override the planner when a swap is clearly better
         book[sid] = k
         print(f"  {gd.species[sid].name:<24}{len(js):>6}" + "".join(f"{m:>22.2f}" for m in means) + f"   {label[k]}")
-    out.write_text(json.dumps({"team": mine + 1, "lead": lead, "opponents": list(styles), "games": games,
+    out.write_text(json.dumps({"team": label(gd, mine), "lead": lead, "opponents": list(styles), "games": games,
                                "book": book}, indent=1) + "\n")
     print(f"\n{time.time() - start:.0f}s. Wrote {out}.")
 
@@ -232,7 +261,7 @@ def select(gd, shortlist: int, games: int, rollouts: int, workers):
     rows = rank(gd, games=4, workers=workers, show=shortlist)
     picks = [i for *_, i in rows[:shortlist]]
     print(f"\nThe planner (planner-list) with each of the top {shortlist}, every lead, against all "
-          f"{len(gd.teams) - 1} other teams × {len(STYLES)} styles × {games} games:\n")
+          f"{len(gd.team_pool('pvpoke')) - 1} other teams × {len(STYLES)} styles × {games} games:\n")
     start = time.time()
     results = []
     for i in picks:
@@ -250,24 +279,26 @@ def select(gd, shortlist: int, games: int, rollouts: int, workers):
             beaten = sum(v > 0.5 for v in per.values())
             wv, wj = min((v, j) for j, v in per.items())
             lead_name = gd.species[gd.teams[i].species[lead - 1]].name
-            print(f"{i + 1:>3}  {short(gd, gd.teams[i]):<38}{lead_name:<22}{f'{m:.3f} ± {se:.3f}':>16}"
-                  f"{beaten:>11}/{len(per)}       {wv:.2f} vs #{wj + 1} {short(gd, gd.teams[wj])}")
+            print(f"{label(gd, i):>3}  {short(gd, gd.teams[i]):<38}{lead_name:<22}{f'{m:.3f} ± {se:.3f}':>16}"
+                  f"{beaten:>11}/{len(per)}       {wv:.2f} vs {label(gd, wj)} {short(gd, gd.teams[wj])}")
             key = (beaten, m)
             if best is None or key > best[0]:
                 best = (key, i, lead)
-    print(f"\n{time.time() - start:.0f}s. Most opponents beaten (then best win rate): team #{best[1] + 1} "
+    print(f"\n{time.time() - start:.0f}s. Most opponents beaten (then best win rate): team {label(gd, best[1])} "
           f"{short(gd, gd.teams[best[1]])}, leading with {gd.species[gd.teams[best[1]].species[best[2] - 1]].name}.")
 
 
-def evaluate(gd, mine: int, lead: int, players, styles, games, rollouts, workers, plan: bool, book=None):
+def evaluate(gd, mine: int, lead: int, players, styles, games, rollouts, workers, plan: bool, book=None,
+             against: str = "pvpoke"):
     team = gd.teams[mine]
     ours = rotate(team.spec, lead)
-    print(f"Team #{mine + 1}: {' / '.join(gd.species[s].name for s, _, _ in ours)} (lead first)")
-    print(f"against the other {len(gd.teams) - 1} teams × styles {', '.join(styles)} × {games} games, "
+    opps = [j for j in gd.team_pool(against) if j != mine]
+    print(f"Team {label(gd, mine)}: {' / '.join(gd.species[s].name for s, _, _ in ours)} (lead first)")
+    print(f"against {len(opps)} teams ({against}) × styles {', '.join(styles)} × {games} games, "
           f"{rollouts[0]} rollouts" + (f" (opponent planners {rollouts[1]})" if rollouts[1] != rollouts[0] else "")
           + "\n")
     start = time.time()
-    results = run_eval(gd, players, mine, [lead], styles, games, rollouts, workers, book)
+    results = run_eval(gd, players, mine, [lead], styles, games, rollouts, workers, book, against)
     print(f"{'player':<16}{'win rate':>16}" + "".join(f"{'vs ' + s:>14}" for s in styles) + f"{'opponents beaten':>20}")
     per = {p: defaultdict(list) for p in players}
     for r in results:
@@ -289,7 +320,7 @@ def evaluate(gd, mine: int, lead: int, players, styles, games, rollouts, workers
     print("Per opponent (win rate over styles and games):")
     print(f"  {'#':>3}  {'opponent':<38}" + "".join(f"{p:>14}" for p in players))
     for j in opps:
-        print(f"  {j + 1:>3}  {short(gd, gd.teams[j]):<38}"
+        print(f"  {label(gd, j):>3}  {short(gd, gd.teams[j]):<38}"
               + "".join(f"{sum(per[p][j]) / len(per[p][j]):>14.2f}" for p in players))
     if plan:
         game_plan(gd, [r for r in results if r[0] == last], opps)
@@ -312,7 +343,7 @@ def game_plan(gd, results, opps):
             shields.update(r[8])
         closers = Counter(s for r in wins for s in r[9])
         opener = f"swap to {name(swap)} at the start" if swap else "stay in"
-        print(f"\n  vs #{j + 1} {short(gd, gd.teams[j])}: won {len(wins)}/{len(rs)}")
+        print(f"\n  vs {label(gd, j)} {short(gd, gd.teams[j])}: won {len(wins)}/{len(rs)}")
         print(f"     opening: {opener} ({k}/{len(rs)}), then usually {line} ({n}/{k})")
         print("     shields per game: " + ", ".join(f"{name(s)} {c / len(rs):.1f}" for s, c in shields.most_common())
               + (f"; left standing in wins: " + ", ".join(f"{name(s)} {c}" for s, c in closers.most_common())
@@ -330,13 +361,17 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("rank")
     r.add_argument("--games", type=int, default=4, help="games per pair per style")
+    r.add_argument("--pool", default="pvpoke", choices=("pvpoke", "all"),
+                   help="PvPoke's teams, or those plus yours and the ones you faced")
     s = sub.add_parser("select")
     s.add_argument("--shortlist", type=int, default=6)
     s.add_argument("--games", type=int, default=2, help="games per opponent per style")
     s.add_argument("--rollouts", type=int, default=12)
     e = sub.add_parser("evaluate")
-    e.add_argument("team", type=int, help="CSV row, from 1")
+    e.add_argument("team", help="PvPoke CSV row (25), your team (M1) or a team you faced (F3)")
     e.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
+    e.add_argument("--against", default="pvpoke", choices=("pvpoke", "faced", "mine", "all"),
+                   help="which teams to play: PvPoke's, the ones you faced, yours, or all")
     e.add_argument("--players", nargs="+", default=["baiter", "planner", "planner-list"], type=player_name,
                    help="match.PLAYERS, or planner-book (planner-list with --book); planners take @start, "
                         "@zero-turn, @catch (the default) or @any for when they consider switching")
@@ -348,7 +383,7 @@ def main():
     e.add_argument("--opponent-rollouts", type=int, default=12, help="for planner opponents")
     e.add_argument("--plan", action="store_true", help="print a game plan per opponent")
     b = sub.add_parser("book")
-    b.add_argument("team", type=int, help="CSV row, from 1")
+    b.add_argument("team", help="PvPoke CSV row (25) or your team (M1)")
     b.add_argument("--lead", type=int, default=1, choices=(1, 2, 3))
     b.add_argument("--opponents", nargs="+", default=["planner-list"], type=player_name)
     b.add_argument("--games", type=int, default=8, help="games per opponent per opening")
@@ -360,19 +395,20 @@ def main():
     args = ap.parse_args()
     gd = gamedata.use(FORMAT)
     if args.cmd == "rank":
-        rank(gd, args.games, args.workers)
+        rank(gd, args.games, args.workers, pool=args.pool)
     elif args.cmd == "select":
         select(gd, args.shortlist, args.games, args.rollouts, args.workers)
     elif args.cmd == "book":
-        out = args.out or gamedata.DATA_DIR / f"openings_{args.team}.json"
-        build_book(gd, args.team - 1, args.lead, args.opponents, args.games, (args.rollouts, args.rollouts),
+        mine = team_index(gd, args.team)
+        out = args.out or gamedata.DATA_DIR / f"openings_{label(gd, mine).lstrip('#')}.json"
+        build_book(gd, mine, args.lead, args.opponents, args.games, (args.rollouts, args.rollouts),
                    args.workers, args.margin, out)
     else:
         book = json.loads(args.book.read_text())["book"] if args.book else None
         if any(p.startswith("planner-book") for p in args.players) and not book:
             ap.error("planner-book needs --book")
-        evaluate(gd, args.team - 1, args.lead, args.players, args.opponents, args.games,
-                 (args.rollouts, args.opponent_rollouts), args.workers, args.plan, book)
+        evaluate(gd, team_index(gd, args.team), args.lead, args.players, args.opponents, args.games,
+                 (args.rollouts, args.opponent_rollouts), args.workers, args.plan, book, args.against)
 
 
 if __name__ == "__main__":

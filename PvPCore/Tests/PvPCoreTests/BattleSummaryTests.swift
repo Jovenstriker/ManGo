@@ -34,7 +34,7 @@ private func summaries(of name: String) throws -> [BattleSummary] {
 
     let theirs = s.chargedMoves.filter { $0.side == .them }
     #expect(theirs.map(\.name) == ["Chilling Water", "Shadow Sneak", "Play Rough", "Moonblast", "Chilling Water", "Chilling Water"])
-    #expect(theirs.map(\.energyBefore) == [45, 80, 62, 72, 49, 49])
+    #expect(theirs.map(\.energyBefore) == [45, 80, 62, 72, 49, 58])
     let yours = s.chargedMoves.filter { $0.side == .you }
     #expect(yours.map(\.name) == ["Energy Ball", "Energy Ball", "Energy Ball", "Icy Wind", "Energy Ball",
                                   "Blaze Kick", "Blaze Kick", "Blaze Kick"])
@@ -49,10 +49,11 @@ private func summaries(of name: String) throws -> [BattleSummary] {
         #expect(!row.isEmpty)
         for (a, b) in zip(row, row.dropFirst()) { #expect(b.start >= a.end - 1e-6, "\(side) fast moves overlap at \(a.start)") }
     }
-    // Their fast moves are ManGo's counts: the 35 before their charged moves, and Mimikyu's one
-    // in progress at your Energy Ball at 3:14, before it fainted.
+    // Their fast moves are ManGo's counts: the 36 before their charged moves (Florges' fourth
+    // Fairy Wind before switching to Mimikyu at 3:12.3 included, as the user counted), and
+    // Mimikyu's one in progress at your Energy Ball at 3:14, before it fainted.
     let last = try #require(theirs.last?.time)
-    #expect(s.fastMoves.filter { $0.side == .them && $0.start < last }.count == 36)
+    #expect(s.fastMoves.filter { $0.side == .them && $0.start < last }.count == 37)
     #expect(s.markers.contains { $0.side == .them && $0.kind == .fainted && $0.pokemon == "Mimikyu" })
     #expect(s.markers.contains { $0.side == .you && $0.kind == .fainted })
     // Seconds of play: charged moves take none.

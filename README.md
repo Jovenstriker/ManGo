@@ -119,29 +119,66 @@ button, and everything else comes from the screen.
 
 ## Accuracy evidence and validation
 
-`swift test` now checks all 24 saved recordings, including the ones with known inaccuracies.
+`swift test` now checks all 34 saved recordings, including the ones with known inaccuracies.
+Only recordings whose video is still in `Test Videos/` are kept (the first battle, recorded
+without ManGo on October 20, 2026, was dropped with its video on November 9).
 A successful behavioral replay is not proof of accurate energy. The accuracy tests deliberately
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **36 exact hand counts across 9 recordings** in
+There are **110 exact hand counts across 38 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
 not zero. Partial lists do not label the rest of a battle. `countTargets` identifies the Pokémon
 and charged move so a missed or misattributed throw cannot silently shift the labels.
 
+The recordings themselves (`Fixtures/battle-*.json` and `gbl-battle-*.json`: what ManGo read off
+the screen in each battle, which can include notification text) and the reports in `Battle Logs/`
+are kept on the Mac that recorded them, not in the repository (`.gitignore`), like the videos.
+`scripts/pull_battles.sh` puts new ones there. The accuracy and replay tests need them, so they
+only run where they are.
+
 | Recording | Opponent's team | Hand counts |
 |---|---|---|
-| gbl-battle-2026-10-20 (without ManGo) | Stunfisk, Cramorant, Fearow | 6, 7, 1, 5, 5, 5, 6 |
 | gbl-battle-2026-10-20-mango (TestWithMangoV1) | Marowak, Sableye (Shadow), Talonflame | 5, 4, 5, 5, 7, 3, 4 |
 | testV2 | Melmetal, Ninetales (Shadow), Altaria | 6, 6, 0, 6, 2, unknown, unknown |
 | testV3 (Fantasy Cup) | Mimikyu, Turtonator, Granbull | 5, 0, 7 |
-| v7 | Azumarill, Empoleon, Magnezone | unknown, 4, 9, 1 |
+| v7 | Azumarill, Empoleon, Magnezone | unknown, 4, 10, 1 |
 | v8 | Azumarill, Lucario, Mawile | 8, 1, 6, 5, 4 |
+| v9 | Turtonator, Mimikyu, Forretress (Shadow) | unknown × 3, 6 |
 | v11 | Altaria, Mimikyu, Empoleon | 13, 7, unknown, 5, 5 |
 | battle-2026-10-23-132243 | Doublade, Togetic, Stunfisk | 7 |
-| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5 |
+| battle-2026-10-24-171449 | Corviknight, Azumarill, Turtonator | unknown × 4, 4, unknown |
+| battle-2026-10-24-172648 | Hydreigon (Shadow), Stunfisk (Galarian), Melmetal | unknown × 3, 10 |
+| battle-2026-10-24-220440 | Stunfisk (Galarian), Forretress, Melmetal | 5, 7, 3 |
+| battle-2026-10-23-155712 | Flygon, Corviknight, Azumarill | unknown, unknown, unknown, 5 |
+| battle-2026-10-28-002722 | Greninja (Shadow), Florges, Charjabug | unknown × 4, 3, unknown × 2 |
+| battle-2026-11-04-155536 | Altaria, Florges, Melmetal | 17, unknown × 5 |
+| battle-2026-10-28-221337 (three battles) | Scizor, Guzzlord, Nidoqueen; Greninja (Shadow), Forretress (Shadow), Mimikyu; Forretress, Greninja, Nidoqueen | throw 5: 7; throws 11, 16, 18: 3 each; throws 12, 13: 7, 6; throw 17: 5 |
+| battle-2026-11-04-233009 | Morpeko (Full Belly), Jirachi, Azumarill | unknown, 5, unknown × 4 |
+| battle-2026-11-08-142007 | Florges, Mimikyu, Sableye (Shadow) | 5, 10, 4, 8, 3, 6 |
+| battle-2026-11-08-144330 | Cramorant, Melmetal, Clodsire | 5, 8, 2, 10, 1 |
+| battle-2026-11-08-152828 | Marowak, Furret, Talonflame | unknown, 8, unknown × 3 |
+| battle-2026-11-08-212316 | Ninetales (Alolan), Quagsire (Shadow), Jumpluff | unknown, 6, 6, unknown, 3 |
+| battle-2026-11-08-220414 | Forretress (Shadow), Carbink, Marowak | 24, 7, 5 |
+| battle-2026-11-08-223847 | Stunfisk, Annihilape, Fearow | 6, 5 |
+| battle-2026-11-08-233921 | Wigglytuff, Stunfisk, Quagsire (Shadow) | 6, 5, 5, 8, 1, 6 |
+| battle-2026-11-09-005151 | Diggersby, Fearow, Jumpluff | 5, 5, 5, 5, 5, 9, 4 |
+| battle-2026-11-09-010443 | Clodsire, Altaria, Mimikyu | 11, 4 |
+| battle-2026-11-09-010753 | Empoleon, Nidoqueen, Forretress (Shadow) | 6, 4, 3 |
+| battle-2026-11-09-013324 | Pangoro, Dunsparce, Azumarill | 7, 9, 6 |
+| battle-2026-11-09-020853 | Persian | 10 |
+| battle-2026-11-09-021018 | Miltank, Forretress (Shadow), Marowak | 4, 4 |
+| battle-2026-11-09-021617 | Sandslash (Alolan), Marowak, Carbink | 5, 9, 23, 1 |
+| battle-2026-11-09-022052 | Corsola (Galarian), Ursaluna, Tinkaton | 17, 2, 5, 9 |
+| battle-2026-11-09-211526 | Mimikyu, Quagsire (Shadow) | 7 |
+| battle-2026-11-09-211824 | Hydreigon (Shadow), Melmetal, Azumarill | 14, unknown, 5, 6, unknown × 2 |
+| battle-2026-11-10-012748 | Ninetales (Shadow), Ursaluna, Stunfisk | unknown × 5, 9, 0 |
+| battle-2026-11-10-020105 | Diggersby, Cramorant, Forretress (Shadow) | unknown, 5, unknown |
+| battle-2026-11-12-192819 | Quagsire (Shadow), Dunsparce, Mimikyu | 5, 4, 10, 4, unknown |
+| battle-2026-11-12-221608 | Cramorant, Marowak, Ninetales (Shadow) | unknown × 2, 5, unknown |
+| battle-2026-11-13-011620 | Ninetales (Alolan), Annihilape | 6, unknown × 2 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -168,7 +205,8 @@ checked for affordability, not claimed to be fully hand-verified.
 Run `scripts/battle_reports.sh` to regenerate **all** reports. It continues after failures,
 prints each result, and exits nonzero if any recording fails validation. `MANGO_BUILD_DIR`
 and `MANGO_OUTPUT_DIR` override the build directory (default `/tmp/ManGo-PvPCore`) and output
-directory (default `Battle Logs`). Reports use per-read structured observations rather than
+directory (default `Battle Logs`). It builds the report tool optimized and runs `MANGO_JOBS` recordings at a time (default: the
+Mac's core count), about 7 seconds for all of them. Reports use per-read structured observations rather than
 the bounded UI log, and count modelled moves from history instead of dividing capped energy.
 A report's PASS means only that its available evidence agrees; it is not a full-battle accuracy claim.
 
@@ -177,9 +215,52 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-53 of 55 exact hand counts match, and every energy checkpoint. In 152828 (November 8, 2026) Marowak
-threw 4 Mud Slaps as the lead, as its first hit on your HP bar shows (it began before GO was readable),
-and Furret stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
+107 of 110 exact hand counts match. A 0-turn switch, made right after anyone's charged move
+(thrown, received or shielded), holds your buttons back while its camera plays. When their name
+box no longer shows the Pokémon that was in by the read before your buttons come back, ManGo dates
+the restart from the frame your buttons start fading in, less 0.15s, not from their read. That
+gives 012748's Stunfisk (for Ninetales after its Weather Ball) 5 Thunder Shocks and a sneak by your
+Blaze Kick, 020105's Cramorant (for Diggersby after its Scorching Sands) 2 Pecks and a sneak by your
+Icy Wind, and 013324's Pangoro (for Azumarill after its Hydro Pump) 4 and a sneak by your 2:00
+charged move, all as you counted on November 14, 2026. Not where theirs stayed in (010901's Ninetales
+after your charged move), where the frames' restart costs an Ember. Dating stops and your charged
+move's freeze from frames broke other counts (November 10); the experiments are kept as patches in
+docs/experiments/.
+221608's Ninetales (5 Embers before its first Weather Ball; your HP bar shows all five, 1:41.76
+to 1:45.77) and 211824's Melmetal (5 Thunder Shocks, recounted on November 14, 2026) both came in
+by a switch and threw in a CMP tie they won. The clock had their 5th 70% and 87% done; it counts
+for a Pokémon switched in since play restarted, whose switch is only dated to within a read, but
+not for 211824's Hydreigon from GO (14, its 15th 99% done). Counting hits on your HP bar as a
+floor also got 221608 right but broke four other counts, where drops on your bar weren't hits.
+In 005818 Altaria came in for the fainted Azumarill and had 20 by your Acrobatics at 2:23.4 (4
+Dragon Breaths and a sneak, November 14, 2026); ManGo has 16. Your buttons fade in from 2:21.1, with
+Altaria's ball still in the air, and the 4th needs play by 2:20.77. Dating that restart from the
+fade-in, at any lead that gets 20 (0.4s), broke 233921 and 005151 (Stunfisk's 2 Thunder Shocks
+after its return at 3:01, Diggersby's 5 before Scorching Sands; both rechecked by you).
+One miss is from 013324: Pangoro threw 1 Karate Chop as the lead before switching, not 2: the player didn't tap for a turn, which ManGo can't see, so it counts 10 before its Rock Slide, not 9. (Dating its switch from yours just before, as made while yours played out, fixed it but broke 212316, v9 and a replay test.) In 221337 you counted Mimikyu's (November 9,
+2026): it came in for Greninja as you threw at 6:09, still on its switch turn (Greninja named at
+6:08.05), so no Shadow Claw in progress; 7 by its Shadow Sneak in a tie with your Clodsire, then 6 by
+the next. So a switch made in play costs its turn even when its name shows in the stop, a charged move
+ends a switch turn, your switch as your buttons come back doesn't stop the line-up rule, and there is
+no longer a wider line-up window after they block yours (Fearow's, the recording dropped). In 233921 (November 8, 2026) Stunfisk's
+Discharge and your Energy Ball were a CMP tie it won: your charged move followed with no play between
+(your buttons never came back; in 002722, where Greninja did sneak one after its Hydro Cannon, your
+fast move hit it first). So no sneak, and the Thunder Shock the clock had 71% done counts: 5 and 5,
+as you counted, not 4 and 6. The lead starts 0.2s after GO is
+first read, the only start after the countdown that fits every lead's count; when that first read
+caught GO already growing as it fades, it came late and the start is 0.5s earlier. Your HP bar
+doesn't date the lead: in 223847 (November 8, 2026) Stunfisk threw 6 Thunder Shocks, not 7. Dated from
+its first hit it got 7, since it waited about a second after its sixth before Mud Bomb. A Pokémon switching out in play has
+thrown a whole number of fast moves (the switch waits for the one in progress, like a charged move):
+your counts on November 9, 2026 put Marowak, Florges, Quagsire, Turtonator, Hydreigon and Altaria at
+their time on the field over their fast move, to the nearest, except a lead leaving the opening
+(v7's Azumarill, 1). The line-up rule (their charged move
+starts as a fast move finishes, so a late-shown restart may hide one more) no longer adds a fast move
+when ManGo saw play restart, from their move in progress hitting you: Quagsire's 6 in 212316,
+Galarian Stunfisk's 5 after its hit at 0:52.65 in 220440, and Altaria's 2 after its hit at 1:18.92
+in 155536, all counted by you. In 152828 (November 8, 2026) Marowak
+threw 4 Mud Slaps as the lead (GO was up from 0:43.9 but first read, fading, at 0:44.56), and Furret
+stayed on Sucker Punch. On November 8, 2026 you confirmed 144330:
 after a CMP tie ManGo keeps the fast move it counted in progress when its clock had it more than half
 done (Melmetal's second Thunder Shock, 98%), since both sides throw as their fast moves finish. You
 also confirmed all six in 142007; Mimikyu's 3 Shadow Claws before Shadow Sneak needed the HP-bar check to look a fast move
@@ -193,18 +274,19 @@ Shadow Greninja's three sneaks in 221337 (5:41, 9:24, and 2 Water Shurikens befo
 9:45) are counted from your fast moves. 155712's Azumarill (5 Bubbles: your 3 Dragon Breaths, then
 one finished and one sneaked at 2:13) and Corviknight (9 Sand Attacks between its Paybacks) are
 counted from their fast move in progress at your charged move hitting you, which shows when play
-restarted: up to 0.8s before your buttons came back. Known limits: testV2's Ninetales paused a turn
-between Embers (6 by hand, 7 by ManGo, which can't see breaks); 155536's Altaria had at least 50 for
-its fifth Sky Attack where ManGo counts 44; and 152828's Furret threw 8 Sucker Punches before its
-second Swift where ManGo counts 7 (you think the game lagged; nothing in the recording shows it), so
-its third Swift comes up short. Minimum-energy reconciliation keeps those visible as raw prediction
-failures.
+restarted: up to 0.8s before your buttons came back. A Pokémon sent in for one your charged move
+knocked out has nothing in progress, so its hit before your buttons is its first fast move, a whole
+move after the restart (155536's Altaria for the fainted Florges: 12 Dragon Breaths by its fifth Sky
+Attack). Known limits: testV2's Ninetales paused a turn between Embers (6 by hand, 7 by ManGo,
+which can't see breaks); and 152828's Furret threw 8 Sucker Punches before its second Swift where
+ManGo counts 7 (you think the game lagged; nothing in the recording shows it), so its third Swift
+comes up short. Minimum-energy reconciliation keeps those visible as raw prediction failures.
 
 v7 was enriched with verified HP pixels and your pokéball counts from its original video;
 its OCR lines, timestamps, and hand-count labels were preserved. To reproduce pixel enrichment:
 
     cd PvPCore
-    swift run screen-log "../Test Videos/v7.mov" --hp-all Tests/PvPCoreTests/Fixtures/gbl-battle-2026-10-20-v7.json > /tmp/v7-with-verified-hp.json
+    swift run screen-log "../Test Videos/v7.mp4" --hp-all Tests/PvPCoreTests/Fixtures/gbl-battle-2026-10-20-v7.json > /tmp/v7-with-verified-hp.json
 
 The verified sampler checks the player's rectangular HP-bar outline and follows its horizontal
 movement; it does not treat arbitrary colored sprite pixels as HP. Ambiguous or missing damage

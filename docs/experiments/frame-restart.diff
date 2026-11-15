@@ -1,0 +1,106 @@
+diff --git a/PvPCore/Sources/PvPCore/BattleAutomation.swift b/PvPCore/Sources/PvPCore/BattleAutomation.swift
+index 2532d56..a2bb870 100644
+--- a/PvPCore/Sources/PvPCore/BattleAutomation.swift
++++ b/PvPCore/Sources/PvPCore/BattleAutomation.swift
+@@ -52,6 +52,15 @@ public struct BattleAutomation: Sendable {
+     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
+     /// your buttons come back.)
+     public var faintResumeLead: TimeInterval = 0.25
++    /// After a charged move, when the frames show your buttons fading back in since the last
++    /// read, the battle resumed this long before the first of them (0.14-0.17s fit every hand
++    /// count; 012748: Stunfisk's 5 Thunder Shocks and a sneak after Weather Ball, not 4).
++    public var fadeInLead: TimeInterval = 0.15
++    /// Buttons this empty look dark as they fade in, like hidden ones: no fade-in to see
++    /// (221337: Nidoqueen's 7 Mud Slaps after Guzzlord blocked yours, not 6).
++    static let fadeInMinimumFill = 0.15
++    /// This stop's restart from the frames, if they showed it.
++    private var fadeInRestart: TimeInterval?
+     /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
+     /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
+     /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
+@@ -354,7 +363,14 @@ public struct BattleAutomation: Sendable {
+                 playerChangedSinceResume = false
+                 cadence = FastMoveCadence()
+                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
+-                var resume = max(t - lead, lastStopAt)
++                let readResume = max(t - lead, lastStopAt)
++                var resume = readResume
++                fadeInRestart = nil
++                if !Rules.off("fadeIn"), chargedMoveThisStop, let fade = buttonsFadeIn(at: t) {
++                    note("Your buttons began fading in at \(clockString(fade)): the battle resumed \(clockString(fade - fadeInLead))")
++                    resume = max(fade - fadeInLead, lastStopAt)
++                    fadeInRestart = resume
++                }
+                 restartSeen = false
+                 // Their fast move in progress at your charged move hit you before your buttons
+                 // came back, so play had restarted by then (155712: Azumarill's Bubble showed over
+@@ -375,7 +391,8 @@ public struct BattleAutomation: Sendable {
+                 readBeforeButtonsBack = previousReadTime
+                 lastResumeAfterYourChargedMove = playerChargedThisStop && !opponentThrewThisStop
+                 playerChargedThisStop = false
+-                if free { freeSwitchUntil = resume + Self.afterStopWindow }
++                // Timed from your buttons' read (or a hit), not their fade-in: it was fitted so.
++                if free { freeSwitchUntil = (restartSeen ? resume : readResume) + Self.afterStopWindow }
+                 if !awaitingGo {
+                     // Where the stop sits on the clock of play, now it can't move any more.
+                     let at = tracker.battleClock(at: resume)
+@@ -631,6 +648,18 @@ public struct BattleAutomation: Sendable {
+         summaryPendingLabels = nil
+     }
+ 
++    /// Where your buttons began fading back in: walking back from the read that names them, the
++    /// first of the frames showing any fill. Only between the last read and this one, from an
++    /// empty frame (fill flickers while they're hidden), and not for nearly empty buttons.
++    private func buttonsFadeIn(at t: TimeInterval) -> TimeInterval? {
++        let frames = fillSamples.filter { $0[0] <= t && $0[0] >= max(lastStopAt, previousReadTime) }
++        func filled(_ f: [Double]) -> Bool { max(f[1], f[2]) > 0.02 }
++        guard let last = frames.last, max(last[1], last[2]) > Self.fadeInMinimumFill else { return nil }
++        var i = frames.count - 1
++        while i > 0, filled(frames[i - 1]) { i -= 1 }
++        return i > 0 ? frames[i][0] : nil
++    }
++
+     private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {
+         YourFastMoves.landings(in: fillSamples.filter { $0[0] >= start && $0[0] <= end })
+     }
+@@ -849,6 +878,7 @@ public struct BattleAutomation: Sendable {
+         goShownAtHit = false
+         inProgressRuledOut = false
+         resumedAt = -.infinity
++        fadeInRestart = nil
+         freeSwitchUntil = -.infinity
+         leadStartChecked = false
+         leadStartedAt = nil
+@@ -898,8 +928,9 @@ public struct BattleAutomation: Sendable {
+         // move came after theirs, the switch is still timed from the restart but costs a
+         // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
+         // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
++        // The frames' restart, when they dated it (012748: Stunfisk for Ninetales after Weather Ball).
+         if !Rules.off("freeSwitchBackdate"), opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
+-            time = max(resumedAt, min(time, back))
++            time = max(resumedAt, min(time, fadeInRestart ?? back))
+         }
+         if tracker.active == nil {
+             // The lead: counting starts at "GO" (or when the countdown says it will be).
+diff --git a/PvPCore/Sources/battle-report/main.swift b/PvPCore/Sources/battle-report/main.swift
+index f2d6ed6..dc90355 100644
+--- a/PvPCore/Sources/battle-report/main.swift
++++ b/PvPCore/Sources/battle-report/main.swift
+@@ -46,6 +46,7 @@ let env = ProcessInfo.processInfo.environment
+ if let v = env["STOP_LEAD"].flatMap(Double.init) { automation.stopLead = v }
+ if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
+ if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
++if let v = env["FADE_IN_LEAD"].flatMap(Double.init) { automation.fadeInLead = v }
+ if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
+ if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
+ if let off = env["RULES_OFF"] { Rules.disabled = Set(off.split(separator: ",").map(String.init)) }
+@@ -123,6 +124,9 @@ out.append(String(format: "  The battle starts %.3fs after \"GO\" is first read.
+ out.append(String(format: "  Battle stops %.3fs before your buttons are first read as gone.", automation.stopLead))
+ out.append(String(format: "  Your charged move freezes the battle %.3fs before \"Get Ready!\" is read.", automation.playerFreezeBeforeCue))
+ out.append(String(format: "  Battle resumes %.3fs before your buttons are read again (%.3fs after a faint).", automation.resumeLead, automation.faintResumeLead))
++if !Rules.disabled.contains("fadeIn") {
++    out.append(String(format: "  After a charged move, %.3fs before they start fading in, if the frames show it since the last read.", automation.fadeInLead))
++}
+ out.append("")
+ out.append("OPPONENT FAST MOVES ASSUMED (PvPoke recommended)")
+ for p in tracker.team {

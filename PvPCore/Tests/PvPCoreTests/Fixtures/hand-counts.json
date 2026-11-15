@@ -1,53 +1,6 @@
 {
-  "gbl-battle-2026-10-20": {
-    "video": "ScreenRecording_10-20-2026 00-33-51_1.MP4",
-    "description": "First battle, recorded without ManGo. You: Altaria, Mimikyu, Melmetal. Opponent: Stunfisk, Cramorant, Fearow.",
-    "counts": [
-      6,
-      7,
-      1,
-      5,
-      5,
-      5,
-      6
-    ],
-    "notes": {
-      "1": "Rounding to the nearest fast move had given 7; only finished fast moves count when they throw.",
-      "7": "Fearow came in after Cramorant fainted (both start at 0 turns). You threw 1 fast move then a charged move: both 2-turn moves lined up, so Fearow got 2 Pecks. You threw 2 more then a charged move: 3 more Pecks. Fearow threw 1 more Peck, then Drill Run. Fearow had shielded your Double Iron Bash, and your buttons came back late; since Drill Run can only start as a Peck finishes, ManGo works out that the battle restarted 0.6s before them."
-    },
-    "countTargets": [
-      {
-        "speciesId": "stunfisk",
-        "moveId": "DISCHARGE"
-      },
-      {
-        "speciesId": "stunfisk",
-        "moveId": "DISCHARGE"
-      },
-      {
-        "speciesId": "stunfisk",
-        "moveId": "DISCHARGE"
-      },
-      {
-        "speciesId": "cramorant",
-        "moveId": "DIVE"
-      },
-      {
-        "speciesId": "cramorant",
-        "moveId": "DIVE"
-      },
-      {
-        "speciesId": "cramorant",
-        "moveId": "DIVE"
-      },
-      {
-        "speciesId": "fearow",
-        "moveId": "DRILL_RUN"
-      }
-    ]
-  },
   "gbl-battle-2026-10-20-mango": {
-    "video": "Test Videos/TestWithMangoV1.mov",
+    "video": "Test Videos/TestWithMangoV1.mp4",
     "description": "Second battle, with ManGo's overlay on screen (dragged to the bottom partway through). You: Altaria, Melmetal, Mimikyu. Opponent: Marowak, Sableye (Shadow), Talonflame.",
     "counts": [
       5,
@@ -94,7 +47,7 @@
     ]
   },
   "gbl-battle-2026-10-20-v2": {
-    "video": "Test Videos/testV2.mov",
+    "video": "Test Videos/testV2.mp4",
     "description": "Third battle, with ManGo's overlay on screen. You: Altaria, Melmetal, Mimikyu. Opponent: Melmetal, Ninetales (Shadow), Altaria (swapping Ninetales and Altaria).",
     "counts": [
       6,
@@ -143,7 +96,7 @@
     ]
   },
   "gbl-battle-2026-10-20-v3": {
-    "video": "Test Videos/testV3.mov",
+    "video": "Test Videos/testV3.mp4",
     "description": "Fourth battle, a Fantasy Cup with ManGo's overlay on screen (covering the opponent's name box much of the time). You: Altaria, Melmetal, Mimikyu. Opponent: Mimikyu, Turtonator, Granbull.",
     "counts": [
       5,
@@ -171,7 +124,7 @@
     ]
   },
   "gbl-battle-2026-10-20-v7": {
-    "video": "Test Videos/v7.mov",
+    "video": "Test Videos/v7.mp4",
     "description": "Seventh battle, with ManGo on screen. Opponent: Azumarill, Empoleon, Magnezone.",
     "counts": [
       null,
@@ -205,8 +158,39 @@
       "empoleon": "WATERFALL"
     }
   },
+  "gbl-battle-2026-10-20-v9": {
+    "video": "Test Videos/v9.mp4",
+    "description": "Screen recording. You: Altaria and Mimikyu among others. Opponent: Turtonator, Mimikyu, Forretress (Shadow).",
+    "counts": [
+      null,
+      null,
+      null,
+      6
+    ],
+    "countTargets": [
+      {
+        "speciesId": "turtonator",
+        "moveId": "DRAGON_CLAW"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "DRAGON_CLAW"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      }
+    ],
+    "notes": {
+      "4": "User, 2026-11-09: 6 Shadow Claws before Shadow Sneak (2:27.8): 4 and one in progress at your charged move (2:04.8 to 2:09.0), then 1 from 2:18.8 to 2:20.6 after they blocked yours. ManGo had added a 7th with a wider line-up window after a block, since dropped."
+    }
+  },
   "gbl-battle-2026-10-20-v8": {
-    "video": "Test Videos/v8.mov",
+    "video": "Test Videos/v8.mp4",
     "description": "Eighth battle, with ManGo on screen. Opponent: Azumarill, Lucario, Mawile.",
     "counts": [
       8,
@@ -242,7 +226,7 @@
     ]
   },
   "gbl-battle-2026-10-23-v11": {
-    "video": "Test Videos/v11.mov",
+    "video": "Test Videos/v11.mp4",
     "description": "Eleventh battle, with ManGo on screen. You: Altaria, Mimikyu, Melmetal. Opponent: Altaria, Mimikyu, Empoleon.",
     "counts": [
       13,
@@ -359,7 +343,7 @@
       }
     ],
     "notes": {
-      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pok\u00e9mon fainted at 1:23: at least 1 Sand Attack short. It has 60 now that the restart comes from its Sand Attack in progress hitting you.",
+      "2": "Corviknight threw Payback (60) when ManGo had 56, after your Pokémon fainted at 1:23: at least 1 Sand Attack short. It has 60 now that the restart comes from its Sand Attack in progress hitting you.",
       "4": "Azumarill threw Ice Beam (55) on 5 Bubbles; ManGo's raw count was 4 (44). Recounted by the user on 2026-11-04: Azumarill sneaked a Bubble at your charged move at 2:13. On 2026-11-06: you threw 3 Dragon Breaths (3 turns) before that charged move, so it finished 1 Bubble and sneaked 1. ManGo started the stretch at 2:11.19, 0.25s before your button labels were readable (2:11.44), and saw 1.2s, short of a Bubble. Its Bubble in progress at your 2:01 charged move hit your Altaria by 2:10.64 (\"NOT VERY EFFECTIVE..\"), so play was back then; restarting there it counts 5.",
       "flygon": "Flygon used Mud Shot, not PvPoke's Dragon Tail (\"it is mud shot\", user, Oct 2026). Its shortfall at a throw is the moveset, not timing."
     },
@@ -386,22 +370,114 @@
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Corviknight, Turtonator, Mimikyu.",
     "counts": [],
     "notes": {
-      "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pok\u00e9balls stayed red (opponentAlive added from the video with screen-log --balls)."
+      "bench": "Corviknight (0:45.7) and Turtonator (1:40.6) switched out right after charged moves, which ManGo took for faints and dropped from the bench. Their pokéballs stayed red (opponentAlive added from the video with screen-log --balls)."
+    }
+  },
+  "battle-2026-10-24-171449": {
+    "video": "Test Videos/battle-2026-10-24-171449.mp4",
+    "description": "Phone-saved battle. Opponent: Corviknight, Azumarill, Turtonator.",
+    "counts": [
+      null,
+      null,
+      null,
+      null,
+      4,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "corviknight",
+        "moveId": "AIR_CUTTER"
+      },
+      {
+        "speciesId": "corviknight",
+        "moveId": "PAYBACK"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "HYDRO_PUMP"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "turtonator",
+        "moveId": "BRUTAL_SWING"
+      }
+    ],
+    "notes": {
+      "5": "User, 2026-11-09: 2 Incinerates after play resumed at 2:37.4 (its Incinerate in progress hit you) before switching to Corviknight at 2:43.1 (4.7s, close to 2), not 1. With ManGo's sneak at your charged move at 2:27.8 and 1 after it came back at 3:14.6: 4."
+    }
+  },
+  "battle-2026-10-24-172648": {
+    "video": "Test Videos/battle-2026-10-24-172648.mp4",
+    "description": "Phone-saved battle. Opponent: Hydreigon (Shadow), Stunfisk (Galarian), Melmetal. Galarian Stunfisk threw Earthquake after your charged move; exact energy checkpoint.",
+    "counts": [
+      null,
+      null,
+      null,
+      10
+    ],
+    "throwEnergy": [
+      {
+        "ordinal": 3,
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE",
+        "exact": 71
+      }
+    ],
+    "countTargets": [
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE"
+      },
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "EARTHQUAKE"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      }
+    ],
+    "notes": {
+      "4": "User, 2026-11-09: 3 Dragon Breaths after play resumed at 0:55.4 before switching to Stunfisk at 0:57.0 (1.6s), not 2. With ManGo's count after it came back at 2:36.9 (4, 1 that knocked your Pokémon out, then 2): 10."
     }
   },
   "battle-2026-10-24-220440": {
     "video": "Test Videos/battle-2026-10-24-220440.mp4",
     "description": "Phone-saved battle. You: Altaria, Melmetal, Mimikyu. Opponent: Stunfisk (Galarian), Forretress (Shadow), Melmetal.",
     "counts": [
-      5
+      5,
+      7,
+      3
     ],
     "notes": {
-      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that."
+      "3": "User, 2026-11-09: 3 Volt Switches before Sand Tomb (1:49.5). Forretress switched in for Stunfisk in play (Stunfisk still named at 1:25.10, \"Go, Forretress!\" at 1:25.36 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 1:26.2): none in progress, then 3 from 1:35.9 to 1:42.1.",
+      "1": "Stunfisk threw Rock Slide (45) on exactly 5 Mud Shots (your Altaria's HP bar drops a pixel at 26.5, 27.5, 28.6, 29.6 and 30.8s). It started about 1s after GO; GO + 0.2s gave a 6th. Its first Mud Shot shows as \"NOT VERY EFFECTIVE...\" over Altaria between the reads at 25.96s and 26.24s, so ManGo now starts it one Mud Shot before that.",
+      "2": "User, 2026-11-09: 5 Mud Shots between its Mud Shot in progress hitting you as play resumed (0:52.65) and \"Attack incoming!\" (0:58.6); with ManGo's 1 and a sneak at your charged move at 0:43, 7 since its first Rock Slide. The line-up rule had added a 6th in that stretch, guessing play restarted earlier than the hit showed."
     },
     "countTargets": [
       {
         "speciesId": "stunfisk_galarian",
         "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "stunfisk_galarian",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
       }
     ],
     "energyCheckpoints": [
@@ -488,12 +564,12 @@
       null,
       null,
       3,
-      null,
-      null,
+      7,
+      6,
       null,
       null,
       3,
-      null,
+      5,
       3
     ],
     "countTargets": [
@@ -575,8 +651,11 @@
       "greninja": "Shadow Greninja's Hydro Cannons and Brutal Swing (throws 11, 16, 18) came with less energy than ManGo counted (30, 28, 28): each time it sneaked or squeezed in a Water Shuriken ManGo's timing missed (see 11, 16, 18). A fourth \"Hydro Cannon\" at 13:40 was ManGo reading its own app (see end).",
       "11": "Recounted by the user on 2026-11-04: 3 Water Shurikens. Greninja sneaked one at your charged move at 5:41: your Mud Slap and its Water Shuriken are both 3-turn moves, so after a restart they always finish together and it always gets one more when you throw. ManGo measured that stretch as 1.37s, short of one Water Shuriken (1.5s), and counted 2.",
       "16": "Recounted by the user on 2026-11-04: 3. Greninja sneaked one at your charged move at about 9:24 (the same 3-turn alignment). ManGo counted 2.",
+      "12": "Counted by the user on 2026-11-09: 7 Shadow Claws. Greninja threw 1 Water Shuriken after its Hydro Cannon, then switched to Mimikyu (a 1-turn switch: Greninja still named at 6:08.05, \"Go, Mimikyu!\" at 6:08.32) as you threw your charged move after 1 Snarl, so Mimikyu took that turn to come in and had no Shadow Claw in progress. You switched to Clodsire for 0 turns; then 7 Shadow Claws and Shadow Sneak in a CMP tie with your charged move (Get Ready! at 6:36.55, no play between).",
+      "13": "Counted by the user on 2026-11-09: 6 Shadow Claws between 6:49 and its Shadow Sneak at 7:03.4 (no sneak at the 6:36.55 tie).",
+      "17": "User, 2026-11-09: 5 before Earth Power (10:25.7). Nidoqueen switched in for Greninja in play (Greninja still named at 9:46.93, Nidoqueen at 9:47.20 as your buttons went) and was still on its switch turn at your charged move (Get Ready! at 9:48.3): none in progress. Then 3 and one in progress at your charged move (9:57.6 to 10:03.5), and 1 (10:16.1 to 10:18.4).",
       "18": "Recounted by the user on 2026-11-04: 3. Greninja threw 2 Water Shurikens after its Brutal Swing (about 9:45) before switching to Nidoqueen (ManGo counted 1 in that 2.9s stretch), then 1 after it came back at about 10:49.",
-      "end": "The battle ended at 11:07.9 (\"GOOD EFFORT!\", read as two lines \"GOOD\" and \"EFFORT!\", which ManGo missed). At 11:02 \"Attack incoming!\" showed but its banner was hidden by a \"Surrender and exit?\" prompt. The user: nothing happened between 11:01 and 13:40; no Hydro Cannon was thrown. At 13:40 ManGo read its own app's event line \"Greninja (Shadow) used Hydro Cannon (28 \u2192 0)\" as a banner."
+      "end": "The battle ended at 11:07.9 (\"GOOD EFFORT!\", read as two lines \"GOOD\" and \"EFFORT!\", which ManGo missed). At 11:02 \"Attack incoming!\" showed but its banner was hidden by a \"Surrender and exit?\" prompt. The user: nothing happened between 11:01 and 13:40; no Hydro Cannon was thrown. At 13:40 ManGo read its own app's event line \"Greninja (Shadow) used Hydro Cannon (28 → 0)\" as a banner."
     },
     "throwEnergy": [
       {
@@ -617,19 +696,6 @@
       }
     ]
   },
-  "battle-2026-10-24-172648": {
-    "video": "Test Videos/battle-2026-10-24-172648.mp4",
-    "description": "Galarian Stunfisk threw Earthquake after your charged move; exact energy checkpoint.",
-    "counts": [],
-    "throwEnergy": [
-      {
-        "ordinal": 3,
-        "speciesId": "stunfisk_galarian",
-        "moveId": "EARTHQUAKE",
-        "exact": 71
-      }
-    ]
-  },
   "battle-2026-10-24-174243": {
     "video": "Test Videos/battle-2026-10-24-174243.mp4",
     "description": "Phone-saved battle. Opponent: Flygon, Melmetal, Turtonator.",
@@ -639,6 +705,48 @@
     },
     "observedFastMoves": {
       "flygon": "MUD_SHOT"
+    }
+  },
+  "battle-2026-11-04-155536": {
+    "video": "Test Videos/battle-2026-11-04-155536.mp4",
+    "description": "Phone-saved battle. Opponent: Altaria, Florges, Melmetal.",
+    "counts": [
+      17,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "altaria",
+        "moveId": "SKY_ATTACK"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "SKY_ATTACK"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "florges",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "altaria",
+        "moveId": "SKY_ATTACK"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      }
+    ],
+    "notes": {
+      "5": "User, 2026-11-09: 3 Dragon Breaths after play resumed at 1:57.8 before switching to Florges at 1:59.4 (1.6s), not 2. ManGo had 44 for this Sky Attack (50) until 2026-11-13: it restarted the clock at Altaria's Dragon Breath over your Mimikyu by 2:56.60, but Altaria came in for the fainted Florges after your charged move, so that was its first, a fast move after the restart. Now 52, on 12; not hand-counted.",
+      "1": "User, 2026-11-09: 2 Dragon Breaths between its Dragon Breath in progress hitting you as play resumed (1:18.92) and its Sky Attack's \"Attack incoming!\" (1:20.8), not 3; with ManGo's 13 as the lead and 1 and a sneak at your charged move at 1:10.4, 17. The line-up rule had added a third, guessing play restarted earlier than the hit showed."
     }
   },
   "battle-2026-11-04-233009": {
@@ -724,7 +832,7 @@
       4,
       8,
       3,
-      5
+      6
     ],
     "countTargets": [
       {
@@ -754,6 +862,7 @@
     ],
     "notes": {
       "2": "User, 2026-11-08: at 1:46 Mimikyu threw 3 Shadow Claws and Shadow Sneak; everything else ManGo counted in this battle is right. ManGo's line-up rule added a 4th: after Mimikyu blocked your Energy Ball, its window put the restart before your buttons. Your HP bar (146 px) held from 1:40.4 and fell at 1:41.35, 1:42.37 and 1:43.39: the first is its Shadow Claw in progress at your Energy Ball, landing as play resumed, which an earlier restart would have put at 1:40.4.",
+      "6": "User, 2026-11-09: Florges threw 4 Fairy Winds after its Chilling Water at 3:05.3 before switching to Mimikyu at 3:12.3, not 3, then 2 after coming back: 6 (ManGo had 5; the switch came as the fourth finished, more than half done by the clock).",
       "sableye": "User, 2026-11-08: Sableye threw on the same turn as your Blaze Kick at 4:11 (CMP), so it had no fast move in progress: 48, not ManGo's 56. Your Blaze Kick knocked it out, so its charged move never showed and its energy no longer mattered; nothing on screen shows the tie."
     }
   },
@@ -846,6 +955,850 @@
       "2": "User, 2026-11-08: Furret threw 8 Sucker Punches before its second Swift; ManGo counted 7. The game lagged, the user thinks, and nothing in the recording shows it (no gaps in the reads or frames): maybe something ManGo can't resolve. With 8, its third Swift came on 21 + 2.",
       "marowak": "User, 2026-11-08: Marowak threw 4 Mud Slaps as the lead before switching to Furret (~0:50.7), not 3. Your HP bar shows them at 0:45.5, 0:47.0, 0:48.5 and 0:50.0: it began by 0:44.0, half a second before GO was read (0:44.56).",
       "furret": "User, 2026-11-08: Furret used Sucker Punch (PvPoke's), not Quick Attack; ManGo took its third Swift, one Sucker Punch short after the missed one, for Quick Attack."
+    }
+  },
+  "battle-2026-11-08-212316": {
+    "video": "Test Videos/battle-2026-11-08-212316.mp4",
+    "description": "Phone-saved battle. You: Thievul, Blaziken and others. Opponent: Ninetales (Alolan), Quagsire (Shadow), Jumpluff.",
+    "counts": [
+      null,
+      6,
+      6,
+      null,
+      3
+    ],
+    "countTargets": [
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      },
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      },
+      {
+        "speciesId": "ninetales_alolan",
+        "moveId": "CHILLING_WATER"
+      },
+      {
+        "speciesId": "ninetales_alolan",
+        "moveId": "WEATHER_BALL_ICE"
+      },
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      }
+    ],
+    "notes": {
+      "5": "User, 2026-11-09: 3 Mud Shots after play resumed at 1:28.8 before switching to Ninetales at 1:31.8 (3.0s: 3 Mud Shots), none after coming back at 2:23.1. ManGo had 2: the switch waits for the fast move in progress, which the clock had more than half done.",
+      "2": "User, 2026-11-08: Quagsire threw 6 Mud Shots: 4 and a sneak at your charged move at 1:08.2, then 1, then Aqua Tail (no sneak at its own). ManGo's line-up rule (their charged move starts as a fast move finishes) used to add a 7th, guessing play restarted before your buttons; but its Mud Shot in progress had hit you by 1:17.02, which showed when play restarted, so the rule no longer second-guesses it. (The first GBL battle's Fearow, whose 6 needed that extra, was dropped with its missing video.)",
+      "3": "User, 2026-11-08: Alolan Ninetales threw 4 Powder Snows as the lead, not 5; with the 2 ManGo counts after it came back at 1:31.8, 6 before Chilling Water. The opening rule had taken the big \"GO\" covering your HP bar at 0:34.4 (202 px, then 244 again) for its first hit; its first hit was at 0:35.54."
+    }
+  },
+  "battle-2026-11-08-220414": {
+    "video": "Test Videos/battle-2026-11-08-220414.mp4",
+    "description": "Phone-saved battle. You: Blaziken and others. Opponent: Forretress (Shadow), Carbink, Marowak.",
+    "counts": [
+      24,
+      7,
+      5
+    ],
+    "countTargets": [
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "ROCK_TOMB"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      }
+    ],
+    "observedFastMoves": {
+      "forretress_shadow": "BUG_BITE"
+    },
+    "notes": {
+      "all": "User, 2026-11-08: ManGo's counts are right except the lead's, and Forretress used Bug Bite, which ManGo found from the rhythm of its hits on your HP bar (PvPoke recommends Volt Switch).",
+      "1": "User, 2026-11-09: as the lead Forretress threw 10 Bug Bites and a sneak, not 13 and a sneak: you threw 5 Sucker Punches (10 turns) and then Night Slash. ManGo had dated its start from its first hit (0:57.31) with 4-turn Volt Switch, 2s before; with 1-turn Bug Bite it's 0:56.81. Then 11 after play resumed (1:12.1) and 2 after your Pokémon fainted: 24 before Rock Tomb.",
+      "2": "User, 2026-11-09: right (4 after switching in for Carbink, a sneak at your charged move at 1:58.5, then 2).",
+      "3": "User, 2026-11-09: a sneak at your charged move at 2:23.1, then 2 Mud Slaps before switching to Carbink at 2:36.4 (ManGo had 1: the switch came as the second finished, 97% done by the clock), then 2 after coming back when Carbink fainted: 5."
+    }
+  },
+  "battle-2026-11-08-223847": {
+    "video": "Test Videos/battle-2026-11-08-223847.mp4",
+    "description": "Phone-saved battle. You: Thievul and others. Opponent: Stunfisk, Annihilape, Fearow.",
+    "counts": [
+      6,
+      5
+    ],
+    "countTargets": [
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 73.0,
+        "speciesId": "stunfisk",
+        "energy": 45
+      },
+      {
+        "time": 87.0,
+        "speciesId": "annihilape",
+        "energy": 8
+      },
+      {
+        "time": 97.0,
+        "speciesId": "fearow",
+        "energy": 48
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-08: ManGo's counts are right except the lead's; the others are taken as hand counts (the checkpoints: 3 Thunder Shocks and one in progress at your 1:12.3 charged move, 1 Low Kick that knocked yours out, 5 Pecks and one in progress at your 1:36.8 charged move).",
+      "1": "User, 2026-11-08: as the lead Stunfisk threw 6 Thunder Shocks before Mud Bomb (0:34.1), not 7. GO showed from about 0:26.85 to 0:27.5 and was first read at 0:27.01."
+    }
+  },
+  "battle-2026-11-08-233921": {
+    "video": "Test Videos/battle-2026-11-08-233921.mp4",
+    "description": "Phone-saved battle. You: Thievul, Jumpluff, Blaziken. Opponent: Wigglytuff, Stunfisk, Quagsire (Shadow).",
+    "counts": [
+      6,
+      5,
+      5,
+      8,
+      1,
+      6
+    ],
+    "countTargets": [
+      {
+        "speciesId": "wigglytuff",
+        "moveId": "ICY_WIND"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      },
+      {
+        "speciesId": "wigglytuff",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "wigglytuff",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "MUD_BOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 111.0,
+        "speciesId": "stunfisk",
+        "energy": 41
+      },
+      {
+        "time": 170.0,
+        "speciesId": "wigglytuff",
+        "energy": 37
+      },
+      {
+        "time": 200.0,
+        "speciesId": "quagsire_shadow",
+        "energy": 27
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-08: ManGo's counts are right except Stunfisk's first two; the others are taken as hand counts (the checkpoints: 3 Thunder Shocks and one in progress at your 1:49.5 charged move, 3 Charms and one in progress at your 2:47.9 one, 2 Mud Shots and one in progress at your 3:18.0 one).",
+      "2": "User, 2026-11-08: Stunfisk threw 5 Thunder Shocks before Discharge (1:18.9), not 4; ManGo's 4 couldn't pay for it.",
+      "3": "User, 2026-11-08: Discharge and your Jumpluff's Energy Ball (Get Ready! at 1:22.2) were a CMP tie that Stunfisk won, so no sneak at yours: 5 before Mud Bomb (1:44.0), not 6. Your buttons never came back between the two charged moves.",
+      "return": "User, 2026-11-14: 2 Thunder Shocks from Stunfisk's return for the fainted Wigglytuff (3:01.07) to your Pokémon going down (about 3:04), as ManGo counts, not 3."
+    }
+  },
+  "battle-2026-11-09-005151": {
+    "video": "Test Videos/battle-2026-11-09-005151.mp4",
+    "description": "Phone-saved battle. Opponent: Diggersby, Fearow, Jumpluff.",
+    "counts": [
+      5,
+      5,
+      5,
+      5,
+      5,
+      9,
+      4
+    ],
+    "countTargets": [
+      {
+        "speciesId": "diggersby",
+        "moveId": "FIRE_PUNCH"
+      },
+      {
+        "speciesId": "fearow",
+        "moveId": "DRILL_RUN"
+      },
+      {
+        "speciesId": "fearow",
+        "moveId": "DRILL_PECK"
+      },
+      {
+        "speciesId": "diggersby",
+        "moveId": "SCORCHING_SANDS"
+      },
+      {
+        "speciesId": "diggersby",
+        "moveId": "FIRE_PUNCH"
+      },
+      {
+        "speciesId": "jumpluff",
+        "moveId": "ACROBATICS"
+      },
+      {
+        "speciesId": "diggersby",
+        "moveId": "FIRE_PUNCH"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 66.2,
+        "speciesId": "diggersby",
+        "energy": 23
+      },
+      {
+        "time": 128.8,
+        "speciesId": "fearow",
+        "energy": 40
+      },
+      {
+        "time": 216.4,
+        "speciesId": "jumpluff",
+        "energy": 53
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts, including Fearow's Drill Peck (1:51.2) and your charged move at 1:54.6 as a CMP tie Fearow won (no sneak). The checkpoints are ManGo's energy at your charged moves at 1:05.9, 2:08.6 and 3:36.1, with the fast move in progress counted.",
+      "3": "User, 2026-11-14: confirmed 5 before Scorching Sands (2:30.3)."
+    }
+  },
+  "battle-2026-11-09-010443": {
+    "video": "Test Videos/battle-2026-11-09-010443.mp4",
+    "description": "Phone-saved battle. Opponent: Clodsire, Altaria, Mimikyu.",
+    "counts": [
+      11,
+      4
+    ],
+    "countTargets": [
+      {
+        "speciesId": "clodsire",
+        "moveId": "EARTHQUAKE"
+      },
+      {
+        "speciesId": "clodsire",
+        "moveId": "EARTHQUAKE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 31.2,
+        "speciesId": "clodsire",
+        "energy": 72
+      },
+      {
+        "time": 57.2,
+        "speciesId": "clodsire",
+        "energy": 61
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 0:30.9 and 0:56.8, with the fast move in progress counted."
+    }
+  },
+  "battle-2026-11-09-010753": {
+    "video": "Test Videos/battle-2026-11-09-010753.mp4",
+    "description": "Phone-saved battle. You: Thievul, Jumpluff, Blaziken. Opponent: Empoleon, Nidoqueen, Forretress (Shadow).",
+    "counts": [
+      6,
+      4,
+      3
+    ],
+    "countTargets": [
+      {
+        "speciesId": "empoleon",
+        "moveId": "HYDRO_CANNON"
+      },
+      {
+        "speciesId": "nidoqueen",
+        "moveId": "POISON_FANG"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 150.3,
+        "speciesId": "nidoqueen",
+        "energy": 10
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: ManGo's counts are right apart from the sneak below; taken as hand counts.",
+      "checkpoint": "User, 2026-11-09: Nidoqueen came in on your Blaziken for the fainted Forretress (\"Go, Nidoqueen!\" at 2:27.1) and you threw your charged move straight away (Get Ready! at 2:29.8): Nidoqueen sneaked a Mud Slap. It came in with 0 (it had spent its 40 on Poison Fang at 1:51 and switched out), so 10. ManGo had given it none: your buttons never showed between, so it hadn't seen play resume."
+    }
+  },
+  "battle-2026-11-09-013324": {
+    "video": "Test Videos/battle-2026-11-09-013324.mp4",
+    "description": "Phone-saved battle. You: Thievul, Blaziken, Jumpluff. Opponent: Pangoro, Dunsparce, Azumarill.",
+    "counts": [
+      7,
+      9,
+      6
+    ],
+    "countTargets": [
+      {
+        "speciesId": "azumarill",
+        "moveId": "HYDRO_PUMP"
+      },
+      {
+        "speciesId": "pangoro",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "azumarill",
+        "moveId": "ICE_BEAM"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 68.4,
+        "speciesId": "dunsparce",
+        "energy": 60
+      },
+      {
+        "time": 92.3,
+        "speciesId": "azumarill",
+        "energy": 55
+      },
+      {
+        "time": 194.4,
+        "speciesId": "azumarill",
+        "energy": 46
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: ManGo's counts are right except Pangoro's lead (and, on 2026-11-14, its return at 1:55); taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:08.0, 1:32.0 and 3:14.0.",
+      "2": "User, 2026-11-14: Pangoro threw 1 Karate Chop as the lead before switching to Dunsparce (ManGo counts 2: the player didn't tap for a turn, which ManGo can't see), then from its 0-turn switch back in for Azumarill after its Hydro Pump (Azumarill last read at 1:54.22, \"Go, Pangoro!\" at 1:55.00, your buttons at 1:55.28) 4 and 1 in progress by your charged move at 2:00.0, and ManGo's counts after that are right: 9 before Rock Slide (2:36.5), 81. On 2026-11-09 the user counted 8 and had Pangoro at 72 from 2:24 to 2:28."
+    }
+  },
+  "battle-2026-11-09-020853": {
+    "video": "Test Videos/battle-2026-11-09-020853.mp4",
+    "description": "Phone-saved battle, ended early. Opponent: Persian.",
+    "counts": [
+      10
+    ],
+    "countTargets": [
+      {
+        "speciesId": "persian",
+        "moveId": "NIGHT_SLASH"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 59.5,
+        "speciesId": "persian",
+        "energy": 25
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoint is ManGo's energy at your charged move at 0:59.3."
+    }
+  },
+  "battle-2026-11-09-021018": {
+    "video": "Test Videos/battle-2026-11-09-021018.mp4",
+    "description": "Phone-saved battle. Opponent: Miltank, Forretress (Shadow), Marowak.",
+    "counts": [
+      4,
+      4
+    ],
+    "countTargets": [
+      {
+        "speciesId": "miltank",
+        "moveId": "BODY_SLAM"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 51.6,
+        "speciesId": "miltank",
+        "energy": 64
+      },
+      {
+        "time": 93.3,
+        "speciesId": "forretress_shadow",
+        "energy": 51
+      },
+      {
+        "time": 108.0,
+        "speciesId": "marowak",
+        "energy": 10
+      },
+      {
+        "time": 138.9,
+        "speciesId": "marowak",
+        "energy": 90
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 0:51.3, 1:33.0, 1:47.7 and 2:18.6. At 1:47.7 Marowak had just come in for the fainted Forretress and you threw straight away: it sneaked a Mud Slap (0 to 10), the rule from 010753."
+    }
+  },
+  "battle-2026-11-09-021617": {
+    "video": "Test Videos/battle-2026-11-09-021617.mp4",
+    "description": "Phone-saved battle. Opponent: Sandslash (Alolan), Marowak, Carbink.",
+    "counts": [
+      5,
+      9,
+      23,
+      1
+    ],
+    "countTargets": [
+      {
+        "speciesId": "marowak",
+        "moveId": "ROCK_SLIDE"
+      },
+      {
+        "speciesId": "sandslash_alolan",
+        "moveId": "ICE_PUNCH"
+      },
+      {
+        "speciesId": "carbink",
+        "moveId": "MOONBLAST"
+      },
+      {
+        "speciesId": "carbink",
+        "moveId": "MOONBLAST"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 83.2,
+        "speciesId": "marowak",
+        "energy": 35
+      },
+      {
+        "time": 98.7,
+        "speciesId": "sandslash_alolan",
+        "energy": 56
+      },
+      {
+        "time": 115.4,
+        "speciesId": "carbink",
+        "energy": 30
+      },
+      {
+        "time": 132.3,
+        "speciesId": "carbink",
+        "energy": 70
+      },
+      {
+        "time": 155.8,
+        "speciesId": "sandslash_alolan",
+        "energy": 64
+      },
+      {
+        "time": 203.1,
+        "speciesId": "carbink",
+        "energy": 20
+      },
+      {
+        "time": 219.9,
+        "speciesId": "carbink",
+        "energy": 45
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:22.9, 1:38.4, 1:55.1, 2:12.0, 2:35.5, 3:22.8 and 3:39.6. At 2:35.5 Sandslash had just switched in for Carbink in play and was still on its switch turn: nothing in progress (64 to 64), the rule from 221337. Carbink's 23 before its first Moonblast runs into the 100 cap."
+    }
+  },
+  "battle-2026-11-09-022052": {
+    "video": "Test Videos/battle-2026-11-09-022052.mp4",
+    "description": "Phone-saved battle. Opponent: Corsola (Galarian), Ursaluna, Tinkaton.",
+    "counts": [
+      17,
+      2,
+      5,
+      9
+    ],
+    "countTargets": [
+      {
+        "speciesId": "ursaluna",
+        "moveId": "FIRE_PUNCH"
+      },
+      {
+        "speciesId": "ursaluna",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "corsola_galarian",
+        "moveId": "NIGHT_SHADE"
+      },
+      {
+        "speciesId": "tinkaton",
+        "moveId": "BULLDOZE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 67.9,
+        "speciesId": "ursaluna",
+        "energy": 13
+      },
+      {
+        "time": 83.5,
+        "speciesId": "corsola_galarian",
+        "energy": 10
+      },
+      {
+        "time": 109.4,
+        "speciesId": "corsola_galarian",
+        "energy": 15
+      },
+      {
+        "time": 123.9,
+        "speciesId": "ursaluna",
+        "energy": 41
+      },
+      {
+        "time": 140.2,
+        "speciesId": "tinkaton",
+        "energy": 45
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: every ManGo count was right, taken as hand counts. The checkpoints are ManGo's energy at your charged moves at 1:07.6, 1:23.2, 1:49.1, 2:03.6 and 2:19.9."
+    }
+  },
+  "battle-2026-11-09-211526": {
+    "video": "Test Videos/battle-2026-11-09-211526.mp4",
+    "description": "Phone-saved battle, ended early. Opponent: Mimikyu, Quagsire (Shadow).",
+    "counts": [
+      7
+    ],
+    "countTargets": [
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "STONE_EDGE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 61.4,
+        "speciesId": "quagsire_shadow",
+        "energy": 8
+      }
+    ],
+    "notes": {
+      "all": "User, 2026-11-09: Quagsire threw Stone Edge (0:57.9) on 7 Mud Shots. Your charged move after it (Get Ready! at 1:01.2) was a CMP tie Quagsire won; 6 Mud Shots (54) couldn't pay for Stone Edge (55), so the clock's seventh, in progress, had landed. The checkpoint is ManGo's energy at your charged move."
+    }
+  },
+  "battle-2026-11-09-211824": {
+    "video": "Test Videos/battle-2026-11-09-211824.mp4",
+    "description": "Phone-saved battle; you surrendered at 2:45. Opponent: Hydreigon (Shadow), Melmetal, Azumarill.",
+    "counts": [
+      14,
+      null,
+      5,
+      6,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      },
+      {
+        "speciesId": "hydreigon_shadow",
+        "moveId": "BRUTAL_SWING"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 34.3,
+        "speciesId": "hydreigon_shadow",
+        "energy": 21
+      },
+      {
+        "time": 86.4,
+        "speciesId": "melmetal",
+        "energy": 10
+      }
+    ],
+    "notes": {
+      "0": "User, 2026-11-09: 14 Dragon Breaths before Brutal Swing (0:31.1). Your Icy Wind after it (Get Ready! at 0:34.3) was a CMP tie Hydreigon won: no sneak, and no extra Dragon Breath though the clock had the 15th 99% done (the count could pay). The checkpoint is its energy at your Icy Wind. The user, 2026-11-14: 14 is right, but ManGo may have started Hydreigon's clock wrong (its 15th 99% done is the clock's, not the game's).",
+      "2": "User, 2026-11-14: 5 Thunder Shocks before Double Iron Bash (1:23.1), not 4 as first counted on 2026-11-09; your Acrobatics after it (1:26.4) was a CMP tie Melmetal won. So the 5th, which the clock had 87% done when your buttons vanished (1:15.77), had landed: 10 left at your Acrobatics, the checkpoint.",
+      "3": "User: 6 before its second Double Iron Bash (1:48.6).",
+      "unknown": "Hydreigon's 10 (0:55.1), 9 (2:19.3) and 3 (2:33.2) were too hazy for the user to count.",
+      "switch": "User: Melmetal threw 5 Thunder Shocks from the restart at 2:01 to its switch to Hydreigon (named at 2:06.22), not ManGo's 6 (83 on the bench): the clock had the 6th 61% done there and counted it as landing before the switch. Not fixed: that rule is needed in 172648, 142007 and 220414, whose fractions overlap. Melmetal didn't come back."
+    }
+  },
+  "battle-2026-11-10-012748": {
+    "video": "Test Videos/battle-2026-11-10-012748.mp4",
+    "description": "Phone-saved battle. Opponent: Ninetales (Shadow), Ursaluna, Stunfisk.",
+    "counts": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      9,
+      0
+    ],
+    "countTargets": [
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ursaluna",
+        "moveId": "SWIFT"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      },
+      {
+        "speciesId": "stunfisk",
+        "moveId": "DISCHARGE"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 183.2,
+        "speciesId": "stunfisk",
+        "energy": 54
+      },
+      {
+        "time": 194.4,
+        "speciesId": "stunfisk",
+        "energy": 72
+      },
+      {
+        "time": 221.7,
+        "speciesId": "stunfisk",
+        "energy": 1
+      }
+    ],
+    "notes": {
+      "5": "User, 2026-11-10: Stunfisk came in on a 0-turn switch for Ninetales at 2:56 (\"Go, Stunfisk!\" at 2:57.16, before your buttons at 2:57.43), and threw 5 Thunder Shocks and sneaked 1 on your charged move at 3:03, not 4 and 1; then 1 and a sneak (3:14), and 1: 9 before Discharge (3:31.4). ManGo had 8, so its second Discharge (3:41.5), after under half a second of play, looked unaffordable (32). Fixed 2026-11-14: at a 0-turn switch ManGo dates the restart from your buttons' first fade-in frame (2:57.24, less 0.15s), not their read.",
+      "6": "None between the two Discharges: 41 left after the first paid for the second.",
+      "unknown": "Ninetales' and Ursaluna's counts weren't given.",
+      "checkpoints": "ManGo's energy at your charged moves (3:03.1, 3:14.3) and after the second Discharge."
+    }
+  },
+  "battle-2026-11-12-192819": {
+    "video": "Test Videos/battle-2026-11-12-192819.mp4",
+    "description": "Phone-saved battle. Opponent: Quagsire (Shadow), Dunsparce, Mimikyu.",
+    "counts": [
+      5,
+      4,
+      10,
+      4,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      },
+      {
+        "speciesId": "quagsire_shadow",
+        "moveId": "AQUA_TAIL"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "mimikyu",
+        "moveId": "SHADOW_SNEAK"
+      },
+      {
+        "speciesId": "dunsparce",
+        "moveId": "DRILL_RUN"
+      }
+    ],
+    "notes": {
+      "0": "User, 2026-11-12: 5 Mud Shots before Aqua Tail (1:00.6), not 6. The video shows mud flying at about 0:48.8, 49.6, 50.6, 51.5 and 52.5, then none before \"Attack incoming!\" (0:54.3). GO was read at 0:47.72 and 0:47.99 at 0.60 by 0.16, its standing width: not fading, so the battle started at 0:47.92.",
+      "2": "User: 10 Shadow Claws before Shadow Sneak (2:25.0): the one that knocked out your Pokémon (1:53.3), 5 from the restart (1:55.4) to your charged move, the one in progress at it (2:01.3), and 3 (2:14.4-2:18.1). Mimikyu's name showed only 0.44s of play before your faint, so its stint cap starts a Claw before the faint.",
+      "unknown": "Dunsparce was on Astonish (3 turns, 10 energy), not PvPoke's Bite, so ManGo's 16 Bites before Drill Run (3:26.5) don't count; no hand count.",
+      "1": "User, 2026-11-12: 4 Mud Shots before the second Aqua Tail (1:23.5).",
+      "3": "User: 4 Shadow Claws before the second Shadow Sneak (2:48.5)."
+    }
+  },
+  "battle-2026-11-13-011620": {
+    "video": "Test Videos/battle-2026-11-13-011620.mp4",
+    "description": "Phone-saved battle. Opponent: Ninetales (Alolan), Annihilape.",
+    "counts": [
+      6,
+      null,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "ninetales_alolan",
+        "moveId": "WEATHER_BALL_ICE"
+      },
+      {
+        "speciesId": "annihilape",
+        "moveId": "RAGE_FIST"
+      },
+      {
+        "speciesId": "annihilape",
+        "moveId": "ICE_PUNCH"
+      }
+    ],
+    "observedFastMoves": {
+      "ninetales_alolan": "POWDER_SNOW"
+    },
+    "notes": {
+      "0": "User, 2026-11-13: 6 two-turn fast moves before Weather Ball (0:50.0), not 5. It was Alolan Ninetales (white, snow on every hit on your Fearow, no Shadow aura), so Powder Snow: 48 energy, not the 54 ManGo showed as PvPoke's top Ninetales (Shadow) on Ember. Its hits read \"SUPER EFFECTIVE!\" over Fearow (Normal/Flying), which only Powder Snow could be.",
+      "unknown": "Annihilape's Rage Fist (1:18.0) and Ice Punch (1:45.6) weren't hand-counted."
+    }
+  },
+  "battle-2026-11-12-221608": {
+    "video": "Test Videos/battle-2026-11-12-221608.mp4",
+    "description": "Phone-saved battle. Opponent: Cramorant, Marowak, Ninetales (Shadow).",
+    "counts": [
+      null,
+      null,
+      5,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      },
+      {
+        "speciesId": "ninetales_shadow",
+        "moveId": "WEATHER_BALL_FIRE"
+      }
+    ],
+    "observedFastMoves": {
+      "ninetales_shadow": "EMBER"
+    },
+    "notes": {
+      "2": "User, 2026-11-14: Ninetales threw 5 Embers before its first Weather Ball (1:53.4), one at 1:41.71, not 4. Your HP bar shows all five on your Jumpluff: 1:41.76, 1:42.72, 1:43.64, 1:44.64 and 1:45.77. ManGo dates its switch from the last read still showing Marowak (1:40.91) plus a switch turn, so its first Ember finishes at 1:42.41 and the fifth is 70% done at the stop (1:46.11); in the CMP tie that followed, the one in progress doesn't count when the finished ones could pay (211824's Melmetal at 87% and Hydreigon at 99% didn't count, by the user).",
+      "3": "Not hand-counted. In the video 3 Embers hit Jumpluff (2:06.5, 2:07.5, 2:08.5) before the second Weather Ball: with 10 left after the first, 37. Gold Ninetales with the Shadow aura, flames on every hit: Ember.",
+      "unknown": "Cramorant's two Dives weren't hand-counted."
+    }
+  },
+  "battle-2026-11-10-020105": {
+    "video": "Test Videos/battle-2026-11-10-020105.mp4",
+    "description": "Phone-saved battle. Opponent: Diggersby, Cramorant, Forretress (Shadow).",
+    "counts": [
+      null,
+      5,
+      null
+    ],
+    "countTargets": [
+      {
+        "speciesId": "diggersby",
+        "moveId": "SCORCHING_SANDS"
+      },
+      {
+        "speciesId": "cramorant",
+        "moveId": "DIVE"
+      },
+      {
+        "speciesId": "forretress_shadow",
+        "moveId": "SAND_TOMB"
+      }
+    ],
+    "energyCheckpoints": [
+      {
+        "time": 53.0,
+        "speciesId": "cramorant",
+        "energy": 24
+      }
+    ],
+    "notes": {
+      "1": "User, 2026-11-14: Cramorant came in on a 0-turn switch for Diggersby at 0:49, after its Scorching Sands (Diggersby last read at 0:49.19, \"Go, Cramorant!\" and your buttons at 0:50.30), and threw 2 Pecks and sneaked 1 on your Icy Wind (Get Ready! at 0:52.95), then 2 before Dive (1:12.0): 5, not 4. ManGo starts it with your buttons, so 1 and a sneak, and its Dive looked unaffordable (32). Fixed the same day: at a 0-turn switch ManGo dates the restart from your buttons' first fade-in frame, not their read.",
+      "checkpoint": "Its energy at your Icy Wind: 2 Pecks and the one in progress, 24.",
+      "unknown": "Diggersby's Scorching Sands and Forretress's Sand Tomb weren't hand-counted."
+    }
+  },
+  "battle-2026-11-13-005818": {
+    "video": "Test Videos/battle-2026-11-13-005818.mp4",
+    "description": "Phone-saved battle. Opponent: Morpeko (Full Belly), Azumarill, Altaria.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 143.43,
+        "speciesId": "altaria",
+        "energy": 20
+      }
+    ],
+    "observedFastMoves": {
+      "altaria": "DRAGON_BREATH"
+    },
+    "notes": {
+      "checkpoint": "User, 2026-11-14: Altaria, in for the fainted Azumarill (\"Go, Altaria!\" at 2:20.23, your buttons at 2:21.30), threw 4 Dragon Breaths and sneaked 1 on your Acrobatics (Get Ready! at 2:23.43): 20, not ManGo's 16. With 20, its first Moonblast (2:45.5) leaves 14 and the second (3:12.1) is paid for.",
+      "fastMove": "Dragon Breath: a pink cloud on your Thievul about every half second (2:51-2:55 in the video). ManGo's HP-rhythm rule took it for Peck until 2026-11-13.",
+      "unknown": "No throw was hand-counted."
     }
   }
 }

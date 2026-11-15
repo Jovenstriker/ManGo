@@ -12,19 +12,23 @@ public struct BattleAutomation: Sendable {
     /// Diagnostics emitted by the latest process call, independent of the bounded UI log.
     public private(set) var logThisRead: [String] = []
     public private(set) var throwsThisRead: [ChargedMoveObservation] = []
+    /// An earlier charged move of theirs, recounted by what this read showed (a tie it won with
+    /// yours): it replaces the observation with the same `time`.
+    public private(set) var throwRevisedThisRead: ChargedMoveObservation?
+    private var lastTheirThrow: ChargedMoveObservation?
 
     public struct ChargedMoveObservation: Sendable {
         public let time: TimeInterval
         public let speciesId: String
         public let move: Move
         public let fastMove: Move?
-        public let energyBefore: Int
-        public let energyAfter: Int
+        public internal(set) var energyBefore: Int
+        public internal(set) var energyAfter: Int
         /// The raw estimate before an observed spend forced reconciliation.
-        public let energyBeforeReconciliation: Int
+        public internal(set) var energyBeforeReconciliation: Int
         /// Modelled fast moves since this Pokémon's previous charged move, including
         /// moves before switching out. Unlike energy differences, this survives the cap.
-        public let fastMoveCount: Int?
+        public internal(set) var fastMoveCount: Int?
     }
 
     /// The "YOU WIN!"/"YOU LOSE" screen was shown. The last battle stays on screen until
@@ -48,12 +52,15 @@ public struct BattleAutomation: Sendable {
     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
     /// your buttons come back.)
     public var faintResumeLead: TimeInterval = 0.25
-    /// Where the battle restarts relative to your buttons coming back, used with "a charged
-    /// move starts as a fast move finishes" to correct the restart guess when the opponent
-    /// throws. When the opponent shields your charged move ("BLOCKED!") the buttons come
-    /// back late (Fearow restarted 0.6s before them); otherwise, including when you shield
-    /// theirs, the restart is around them (Melmetal's straight-away Double Iron Bash
-    /// restarted about when they came back, Ninetales about 0.4s after).
+    /// At a 0-turn switch after a charged move, when the frames show your buttons fading back in
+    /// since the last read, the battle resumed this long before the first of them (012748:
+    /// Stunfisk's 5 Thunder Shocks and a sneak after Weather Ball, not 4; 0.14-0.17s fit then).
+    public var fadeInLead: TimeInterval = 0.15
+    /// Buttons this empty look dark as they fade in, like hidden ones: no fade-in to see
+    /// (221337: Nidoqueen's 7 Mud Slaps after Guzzlord blocked yours, not 6).
+    static let fadeInMinimumFill = 0.15
+    /// This stop's restart from the frames, if they showed it.
+    private var fadeInRestart: TimeInterval?
     /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
     /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
     /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
@@ -66,14 +73,24 @@ public struct BattleAutomation: Sendable {
     private var leadStartChecked = false
     /// When the lead's first fast move began, as counted.
     private var leadStartedAt: TimeInterval?
-    /// This stretch's start was checked against their first hit on your HP bar.
-    private var theirHitsChecked = true
+    /// This stretch's restart was seen (their move in progress hit you), not guessed from your buttons.
+    private var restartSeen = false
+    /// Their Pokémon in now came in by a switch (not a faint, not the lead) since play last restarted.
+    private var switchedInSinceRestart = false
     /// The battle's first turn begins this long after "GO" is first read: GO stays on screen
     /// a moment before anyone can attack. (The phone-saved Doublade battle: 7 Shadow Claws,
-    /// not 8.) 0.15-0.25s all fit every hand count; with no countdown or GO at all, the
-    /// lead's clock starts with your buttons instead.
+    /// not 8.) Of the starts tried after GO on November 8, 2026, only this one fits every lead's
+    /// hand count (0.1s loses 132243's, 0.3s 174243's and 144330's). With no countdown or GO at
+    /// all, the lead's clock starts with your buttons instead.
     public var goDelay: TimeInterval = 0.2
-    public var restartWindowAfterShield: ClosedRange<TimeInterval> = -0.8 ... -0.2
+    /// GO shows about 0.65s and a first read usually lags it by about 0.15s: one that caught it
+    /// fading came about this much later.
+    static let fadingGoLag: TimeInterval = 0.5
+    /// Where the battle restarts relative to your buttons coming back, used with "a charged
+    /// move starts as a fast move finishes" to correct the restart guess when the opponent
+    /// throws: around them (Melmetal's straight-away Double Iron Bash restarted about when they
+    /// came back, Ninetales about 0.4s after), also after they blocked yours (221337: Mimikyu's
+    /// 6 Shadow Claws from 6:49.6 to its Shadow Sneak, by the user's count, not 7).
     public var restartWindow: ClosedRange<TimeInterval> = -0.5 ... 0.4
     /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
     public var assumedFastMoves: [String: String] = [:]
@@ -85,13 +102,11 @@ public struct BattleAutomation: Sendable {
     /// The read by which their fast move in progress at your charged move had hit you this stop,
     /// whether a "Go, X!" already showed then, and whether your Pokémon went down to it after.
     private var inProgressLandedBy: TimeInterval?
+    /// The read before it, which didn't show the hit yet.
+    private var inProgressLandedAfter: TimeInterval = 0
     private var goShownAtHit = false
     private var inProgressRuledOut = false
-    private var shieldedThisStop = false
     private var playerChargedThisStop = false
-    /// Their charged move came after yours in this stop, so yours being blocked wasn't the last thing.
-    private var opponentThrewAfterYours = false
-    private var lastResumeAfterShield = false
     /// The last stop ended with your charged move, so their fast move in progress landed as play resumed.
     private var lastResumeAfterYourChargedMove = false
     private var playerChangedSinceResume = false
@@ -120,6 +135,28 @@ public struct BattleAutomation: Sendable {
     private var resumedAt: TimeInterval = -.infinity
     private var freeSwitchUntil: TimeInterval = -.infinity
     private var opponentThrewThisStop = false
+    /// Play ran between their charged move and now, in this stop: your fast move hit them after
+    /// their banner had gone, or your next Pokémon came out.
+    private var playSinceTheirChargedMove = false
+    /// Their Pokémon fainted in this stop and its replacement came in.
+    private var theirFaintThisStop = false
+    /// ...after your last charged move: the one in now had nothing in progress at it.
+    private var replacedSinceYourChargedMove = false
+    /// A hit on their Pokémon was showing on the last read.
+    private var hitOverThemLastRead = false
+    /// Your charged move buttons as last read and since when, and when the opponent's Pokémon
+    /// now in was named: a hit's text is read for type only once both have settled.
+    private var yourLabels: Set<String> = []
+    private var yourLabelsSince: TimeInterval = -.infinity
+    private var opponentSeenAt: TimeInterval = -.infinity
+    /// Since when a hit's text has shown over your Pokémon without a break, if it shows now.
+    private var hitTextSince: TimeInterval?
+    /// A charged move's text shows over the Pokémon it hit as play restarts (Persian's Night
+    /// Slash "NOT VERY EFFECTIVE..." on your Thievul, 020853; Ursaluna's Fire Punch on your
+    /// Jumpluff, 022052); a fast move started at the restart lands a turn later at the soonest.
+    static let hitTextAfterRestart: TimeInterval = 0.5
+    /// A line for the card about a change it would otherwise make silently, and when.
+    public private(set) var cardNote: (text: String, time: TimeInterval)?
     /// Your Pokémon fainted in this stop ("Switch in a new Pokémon?").
     private var yourFaintThisStop = false
     /// Red pokéballs in their name box (Pokémon left): the latest count, when it was read,
@@ -193,6 +230,7 @@ public struct BattleAutomation: Sendable {
     public mutating func process(_ read: ScreenRead, tracker: inout OpponentTracker) {
         logThisRead = []
         throwsThisRead = []
+        throwRevisedThisRead = nil
         guard read.time > lastTime else { return }
         if lastTime.isFinite, read.time - lastTime > 1, !stopped, !isBattleOver, tracker.active != nil {
             tracker.markEnergyUncertain("Screen reads delayed; timing uncertain")
@@ -217,7 +255,6 @@ public struct BattleAutomation: Sendable {
         fillSamples += (read.fillTrace ?? []).filter { $0.count == 3 }
         if let first = fillSamples.first, t - first[0] > 20 { fillSamples.removeAll { t - $0[0] > 20 } }
         if !stopped { checkRestartAgainstYourFastMoves(before: max(t, fillSamples.last?[0] ?? t), tracker: &tracker) }
-        if !stopped { checkStartAgainstTheirHits(tracker: &tracker) }
         if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         // After your charged move their fast move in progress finishes as play resumes, often
@@ -234,9 +271,18 @@ public struct BattleAutomation: Sendable {
         }
         if stopped, playerChargedThisStop, !opponentThrewThisStop, !inProgressRuledOut, hitOverYou, !hitOverYouLastRead, inProgressLandedBy == nil {
             inProgressLandedBy = t
+            inProgressLandedAfter = previousReadTime
             goShownAtHit = goShown
         }
         hitOverYouLastRead = hitOverYou
+        // Your fast move hitting them once their banner has gone means play ran after their
+        // charged move (002722: "NOT VERY EFFECTIVE..." over Greninja at 0:41.92, after Hydro Cannon).
+        let hitOverThem = read.lines.contains(where: Self.isHitOnThem)
+        if stopped, opponentThrewThisStop, hitOverThem, !hitOverThemLastRead,
+           !read.lines.contains(where: { $0.text.contains(" used ") }) {
+            playSinceTheirChargedMove = true
+        }
+        hitOverThemLastRead = hitOverThem
         if let n = read.opponentAlive {
             if let before = opponentAlive, n < before { aliveDroppedAt = t }
             opponentAlive = n
@@ -260,7 +306,6 @@ public struct BattleAutomation: Sendable {
             tracker.resume(at: go)
             tracker.setEnergy(0, at: go)
             leadStartedAt = go
-            theirHitsChecked = false
         }
         if awaitingGo, goAt == nil, t >= leadNamedAt + Self.goWait {
             // No countdown at all: go by the buttons.
@@ -287,7 +332,12 @@ public struct BattleAutomation: Sendable {
             case .battleStarted:
                 // Turn 0, `goDelay` after GO shows. The lead was probably read during the countdown:
                 // its clock restarts then (on the first read after, if that's later than now).
-                let start = t + (Rules.off("goDelay") ? 0 : goDelay)
+                // A first read of GO usually comes within a read of it appearing; one that caught it
+                // growing as it fades came most of its 0.65s on screen later (152828: up from 0:43.9,
+                // first read at 0:44.56; 4 Mud Slaps from Marowak by 0:50.7, not 3).
+                let late = !Rules.off("fadingGo") && parser.goReadFading ? Self.fadingGoLag : 0
+                if late > 0 { note("GO was first read as it faded: the battle started \(String(format: "%.2f", late))s earlier") }
+                let start = t + (Rules.off("goDelay") ? 0 : goDelay) - late
                 goAt = start
                 buttonsResumedAt = start
                 if battleRecord.start == nil { battleRecord.start = tracker.battleClock(at: start) }
@@ -299,17 +349,17 @@ public struct BattleAutomation: Sendable {
                     tracker.setEnergy(0, at: start)
                     leadStartedAt = start
                 }
-                theirHitsChecked = false
 
             case .stopped:
                 // Either side's charged move or a faint: no turns pass from here.
                 stopped = true
                 opponentThrewThisStop = false
                 yourFaintThisStop = false
+                theirFaintThisStop = false
+                replacedSinceYourChargedMove = false
                 chargedMoveThisStop = false
                 inProgressLandedBy = nil
                 inProgressRuledOut = false
-                theirHitsChecked = true
                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
                 checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
                 let stop = max(observation.first - stopLead, observation.previous, resumedAt)
@@ -326,7 +376,6 @@ public struct BattleAutomation: Sendable {
                 }
 
             case .shielded:
-                shieldedThisStop = true
                 if let i = battleRecord.charged.lastIndex(where: { $0.stop == battleRecord.stops.count }) {
                     battleRecord.charged[i].move.shielded = true
                 }
@@ -336,32 +385,58 @@ public struct BattleAutomation: Sendable {
                 playerChangedSinceResume = false
                 cadence = FastMoveCadence()
                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
-                var resume = max(t - lead, lastStopAt)
+                let readResume = max(t - lead, lastStopAt)
+                var resume = readResume
+                fadeInRestart = nil
+                // A 0-turn switch as a charged move ends: their name box no longer shows the one
+                // that was in by the read before your buttons came back. Its camera holds your
+                // buttons back, so the frames they fade in on date the restart, not their read
+                // (012748: Stunfisk for Ninetales after its Weather Ball, 5 Thunder Shocks and a
+                // sneak by your Blaze Kick; 020105: Cramorant for Diggersby after its Scorching
+                // Sands, 2 Pecks and a sneak by your Icy Wind; both by the user's count). Not when
+                // theirs stayed in (010901: Ninetales after your charged move). Nor, as yet, for one
+                // sent in for theirs that fainted: it changed nothing at a 0.15s lead, and the lead
+                // that gave 005818's Altaria its 20 (0.4s) broke 233921 and 005151.
+                let zeroTurnSwitch = parser.currentOpponentShownAt.map { $0 < previousReadTime } ?? false
+                if !Rules.off("fadeIn"), chargedMoveThisStop, zeroTurnSwitch || Rules.off("fadeInOnlySwitch"), let fade = buttonsFadeIn(at: t) {
+                    note("Your buttons began fading in at \(clockString(fade)): the battle resumed \(clockString(fade - fadeInLead))")
+                    resume = max(fade - fadeInLead, lastStopAt)
+                    fadeInRestart = resume
+                }
+                restartSeen = false
+                switchedInSinceRestart = false
                 // Their fast move in progress at your charged move hit you before your buttons
                 // came back, so play had restarted by then (155712: Azumarill's Bubble showed over
                 // your Altaria at 2:10.64, your buttons at 2:11.44; your 3 Dragon Breaths fit
                 // after it, and so did one Bubble and the one it sneaked on your next charged move).
                 if !Rules.off("inProgressHit"), !yourFaintThisStop, let hit = inProgressLandedBy, hit < resume, hit > lastStopAt {
-                    note("Their fast move in progress hit you at \(clockString(hit)), before your buttons came back: the battle had restarted")
-                    resume = hit
+                    // One sent in for theirs that fainted in this stop had no fast move in progress:
+                    // the hit was its first, a whole fast move after play resumed (155536: Altaria for
+                    // the fainted Florges, its Dragon Breath over your Mimikyu by 2:56.60).
+                    if replacedSinceYourChargedMove, !Rules.off("replacementHit"), let fast = tracker.active?.fastMove {
+                        // It landed between the read before and this one: halfway, like a stop.
+                        let landed = inProgressLandedAfter > lastStopAt ? (inProgressLandedAfter + hit) / 2 : hit
+                        let first = max(landed - Double(fast.turns) * turnDuration, lastStopAt)
+                        note("\(name(tracker.active?.speciesId))'s first fast move hit you at \(clockString(hit)), before your buttons came back: the battle had restarted at \(clockString(first))")
+                        resume = first
+                    } else {
+                        note("Their fast move in progress hit you at \(clockString(hit)), before your buttons came back: the battle had restarted")
+                        resume = hit
+                    }
+                    restartSeen = true
                 }
                 resumedAt = resume
                 // Your buttons only show your fast moves once they're back (they fade in at first).
                 buttonsResumedAt = max(t - lead, lastStopAt)
                 // When your Pokémon fainted, not until your replacement's buttons show its fast move.
                 restartChecked = awaitingGo || yourFaintThisStop
-                theirHitsChecked = false
                 awaitingYourReplacement = !awaitingGo && yourFaintThisStop
                 buttonsBackAt = t
                 readBeforeButtonsBack = previousReadTime
-                // They blocked yours, and didn't throw their own after (v11's Empoleon did: its
-                // next stretch restarted with the buttons, as after any charged move of theirs).
-                lastResumeAfterShield = shieldedThisStop && playerChargedThisStop && !opponentThrewAfterYours
                 lastResumeAfterYourChargedMove = playerChargedThisStop && !opponentThrewThisStop
-                opponentThrewAfterYours = false
-                shieldedThisStop = false
                 playerChargedThisStop = false
-                if free { freeSwitchUntil = resume + Self.afterStopWindow }
+                // Timed from your buttons' read (or a hit), not their fade-in: it was fitted so.
+                if free { freeSwitchUntil = (restartSeen ? resume : readResume) + Self.afterStopWindow }
                 if !awaitingGo {
                     // Where the stop sits on the clock of play, now it can't move any more.
                     let at = tracker.battleClock(at: resume)
@@ -382,7 +457,6 @@ public struct BattleAutomation: Sendable {
                 if !Rules.off("restore"), tracker.restoreInProgress(ifShortOf: move.energy, at: t) {
                     note("\(name(tracker.active?.speciesId)) couldn't afford \(move.name) without its fast move in progress: it threw after yours, not on the same turn (\(short) → \(tracker.snapshot(at: t).energy))")
                 }
-                if playerChargedThisStop { opponentThrewAfterYours = true }
                 // A throw the assumed fast move couldn't have afforded, but another fast move it
                 // learns could, means it's that one: Flygon threw Twister and Sand Tomb on Mud
                 // Shot, not PvPoke's Dragon Tail (155712, 174243).
@@ -405,12 +479,15 @@ public struct BattleAutomation: Sendable {
                                 + (stretch.interrupted ? 1 : 0)
                         }
                     }
-                    throwsThisRead.append(ChargedMoveObservation(
+                    let observation = ChargedMoveObservation(
                         time: t, speciesId: pokemon.speciesId, move: move, fastMove: pokemon.fastMove,
                         energyBefore: before, energyAfter: tracker.snapshot(at: t).energy,
-                        energyBeforeReconciliation: raw, fastMoveCount: count))
+                        energyBeforeReconciliation: raw, fastMoveCount: count)
+                    throwsThisRead.append(observation)
+                    lastTheirThrow = observation
                 }
                 opponentThrewThisStop = true
+                playSinceTheirChargedMove = false
                 chargedMoveThisStop = true
                 note("\(name(tracker.active?.speciesId)) used \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
                 if battleRecord.start != nil {
@@ -426,6 +503,8 @@ public struct BattleAutomation: Sendable {
 
             case .yourPokemonFainted:
                 yourFaintThisStop = true
+                // Yours can't throw once fainted: a charged move after this is your next Pokémon's.
+                playSinceTheirChargedMove = true
                 if battleRecord.start != nil {
                     battleRecord.markers.append((battleRecord.stops.count, .init(side: .you, time: 0, kind: .fainted)))
                 }
@@ -439,7 +518,12 @@ public struct BattleAutomation: Sendable {
                 // A switch/faint transition can interrupt the opponent's rhythm even
                 // while OCR still sees the dimmed buttons. It cannot justify adding a
                 // fast move by assuming the whole stretch was uninterrupted.
-                playerChangedSinceResume = true
+                // Not for a switch that shows as your buttons come back: made during the stop, it
+                // doesn't break their rhythm from the restart (221337: your Clodsire after the
+                // 6:09 charged move; Mimikyu's 7 Shadow Claws before Shadow Sneak).
+                let atRestart = !Rules.off("switchAtRestart") && !stopped && buttonsBackAt.map { t - $0 < 0.6 } == true
+                if !atRestart { playerChangedSinceResume = true }
+                playSinceTheirChargedMove = true
                 cadence = FastMoveCadence()
                 yourGaps = []
                 // A switch, not the Pokémon you sent in after yours fainted.
@@ -459,10 +543,50 @@ public struct BattleAutomation: Sendable {
                     lastStopAt = t - before
                     tracker.pause(at: lastStopAt)
                 }
+                // The first charged move after a faint, before ManGo saw play resume: you can only
+                // throw once it has, so yours took its first turn and they started a fast move on
+                // it, a sneak (010753: Nidoqueen in for the fainted Forretress at 2:27.1, your
+                // charged move straight away at 2:29.8; the user saw it sneak a Mud Slap).
+                let afterFaint = !Rules.off("sneakAfterFaint") && !chargedMoveThisStop && (theirFaintThisStop || yourFaintThisStop)
                 chargedMoveThisStop = true
                 playerChargedThisStop = true
+                replacedSinceYourChargedMove = false
                 let energyBefore = tracker.snapshot(at: t).energy
-                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: opponentThrewThisStop)
+                // Straight after theirs with no play between (no hit on them, your buttons never
+                // back), both of you threw on the same turn and theirs won the tie: they weren't in
+                // a fast move, so no sneak (233921: Stunfisk's Discharge, then your Energy Ball at
+                // 1:22.2; 5 Thunder Shocks before its Mud Bomb, not 6).
+                let tieTheyWon = opponentThrewThisStop && !playSinceTheirChargedMove && !Rules.off("cmpAfterTheirs")
+                if tieTheyWon {
+                    note("Your charged move came straight after theirs with no play between: a CMP tie \(name(tracker.active?.speciesId)) won, no sneak")
+                    // The clock's move in progress at theirs counts when its finished ones couldn't
+                    // pay for their charged move: then the clock was behind (233921's Stunfisk,
+                    // 232707's Forretress, 211526's Quagsire). Or when it came in by a switch since
+                    // play last restarted: a switch is only dated to within a read or so, and its
+                    // hits on your bar come before the clock has them (211824: Melmetal's Double
+                    // Iron Bash on 5 Thunder Shocks, the 5th 87% done; 221608: Ninetales's Weather
+                    // Ball on 5 Embers, the 5th 70% done, by the user's counts). Otherwise nothing
+                    // says it was behind, however done it had the next (211824: Hydreigon's Brutal
+                    // Swing on 14 Dragon Breaths from GO, the 15th 99% done).
+                    let clockShort = Rules.off("tieNeedsUnderpay")
+                        || (switchedInSinceRestart && !Rules.off("tieAfterSwitch"))
+                        || lastTheirThrow.map { $0.speciesId == tracker.active?.speciesId && $0.energyBeforeReconciliation < $0.move.energy } == true
+                    let added = clockShort ? tracker.theyWonSameTurnTie() : 0
+                    if added > 0, var revised = lastTheirThrow, revised.speciesId == tracker.active?.speciesId {
+                        note("\(name(tracker.active?.speciesId)) threw as a fast move finished: the one the clock had over half done counts (\(revised.energyAfter) → \(tracker.snapshot(at: t).energy))")
+                        revised.fastMoveCount = revised.fastMoveCount.map { $0 + 1 }
+                        revised.energyBeforeReconciliation += revised.fastMove?.energyGain ?? 0
+                        revised.energyBefore = max(revised.energyBefore, min(100, revised.energyBeforeReconciliation))
+                        revised.energyAfter = tracker.snapshot(at: t).energy
+                        throwRevisedThisRead = revised
+                        lastTheirThrow = revised
+                        if let k = battleRecord.charged.lastIndex(where: { $0.move.side == .them }) {
+                            battleRecord.charged[k].move.energyBefore = revised.energyBefore
+                            battleRecord.charged[k].move.energyAfter = revised.energyAfter
+                        }
+                    }
+                }
+                tracker.playerThrewChargedMove(at: t, afterTheirChargedMove: (opponentThrewThisStop && !tieTheyWon) || afterFaint)
                 if tracker.active != nil {
                     note("You threw a charged move: \(name(tracker.active?.speciesId)) \(energyBefore) → \(tracker.snapshot(at: t).energy) (its fast move in progress counts)")
                 }
@@ -475,8 +599,78 @@ public struct BattleAutomation: Sendable {
                 appear(match, at: since, now: t, tracker: &tracker)
             }
         }
+        checkHitType(read, tracker: &tracker)
         nameYourChargedMove()
         noteYourFastMove(tracker)
+    }
+
+    /// Their fast moves' hits on you, read for type: the game says "SUPER EFFECTIVE!" or "NOT
+    /// VERY EFFECTIVE..." over your Pokémon as each lands (nothing when it's neutral). Against
+    /// your Pokémon's types, that rules out each of their fast moves of the wrong type, and any
+    /// form left with none. "SUPER EFFECTIVE!" on your Fearow (Normal/Flying) fits no Ninetales
+    /// move but Alolan Ninetales's Powder Snow, not PvPoke's top Ninetales on Ember (011620: 6
+    /// Powder Snows before Weather Ball, 48, not 54). Only a text it says counts: a hit it says
+    /// nothing over may just not have been read.
+    ///
+    /// The text must first show after the restart, your switch and theirs. It stays up a while
+    /// and hits keep it up: Altaria's Dragon Breath's "NOT VERY EFFECTIVE..." on your Mimikyu was
+    /// still showing 2s after Florges came in (155536), and Fairy Wind is neutral on Mimikyu.
+    private mutating func checkHitType(_ read: ScreenRead, tracker: inout OpponentTracker) {
+        let t = read.time
+        if parser.yourButtonLabels != yourLabels { yourLabels = parser.yourButtonLabels; yourLabelsSince = t }
+        let said = read.lines.filter(Self.isHitOnYou).map { NameMatcher.normalize($0.text) }
+        // A charged move's text starts mid-screen and follows your Pokémon left as the camera
+        // comes back (Dunsparce's Rock Slide on your Jumpluff, 124534): it's the same text there.
+        // Not one over them (`isHitOnThem`), which your hits keep up.
+        let showing = read.lines.contains {
+            NameMatcher.normalize($0.text).contains("effective") && !Self.isHitOnThem($0) && (0.12...0.7).contains($0.box.midY)
+        }
+        hitTextSince = showing ? hitTextSince ?? t : nil
+        guard !Rules.off("hitType"), !stopped, !awaitingGo, !isBattleOver, let active = tracker.active,
+              let since = hitTextSince, since > max(resumedAt + Self.hitTextAfterRestart, yourLabelsSince, opponentSeenAt) else { return }
+        let notVery = said.contains { $0.contains("not") || $0.contains("very") }
+        let superEffective = said.contains { $0.contains("uper") }
+        guard notVery != superEffective, let you = yourActivePokemon else { return }
+        let effect: TypeChart.Effect = superEffective ? .superEffective : .notVeryEffective
+        let forms = active.possibleSpeciesIds.contains(active.speciesId) ? active.possibleSpeciesIds : [active.speciesId]
+        let wrong = Set(forms.flatMap { data.fastMoves(for: $0) }
+            .filter { TypeChart.effect($0.type, against: you.types) != effect }.map(\.moveId))
+        guard !wrong.isSubset(of: active.ruledOutFastMoves) else { return }
+        let ruledOut = active.ruledOutFastMoves.union(wrong)
+        func allowed(_ id: String) -> [Move] { data.fastMoves(for: id).filter { !ruledOut.contains($0.moveId) } }
+        let fitting = forms.filter { !allowed($0).isEmpty }
+        // Nothing it could be fits: a misread, or a type ManGo has wrong. Leave it.
+        guard let first = fitting.first else { return }
+        tracker.ruleOutFastMoves(wrong)
+        let form = fitting.contains(active.speciesId) ? active.speciesId : first
+        let moves = allowed(form)
+        let move = data.recommendedMoves(for: form).fast.flatMap { moves.contains($0) ? $0 : nil } ?? moves[0]
+        if form == active.speciesId, active.fastMove == move { tracker.setPossibleForms(fitting); return }
+        let before = tracker.snapshot(at: t).energy
+        if form != active.speciesId { tracker.changeForm(to: form) }
+        tracker.setPossibleForms(fitting)
+        tracker.switchFastMove(to: move)
+        let kind = effect == .superEffective ? "super effective" : "not very effective"
+        note("Their hit on your \(you.name) was \(kind): \(name(active.speciesId)) on \(active.fastMove?.name ?? "?") wouldn't be; it's \(name(form)) on \(move.name) (\(before) → \(tracker.snapshot(at: t).energy))")
+    }
+
+    /// Your Pokémon now, from its two charged move buttons: the one you've been seen with (by
+    /// name) that has both, or else the ranked ones that do, if they share their types.
+    private var yourActivePokemon: (name: String, types: [String])? {
+        let labels = parser.yourButtonLabels
+        guard labels.count == 2 else { return nil }
+        // Each label is any charged move by that name (PvPoke has a DRILL_PECK_PLUS too).
+        let named = Dictionary(grouping: data.moves.values.filter { !$0.isFast && $0.energy > 0 }) { NameMatcher.normalize($0.name) }
+        let options = labels.map { Set(named[$0]?.map(\.moveId) ?? []) }
+        guard options.allSatisfy({ !$0.isEmpty }) else { return nil }
+        let all = data.species.values.filter { s in !s.types.isEmpty && options.allSatisfy { !$0.isDisjoint(with: s.chargedMoves) } }
+        let seen = all.filter { parser.myTeam.contains(NameMatcher.baseKey($0.speciesName)) }
+        let candidates = seen.isEmpty ? all.filter { $0.rank != nil } : seen
+        guard let best = candidates.min(by: { ($0.rank ?? .max) < ($1.rank ?? .max) }),
+              candidates.allSatisfy({ Set($0.types) == Set(best.types) }) else { return nil }
+        // The base name: "Blaziken" for Shadow Blaziken too, which the buttons can't tell apart.
+        let base = best.speciesName.split(separator: "(").first.map { $0.trimmingCharacters(in: .whitespaces) } ?? best.speciesName
+        return (base, best.types)
     }
 
     // MARK: Helpers
@@ -577,6 +771,18 @@ public struct BattleAutomation: Sendable {
         summaryPendingLabels = nil
     }
 
+    /// Where your buttons began fading back in: walking back from the read that names them, the
+    /// first of the frames showing any fill. Only between the last read and this one, from an
+    /// empty frame (fill flickers while they're hidden), and not for nearly empty buttons.
+    private func buttonsFadeIn(at t: TimeInterval) -> TimeInterval? {
+        let frames = fillSamples.filter { $0[0] <= t && $0[0] >= max(lastStopAt, previousReadTime) }
+        func filled(_ f: [Double]) -> Bool { max(f[1], f[2]) > 0.02 }
+        guard let last = frames.last, max(last[1], last[2]) > Self.fadeInMinimumFill else { return nil }
+        var i = frames.count - 1
+        while i > 0, filled(frames[i - 1]) { i -= 1 }
+        return i > 0 ? frames[i][0] : nil
+    }
+
     private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {
         YourFastMoves.landings(in: fillSamples.filter { $0[0] >= start && $0[0] <= end })
     }
@@ -638,6 +844,12 @@ public struct BattleAutomation: Sendable {
         NameMatcher.normalize(line.text).contains("effective") && line.box.midX < 0.45 && (0.12...0.7).contains(line.box.midY)
     }
 
+    /// "NOT VERY EFFECTIVE..." or "SUPER EFFECTIVE!" over their Pokémon: your move hit them. A
+    /// charged move's shows about mid-screen (0.50-0.54 across), so only well to the right.
+    private static func isHitOnThem(_ line: RecognizedText) -> Bool {
+        NameMatcher.normalize(line.text).contains("effective") && line.box.midX > 0.6 && (0.12...0.7).contains(line.box.midY)
+    }
+
     /// The opponent's fast moves landing on your HP bar in the opening stretch, GO to the
     /// first stop: each drop (held for two frames) is one. Their energy at the stop is then
     /// counted, not timed: the lead's start and the stop are each only seen to within a
@@ -686,7 +898,14 @@ public struct BattleAutomation: Sendable {
     /// restarted holds a whole number of fast moves.
     private mutating func alignToOpponentChargedMove(_ tracker: inout OpponentTracker) {
         guard !Rules.off("align"), !playerChangedSinceResume else { return }
-        let window = lastResumeAfterShield ? restartWindowAfterShield : restartWindow
+        // It corrects a restart time guessed from your buttons. One seen directly (their move in
+        // progress hitting you as play resumed) needs no correcting (212316: Quagsire's at 1:17.02;
+        // 4 Mud Shots and a sneak at your 1:08 charged move, then 1, then Aqua Tail: 6, not 7).
+        if restartSeen, !Rules.off("alignTrustsHit") {
+            note("\(name(tracker.active?.speciesId))'s restart was seen, when its fast move in progress hit you: no fast move added")
+            return
+        }
+        let window = restartWindow
         // The fast move it would add must have hit you: their first would have landed one stretch
         // of finished fast moves before the stop. Your HP bar steady then means it didn't. After
         // your charged move their move in progress lands as play resumes, so a hit then proves
@@ -728,49 +947,6 @@ public struct BattleAutomation: Sendable {
         return pixels.max()! - pixels.min()! < max(1.5, 0.0035 * width)
     }
 
-    /// When your HP bar first fell after `start`, if it has: a hit's drop from where it held first
-    /// that stays (its middle value over the next 0.3s is that low), so a frame or two of glitch
-    /// isn't one (152828: 93 px for two frames at 0:44.62 between 244s).
-    private func firstHitOnYou(after start: TimeInterval) -> TimeInterval? {
-        let seen = recentVerifiedHP.filter { $0[0] > start && $0[1] * $0[2] > 0.5 }
-        guard let first = seen.first, let last = seen.last else { return nil }
-        let drop = max(Self.hitPixels, 0.0035 * first[2])
-        func held(from t: TimeInterval) -> Double? {
-            guard last[0] >= t + 0.3 else { return nil }  // not all read yet
-            let px = seen.filter { $0[0] >= t && $0[0] < t + 0.3 }.map { $0[1] * $0[2] }.sorted()
-            return px.count >= 2 ? px[px.count / 2] : nil
-        }
-        guard let level = held(from: first[0]) else { return nil }
-        for s in seen where s[0] >= first[0] + 0.3 && level - s[1] * s[2] >= drop {
-            if let after = held(from: s[0]), level - after >= drop { return s[0] }
-        }
-        return nil
-    }
-
-    /// A fast move registers on its last turn, so the lead's first one lands one fast move after it
-    /// started: the first hit on your HP bar after GO dates the latest it could have begun. Only
-    /// ever earlier. (152828: Marowak's first Mud Slap hit at 0:45.5, so it began by 0:44.0, not
-    /// 0.2s after GO was read at 0:44.76: 4 Mud Slaps before it switched, as the user counted, not
-    /// 3.) Only the opening: after a charged move a hit already counted shows as play resumes
-    /// (their move in progress after yours; after theirs, their last one before it), so the
-    /// first drop then isn't a fresh move (Melmetal in 144330 at 1:27.30, Furret here at 1:45.49).
-    private mutating func checkStartAgainstTheirHits(tracker: inout OpponentTracker) {
-        guard !theirHitsChecked, !stopped, !awaitingGo, !Rules.off("theirHits") else { return }
-        guard let fast = tracker.active?.fastMove, !playerChangedSinceResume, let go = goAt,
-              lastStopAt < go, tracker.team.count == 1, let start = leadStartedAt else { theirHitsChecked = true; return }
-        let move = Double(fast.turns) * turnDuration
-        guard let hit = firstHitOnYou(after: go - 1) else {
-            if lastTime > go + 2 * move + 1.5 { theirHitsChecked = true }
-            return
-        }
-        theirHitsChecked = true
-        let latest = hit - move
-        guard start - latest > 0.05 else { return }
-        tracker.setEnergy(0, at: latest)
-        leadStartedAt = latest
-        note("Your HP bar fell at \(clockString(hit)): \(name(tracker.active?.speciesId))'s first fast move began by \(clockString(latest)), not \(clockString(start))")
-    }
-
     /// Their fast moves visibly hit you in this stretch (your bar fell), so a hit would have shown:
     /// a light one, like Dragon Breath, may not move the bar at all.
     private func yourHPShowsHits(between start: TimeInterval, and end: TimeInterval) -> Bool {
@@ -792,6 +968,8 @@ public struct BattleAutomation: Sendable {
             note("\(name(tracker.active?.speciesId)) threw on the same turn as you, as its fast move finished: it keeps that one (\(after))")
         } else if after != before {
             note("\(name(tracker.active?.speciesId)) threw on the same turn as you: no fast move in progress (\(before) → \(after))")
+            // The card showed the sneak since your charged move; say why it's gone.
+            cardNote = ("−\(before - after) taken back: you won CMP", lastTime)
         }
     }
 
@@ -802,10 +980,7 @@ public struct BattleAutomation: Sendable {
         goAt = nil
         awaitingGo = false
         stopped = false
-        shieldedThisStop = false
         playerChargedThisStop = false
-        opponentThrewAfterYours = false
-        lastResumeAfterShield = false
         lastResumeAfterYourChargedMove = false
         playerChangedSinceResume = false
         cadence = FastMoveCadence()
@@ -824,14 +999,21 @@ public struct BattleAutomation: Sendable {
         buttonsBackAt = nil
         readBeforeButtonsBack = nil
         hitOverYouLastRead = false
+        yourLabels = []
+        yourLabelsSince = -.infinity
+        opponentSeenAt = -.infinity
+        hitTextSince = nil
+        cardNote = nil
         inProgressLandedBy = nil
         goShownAtHit = false
         inProgressRuledOut = false
         resumedAt = -.infinity
+        fadeInRestart = nil
         freeSwitchUntil = -.infinity
+        switchedInSinceRestart = false
         leadStartChecked = false
         leadStartedAt = nil
-        theirHitsChecked = true
+        restartSeen = false
         opponentAlive = nil
         opponentAliveAt = -.infinity
         hpRecent = []
@@ -877,8 +1059,9 @@ public struct BattleAutomation: Sendable {
         // move came after theirs, the switch is still timed from the restart but costs a
         // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
         // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
+        // The frames' restart, when they dated it (012748: Stunfisk for Ninetales after Weather Ball).
         if !Rules.off("freeSwitchBackdate"), opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
-            time = max(resumedAt, min(time, back))
+            time = max(resumedAt, min(time, fadeInRestart ?? back))
         }
         if tracker.active == nil {
             // The lead: counting starts at "GO" (or when the countdown says it will be).
@@ -915,13 +1098,18 @@ public struct BattleAutomation: Sendable {
                 unconfirmedFaint = (id, lastStopAt)
             }
             tracker.markActiveFainted(at: time)
+            if stopped { theirFaintThisStop = true; replacedSinceYourChargedMove = true }
         }
         // A name change during a stop is a faint replacement or a switch right after their
         // charged move: both take 0 turns, as does a quick switch (above).
         // Switching out right after the stop: they chose the switch, not a fast move, on the
         // turn your charged move took, so a sneak counted then didn't happen.
         if duringStop, !theirsFainted { tracker.switchingOutAfterStop() }
-        var free = stopped || time < freeSwitchUntil || quick
+        // Named only once stopped, but switched before the stop began: made in play, so it costs
+        // a turn (221337: Mimikyu for Greninja after 6:08.05, your charged move frozen at 6:08.37;
+        // still on its switch turn, so no Shadow Claw in progress, as the user counted).
+        let madeInPlay = !Rules.off("switchBeforeStop") && stopped && !theirsFainted && !opponentThrewThisStop && since < lastStopAt
+        var free = (stopped && !madeInPlay) || time < freeSwitchUntil || quick
         // After your Pokémon fainted, their switch (theirs still in) is a choice and costs a
         // turn, even straight after their charged move: Mimikyu for Turtonator after its
         // Dragon Claw knocked yours out, 2 Shadow Claws by your next throw, not 3.
@@ -938,10 +1126,14 @@ public struct BattleAutomation: Sendable {
             marker = battleRecord.markers.count - 1
         }
         cadence = FastMoveCadence()
+        // A lead leaving before the first stop: its clock only has GO to go on.
+        let leadInOpening = tracker.team.count == 1 && goAt.map { lastStopAt < $0 } == true
         let outgoing = tracker.activeIndex
         let returning = tracker.team.contains { $0.speciesId == speciesId }
         let switchTurns = tracker.setActive(speciesId: speciesId, at: time, assumeFastMove: assumed, freeSwitch: free,
-                                            seenAt: isLead ? nil : leftDuringStop ? time : since)
+                                            seenAt: isLead ? nil : leftDuringStop ? time : since, outgoingWaitsForFastMove: !leadInOpening)
+        opponentSeenAt = t
+        cardNote = nil
         if let m = marker {
             // What it left with is what it keeps on the bench (kept for a faint too, in case the
             // pokéballs show it was a switch after all).
@@ -950,6 +1142,7 @@ public struct BattleAutomation: Sendable {
             battleRecord.markers[m].marker.energyIn = returning ? tracker.active?.bankedEnergy : nil
         }
         if seen == nil { tracker.setPossibleForms(match.candidates.map(\.speciesId)) }
+        switchedInSinceRestart = !isLead && !theirsFainted && !stopped
         // Name confirmation arrives after the switch. Replay the verified samples
         // belonging to the incoming Pokémon instead of discarding its first hit.
         if !stopped {

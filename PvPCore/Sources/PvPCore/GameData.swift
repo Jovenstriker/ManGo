@@ -33,11 +33,24 @@ public struct Species: Codable, Hashable, Sendable, Identifiable {
     public var recommendedMoveset: [String] = []
     /// 1-based PvPoke ranking. `nil` if unranked.
     public var rank: Int?
+    /// Its one or two types, e.g. ["ice", "fairy"]. Empty if unknown.
+    public var types: [String] = []
 
     public var id: String { speciesId }
 
     private enum CodingKeys: String, CodingKey {
-        case speciesId, speciesName, fastMoves, chargedMoves
+        case speciesId, speciesName, fastMoves, chargedMoves, types
+    }
+}
+
+extension Species {
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(speciesId: try c.decode(String.self, forKey: .speciesId),
+                  speciesName: try c.decode(String.self, forKey: .speciesName),
+                  fastMoves: try c.decode([String].self, forKey: .fastMoves),
+                  chargedMoves: try c.decode([String].self, forKey: .chargedMoves),
+                  types: (try c.decodeIfPresent([String].self, forKey: .types) ?? []).filter { $0 != "none" })
     }
 }
 

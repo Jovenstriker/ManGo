@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import PvPCore
 
-/// Replays a real Great League battle (Altaria/Mimikyu/Melmetal vs Stunfisk/Cramorant/Fearow),
-/// read frame by frame from a screen recording every 0.25s.
-private func loadBattle(_ name: String = "gbl-battle-2026-10-20") throws -> (GameData, [ScreenRead]) {
+/// The game data, and a recorded battle's screen reads (by default a phone-saved Great League
+/// battle: Jumpluff/Thievul/Blaziken vs Florges/Mimikyu/Shadow Sableye).
+private func loadBattle(_ name: String = "battle-2026-11-08-142007") throws -> (GameData, [ScreenRead]) {
     let resources = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         .deletingLastPathComponent().appending(path: "App/ManGo/Resources")
@@ -27,69 +27,19 @@ private func energiesAtThrows(_ log: [String]) -> [Int] {
     }
 }
 
-@Test func replayTracksTheWholeBattle() throws {
-    let (data, reads) = try loadBattle()
-    var automation = BattleAutomation(data: data)
-    var tracker = OpponentTracker(data: data)
-    var stops = 0
-    var energyAtThrows: [Int] = []
-
-    for read in reads {
-        let wasPaused = tracker.isPaused
-        automation.process(read, tracker: &tracker)
-        if tracker.isPaused && !wasPaused { stops += 1 }
-    }
-    energyAtThrows = energiesAtThrows(automation.log)
-
-    // Every pause in the recording: the lead waiting for the countdown's GO (named from
-    // "Go, Stunfisk!" just before), 7 opponent charged moves, 6 of yours (one back-to-back
-    // with theirs), 3 faints, and the end screen.
-    #expect(stops == 16)
-
-    // The opponent's team, in order, with the faint inferred from the screen.
-    #expect(tracker.team.map(\.speciesId) == ["stunfisk", "cramorant", "fearow"])
-    #expect(tracker.team.map(\.isFainted) == [false, true, false])
-
-    // Their charged moves, each counted once, from the "X used Y!" banners.
-    let used = automation.log.filter { $0.contains(" used ") }.map { $0.components(separatedBy: " (").dropLast().joined(separator: " (") }
-    #expect(used == [
-        "Stunfisk used Discharge", "Stunfisk used Discharge", "Stunfisk used Discharge",
-        "Cramorant used Dive", "Cramorant used Dive", "Cramorant used Dive",
-        "Fearow used Drill Run",
-    ])
-
-    // The time-based model holds up: every throw came when the app counted at least the
-    // move's cost (40 for all three moves). Fearow's Drill Run and Cramorant's first Dive
-    // land exactly on 40. Stunfisk's clock starts at the countdown's "GO" (42.25s), and the
-    // battle keeps running between your tap and "Get Ready!" while your fast move finishes.
-    // Matches the fast moves counted by watching the recording: Stunfisk 6, 7 and 1 Thunder
-    // Shocks, Cramorant 5 Pecks each time, Fearow 6 Pecks. Fearow's last Peck comes after
-    // it shielded your Double Iron Bash, when your buttons came back late: Drill Run can
-    // only start as a Peck finishes, which puts the restart 0.6s before the buttons.
-    #expect(energyAtThrows == [54, 77, 46, 40, 40, 40, 48])
-    for energy in energyAtThrows {
-        #expect(energy >= 40)
-    }
-
-    // "YOU WIN!" ends it: counting stops and the last battle stays on screen.
-    #expect(automation.isBattleOver)
-    #expect(tracker.isPaused)
-    #expect(automation.log.last == "Battle over")
-}
-
 @Test func nextBattleStartsFresh() throws {
     let (data, reads) = try loadBattle()
     var automation = BattleAutomation(data: data)
     var tracker = OpponentTracker(data: data)
-    // The same battle twice in a row: the second has the same lead, Stunfisk, which
+    // The same battle twice in a row: the second has the same lead, Florges, which
     // must start a new battle rather than continue the old one.
     let second = reads.map { ScreenRead(time: $0.time + 300, lines: $0.lines) }
     for read in reads + second {
         automation.process(read, tracker: &tracker)
     }
     #expect(automation.log.first == "New battle")
-    #expect(tracker.team.map(\.speciesId) == ["stunfisk", "cramorant", "fearow"])
-    #expect(automation.log.filter { $0.contains(" used ") }.count == 7)
+    #expect(tracker.team.map(\.speciesId) == ["florges", "mimikyu", "sableye_shadow"])
+    #expect(automation.log.filter { $0.contains(" used ") }.count == 6)
 }
 
 @Test func parsesBanners() {

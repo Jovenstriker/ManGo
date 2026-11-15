@@ -22,6 +22,9 @@ public struct OpponentTracker: Sendable {
         public var fastMoveConfirmed = false
         /// A cadence-selected move remains a hypothesis: deliberate delays can mimic it.
         public var fastMoveBasedOnCadence = false
+        /// Fast moves its hits on you showed it can't have: the wrong type for what the game
+        /// said over your Pokémon (see `ruleOutFastMoves`). No other rule picks one of these.
+        public var ruledOutFastMoves: Set<String> = []
         /// Forms compatible with the visible base name until a move distinguishes them.
         public var possibleSpeciesIds: [String] = []
         public var energyWarning: String?
@@ -62,7 +65,8 @@ public struct OpponentTracker: Sendable {
     /// A stretch of back-to-back fast moves, ended by a charged move or a switch.
     public struct Stretch: Sendable, Hashable {
         public var length: TimeInterval
-        /// Ended by your charged move, so the fast move in progress counted too.
+        /// Ended by your charged move (or by theirs winning a tie with yours), so the fast move in
+        /// progress counted too.
         public var interrupted: Bool
         /// An observed spend proves at least this much energy existed. This is a
         /// reconciliation constraint, not an invented fast move or elapsed time.
@@ -138,14 +142,29 @@ public struct OpponentTracker: Sendable {
     @discardableResult
     public mutating func setActive(
         speciesId: String, at now: TimeInterval, assumeFastMove: String? = nil, freeSwitch: Bool = false,
-        seenAt: TimeInterval? = nil
+        seenAt: TimeInterval? = nil, outgoingWaitsForFastMove: Bool = true
     ) -> Int {
         let t = battleTime(at: now)
         let switchTurns = activeIndex == nil || freeSwitch || justThrewChargedMove(atBattleTime: t) ? 0 : 1
         lastChargedMoveAt = nil
         if let i = activeIndex {
-            team[i].bankedEnergy = energy(of: team[i], atBattleTime: t)
-            closeStretch(i, at: t)
+            // A switch in play waits for the fast move in progress, like a charged move, so the
+            // one leaving has thrown a whole number: if the clock had its latest more than half
+            // done, it had landed (220414: Marowak, 2 Mud Slaps after your charged move at 2:23.1
+            // before switching to Carbink, the second 97% done by the clock; 142007: Florges, 4
+            // Fairy Winds before switching to Mimikyu). Not before its first: it may have switched
+            // instead of attacking (125109's Mightyena lead, 0). Nor a lead leaving in the opening
+            // (`outgoingWaitsForFastMove` false): its clock starts at GO, and leads often start
+            // late, so a half-done move there may not have begun (v7: Azumarill, 1 Bubble).
+            var left = t
+            if !isPaused, outgoingWaitsForFastMove, !Rules.off("switchRounds"), let fast = team[i].fastMove, let start = team[i].chainStart, t > start {
+                let duration = Double(fast.turns) * turnDuration
+                let moves = (t - start) / duration
+                let finished = (moves + 1e-9).rounded(.down)
+                if finished >= 1, moves - finished >= 0.5 { left = start + (finished + 1) * duration }
+            }
+            team[i].bankedEnergy = energy(of: team[i], atBattleTime: left)
+            closeStretch(i, at: left)
             team[i].chainStart = nil
         }
 
@@ -185,8 +204,10 @@ public struct OpponentTracker: Sendable {
         team[i].speciesId = speciesId
         // An assumed move the new form can't learn becomes the form's own likeliest one.
         // The battle went on the whole time, so the count is redone with it.
-        if let current = team[i].fastMove, !fast.contains(current),
-           let move = data.recommendedMoves(for: speciesId).fast ?? fast.first {
+        let allowed = fast.filter { !team[i].ruledOutFastMoves.contains($0.moveId) }
+        let recommended = data.recommendedMoves(for: speciesId).fast.flatMap { allowed.contains($0) ? $0 : nil }
+        if let current = team[i].fastMove, !allowed.contains(current),
+           let move = recommended ?? allowed.first {
             team[i].fastMove = move
             team[i].fastMoveConfirmed = fast.count == 1
             team[i].fastMoveBasedOnCadence = false
@@ -208,11 +229,35 @@ public struct OpponentTracker: Sendable {
         team[i].chainStart = t
     }
 
+    /// Its hits on you showed the active Pokémon's fast move isn't any of `moveIds`.
+    public mutating func ruleOutFastMoves(_ moveIds: Set<String>) {
+        guard let i = activeIndex else { return }
+        team[i].ruledOutFastMoves.formUnion(moveIds)
+    }
+
+    /// The active Pokémon's fast move is `move` after all: its energy is recounted with it over
+    /// everything since it came in, as when a rhythm shows it.
+    public mutating func switchFastMove(to move: Move) {
+        guard let i = activeIndex, move.isFast, team[i].fastMove != move else { return }
+        let energy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
+        team[i].fastMove = move
+        team[i].bankedEnergy = energy
+        if let start = team[i].chainStart { team[i].stint = Stint(start: start, entryEnergy: energy) }
+    }
+
     /// Recounts a previously assumed moveset when repeated HP drops identify its rhythm.
     public mutating func inferFastMoveFromCadence(_ duration: TimeInterval) -> Move? {
         guard let i = activeIndex, !team[i].fastMoveConfirmed, !team[i].fastMoveBasedOnCadence else { return nil }
-        let candidates = data.fastMoves(for: team[i].speciesId).filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 }
+        let allowed = data.fastMoves(for: team[i].speciesId).filter { !team[i].ruledOutFastMoves.contains($0.moveId) }
+        let candidates = allowed.filter { abs(Double($0.turns) * turnDuration - duration) <= 0.2 }
         guard candidates.count == 1, let move = candidates.first else { return nil }
+        // A small hit can fall under the HP bar's resolution, so a faster move whose length
+        // divides this one's shows the same rhythm when every other hit goes unseen (005818:
+        // Altaria's Dragon Breath, a drop every 0.5s but only some of 3 pixels, read as Peck).
+        if !Rules.off("cadenceMultiple"),
+           allowed.contains(where: { $0.turns > 0 && $0.turns < move.turns && move.turns % $0.turns == 0 }) {
+            return nil
+        }
         let old = team[i].fastMove
         let energy = Self.replay(team[i], with: move, openStretch: nil, throwing: nil).energy
         team[i].fastMove = move
@@ -312,8 +357,8 @@ public struct OpponentTracker: Sendable {
         // Only if they've had a turn since their chain began: not when you throw straight
         // after their own charged move, or as they come in.
         if t <= start + 1e-6, afterTheirChargedMove, !Rules.off("sneakAfterTheirs") {
-            // Straight after their charged move, in the same stop: your charged move takes
-            // the next turn, and they start a fast move on it (a sneak), so it counts.
+            // Straight after their charged move (or a faint), in the same stop: your charged move
+            // takes the next turn, and they start a fast move on it (a sneak), so it counts.
             // (Shadow Greninja's Water Shuriken after its Hydro Cannon and your Mandibuzz's
             // throw: without it, its third Hydro Cannon had 32 of 40.)
             let before = team[i].bankedEnergy
@@ -332,7 +377,10 @@ public struct OpponentTracker: Sendable {
             inProgressBonus = (i, max(0, team[i].bankedEnergy - withFinished), moves - Double(finished))
             closeStretch(i, at: t, interrupted: true)
         }
-        team[i].chainStart = max(t, start)
+        // After it both sides start fresh, even one still on its switch turn: the charged move took
+        // that turn (221337: Mimikyu came in as you threw at 6:09, then 7 Shadow Claws from the
+        // restart to its Shadow Sneak, as the user counted).
+        team[i].chainStart = Rules.off("switchTurnEndsAtCharge") ? max(t, start) : t
     }
 
     /// The opponent threw a charged move on the same turn as yours (charged move priority
@@ -356,6 +404,29 @@ public struct OpponentTracker: Sendable {
             team[i].history[last].interrupted = false
         }
         return false
+    }
+
+    /// Your charged move came straight after theirs with no play between: the same turn, and theirs
+    /// went first (charged move priority). Both of you threw as your fast moves finished, so they'd
+    /// finished a whole number. As in a tie yours won (`opponentThrewOnSameTurn`), the one the clock
+    /// had in progress at their charged move counts if it was at least half done: it had landed and
+    /// the clock was behind (233921: Stunfisk's fifth Thunder Shock, 71% done by the clock, so 5
+    /// before Discharge, not 4). Returns the energy it added (their charged move was already spent).
+    @discardableResult
+    public mutating func theyWonSameTurnTie() -> Int {
+        guard !Rules.off("tieRounds"), let i = activeIndex, let fast = team[i].fastMove,
+              let thrown = team[i].chargedMovesThrown.last, thrown.afterStretch == team[i].history.count else { return 0 }
+        let previousEnd = team[i].chargedMovesThrown.dropLast().last?.afterStretch ?? 0
+        // The stretch their charged move ended (a reconciliation adds an empty one after it).
+        guard let k = team[i].history.indices.last(where: { $0 >= previousEnd && team[i].history[$0].length > 0 }),
+              !team[i].history[k].interrupted else { return 0 }
+        let moves = team[i].history[k].length / (Double(fast.turns) * turnDuration) + 1e-9
+        guard moves - moves.rounded(.down) >= 0.5 else { return 0 }
+        let before = Self.replay(team[i], with: fast, openStretch: nil, throwing: nil).energy
+        team[i].history[k].interrupted = true
+        let added = max(0, Self.replay(team[i], with: fast, openStretch: nil, throwing: nil).energy - before)
+        team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + added)
+        return added
     }
 
     /// They switch out right after the stop: a sneak counted at your charged move didn't
@@ -404,6 +475,12 @@ public struct OpponentTracker: Sendable {
         let duration = Double(fast.turns) * turnDuration
         let landed = max(1, ((t - start) / duration).rounded())
         team[i].bankedEnergy = min(maxEnergy, team[i].bankedEnergy + Int(landed) * fast.energyGain)
+        // Those moves took their time: if the clock hadn't run that long, it had been in longer
+        // than seen, and the cap on its energy grows to match (192819: Mimikyu's Shadow Claw
+        // knocked yours out 0.44s of play after its name showed; capped from there, it lost the
+        // Claw it sneaked on your next charged move).
+        let short = start + landed * duration - t
+        if !Rules.off("knockoutShowsTime"), short > 0 { team[i].stint?.start -= short }
         closeStretch(i, at: start + landed * duration)
         team[i].chainStart = t
     }
@@ -511,7 +588,7 @@ public struct OpponentTracker: Sendable {
         guard !assumed.possible else { return nil }
         let oneShort = !Rules.off("reconsiderOneShort") && assumed.shortfall <= current.energyGain
         let best = data.fastMoves(for: p.speciesId)
-            .filter { $0 != current && !(oneShort && $0.turns == current.turns) }
+            .filter { $0 != current && !(oneShort && $0.turns == current.turns) && !p.ruledOutFastMoves.contains($0.moveId) }
             .map { ($0, Self.replay(p, with: $0, openStretch: open, throwing: cost)) }
             .filter { $0.1.possible }
             .min { $0.1.slack < $1.1.slack }

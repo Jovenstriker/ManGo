@@ -1,0 +1,122 @@
+diff --git a/PvPCore/Sources/PvPCore/BattleAutomation.swift b/PvPCore/Sources/PvPCore/BattleAutomation.swift
+index 2532d56..95bde51 100644
+--- a/PvPCore/Sources/PvPCore/BattleAutomation.swift
++++ b/PvPCore/Sources/PvPCore/BattleAutomation.swift
+@@ -52,6 +52,12 @@ public struct BattleAutomation: Sendable {
+     /// Cramorant's faint, and Ninetales after Melmetal's, both start counting about when
+     /// your buttons come back.)
+     public var faintResumeLead: TimeInterval = 0.25
++    /// Rules "frameEdges": your buttons' fill on every frame dates them coming back and vanishing
++    /// better than reads 0.27s apart. Play restarts this long before the first frame they fade in
++    /// (a 0-turn switch-in with it), and stops on the first frame they're gone. Unseen in the
++    /// frames, the read-based leads above stand. (012748: Stunfisk in for Ninetales with your
++    /// buttons fading in at 2:57.24, read at 2:57.43: 5 Thunder Shocks and a sneak by 3:02.3, not 4.)
++    public var frameResumeLead: TimeInterval = 0.245
+     /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
+     /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
+     /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
+@@ -84,6 +90,8 @@ public struct BattleAutomation: Sendable {
+     /// Testing: start these species on a given fast move instead of PvPoke's recommended one.
+     public var assumedFastMoves: [String: String] = [:]
+     private var buttonsBackAt: TimeInterval?
++    /// Where a 0-turn switch-in after the stop starts: the restart their frames showed, else `buttonsBackAt`.
++    private var switchInFrom: TimeInterval?
+     /// The last read before your buttons came back.
+     private var readBeforeButtonsBack: TimeInterval?
+     /// A hit on you was showing on the last read.
+@@ -331,7 +339,8 @@ public struct BattleAutomation: Sendable {
+                 inProgressRuledOut = false
+                 let observation = parser.stopObservation ?? (first: t, previous: previousReadTime)
+                 checkRestartAgainstYourFastMoves(before: observation.first, tracker: &tracker)
+-                let stop = max(observation.first - stopLead, observation.previous, resumedAt)
++                let vanished = Rules.off("frameEdges") ? nil : buttonsVanished(by: observation.first, after: observation.previous)
++                let stop = max(vanished ?? max(observation.first - stopLead, observation.previous), resumedAt)
+                 learnYourFastMove(between: buttonsResumedAt, and: observation.first)
+                 restartChecked = true
+                 awaitingYourReplacement = false
+@@ -354,7 +363,10 @@ public struct BattleAutomation: Sendable {
+                 playerChangedSinceResume = false
+                 cadence = FastMoveCadence()
+                 let lead = chargedMoveThisStop ? resumeLead : faintResumeLead
+-                var resume = max(t - lead, lastStopAt)
++                let fadedIn = Rules.off("frameEdges") ? nil : buttonsFadedIn(by: t, after: max(lastStopAt, previousReadTime - 0.6))
++                var resume = max(fadedIn.map { $0 - frameResumeLead } ?? t - lead, lastStopAt)
++                let shownResume = resume
++                switchInFrom = fadedIn == nil ? t : resume
+                 restartSeen = false
+                 // Their fast move in progress at your charged move hit you before your buttons
+                 // came back, so play had restarted by then (155712: Azumarill's Bubble showed over
+@@ -367,7 +379,7 @@ public struct BattleAutomation: Sendable {
+                 }
+                 resumedAt = resume
+                 // Your buttons only show your fast moves once they're back (they fade in at first).
+-                buttonsResumedAt = max(t - lead, lastStopAt)
++                buttonsResumedAt = shownResume
+                 // When your Pokémon fainted, not until your replacement's buttons show its fast move.
+                 restartChecked = awaitingGo || yourFaintThisStop
+                 awaitingYourReplacement = !awaitingGo && yourFaintThisStop
+@@ -631,6 +643,38 @@ public struct BattleAutomation: Sendable {
+         summaryPendingLabels = nil
+     }
+ 
++    /// A button shows fill on this frame (hidden or empty reads 0).
++    private static func fills(_ s: [Double], _ b: Int) -> Bool { s[b] > 0.02 }
++
++    /// The first frame your buttons faded in by the read at `t`. Walking back the fill only falls
++    /// (a frame may dip) to an empty frame before they showed. A fuller frame first is the stop's
++    /// effects, and no empty frame by `floor` no edge: unknown.
++    private func buttonsFadedIn(by t: TimeInterval, after floor: TimeInterval) -> TimeInterval? {
++        let frames = fillSamples.filter { $0[0] > floor && $0[0] <= t }
++        guard var i = frames.indices.last, Self.fills(frames[i], 1) || Self.fills(frames[i], 2) else { return nil }
++        while i > 0 {
++            let earlier = frames[i - 1], later = frames[i...].prefix(2)
++            if !Self.fills(earlier, 1) && !Self.fills(earlier, 2) { return frames[i][0] }
++            if (1...2).contains(where: { b in earlier[b] > later.map { $0[b] }.max()! + 0.1 }) { return nil }
++            i -= 1
++        }
++        return nil
++    }
++
++    /// The first frame your buttons were gone by the first read without them: a button showing
++    /// fill at the last read with them, empty on two frames in a row after it (the stop's effects
++    /// may follow). Unknown if neither did.
++    private func buttonsVanished(by first: TimeInterval, after previous: TimeInterval) -> TimeInterval? {
++        guard let shown = fillSamples.last(where: { $0[0] <= previous }) else { return nil }
++        let frames = fillSamples.filter { $0[0] > previous }
++        return (1...2).compactMap { b -> TimeInterval? in
++            guard Self.fills(shown, b) else { return nil }
++            return frames.indices.first { i in
++                frames[i][0] <= first && !Self.fills(frames[i], b) && i + 1 < frames.count && !Self.fills(frames[i + 1], b)
++            }.map { frames[$0][0] }
++        }.min()
++    }
++
+     private func yourLandings(from start: TimeInterval, to end: TimeInterval) -> [TimeInterval] {
+         YourFastMoves.landings(in: fillSamples.filter { $0[0] >= start && $0[0] <= end })
+     }
+@@ -843,6 +887,7 @@ public struct BattleAutomation: Sendable {
+         resumedBeforeGo = nil
+         lastStopAt = -.infinity
+         buttonsBackAt = nil
++        switchInFrom = nil
+         readBeforeButtonsBack = nil
+         hitOverYouLastRead = false
+         inProgressLandedBy = nil
+@@ -899,7 +944,7 @@ public struct BattleAutomation: Sendable {
+         // turn (the parser's `freeSwitch`): Turtonator after Mimikyu blocked yours had 3
+         // Incinerates plus the one in progress, and Mimikyu left with no extra Shadow Claw.
+         if !Rules.off("freeSwitchBackdate"), opponentThrewThisStop, let back = buttonsBackAt, back >= resumedAt, t - back < Self.afterStopWindow {
+-            time = max(resumedAt, min(time, back))
++            time = max(resumedAt, min(time, switchInFrom ?? back))
+         }
+         if tracker.active == nil {
+             // The lead: counting starts at "GO" (or when the countdown says it will be).
+@@ -926,7 +971,7 @@ public struct BattleAutomation: Sendable {
+         // made in play and costs a turn (Turtonator, 1.1s after: 3 Incinerates plus the one
+         // in progress, not 4 plus one).
+         let quick = !Rules.off("quickSwitch") && chargedMoveThisStop && buttonsBackAt.map { since - $0 < Self.quickSwitchWindow } == true
+-        if quick, let back = buttonsBackAt { time = leftDuringStop ? resumedAt : max(resumedAt, min(time, back)) }
++        if quick, let back = buttonsBackAt { time = leftDuringStop ? resumedAt : max(resumedAt, min(time, switchInFrom ?? back)) }
+         if theirsFainted {
+             // A new Pokémon right after a stop with no charged move from them: theirs fainted.
+             // The clock stays as the screen says: if the battle is still stopped, the new

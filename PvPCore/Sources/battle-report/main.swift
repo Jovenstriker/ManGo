@@ -46,6 +46,7 @@ let env = ProcessInfo.processInfo.environment
 if let v = env["STOP_LEAD"].flatMap(Double.init) { automation.stopLead = v }
 if let v = env["RESUME_LEAD"].flatMap(Double.init) { automation.resumeLead = v }
 if let v = env["FAINT_RESUME_LEAD"].flatMap(Double.init) { automation.faintResumeLead = v }
+if let v = env["FADE_IN_LEAD"].flatMap(Double.init) { automation.fadeInLead = v }
 if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.playerFreezeBeforeCue = v }
 if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
 if let off = env["RULES_OFF"] { Rules.disabled = Set(off.split(separator: ",").map(String.init)) }
@@ -65,11 +66,18 @@ for read in reads {
     let snap = tracker.snapshot(at: read.time)
     timeline += automation.logThisRead.map { "\(clock(read.time))  \($0)" }
     throwsSeen += automation.throwsThisRead
+    if let revised = automation.throwRevisedThisRead, let k = throwsSeen.lastIndex(where: { $0.time == revised.time }) {
+        throwsSeen[k] = revised
+    }
     for (i, point) in checkpoints.enumerated() where !checkedPoints.contains(i) && read.time >= point.time {
         checkedPoints.insert(i)
         if read.time - point.time >= 0.5 || snap.pokemon?.possibleSpeciesIds.contains(point.speciesId) != true || snap.energy != point.energy {
             evidenceFailures.append("At \(point.time)s expected \(point.speciesId) energy \(point.energy); observed \(snap.pokemon?.speciesId ?? "unknown") energy \(snap.energy) at \(read.time)s")
         }
+    }
+    // TRACE=from-to (seconds) prints the opponent's energy at every read in that window.
+    if let w = env["TRACE"]?.split(separator: "-").compactMap({ Double($0) }), w.count == 2, (w[0]...w[1]).contains(read.time) {
+        FileHandle.standardError.write("\(clock(read.time)) \(tracker.isPaused ? "stopped" : "running") \(name(snap.pokemon?.speciesId)) \(snap.energy)\n".data(using: .utf8)!)
     }
     if tracker.isPaused != wasPaused, let p = snap.pokemon {
         timeline.append("\(clock(read.time))    \(tracker.isPaused ? "stopped" : "running")  \(name(p.speciesId)) at \(snap.energy)")
@@ -116,6 +124,9 @@ out.append(String(format: "  The battle starts %.3fs after \"GO\" is first read.
 out.append(String(format: "  Battle stops %.3fs before your buttons are first read as gone.", automation.stopLead))
 out.append(String(format: "  Your charged move freezes the battle %.3fs before \"Get Ready!\" is read.", automation.playerFreezeBeforeCue))
 out.append(String(format: "  Battle resumes %.3fs before your buttons are read again (%.3fs after a faint).", automation.resumeLead, automation.faintResumeLead))
+if !Rules.disabled.contains("fadeIn") {
+    out.append(String(format: "  At a 0-turn switch after a charged move, %.3fs before your buttons start fading in, if the frames show it.", automation.fadeInLead))
+}
 out.append("")
 out.append("OPPONENT FAST MOVES ASSUMED (PvPoke recommended)")
 for p in tracker.team {

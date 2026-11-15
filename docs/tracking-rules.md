@@ -16,10 +16,36 @@ explicitly approximate and are not used to identify moves or compute energy.
 - A normal switch costs one turn. Replacing a fainted Pokémon is free. Either side can
   switch freely as a charged move ends; once play has resumed, the normal switch turn applies.
   Choosing to switch out after the other side fainted costs one turn.
+- A switch in play waits for the fast move in progress, like a charged move, so the Pokémon
+  leaving has thrown a whole number: its time on the field over its fast move, to the nearest
+  (confirmed by hand six times on November 9, 2026). Not for a lead leaving before the first stop,
+  whose clock starts at GO and may run ahead of a late start.
+- A switch made in play costs its turn even when the new name first shows in a stop: dated by its
+  "Go, X!" (never before a read still showing the Pokémon it replaced), before the stop began, it had
+  no fast move in progress at your charged move unless its turn was over. A charged move ends a
+  switch turn: after it, the new Pokémon starts with the restart (221337: Mimikyu for Greninja just
+  before your 6:09 charged move, then 7 Shadow Claws by its Shadow Sneak, by the user's count).
+- Your own switch as your buttons come back (made in the stop) doesn't break their rhythm from the
+  restart; one made in play does.
 - A free switch counts from when the Pokémon it replaced left. Gone from their name box before
   the last read before your buttons came back, it left during the stop and the new one starts
   at the restart: a moment before your buttons after your charged move, with them after theirs
   (play restarts around your buttons then, even when you shield).
+- A 0-turn switch, right after anyone's charged move (thrown, received or shielded), holds your
+  buttons back while its camera plays. When their name box no longer shows the Pokémon that was
+  in by the read before your buttons come back, the restart is dated from the frame your buttons
+  start fading in, less 0.15s, not from their read (012748: Stunfisk for Ninetales, 5 Thunder
+  Shocks and a sneak by your Blaze Kick; 020105: Cramorant for Diggersby, 2 Pecks and a sneak;
+  013324: Pangoro for Azumarill, 4 and a sneak; all by the user's count). Not when theirs stayed
+  in (010901: Ninetales after your charged move, an Ember short if dated from the frames).
+- After a faint, your first charged move gives them a sneak, even if your buttons never showed
+  play resuming: you can only throw once it has, so yours took its first turn and they started a
+  fast move on it (010753: Nidoqueen in for the fainted Forretress, your charged move at 2:29.8; the
+  user saw it sneak a Mud Slap). Unlike a switch made in play, a replacement has no switch turn.
+- The fast move that knocks your Pokémon out took its full length: if the clock hadn't had that
+  Pokémon in that long, it came in earlier than seen, and the cap on its energy starts that much
+  earlier (192819: Mimikyu's name showed 0.44s of play before its Shadow Claw knocked yours out;
+  capped from the name, it lost the Claw it sneaked on your next charged move, 9 not 10).
 - After a faint, neither side attacks until the replacement is out. Dimmed move labels
   can remain on screen during this transition. Confirmed player pokéball loss overrides them.
 - Benched Pokémon keep their energy. Form clarification must preserve their history.
@@ -32,19 +58,46 @@ explicitly approximate and are not used to identify moves or compute energy.
   another one the Pokémon learns could have paid for it (the user confirmed Flygon used Mud Shot,
   not PvPoke's Dragon Tail), but not to one of the same length when the assumed move is less than
   one fast move short: those fit the same turns, and a lag can lose one (Furret, Sucker Punch).
-- A fast move registers on its last turn (PvPoke's guide to fast move registration), so the
-  lead's first hit on your HP bar shows it began at least one fast move earlier, sometimes before
-  GO is readable. Only for the opening: after a charged move a hit already counted can show as
-  play resumes.
+- A GO (or "CO") read sooner after a countdown digit than the countdown can get there (1.5s
+  after its "3", 0.8s after its "2") is that digit misread (014321: "co" 0.26s after the "3";
+  the real GO came 2.7s later). In every other recording GO came 2.46s or more after a "3" and
+  1.30s after a "2".
+- A "Go, X!" within 1.5s of your buttons changing to moves X learns is your switch, even with
+  your name box covered (014321: "Go, Jumpluff!" as your buttons became Energy Ball and
+  Acrobatics, while Cramorant's box went blank for its Dive; taken for theirs, it made Machamp a
+  fourth Pokémon and started a new battle, resetting their energy).
+- The lead starts 0.2s after GO is first read: of the starts tried after the countdown on
+  November 8, 2026, the only one that fits every lead's hand count. GO stands about 0.65s, then
+  grows as it fades; a first read that caught it fading (taller and wider than it stands) came
+  most of that late, and the start is 0.5s earlier (152828: up from 0:43.9, first read at 0:44.56,
+  0.70 wide by 0.16 high; Marowak's 4 Mud Slaps). Taller but no wider is the text box read
+  loosely (192819: 0.60 by 0.16 while it stood; Quagsire's 5 Mud Shots before Aqua Tail, not 6). Your HP bar doesn't date the lead: Stunfisk in 223847 waited about a second after its
+  sixth Thunder Shock before Mud Bomb, so dated from its first hit it got 7, not the user's 6.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
-  one more. Your HP bar overrules that when it held steady where the extra one would have hit you,
-  or, after your charged move, a fast move earlier, where their move in progress would have.
+  one more, if the restart that implies is within 0.5s before to 0.4s after your buttons came back
+  (also after they blocked yours: Mimikyu in 221337 threw 6, not 7, after the 6:36 tie). Your HP bar
+  overrules that when it held steady where the extra one would have hit you,
+  or, after your charged move, a fast move earlier, where their move in progress would have. And it
+  doesn't apply when the restart was seen: their move in progress hitting you as play resumed.
 - On a same-turn throw (CMP) they had no fast move in progress: no sneak. Both sides throw as
   their fast moves finish, so they'd finished a whole number: the move counted in progress at
   your charged move is taken back if the clock had it less than half done, and kept if nearer
   done (it had landed and the clock was behind). That shows when both charged moves play out;
   if yours knocks theirs out first, theirs never shows, and neither does the tie, but its energy
   no longer matters.
+- When theirs goes first and yours follows in the same stop with no play between (no hit on their
+  Pokémon after their banner has gone, your buttons never back, your Pokémon not out), it was the
+  same turn and theirs won the tie: no sneak. The move the clock had in progress at theirs counts
+  only when the finished ones couldn't pay for their charged move: the clock was behind (233921:
+  Stunfisk's Discharge and your Energy Ball at 1:22.2, 5 Thunder Shocks before it and 5 before its
+  Mud Bomb, by the user's count; 211526: Quagsire's Stone Edge on 7 Mud Shots, 6 being 54). When
+  they could pay, it doesn't, however done the clock had it (211824: Hydreigon's Brutal Swing on
+  14 Dragon Breaths from GO with the 15th 99% done; the user saw a sneak at the tie). Unless it came
+  in by a switch since play last restarted: a switch is only dated to within a read or so, and its
+  hits on your bar come before the clock has them, so the half-done move counts (211824: Melmetal's
+  Double Iron Bash on 5 Thunder Shocks, the 5th 87% done; 221608: Ninetales's Weather Ball on 5
+  Embers, the 5th 70% done, both by the user's count). A sneak after their charged move
+  needs play between (002722: your Mandibuzz's fast move hit Greninja after its Hydro Cannon).
 - After your charged move, their fast move in progress finishes as play resumes: its hit on you
   ("…EFFECTIVE" over your Pokémon, fresh in the stop) shows play had restarted by that read, often
   before your buttons are readable. Not if it knocked yours out: play then waits for your next
@@ -54,11 +107,30 @@ explicitly approximate and are not used to identify moves or compute energy.
   The opponent's count starts from it less a 0.35s reaction; restarts only ever move earlier.
 - A switch or unreadable interval breaks the premise of uninterrupted fast moves.
   A clear repeated HP-damage cadence can refine an assumed moveset. Shared durations and
-  occluded bars remain ambiguous; do not convert their absence into a measured zero.
+  occluded bars remain ambiguous; do not convert their absence into a measured zero. Nor does a
+  rhythm pick a move when a faster one the Pokémon learns divides its length: a small hit can
+  fall under the bar's resolution, so missing every other hit of the faster move looks the same
+  (005818: Altaria's Dragon Breath, a drop every 0.5s but some of only 1-2 pixels, read as Peck).
+- Their fast move in progress at your charged move hitting you before your buttons come back
+  dates the restart. Not when your charged move knocked theirs out and its replacement came in
+  after it: that one had nothing in progress, so the hit was its first fast move, a whole move
+  after the restart (155536: Altaria for the fainted Florges, its Dragon Breath over your Mimikyu
+  by 2:56.60, 12 Dragon Breaths by its Sky Attack, not 10). It landed between two reads, so
+  halfway, as a stop is dated.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
   Ranked recommendations are hypotheses, not visual identification.
+- Their fast move's hits on you say "SUPER EFFECTIVE!" or "NOT VERY EFFECTIVE..." over your
+  Pokémon (nothing when neutral). With your Pokémon's types (from its two charged move buttons,
+  the one of your team that has both), that rules out each of their fast moves of the wrong
+  type, and any form left with none; ManGo then takes the best-ranked form that fits and its
+  recommended fast move if that fits (011620: "SUPER EFFECTIVE!" on Fearow is only Powder Snow,
+  so Alolan Ninetales, not PvPoke's top Ninetales on Ember: 48 at Weather Ball, not 54). No
+  other rule picks a ruled-out move. Only a text that first shows after the restart, your
+  switch and theirs counts, and not within 0.5s of the restart: a charged move's text shows
+  as play restarts and drifts over your Pokémon (020853, 022052, 124534), and a text stays up
+  a while (155536: Altaria's on your Mimikyu, 2s into Florges). No text is no evidence.
 
-`BattleAccuracyTests` enforces all 55 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 110 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

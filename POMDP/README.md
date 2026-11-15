@@ -143,30 +143,64 @@ The planner keeps the rollout policy's own choice unless a paired test says anot
 better by more than one standard error. Without that test, in an earlier run, the planner lost
 to its own rollout policy (0.52 vs baiter's 0.58). With it, the planner beats baiter clearly.
 
-**Switching, waiting and catching.** Switching is legal on any turn the 45-second switch timer
-allows, and a Pokémon can also wait: do nothing for a turn and stay free. A switch on the turn
-the opponent throws takes the throw on the incoming Pokémon ("catching" it). Both sides choose
-blind, so catching means predicting the throw turn from counted energy, and waiting keeps a
-Pokémon with a multi-turn fast move free for that turn. Rollouts are the expensive part, so the
-planner only weighs a switch at some moments. Its `switch_at` option sets them; append
-`@start`, `@zero-turn`, `@catch` or `@any` to a planner's name:
+**The actions.** On every turn your Pokémon is free, you can:
+- fast move, which locks it in for that move's length;
+- throw a charged move you have the energy for;
+- switch to either bench Pokémon, when the 45-second switch timer allows;
+- wait: do nothing, and stay free next turn.
 
-| `switch_at` | The planner weighs a switch |
+When they throw, you shield or don't, while you have shields. After a faint, you pick who comes
+in. A switch on the turn the opponent throws takes the throw on the incoming Pokémon
+("catching" it). Both sides choose blind, so catching means predicting the throw turn from
+counted energy. Waiting keeps a Pokémon with a multi-turn fast move free for that turn.
+
+By default (`any`) the planner weighs every legal action on every free turn. Its `switch_at`
+option can narrow that to save rollouts; append `@start`, `@zero-turn`, `@catch` or `@any` to a
+planner's name:
+
+| `switch_at` | Besides fast and charged moves, the planner weighs |
 |---|---|
-| `start` | within 2 turns of a new matchup |
-| `zero-turn` | that, and the turn right after any charged move (thrown, shielded or taken): a 0-turn switch, which costs no fast move |
-| `catch` (default) | that, and whenever their counted energy is within one fast move of a charged move: switching now, or waiting and switching the turn they throw |
-| `any` | every turn |
+| `start` | switches within 2 turns of a new matchup |
+| `zero-turn` | that, and switches on the turn right after any charged move (thrown, shielded or taken): a 0-turn switch, which costs no fast move |
+| `catch` | that, and whenever their counted energy is within one fast move of a charged move: switching now, or waiting and switching the turn they throw |
+| `any` (default) | every legal action on every free turn: all of the above, plus switching or waiting on any other turn |
 
-With `catch`, our own rollout policy catches too: it stays free and switches when the
-predicted throw is a big hit that a bench Pokémon takes much less of. Measured on paired games:
+With `any`, a wait or switch at a moment the mechanics don't favor has to beat the default by
+3 standard errors instead of 1. With a dozen noisy rollouts on every turn, a plain one-standard-
+error test let the planner wander off its default by chance. It then played worse (0.805,
+below).
+
+**Good timing.** The planner's default, which is also its rollout policy, is the baiter
+heuristic with two additions:
+- *Throw timing* (`policies.Timed`). A charged move registers the opponent's fast move in
+  progress on the spot and resets cooldowns, which hands them the turns they had left. So it
+  holds a throw until their fast move lands, fast moving meanwhile if its own move ends in
+  time, and waiting otherwise.
+- *Catching.* When a big hit is coming that a bench Pokémon takes much less of, it stays free
+  and switches on the throw turn.
+
+These are heuristics, and sometimes throwing at once is better. Each free turn the planner
+weighs throwing now against them. On 100 paired Great League games against the heuristic
+styles:
+
+| Planner | Win rate | Seconds per battle |
+|---|---|---|
+| `catch`, no good timing (the previous default) | 0.828 ± 0.025 | 2.7 |
+| `catch` with good timing | 0.845 ± 0.025 | 2.8–3.4 |
+| `any`, plain one-standard-error test | 0.805 ± 0.027 | 3.8 |
+| `any`, waits and switches off key moments need 2 standard errors | 0.843 ± 0.024 | 4.0 |
+| **`any`, 3 standard errors (default)** | **0.858 ± 0.024** | 4.7 |
+
+The tables below, and the Mega Great League experiment, were run before good timing and
+`any`, with `catch` as the default. The newest experiment, your own battles, uses the current
+default. With `catch`, measured on paired games:
 
 | Switching | Great League tournament | #25 vs heuristic styles | #25 vs the planner (`@start`) | Catches per game |
 |---|---|---|---|---|
 | `start` | 0.798 ± 0.023 | 0.961 | 0.721 | 0.00–0.01 |
 | `zero-turn` | 0.807 ± 0.023 | | | |
 | `catch`, plain rollouts | | 0.963 | 0.697 | 0.05–0.06 |
-| `catch` (default) | 0.803 ± 0.023 | 0.960 | 0.676 | 0.07–0.09 |
+| `catch`, catching rollouts | 0.803 ± 0.023 | 0.960 | 0.676 | 0.07–0.09 |
 
 Head to head, the same planner (`planner-list`) on 250 random pairs of the listed Mega Great
 League teams, each played from both sides so team strength cancels:
@@ -199,8 +233,9 @@ Ablations, by player name:
 `python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner oracle`:
 each player plays 300 battles. Each game is 2 battles with the teams swapped, and the opponent
 style is drawn uniformly. Ties count as half a win. The run took about 4 minutes on 10 cores.
-These numbers use the current rules and planner: charged moves reset cooldowns, both sides
-choose simultaneously, and the planner can wait and catch (above).
+These numbers use the current rules: charged moves reset cooldowns, and both sides choose
+simultaneously. The planner is the `catch` version, which waits and catches but has no good
+timing (above).
 
 | Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
 |---|---|---|---|---|---|
@@ -312,13 +347,78 @@ What this says:
   opponent planner as much as ours. Against an equally strong opponent, the best team's win
   rate fell from 0.72 to 0.64, so team choice matters less once both sides play well.
 
+## Your battles, replayed
+
+Your recorded battles are in two files, with species only and lead first: no recording names
+or screen text.
+- `data/mega_great_league_my_battles.csv` has each battle's two teams. Pokémon you didn't bring
+  out are filled in from your usual team.
+- `data/mega_great_league_faced_teams.csv` has the distinct teams: your 4, and the 63 full
+  teams you faced. It leaves out 8 battles where fewer than three opponents were seen, and 1
+  misread.
+
+They're simulated as Mega Great League battles with PvPoke's recommended movesets, since the
+table lists species only.
+
+**Every team against every other** (`top_teams rank --pool all`): PvPoke's 48, your 4, and the
+63 you faced, with heuristic play.
+
+| Rank of 115 | Team | Win rate |
+|---|---|---|
+| 1 | Forretressˢ / Carbink / Marowak (faced) | 0.713 |
+| 2 | Sandslash (Alolan) / Marowak / Carbink (faced) | 0.694 |
+| 3 | Turtonator / Mimikyu / Forretressˢ (faced) | 0.681 |
+| 4 | #25 Thievul / Cramorant / Stunfisk (PvPoke's best) | 0.670 |
+| 6 | **Nidoqueen / Mandibuzz / Clodsire (yours)** | 0.643 |
+| 64 | **Altaria / Melmetal / Mimikyu (yours)** | 0.488 |
+| 84 | **Thievul / Blaziken / Jumpluff (yours, the most used)** | 0.454 |
+| 109 | **Blaziken / Jumpluff / Fearow (yours)** | 0.353 |
+
+**Each battle replayed with the solver** (`python3 -m experiments.my_battles --games 4`). In
+each of the 63 battles with a full opponent team, your team that day plays that day's opponent.
+It's replayed 4 times against each heuristic style and 4 times against the planner, from both
+sides. The solver is `planner-list` with the current default, and it knows only PvPoke's list,
+not your opponents. The baiter heuristic plays the same games for comparison. A battle counts as
+won if more than half its replays are wins:
+
+| Your side played by | vs heuristic opponents | vs the planner |
+|---|---|---|
+| **solver** | **wins 59 of 63** (0.808 ± 0.012) | **wins 17, ties 14** (0.409 ± 0.031) |
+| baiter heuristic | wins 32 of 63 (0.540 ± 0.016) | wins 5, ties 9 (0.202 ± 0.025) |
+
+| Your team | Battles | Solver vs heuristics | Solver vs the planner |
+|---|---|---|---|
+| Thievul / Jumpluff / Blaziken | 34 | wins 32 (0.79) | wins 10 (0.38) |
+| Altaria / Melmetal / Mimikyu | 23 | wins 21 (0.83) | wins 3 (0.41) |
+| Nidoqueen / Mandibuzz / Clodsire | 4 | wins 4 (0.89) | wins 3 (0.56) |
+| Blaziken / Jumpluff / Fearow | 2 | wins 2 (0.75) | wins 1 (0.50) |
+
+What this says:
+- **Against simple opponents, the solver wins nearly all of your battles.** It wins 59 of 63,
+  where the baiter heuristic playing the same teams wins 32. It loses only to Morpeko / Jirachi
+  / Azumarill (0.31) and Hydreigonˢ / Melmetal / Azumarill (0.41).
+- **Against an equally strong opponent, your teams are the weaker side.** The solver wins 0.41
+  of the replays. That fits the round robin: your two most-used teams rank 64th and 84th of
+  115.
+- **Nidoqueen / Mandibuzz / Clodsire is your strongest team here.** It ranks 6th in the round
+  robin and wins 3 of 4 battles even against the planner. It's also your least used.
+
+These are simulations, not a check against what happened. The table doesn't record who won
+each real battle, and movesets are PvPoke's recommended ones. Some battles may have been in
+other formats, such as testV3 in the Fantasy Cup. Against the planner, each battle has only 4
+replays, so per-battle rates are coarse. The full table is in `results/my_battles.txt`.
+
 ## Layout
 
     data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves
     data/mega_great_league.json          the same for Mega Great League, plus its top teams, decoded
     data/mega_great_league_top_teams.csv PvPoke's top Mega Great League teams export
+    data/mega_great_league_faced_teams.csv  your teams and the full teams you faced (species, lead first)
+    data/mega_great_league_my_battles.csv   each of your battles: your team and theirs (species, lead first)
     data/openings_25.json      the opening book for team #25, Cramorant leading (top_teams book 25 --lead 2)
     results/mega_team25.txt    team #25's full results and per-opponent game plans
+    results/my_battles.txt     your battles, replayed with the solver (experiments/my_battles.py)
+    results/rank_all.txt       every team (PvPoke's, yours, the ones you faced) against every other
     scripts/update_data.sh     re-download and trim PvPoke's data (scripts/trim_data.py)
     mango_pomdp/gamedata.py    types, moves, damage formula
     mango_pomdp/battle.py      the simulator and the player's View
@@ -332,7 +432,8 @@ What this says:
     mango_pomdp/match.py       building players by name, playing one battle
     experiments/               duel.py (one 1v1, solved), meta.py (every 1v1 among the top N),
                                tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle),
-                               top_teams.py (pick one of PvPoke's top teams and plan against the rest)
+                               top_teams.py (pick one of PvPoke's top teams and plan against the rest),
+                               my_battles.py (your own battles, replayed with the solver)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps

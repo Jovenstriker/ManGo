@@ -1,0 +1,119 @@
+Round robin: 115 teams (all), each pair 4 games per style × 4 styles, both sides playing the same heuristic style. 14s
+usage-wt weights opponents by PvPoke usage, so it counts only PvPoke's teams.
+
+rank team                                         PvPoke  win rate  usage-wt    beats   worst matchup
+   1  F28  Forretressˢ/Carbink/Marowak                       0.713     0.653   89/114   0.00 vs #8 Stunfisk/Empoleon/Moltres-G
+   2  F56  Sandslash-A/Marowak/Carbink                       0.694     0.578   84/114   0.12 vs #25 Thievul/Cramorant/Stunfisk
+   3  F61  Turtonator/Mimikyu/Forretressˢ                    0.681     0.697   81/114   0.06 vs #22 Cramorant/Marowak/Melmetal
+   4  #25  Thievul/Cramorant/Stunfisk                503     0.670     0.660   82/114   0.00 vs F63 Wigglytuff/Stunfisk/Quagsireˢ
+   5  #22  Cramorant/Marowak/Melmetal                511     0.647     0.536   73/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ
+   6   M3  Nidoqueen/Mandibuzz/Clodsire                      0.643     0.598   77/114   0.00 vs #47 Marowak/Lickilicky/Mimikyu
+   7  #32  Cramorant/Marowak/Tinkaton                495     0.643     0.524   75/114   0.00 vs #33 Melmetal/Corsola-G/Cramorant
+   8  #26  Cramorant/Marowak/Sableyeˢ                502     0.627     0.526   74/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ
+   9  F42  Mightyenaˢ/Corviknight/Charjabug                  0.610     0.594   77/114   0.00 vs #25 Thievul/Cramorant/Stunfisk
+  10  #33  Melmetal/Corsola-G/Cramorant              495     0.608     0.589   75/114   0.00 vs #47 Marowak/Lickilicky/Mimikyu
+  11  #36  Marowak/Cramorant/Mimikyu                 494     0.608     0.622   73/114   0.00 vs #3 Altaria/Corsola-G/Melmetal
+  12  F62  Turtonator/Mimikyu/Stunfisk                       0.601     0.594   68/114   0.00 vs F16 Cramorant/Dunsparce/Diggersby
+  13   F8  Charjabug/Cramorant/Diggersby                     0.600     0.620   68/114   0.00 vs M3 Nidoqueen/Mandibuzz/Clodsire
+  14  #45  Cramorant/Mimikyu/Thievul                 491     0.595     0.656   64/114   0.00 vs F45 Mimikyu/Turtonator/Granbull
+  15  F43  Miltank/Forretressˢ/Marowak                       0.592     0.487   69/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ
+  16  F18  Cramorant/Marowak/Ninetalesˢ                      0.591     0.499   67/114   0.00 vs #33 Melmetal/Corsola-G/Cramorant
+  17  F29  Forretressˢ/Greninjaˢ/Nidoqueen                   0.589     0.538   71/114   0.00 vs #16 Charjabug/Mantine/Vigoroth
+  18  F14  Corviknight/Turtonator/Mimikyu                    0.589     0.508   67/114   0.00 vs F28 Forretressˢ/Carbink/Marowak
+  19  F63  Wigglytuff/Stunfisk/Quagsireˢ                     0.588     0.534   64/114   0.00 vs #11 Ninetales/Kingdra/Mimikyu
+  20  #12  Cramorant/Jumpluff/Stunfisk               518     0.584     0.547   69/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ
+  21  F13  Corviknight/Azumarill/Turtonator                  0.580     0.552   70/114   0.00 vs #22 Cramorant/Marowak/Melmetal
+  22  F37  Marowak/Furret/Talonflame                         0.567     0.578   63/114   0.00 vs #12 Cramorant/Jumpluff/Stunfisk
+  23  F49  Ninetales-A/Quagsireˢ/Jumpluff                    0.566     0.519   65/114   0.06 vs #11 Ninetales/Kingdra/Mimikyu
+  24   #2  Sableye-Mega/Marowak/Melmetal             556     0.561     0.502   62/114   0.00 vs M1 Thievul/Blaziken/Jumpluff
+  25  F38  Marowak/Lickilicky/Carbink                        0.559     0.602   63/114   0.00 vs #1 Cramorant/Hippowdon/Melmetal
+  26  #44  Melmetal/Altaria/Mimikyu                  491     0.558     0.546   65/114   0.00 vs #16 Charjabug/Mantine/Vigoroth
+  27  F20  Diggersby/Cramorant/Forretressˢ                   0.558     0.586   62/114   0.00 vs #24 Araquanid/Fearow/Stunfisk
+  28  F27  Flygon/Melmetal/Turtonator                        0.556     0.466   64/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ
+  29  F32  Greninjaˢ/Forretressˢ/Mimikyu                     0.553     0.535   60/114   0.00 vs #24 Araquanid/Fearow/Stunfisk
+  30  F24  Empoleon/Nidoqueen/Forretressˢ                    0.546     0.426   58/114   0.00 vs F28 Forretressˢ/Carbink/Marowak
+  31  #14  Ursalunaˢ/Araquanid/Mimikyu               517     0.542     0.453   61/114   0.00 vs #45 Cramorant/Mimikyu/Thievul
+  32  F47  Morpeko/Corsola-G/Corviknight                     0.542     0.585   62/114   0.00 vs F8 Charjabug/Cramorant/Diggersby
+  33  F41  Melmetal/Ninetalesˢ/Altaria                       0.538     0.430   60/114   0.00 vs #25 Thievul/Cramorant/Stunfisk
+  34  #42  Stunfisk/Cramorant/Mimikyu                492     0.538     0.567   68/114   0.03 vs #14 Ursalunaˢ/Araquanid/Mimikyu
+  35  F40  Melmetal/Azumarill/Mimikyu                        0.537     0.534   63/114   0.00 vs #4 Charjabug/Cradily/Empoleon
+  36   #3  Altaria/Corsola-G/Melmetal                555     0.532     0.541   59/114   0.00 vs #9 Tinkaton/Malamar/Mimikyu
+  37  #38  Melmetal/Araquanid/Mimikyu                493     0.529     0.497   58/114   0.00 vs #47 Marowak/Lickilicky/Mimikyu
+  38  F39  Marowak/Sableyeˢ/Talonflame                       0.527     0.498   65/114   0.00 vs #3 Altaria/Corsola-G/Melmetal
+  39  #18  Melmetal/Altaria/Ninetalesˢ               514     0.527     0.402   55/114   0.00 vs #7 Marowak-Aˢ/Cradily/Kingdra
+  40  #13  Corsola-G/Melmetal/Quagsire               518     0.527     0.492   61/114   0.00 vs #20 Drapion/Dunsparce/Jumpluffˢ
+  41  F16  Cramorant/Dunsparce/Diggersby                     0.523     0.462   60/114   0.00 vs #8 Stunfisk/Empoleon/Moltres-G
+  42  #31  Quagsireˢ/Corsola-G/Corviknight           495     0.521     0.489   60/114   0.00 vs F16 Cramorant/Dunsparce/Diggersby
+  43  F45  Mimikyu/Turtonator/Granbull                       0.520     0.568   54/114   0.00 vs F28 Forretressˢ/Carbink/Marowak
+  44  #47  Marowak/Lickilicky/Mimikyu                491     0.520     0.596   58/114   0.00 vs #22 Cramorant/Marowak/Melmetal
+  45  #48  Quagsireˢ/Corsola-G/Tinkaton              490     0.520     0.562   57/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+  46   #4  Charjabug/Cradily/Empoleon                552     0.519     0.546   56/114   0.00 vs #36 Marowak/Cramorant/Mimikyu
+  47  #24  Araquanid/Fearow/Stunfisk                 506     0.519     0.470   58/114   0.00 vs #1 Cramorant/Hippowdon/Melmetal
+  48  F48  Morpeko/Jirachi/Azumarill                         0.518     0.430   54/114   0.00 vs F5 Azumarill/Empoleon/Magnezone
+  49   F7  Charjabug/Blastoise/Dunsparce                     0.518     0.522   58/114   0.00 vs #19 Dusknoirˢ/Araquanid/Snorlaxˢ
+  50   #8  Stunfisk/Empoleon/Moltres-G               546     0.517     0.495   58/114   0.00 vs #13 Corsola-G/Melmetal/Quagsire
+  51  F34  Hydreigonˢ/Ninetalesˢ/Melmetal                    0.515     0.517   59/114   0.00 vs #26 Cramorant/Marowak/Sableyeˢ
+  52  F33  Hydreigonˢ/Melmetal/Azumarill                     0.514     0.581   55/114   0.00 vs #46 Altaria/Azumarill/Melmetal
+  53   #1  Cramorant/Hippowdon/Melmetal              577     0.509     0.440   56/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ
+  54  F15  Cramorant/Charjabug/Machampˢ                      0.507     0.468   58/114   0.00 vs #23 Clefable/Corsola-G/Dusknoirˢ
+  55  #37  Araquanid/Mimikyu/Stunfisk                494     0.501     0.500   57/114   0.00 vs #1 Cramorant/Hippowdon/Melmetal
+  56  F12  Corsola-G/Ursaluna/Tinkaton                       0.499     0.478   52/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+  57  F60  Turtonator/Florges/Tinkaton                       0.498     0.501   53/114   0.00 vs #3 Altaria/Corsola-G/Melmetal
+  58  #34  Sableyeˢ/Ninetalesˢ/Tinkaton              495     0.495     0.402   52/114   0.00 vs #33 Melmetal/Corsola-G/Cramorant
+  59  F46  Morpeko/Azumarill/Altaria                         0.493     0.477   47/114   0.00 vs M2 Altaria/Melmetal/Mimikyu
+  60   F3  Altaria/Forretressˢ/Magnezone                     0.492     0.462   52/114   0.00 vs #32 Cramorant/Marowak/Tinkaton
+  61  #19  Dusknoirˢ/Araquanid/Snorlaxˢ              512     0.491     0.382   52/114   0.00 vs F20 Diggersby/Cramorant/Forretressˢ
+  62  F30  Froslass/Swanna/Rapidash                          0.490     0.412   50/114   0.00 vs #7 Marowak-Aˢ/Cradily/Kingdra
+  63  #39  Morpeko/Fearow/Quagsire                   493     0.489     0.450   50/114   0.00 vs #31 Quagsireˢ/Corsola-G/Corviknight
+  64   M2  Altaria/Melmetal/Mimikyu                          0.488     0.520   50/114   0.00 vs #38 Melmetal/Araquanid/Mimikyu
+  65  F26  Flygon/Corviknight/Azumarill                      0.487     0.499   55/114   0.00 vs #14 Ursalunaˢ/Araquanid/Mimikyu
+  66  F31  Greninjaˢ/Florges/Charjabug                       0.484     0.448   49/114   0.00 vs #32 Cramorant/Marowak/Tinkaton
+  67  F57  Scizorˢ/Guzzlord/Nidoqueen                        0.482     0.387   50/114   0.00 vs #30 Ninetalesˢ/Cramorant/Melmetal
+  68  F50  Ninetales-A/Ursaluna/Stunfisk                     0.481     0.360   46/114   0.00 vs #26 Cramorant/Marowak/Sableyeˢ
+  69  F51  Pangoro/Dunsparce/Azumarill                       0.480     0.504   51/114   0.00 vs #4 Charjabug/Cradily/Empoleon
+  70  #46  Altaria/Azumarill/Melmetal                491     0.479     0.548   49/114   0.00 vs #23 Clefable/Corsola-G/Dusknoirˢ
+  71  F54  Quagsireˢ/Dunsparce/Mimikyu                       0.475     0.606   49/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+  72  #27  Mimikyu/Empoleon/Jumpluff                 502     0.475     0.462   49/114   0.00 vs M1 Thievul/Blaziken/Jumpluff
+  73  F19  Cramorant/Melmetal/Clodsire                       0.474     0.480   49/114   0.00 vs #22 Cramorant/Marowak/Melmetal
+  74   #6  Mimikyu/Corviknight/Ninetalesˢ            548     0.473     0.431   48/114   0.00 vs #25 Thievul/Cramorant/Stunfisk
+  75  F25  Florges/Mimikyu/Sableyeˢ                          0.471     0.436   50/114   0.00 vs #20 Drapion/Dunsparce/Jumpluffˢ
+  76  #16  Charjabug/Mantine/Vigoroth                515     0.469     0.517   48/114   0.00 vs #14 Ursalunaˢ/Araquanid/Mimikyu
+  77   F4  Altaria/Mimikyu/Empoleon                          0.466     0.476   44/114   0.00 vs F43 Miltank/Forretressˢ/Marowak
+  78  #23  Clefable/Corsola-G/Dusknoirˢ              507     0.463     0.349   49/114   0.00 vs #8 Stunfisk/Empoleon/Moltres-G
+  79  F55  Sableyeˢ/Ninetalesˢ/Empoleon                      0.462     0.441   45/114   0.00 vs M3 Nidoqueen/Mandibuzz/Clodsire
+  80  #30  Ninetalesˢ/Cramorant/Melmetal             498     0.461     0.434   52/114   0.00 vs F3 Altaria/Forretressˢ/Magnezone
+  81  F21  Diggersby/Fearow/Jumpluff                         0.459     0.458   50/114   0.00 vs #5 Hydreigonˢ/Clodsire/Corviknight
+  82  F58  Stunfisk/Annihilape/Fearow                        0.458     0.408   45/114   0.00 vs M3 Nidoqueen/Mandibuzz/Clodsire
+  83   F1  Altaria/Empoleon/Melmetal                         0.456     0.470   45/114   0.00 vs #28 Tinkaton/Altaria/Jellicent
+  84   M1  Thievul/Blaziken/Jumpluff                         0.454     0.459   45/114   0.00 vs #1 Cramorant/Hippowdon/Melmetal
+  85  F44  Mimikyu/Magnezone/Togetic                         0.448     0.410   47/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+  86  #35  Tinkaton/Quagsireˢ/Thievul                494     0.448     0.369   42/114   0.00 vs #11 Ninetales/Kingdra/Mimikyu
+  87   F5  Azumarill/Empoleon/Magnezone                      0.448     0.350   48/114   0.00 vs #12 Cramorant/Jumpluff/Stunfisk
+  88  F35  Hydreigonˢ/Stunfisk-G/Melmetal                    0.446     0.463   50/114   0.00 vs #24 Araquanid/Fearow/Stunfisk
+  89  #17  Mimikyu/Sableyeˢ/Tinkaton                 515     0.445     0.471   54/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+  90  #28  Tinkaton/Altaria/Jellicent                500     0.443     0.297   45/114   0.00 vs #36 Marowak/Cramorant/Mimikyu
+  91  F10  Clodsire/Altaria/Mimikyu                          0.442     0.368   44/114   0.00 vs M3 Nidoqueen/Mandibuzz/Clodsire
+  92  F53  Primarina/Stunfisk-G/Melmetal                     0.438     0.367   47/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+  93  F17  Cramorant/Hydreigonˢ/Clodsire                     0.436     0.496   40/114   0.00 vs #27 Mimikyu/Empoleon/Jumpluff
+  94  #15  Quagsireˢ/Sableyeˢ/Tinkaton               516     0.434     0.487   41/114   0.00 vs #1 Cramorant/Hippowdon/Melmetal
+  95  #43  Tinkaton/Quagsireˢ/Snorlax                492     0.428     0.306   42/114   0.00 vs #11 Ninetales/Kingdra/Mimikyu
+  96  #29  Morpeko/Florges/Mimikyu                   498     0.428     0.463   40/114   0.03 vs F21 Diggersby/Fearow/Jumpluff
+  97  #21  Tinkaton/Clodsire/Mimikyu                 511     0.424     0.339   43/114   0.00 vs #6 Mimikyu/Corviknight/Ninetalesˢ
+  98  F36  Machampˢ/Dunsparce/Toxapex                        0.422     0.449   41/114   0.00 vs #19 Dusknoirˢ/Araquanid/Snorlaxˢ
+  99  F22  Doublade/Togetic/Stunfisk                         0.421     0.374   41/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+ 100   F2  Altaria/Florges/Melmetal                          0.420     0.446   36/114   0.00 vs #6 Mimikyu/Corviknight/Ninetalesˢ
+ 101  #20  Drapion/Dunsparce/Jumpluffˢ               512     0.414     0.442   45/114   0.00 vs #16 Charjabug/Mantine/Vigoroth
+ 102   #5  Hydreigonˢ/Clodsire/Corviknight           551     0.413     0.359   38/114   0.00 vs #3 Altaria/Corsola-G/Melmetal
+ 103   F9  Clefable/Stunfisk/Hydreigonˢ                      0.411     0.402   37/114   0.00 vs #1 Cramorant/Hippowdon/Melmetal
+ 104  #41  Clodsire/Araquanid/Umbreon                492     0.411     0.356   38/114   0.00 vs #15 Quagsireˢ/Sableyeˢ/Tinkaton
+ 105  F59  Stunfisk-G/Forretressˢ/Melmetal                   0.405     0.376   38/114   0.00 vs #2 Sableye-Mega/Marowak/Melmetal
+ 106   #9  Tinkaton/Malamar/Mimikyu                  521     0.390     0.313   36/114   0.00 vs #6 Mimikyu/Corviknight/Ninetalesˢ
+ 107  #40  Araquanid/Dunsparce/Morpeko               492     0.385     0.433   37/114   0.00 vs #26 Cramorant/Marowak/Sableyeˢ
+ 108   F6  Azumarill/Lucario/Mawile                          0.363     0.212   33/114   0.00 vs #6 Mimikyu/Corviknight/Ninetalesˢ
+ 109   M4  Blaziken/Jumpluff/Fearow                          0.353     0.316   34/114   0.00 vs #5 Hydreigonˢ/Clodsire/Corviknight
+ 110  F23  Dragoniteˢ/Melmetal/Togetic                       0.346     0.382   30/114   0.00 vs #8 Stunfisk/Empoleon/Moltres-G
+ 111   #7  Marowak-Aˢ/Cradily/Kingdra                548     0.341     0.351   30/114   0.00 vs #15 Quagsireˢ/Sableyeˢ/Tinkaton
+ 112  #10  Electrode-H/Blastoise/Ninetales           520     0.338     0.341   23/114   0.00 vs #5 Hydreigonˢ/Clodsire/Corviknight
+ 113  #11  Ninetales/Kingdra/Mimikyu                 518     0.338     0.362   26/114   0.00 vs #12 Cramorant/Jumpluff/Stunfisk
+ 114  F11  Clodsire/Electrode-H/Dunsparce                    0.327     0.311   27/114   0.00 vs #15 Quagsireˢ/Sableyeˢ/Tinkaton
+ 115  F52  Persian/Corviknight/Nidoking                      0.293     0.221   23/114   0.00 vs #18 Melmetal/Altaria/Ninetalesˢ

@@ -439,37 +439,45 @@ class RecordedBattleTests(unittest.TestCase):
             w = csv.DictWriter(f, cols)
             w.writeheader()
             w.writerow(row)
-        turns = [  # turn, you_shields, them_shields, you_action, them_action, them_active
-            (0, 2, 2, "", "charged:ICE_BEAM", "azumarill"),                  # bait (Ice Beam is cheaper) while you had 2
-            (1, 2, 1, "charged:ICE_PUNCH(shielded)", "shield", "azumarill"),  # they shielded
-            (2, 2, 1, "charged:DYNAMIC_PUNCH", "", "azumarill"),             # they didn't
-            (3, 1, 1, "shield", "charged:PLAY_ROUGH(shielded)", "azumarill"),  # no bait
+        turns = [  # turn, you_shields, them_shields, you_action, them_action, their energy after
+            (0, 2, 2, "", "charged:ICE_BEAM", 0),                          # thrown at 55, while you had 2
+            (1, 2, 1, "charged:ICE_PUNCH(shielded)", "shield", 0),          # they shielded at full HP
+            (2, 2, 1, "charged:DYNAMIC_PUNCH", "", 0),                      # with one left, they didn't
         ]
         with (d / "turns.csv").open("w", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["battle_id", "turn", "you_shields", "them_shields", "you_action", "them_action", "them_active"])
-            for t in turns:
-                w.writerow(["b#1", *t])
+            w.writerow(["battle_id", "turn", "you_active", "them_active", "you_1", "you_1_energy", "them_1",
+                        "them_1_energy", "you_shields", "them_shields", "you_action", "them_action", "charged_first"])
+            for t, ys, ts, ya, ta, e in turns:
+                w.writerow(["b#1", t, "medicham", "azumarill", "medicham", 0, "azumarill", e, ys, ts, ya, ta, ""])
         return d
 
-    def test_habits_record_shields_and_baits_in_order(self):
+    def test_decisions_are_kept_with_their_context(self):
         from mango_pomdp.battle_turns import load as load_turns
         b = load_turns(gd, self.folder())[0]
-        self.assertEqual((b.habits.shields, b.habits.baits), ([True, False], [True, False]))
         self.assertEqual(b.you[0], ("medicham", "COUNTER", ("ICE_PUNCH", "DYNAMIC_PUNCH")))
+        first, second = b.shields
+        self.assertEqual((first.move, first.shields, first.faced, first.shielded, first.hp),
+                         ("ICE_PUNCH", (2, 2), 0, True, 1.0))
+        self.assertEqual((second.move, second.shields, second.faced, second.shielded), ("DYNAMIC_PUNCH", (1, 2), 1, False))
+        throw = next(c for c in b.throws if c.choice)
+        self.assertEqual((throw.choice, throw.energy, throw.shields), ("ICE_BEAM", 55, (2, 2)))
 
-    def test_habit_opponent_shields_like_them_and_baits(self):
-        from mango_pomdp.battle_turns import Habits, HabitOpponent
-        b = Battle([[mon("medicham")], [mon("azumarill")]], seed=0)
-        always_fast = Scripted()
-        opp = HabitOpponent(always_fast, Habits(shields=[False, True], baits=[True, True]))
+    def test_context_opponent_copies_only_matching_situations(self):
+        from mango_pomdp.battle_turns import ContextOpponent, load as load_turns
+        rec = load_turns(gd, self.folder())[0]
+        b = Battle([[mon("medicham", fast="COUNTER", charged=["ICE_PUNCH", "DYNAMIC_PUNCH"])],
+                    [mon("azumarill", fast="BUBBLE", charged=["ICE_BEAM", "PLAY_ROUGH"])]], seed=0)
+        opp = ContextOpponent(Scripted(shields=False), rec)
         view = b.view(1)
-        self.assertEqual([opp.shield(view, b.sides[0].mon.charged[0]) for _ in range(2)], [False, True])
-        b.sides[1].mon.energy = 100
-        cheap = min(range(2), key=lambda i: b.sides[1].mon.charged[i].energy)
-        self.assertEqual(opp.act(view), CHARGED(cheap))   # a baiter throws the cheap move while you have shields
-        holder = HabitOpponent(Scripted([CHARGED(cheap)]), Habits(baits=[False]))
-        self.assertEqual(holder.act(view), CHARGED(1 - cheap))   # a non-baiter holds for the big one
+        ice_punch = b.sides[0].mon.charged[0]
+        self.assertTrue(opp.shield(view, ice_punch))          # same situation as turn 1: they shielded
+        opp.faced["azumarill"] = 3
+        self.assertFalse(opp.shield(view, ice_punch))         # a different history: the planner decides
+        b.sides[1].mon.energy = 55
+        self.assertEqual(opp.act(view), CHARGED(0))           # Ice Beam at 55, as they did
+        b.sides[0].shields = 0
+        self.assertEqual(opp.act(view), FAST)                 # no recorded case with you out of shields
 
 
 def payoff(battle, duel):

@@ -8,7 +8,7 @@ Pokémon you didn't bring out are added in your usual order). Movesets are PvPok
 ones. Your real opponents were people, so each battle is played against each heuristic style
 and against the planner itself (`planner-list`, which knows PvPoke's top teams, as yours does),
 `--games` times each, alternating sides. Every player sees the same games (same seeds), so the
-solver and the baiter heuristic are compared on identical battles. Battles where fewer than three
+planner and the baiter heuristic are compared on identical battles. Battles where fewer than three
 of their Pokémon were seen, or the read was unreliable, are left out.
 """
 from __future__ import annotations
@@ -96,7 +96,7 @@ def main():
           f"({', '.join(args.opponents)}), {time.time() - start:.0f}s.\n")
 
     cols = [(p, k) for k in kinds for p in args.players]
-    head = "".join(f"{(p if p != 'planner-list' else 'solver') + ' vs ' + ('heuristics' if k == 'styles' else 'planner'):>26}"
+    head = "".join(f"{(p if p != 'planner-list' else 'your planner') + ' vs ' + ('heuristics' if k == 'styles' else 'planner'):>26}"
                    for p, k in cols)
     print(f"{'#':>3}  {'your team':<26}{'opponent':<34}{head}")
     for n, y, t in battles:
@@ -109,14 +109,14 @@ def main():
         allx = [s for n, _, _ in battles for s in res[p, n, k]]
         m = sum(allx) / len(allx)
         se = math.sqrt(sum((x - m) ** 2 for x in allx) / (len(allx) - 1) / len(allx))
-        who = "solver (planner-list)" if p == "planner-list" else p
+        who = "planner (your side)" if p == "planner-list" else p
         vs = "the heuristic styles" if k == "styles" else "the planner"
         print(f"  {who:<22} vs {vs:<21} wins {sum(r > 0.5 for r in rates):>2} of {len(battles)}, "
               f"ties {sum(r == 0.5 for r in rates):>2}   win rate {m:.3f} ± {se:.3f}")
 
     if "planner-list" not in args.players:
         return
-    print("\nBy your team (solver):")
+    print("\nBy your team (planner on your side):")
     by = defaultdict(list)
     for n, y, t in battles:
         by[tuple(sorted(y))].append(n)

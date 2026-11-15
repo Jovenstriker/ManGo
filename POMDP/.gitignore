@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+# Local only: anything with recording names or parsed from your battle reports.
+data/local/

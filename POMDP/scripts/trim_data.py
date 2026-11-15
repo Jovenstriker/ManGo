@@ -38,6 +38,8 @@ ap.add_argument("--teams", type=Path, help="PvPoke top teams CSV to decode and k
 ap.add_argument("--species-teams", type=Path,
                 help='CSV of teams by species ("side", "team" as "A; B; C", "battles"), given '
                      "PvPoke's recommended movesets")
+ap.add_argument("--extra-species", default="",
+                help="comma-separated species ids to keep too (say, ones in your own battles)")
 ap.add_argument("--keep", type=Path,
                 help="an earlier data file whose Pokémon and moves are kept exactly as they are; only "
                      "what it lacks comes from this game master (so earlier results stay valid)")
@@ -142,6 +144,7 @@ def ability(p):
 
 keep = [sid for sid, (rank, _) in ranked.items() if rank <= TOP_N]
 keep += [sid for sid in required if sid not in keep]
+keep += [sid for sid in filter(None, args.extra_species.split(",")) if sid not in keep]
 pokemon, used_moves = [], set()
 for sid in keep:
     rank, r = ranked[sid]

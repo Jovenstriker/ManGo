@@ -1,4 +1,5 @@
 """cd POMDP && python3 -m unittest discover tests"""
+import csv
 import random
 import unittest
 
@@ -419,6 +420,56 @@ class TopTeamTests(unittest.TestCase):
                 self.assertTrue(b.done)
         finally:
             gamedata.use("great_league")
+
+
+class RecordedBattleTests(unittest.TestCase):
+    """Habits from a made-up Battle Turns folder (the real one stays local)."""
+
+    def folder(self):
+        import tempfile
+        from pathlib import Path
+        d = Path(tempfile.mkdtemp())
+        cols = ["battle_id", "result"] + [f"{s}_{k}{x}" for s in ("you", "them") for k in (1, 2, 3)
+                                           for x in ("", "_fast", "_charged")]
+        row = dict.fromkeys(cols, "")
+        row.update(battle_id="b#1", result="lost", you_1="medicham", you_1_fast="COUNTER",
+                   you_1_charged="ICE_PUNCH;DYNAMIC_PUNCH", them_1="azumarill", them_1_fast="BUBBLE",
+                   them_1_charged="ICE_BEAM;PLAY_ROUGH")
+        with (d / "battles.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, cols)
+            w.writeheader()
+            w.writerow(row)
+        turns = [  # turn, you_shields, them_shields, you_action, them_action, them_active
+            (0, 2, 2, "", "charged:ICE_BEAM", "azumarill"),                  # bait (Ice Beam is cheaper) while you had 2
+            (1, 2, 1, "charged:ICE_PUNCH(shielded)", "shield", "azumarill"),  # they shielded
+            (2, 2, 1, "charged:DYNAMIC_PUNCH", "", "azumarill"),             # they didn't
+            (3, 1, 1, "shield", "charged:PLAY_ROUGH(shielded)", "azumarill"),  # no bait
+        ]
+        with (d / "turns.csv").open("w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["battle_id", "turn", "you_shields", "them_shields", "you_action", "them_action", "them_active"])
+            for t in turns:
+                w.writerow(["b#1", *t])
+        return d
+
+    def test_habits_record_shields_and_baits_in_order(self):
+        from mango_pomdp.battle_turns import load as load_turns
+        b = load_turns(gd, self.folder())[0]
+        self.assertEqual((b.habits.shields, b.habits.baits), ([True, False], [True, False]))
+        self.assertEqual(b.you[0], ("medicham", "COUNTER", ("ICE_PUNCH", "DYNAMIC_PUNCH")))
+
+    def test_habit_opponent_shields_like_them_and_baits(self):
+        from mango_pomdp.battle_turns import Habits, HabitOpponent
+        b = Battle([[mon("medicham")], [mon("azumarill")]], seed=0)
+        always_fast = Scripted()
+        opp = HabitOpponent(always_fast, Habits(shields=[False, True], baits=[True, True]))
+        view = b.view(1)
+        self.assertEqual([opp.shield(view, b.sides[0].mon.charged[0]) for _ in range(2)], [False, True])
+        b.sides[1].mon.energy = 100
+        cheap = min(range(2), key=lambda i: b.sides[1].mon.charged[i].energy)
+        self.assertEqual(opp.act(view), CHARGED(cheap))   # a baiter throws the cheap move while you have shields
+        holder = HabitOpponent(Scripted([CHARGED(cheap)]), Habits(baits=[False]))
+        self.assertEqual(holder.act(view), CHARGED(1 - cheap))   # a non-baiter holds for the big one
 
 
 def payoff(battle, duel):

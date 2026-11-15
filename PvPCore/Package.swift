@@ -15,6 +15,8 @@ let package = Package(
         .executableTarget(name: "screen-log", dependencies: ["PvPCore"]),
         // Dev tool: writes a battle report (timeline, energy math, hand counts) for a recording.
         .executableTarget(name: "battle-report", dependencies: ["PvPCore"]),
+        // Dev tool: writes every recorded battle turn by turn as CSV (battles.csv, turns.csv).
+        .executableTarget(name: "battle-turns", dependencies: ["PvPCore"]),
         .testTarget(name: "PvPCoreTests", dependencies: ["PvPCore"], resources: [.copy("Fixtures")]),
     ]
 )

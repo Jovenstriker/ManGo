@@ -110,6 +110,14 @@ watching the recording, and a timeline of everything the screen reader saw and d
 notes live in `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Regenerate the reports with
 `scripts/battle_reports.sh` after changing either. The videos themselves aren't committed.
 
+### Battles turn by turn
+
+`swift run battle-turns <fixtures dir> App/ManGo/Resources <hand-counts.json> "Battle Turns"` writes
+every recorded battle as CSV, for comparing your play with a solver's: `battles.csv` (teams,
+movesets, who won) and `turns.csv` (one row per 0.5s turn: who's in, every Pokémon's energy, shields
+left, what each side did). Their energy is ManGo's count; yours is your fast moves set by how full
+your charged move buttons were. Like the reports, it stays on this Mac.
+
 To add a battle: put the video in `Test Videos/`, run `screen-log <video> 0.25 --json` to get its
 screen text, trim it into a fixture like the others, add its hand counts, and add it to the script.
 

@@ -14,3 +14,5 @@ Test Videos/app logs/
 PvPCore/Tests/PvPCoreTests/Fixtures/battle-*.json
 PvPCore/Tests/PvPCoreTests/Fixtures/gbl-battle-*.json
 Battle Logs/
+# Every recorded battle turn by turn (battle-turns), made from the same recordings.
+Battle Turns/

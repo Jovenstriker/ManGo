@@ -38,9 +38,11 @@ private func summaries(of name: String) throws -> [BattleSummary] {
     let yours = s.chargedMoves.filter { $0.side == .you }
     #expect(yours.map(\.name) == ["Energy Ball", "Energy Ball", "Energy Ball", "Icy Wind", "Energy Ball",
                                   "Blaze Kick", "Blaze Kick", "Blaze Kick"])
-    // Mimikyu blocked your first two Energy Balls and Sableye your second Blaze Kick; you
-    // blocked Play Rough and the last Chilling Water.
+    // Mimikyu's Disguise blocked your first Energy Ball and a shield your second; Sableye shielded
+    // your second Blaze Kick. You shielded Play Rough and the last Chilling Water.
     #expect(s.chargedMoves.filter(\.shielded).map(\.name) == ["Energy Ball", "Energy Ball", "Play Rough", "Chilling Water", "Blaze Kick"])
+    #expect(s.chargedMoves.filter { $0.disguise == true }.map(\.name) == ["Energy Ball"])
+    #expect(s.yourPokemon?.map(\.speciesId) == ["thievul", "jumpluff", "blaziken_shadow"])
 
     // Charged moves in battle order, and nothing on a row overlaps.
     #expect(s.chargedMoves.map(\.time) == s.chargedMoves.map(\.time).sorted())
@@ -80,6 +82,48 @@ private func summaries(of name: String) throws -> [BattleSummary] {
     #expect((mightyena.other, mightyena.energyIn, mightyena.turns) == ("Charjabug", 0, 0))
     // A banner read cut short ("ken") is Blaziken, not a fourth Pokémon of yours.
     #expect(third.yourTeam == ["Blaziken", "Jumpluff"])
+}
+
+/// 142007 turn by turn: their energy is ManGo's count, the shields add up, and every Pokémon's
+/// energy stays in range.
+@Test func turnByTurnFollowsManGosCount() throws {
+    let resources = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().appending(path: "App/ManGo/Resources")
+    let data = try GameData(
+        gamemasterJSON: Data(contentsOf: resources.appending(path: "gamemaster.json")),
+        rankingsJSON: Data(contentsOf: resources.appending(path: "rankings-1500.json")))
+    let url = try #require(Bundle.module.url(forResource: "battle-2026-11-08-142007", withExtension: "json", subdirectory: "Fixtures"))
+    let reads = try JSONDecoder().decode([ScreenRead].self, from: Data(contentsOf: url))
+    var automation = BattleAutomation(data: data)
+    var tracker = OpponentTracker(data: data)
+    var readings = TurnByTurn.Readings()
+    var done: [BattleSummary] = []
+    for read in reads {
+        automation.process(read, tracker: &tracker)
+        readings.add(read, tracker: tracker)
+        done += automation.takeCompletedBattles()
+    }
+    let s = try #require(done.first)
+    let model = TurnByTurn.model(s, id: "142007", recording: "battle-2026-11-08-142007", number: 1, video: nil, readings: readings, data: data)
+    #expect(model.battle["result"] == "won")
+    #expect([model.battle["you_shields_used"], model.battle["them_shields_used"]] == ["2", "2"])
+    #expect(model.turns.count == Int((s.duration / 0.5).rounded(.up)))
+    // Before each of their charged moves, the thrower had what ManGo counted: the turn before's
+    // energy and the fast moves landing on that turn.
+    var before: [Int] = []
+    for (k, row) in model.turns.enumerated() where k > 0 && row["them_action"]!.contains("charged:") {
+        let p = model.turns[k - 1]["them_active"]!
+        let slot = try #require((1...3).first { model.turns[k - 1]["them_\($0)"] == p })
+        let landed = row["them_action"]!.components(separatedBy: ";").filter { $0.hasPrefix("fast:") }.count
+        before.append(Int(model.turns[k - 1]["them_\(slot)_energy"]!)! + landed * (s.fastMoves.first { $0.pokemon == p }?.energy ?? 0))
+    }
+    #expect(before == s.chargedMoves.filter { $0.side == .them }.compactMap(\.energyBefore))
+    for row in model.turns {
+        for side in ["you", "them"] {
+            for i in 1...3 { if let e = row["\(side)_\(i)_energy"].flatMap(Int.init) { #expect((0...100).contains(e)) } }
+        }
+    }
 }
 
 @Test func summaryRoundTripsThroughJSON() throws {

@@ -340,7 +340,7 @@ public struct BattleAutomation: Sendable {
                 let start = t + (Rules.off("goDelay") ? 0 : goDelay) - late
                 goAt = start
                 buttonsResumedAt = start
-                if battleRecord.start == nil { battleRecord.start = tracker.battleClock(at: start) }
+                if battleRecord.start == nil { battleRecord.start = tracker.battleClock(at: start); battleRecord.readTimes = [start] }
                 if awaitingGo, start <= t {
                     awaitingGo = false
                     tracker.resume(at: t)
@@ -373,6 +373,7 @@ public struct BattleAutomation: Sendable {
                 if parser.yourButtonLabels == summaryButtonLabels, let turns = YourFastMoves.turns(fromGaps: yourGaps),
                    let last = battleRecord.yourMoves.indices.last {
                     battleRecord.yourMoves[last].turns = turns
+                    battleRecord.yourMoves[last].measured = true
                 }
 
             case .shielded:
@@ -440,7 +441,13 @@ public struct BattleAutomation: Sendable {
                 if !awaitingGo {
                     // Where the stop sits on the clock of play, now it can't move any more.
                     let at = tracker.battleClock(at: resume)
-                    if battleRecord.start == nil { battleRecord.start = at } else { battleRecord.stops.append(at) }
+                    if battleRecord.start == nil {
+                        battleRecord.start = at
+                        battleRecord.readTimes = [resume]
+                    } else {
+                        battleRecord.stops.append(at)
+                        battleRecord.readTimes.append(resume)
+                    }
                 }
                 // The buttons show during the countdown: the lead's clock waits for GO.
                 if awaitingGo { resumedBeforeGo = resume } else { tracker.resume(at: resume) }
@@ -493,7 +500,8 @@ public struct BattleAutomation: Sendable {
                 if battleRecord.start != nil {
                     battleRecord.charged.append((battleRecord.stops.count, .init(
                         side: .them, time: 0, name: move.name, type: move.type, pokemon: name(tracker.active?.speciesId),
-                        shielded: false, energyBefore: before, energyAfter: tracker.snapshot(at: t).energy)))
+                        shielded: false, energyBefore: before, energyAfter: tracker.snapshot(at: t).energy,
+                        moveId: move.moveId, cost: move.energy, speciesId: tracker.active?.speciesId)))
                 }
 
             case .attackIncoming:
@@ -702,19 +710,27 @@ public struct BattleAutomation: Sendable {
     /// PvPoke's fast move for your Pokémon, from its two charged move buttons: the best-ranked
     /// Pokémon with both (Aura Sphere and Blaze Kick: Shadow Blaziken's Ember, not Lucario's
     /// Force Palm). A guess for drawing your side; your fast moves landing correct its length.
-    private func fastMove(forButtons labels: Set<String>) -> (turns: Int, type: String?)? {
+    /// Also the Pokémon that learn both (best-ranked first) and the charged moves' ids.
+    private func fastMove(forButtons labels: Set<String>) -> (turns: Int, type: String?, moveId: String, species: [String], charged: [String])? {
         guard labels.count == 2 else { return nil }
-        let moveIds = data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
-        guard Set(moveIds.compactMap { data.moves[$0].map { NameMatcher.normalize($0.name) } }) == labels else { return nil }
-        let top = data.species.values
-            .filter { $0.rank != nil && moveIds.allSatisfy($0.chargedMoves.contains) }
+        let moves = data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }
+        // A label can name more than one move ("Dynamic Punch" and "Dynamic Punch+", Weather Ball's
+        // forms): a Pokémon needs one of each (171449's Melmetal).
+        let byLabel = Dictionary(grouping: moves.map(\.moveId)) { NameMatcher.normalize(data.moves[$0]!.name) }
+        guard Set(byLabel.keys) == labels else { return nil }
+        let ranked = data.species.values
+            .filter { s in s.rank != nil && byLabel.values.allSatisfy { $0.contains(where: s.chargedMoves.contains) } }
             .sorted { ($0.rank ?? .max) < ($1.rank ?? .max) }
-            .lazy.compactMap { self.data.recommendedMoves(for: $0.speciesId).fast }.first
-        return top.map { ($0.turns, $0.type) }
+        guard let best = ranked.first,
+              let top = ranked.lazy.compactMap({ self.data.recommendedMoves(for: $0.speciesId).fast }).first else { return nil }
+        let charged = byLabel.values.compactMap { $0.first(where: best.chargedMoves.contains) }.sorted()
+        return (top.turns, top.type, top.moveId, ranked.map(\.speciesId), charged)
     }
 
     /// The charged moves on your buttons, as the summary last read them.
     private var yourButtonMoves: [String] {
+        // The ones your Pokémon learns: "Dynamic Punch" is Melmetal's, not Dynamic Punch+.
+        if !summaryButtonLabels.isEmpty, let charged = battleRecord.yourMoves.last?.charged, !charged.isEmpty { return charged }
         let labels = summaryButtonLabels.isEmpty ? parser.yourButtonLabels : summaryButtonLabels
         return data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
     }
@@ -730,10 +746,23 @@ public struct BattleAutomation: Sendable {
         }
         guard let i = battleRecord.charged.lastIndex(where: { $0.move.side == .you }), battleRecord.charged[i].move.name == nil else { return }
         let read = NameMatcher.normalize(banner.move)
-        let move = yourButtonMoves.compactMap { data.moves[$0] }
-            .min { NameMatcher.editDistance(NameMatcher.normalize($0.name), read, limit: 6) < NameMatcher.editDistance(NameMatcher.normalize($1.name), read, limit: 6) }
+        func distance(_ m: Move) -> Int { NameMatcher.editDistance(NameMatcher.normalize(m.name), read, limit: 6) }
+        var move = yourButtonMoves.compactMap { data.moves[$0] }.min { distance($0) < distance($1) }
+        if move.map({ distance($0) > 2 }) ?? true {
+            // Not one on the buttons last read (171449: Melmetal's Double Iron Bash with Altaria's
+            // buttons): a charged move of the Pokémon the banner names, else any by that name.
+            let user = banner.user.map(NameMatcher.normalize)
+            let learners = data.species.values.filter { s in
+                user == NameMatcher.normalize(s.speciesName.split(separator: "(").first.map(String.init) ?? s.speciesName)
+            }
+            func learned(_ m: Move) -> Int { learners.contains { $0.chargedMoves.contains(m.moveId) } ? 0 : 1 }
+            move = data.moves.values.filter { !$0.isFast && $0.energy > 0 }
+                .min { (distance($0), learned($0), $0.moveId) < (distance($1), learned($1), $1.moveId) }
+        }
         battleRecord.charged[i].move.name = move?.name ?? banner.move
         battleRecord.charged[i].move.type = move?.type
+        battleRecord.charged[i].move.moveId = move?.moveId
+        battleRecord.charged[i].move.cost = move?.energy
         battleRecord.charged[i].move.pokemon = banner.user
     }
 
@@ -754,7 +783,8 @@ public struct BattleAutomation: Sendable {
         let first = battleRecord.yourMoves.isEmpty
         summaryButtonLabels = labels
         summaryPendingLabels = nil
-        battleRecord.yourMoves.append((from: first ? start : pending.at, turns: move.turns, type: move.type, switchTurn: !first && pending.inPlay))
+        battleRecord.yourMoves.append(.init(from: first ? start : pending.at, turns: move.turns, type: move.type, switchTurn: !first && pending.inPlay,
+                                            moveId: move.moveId, species: move.species, charged: move.charged))
         if !first, let i = battleRecord.markers.lastIndex(where: { $0.marker.side == .you && $0.marker.kind == .switched }),
            battleRecord.markers[i].marker.turns == nil, abs(battleRecord.markers[i].marker.time - pending.at) < 3 {
             battleRecord.markers[i].marker.turns = pending.inPlay ? 1 : 0

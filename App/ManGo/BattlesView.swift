@@ -169,10 +169,10 @@ private struct MarkerRow: View {
 
     private var title: String {
         switch (marker.kind, marker.side) {
-        case (.switched, .you): "switched"
-        case (.switched, .them):
-            if let out = marker.other, let into = marker.pokemon { "\(out) → \(into)" } else { "switched to \(marker.pokemon ?? "another Pokémon")" }
-        case (.fainted, .you): "fainted"
+        case (.switched, _):
+            if let out = marker.other, let into = marker.pokemon { "\(out) → \(into)" }
+            else if let into = marker.pokemon { "switched to \(into)" } else { "switched" }
+        case (.fainted, .you): marker.pokemon.map { "\($0) fainted" } ?? "fainted"
         case (.fainted, .them): "\(marker.pokemon ?? "their Pokémon") fainted"
         }
     }
@@ -185,7 +185,7 @@ private struct MarkerRow: View {
             if let back = marker.energyIn { parts.append("\(marker.pokemon ?? "The other") came back with \(back)") }
             if marker.turns == 1 { parts.append("1-turn switch") }
         case .fainted:
-            if marker.side == .them, let next = marker.other {
+            if let next = marker.other {
                 parts.append(marker.energyIn.map { "\(next) came back in with \($0) energy" } ?? "\(next) came in")
             }
         }
@@ -212,7 +212,9 @@ private struct ChargedMoveRow: View {
                 }
             }
             Spacer()
-            if move.shielded {
+            if move.disguise == true {
+                Text("Disguise").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            } else if move.shielded {
                 Label("Shielded", systemImage: "shield.fill").labelStyle(.iconOnly).foregroundStyle(TypeColors.shield)
             }
         }

@@ -26,7 +26,7 @@ situations or across opponents; everywhere else the planner decides.
 from __future__ import annotations
 
 import csv
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -71,6 +71,7 @@ class RecordedBattle:
     shields: list[ShieldCase] = field(default_factory=list)
     throws: list[ThrowCase] = field(default_factory=list)
     unplaced: set[str] = field(default_factory=set)   # active Pokémon not on the team list (misreads)
+    misread: bool = False   # your Pokémon don't fit any of your teams
 
 
 def _spec(gd: GameData, row: dict, side: str, own_moves: bool) -> tuple[TeamSpec, int]:
@@ -202,12 +203,25 @@ def load(gd: GameData, folder: Path) -> list[RecordedBattle]:
     with (folder / "turns.csv").open() as f:
         for t in csv.DictReader(f):
             turns[t["battle_id"]].append(t)
+    # Your full teams, from the battles where all three of yours came in, and each Pokémon's
+    # moves as your buttons showed them.
+    specs = [_spec(gd, row, "you", True) for row in rows]
+    full = Counter(frozenset(s for s, _, _ in you) for you, n in specs if n == 3)
+    known = {s: (s, f, cs) for you, _ in specs for s, f, cs in you}
     out = []
-    for row in rows:
-        you, _ = _spec(gd, row, "you", True)
+    for row, (you, n) in zip(rows, specs):
         them, seen = _spec(gd, row, "them", False)
         b = RecordedBattle(row["battle_id"], row["result"], you, them, seen)
-        if you and them:
+        if n < 3:
+            # You didn't bring all three out: the rest of your team that day.
+            mine = {s for s, _, _ in you}
+            fits = [(c, team) for team, c in full.items() if mine <= team]
+            if fits:
+                team = max(fits)[1]
+                b.you = you + [known[s] for s in sorted(team - mine)]
+            else:
+                b.misread = True   # not one of your teams: a misread
+        if b.you and them:
             replay(gd, b, turns[row["battle_id"]])
         out.append(b)
     return out

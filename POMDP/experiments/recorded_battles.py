@@ -65,7 +65,7 @@ def main():
     args = ap.parse_args()
     gd = gamedata.use(FORMAT)
     every = load(gd, args.turns)
-    battles = [b for b in every if b.seen == 3]
+    battles = [b for b in every if b.seen == 3 and not b.misread]
     jobs = [(b, opp, g, args.rollouts) for b in battles for opp in OPPONENTS for g in range(args.games)]
     start = time.time()
     with ProcessPoolExecutor(args.workers) as pool:

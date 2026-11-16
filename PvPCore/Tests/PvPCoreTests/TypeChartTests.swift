@@ -20,3 +20,15 @@ import Testing
     let data = try GameData(gamemasterJSON: Data(json.utf8))
     #expect(data.species["dunsparce"]?.types == ["normal"])
 }
+
+@Test func unrankedMegaTakesItsBaseFormsMoveset() throws {
+    // PvPoke's Great League rankings have Sableye but not Mega Sableye.
+    let sableye = #"["FEINT_ATTACK","SHADOW_CLAW"],"chargedMoves":["FOUL_PLAY","POWER_GEM"]"#
+    let gm = #"{"pokemon":[{"speciesId":"sableye","speciesName":"Sableye","types":["dark","ghost"],"fastMoves":"# + sableye
+        + #"},{"speciesId":"sableye_mega","speciesName":"Sableye (Mega)","types":["dark","ghost"],"fastMoves":"# + sableye
+        + #"}],"moves":[]}"#
+    let rankings = #"[{"speciesId":"sableye","moveset":["SHADOW_CLAW","FOUL_PLAY","POWER_GEM"]}]"#
+    let data = try GameData(gamemasterJSON: Data(gm.utf8), rankingsJSON: Data(rankings.utf8))
+    #expect(data.species["sableye_mega"]?.recommendedMoveset == ["SHADOW_CLAW", "FOUL_PLAY", "POWER_GEM"])
+    #expect(data.species["sableye_mega"]?.rank == nil)
+}

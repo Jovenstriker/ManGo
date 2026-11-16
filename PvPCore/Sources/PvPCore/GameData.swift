@@ -90,6 +90,16 @@ public struct GameData: Sendable {
                 species[i].rank = r.rank
                 species[i].recommendedMoveset = r.moveset
             }
+            // PvPoke's league rankings leave Megas and Primals out, but they learn their base
+            // form's moves: take its moveset (Mega Sableye on Shadow Claw like Sableye, not the
+            // first fast move listed, Feint Attack).
+            for i in species.indices where byId[species[i].speciesId] == nil {
+                let id = species[i].speciesId
+                guard let cut = id.range(of: "_mega") ?? id.range(of: "_primal"),
+                      let base = byId[String(id[..<cut.lowerBound])] else { continue }
+                let learns = Set(species[i].fastMoves + species[i].chargedMoves)
+                species[i].recommendedMoveset = base.moveset.filter { learns.contains($0) }
+            }
         }
         self.init(species: species, moves: gm.moves)
     }

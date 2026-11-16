@@ -115,7 +115,8 @@ screen text, trim it into a fixture like the others, add its hand counts, and ad
 
 The screen only shows the base name ("Ninetales" for Alolan or Shadow Ninetales), so the app picks
 the highest-ranked form until a move reveals it. A Mega or Primal form says so ("Mega Sableye",
-"Mega Charizard X"), and is matched by that. Nicknamed Pokémon won't match. The app has no manual controls: start the reader with the record
+"Mega Charizard X"), and is matched by that; PvPoke doesn't rank Megas, so one starts on its base
+form's moveset. Nicknamed Pokémon won't match. The app has no manual controls: start the reader with the record
 button, and everything else comes from the screen.
 
 ## Accuracy evidence and validation

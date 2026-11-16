@@ -469,7 +469,10 @@ public struct BattleAutomation: Sendable {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
                 }
                 alignToOpponentChargedMove(&tracker)
-                tracker.restrictForms(learning: move.moveId)
+                // A move PvPoke doesn't list for this species says nothing about its form.
+                if data.species[speciesId]?.chargedMoves.contains(move.moveId) == true {
+                    tracker.restrictForms(learning: move.moveId)
+                }
                 let raw = tracker.snapshot(at: t).energy
                 if tracker.reconcileObservedSpend(move.energy, at: t) > 0 {
                     note("Timing uncertain: \(name(tracker.active?.speciesId)) spent \(move.energy) on \(move.name), but the clock counted \(raw); resynchronized to the observed minimum")
@@ -1186,21 +1189,31 @@ public struct BattleAutomation: Sendable {
     /// same on-screen name (e.g. Discharge means Stunfisk, not Galarian Stunfisk).
     private func resolve(chargedMove name: String, tracker: OpponentTracker) -> (String, Move)? {
         guard let active = tracker.active?.speciesId, let s = data.species[active] else { return nil }
-        // The banner says "Weather Ball"; PvPoke calls it "Weather Ball (Fire)".
-        let key = NameMatcher.normalize(name)
-        func moveKey(_ m: Move) -> String {
-            NameMatcher.normalize(m.name.split(separator: "(").first.map(String.init) ?? m.name)
+        // The banner says "Weather Ball"; PvPoke calls it "Weather Ball (Fire)". A "+" is part of
+        // the name: Surf+ costs 35, Surf 45.
+        func moveKey(_ text: String) -> String {
+            let base = text.split(separator: "(").first.map(String.init) ?? text
+            return NameMatcher.normalize(base) + (base.contains("+") ? "plus" : "")
         }
+        let key = moveKey(name)
         let base = NameMatcher.screenName(s.speciesName)
         let forms = [active] + (parser.matcher.match(base)?.candidates.map(\.speciesId).filter { $0 != active } ?? [])
         for id in forms {
             let moves = data.chargedMoves(for: id)
-            if let move = moves.first(where: { moveKey($0) == key })
-                ?? moves.first(where: { NameMatcher.editDistance(moveKey($0), key, limit: 2) <= 2 }) {
+            if let move = moves.first(where: { moveKey($0.name) == key })
+                ?? moves.first(where: { NameMatcher.editDistance(moveKey($0.name), key, limit: 2) <= 2 }) {
                 return (id, move)
             }
         }
-        return nil
+        // A move PvPoke doesn't list for it still shows they threw, and PvPoke's moves give its
+        // cost: Mega Sableye's "Night Shade+" (ItsAXN's GBL video of 2026-11-07, 12:30.75 and
+        // 17:05.25), which ManGo dropped, so it counted on as if Sableye had kept its 45 energy.
+        // Only a whole name: a half-read one waits for the next read.
+        guard !Rules.off("anyMove") else { return nil }
+        let named = data.moves.values.filter { !$0.isFast && $0.energy > 0 && moveKey($0.name) == key }
+            .sorted { $0.moveId < $1.moveId }
+        guard let move = named.first, named.allSatisfy({ $0.energy == move.energy }) else { return nil }
+        return (active, move)
     }
 
     private func name(_ speciesId: String?) -> String {

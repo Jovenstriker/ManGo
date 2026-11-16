@@ -51,6 +51,10 @@ explicitly approximate and are not used to identify moves or compute energy.
 - Benched Pokémon keep their energy. Form clarification must preserve their history.
 - CMP knockouts do not spend energy for the move that never happens. Only an observed
   opponent banner spends energy; absence of a banner does not prove a sneak occurred.
+- Their banner names a move from the Pokémon's PvPoke movepool, or else, by its whole name, any
+  charged move PvPoke has, with its cost ("+" is part of the name: Surf+ 35, Surf 45). A move
+  PvPoke doesn't list for that species says nothing about its form (ItsAXN 2026-11-07, 12:30.75:
+  Mega Sableye's "Night Shade+", dropped before, so it counted on as if Sableye kept 45 energy).
 - A charged move requires at least its cost. If an observed spend contradicts the clock,
   preserve the raw discrepancy and record a minimum-energy constraint (the card shows no
   uncertainty marks, at the user's request).
@@ -122,7 +126,9 @@ explicitly approximate and are not used to identify moves or compute energy.
   by 2:56.60, 12 Dragon Breaths by its Sky Attack, not 10). It landed between two reads, so
   halfway, as a stop is dated.
 - Base-name matches retain multiple possible forms until distinguishing evidence arrives.
-  Ranked recommendations are hypotheses, not visual identification.
+  Ranked recommendations are hypotheses, not visual identification. PvPoke's league rankings
+  leave Megas and Primals out: they take their base form's moveset (Mega Sableye on Shadow Claw,
+  not Feint Attack, the first fast move listed).
 - Their fast move's hits on you say "SUPER EFFECTIVE!" or "NOT VERY EFFECTIVE..." over your
   Pokémon (nothing when neutral). With your Pokémon's types (from its two charged move buttons,
   the one of your team that has both), that rules out each of their fast moves of the wrong

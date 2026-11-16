@@ -153,7 +153,7 @@ public struct BattleAutomation: Sendable {
     private var hitTextSince: TimeInterval?
     private var hitTextLastSeen: TimeInterval = -.infinity
     /// A hit's text missing from reads for less than this is still the same text: the reader
-    /// loses it under attack effects (Gdańsk stream, 1:58:13: Empoleon's Metal Sound "NOT VERY
+    /// loses it under attack effects (Gdańsk stream, 1:58:50: Empoleon's Metal Sound "NOT VERY
     /// EFFECTIVE..." on your Stunfisk, unread for two reads under Stunfisk's attack as Dunsparce
     /// came in, then read again: not Dunsparce's hit, which was Astonish, neutral).
     static let hitTextGap: TimeInterval = 1.0
@@ -653,7 +653,7 @@ public struct BattleAutomation: Sendable {
         guard let first = fitting.first else { return }
         // Switched in during play, it takes the switch's turn and then a fast move before its
         // first hit lands: a text sooner is the last hit of the one it replaced (Gdańsk stream,
-        // Day 2, 0:42:00: Empoleon's Metal Sound "NOT VERY EFFECTIVE..." on Toxapex 0.75s after
+        // Day 2, 0:42:05: Empoleon's Metal Sound "NOT VERY EFFECTIVE..." on Toxapex 0.75s after
         // Charjabug's name showed; Bug Bite, the only Charjabug move that fits, takes 1s with the
         // switch, and it was on Volt Switch).
         if switchedInSinceRestart, !Rules.off("firstHitTime") {

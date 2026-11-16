@@ -320,6 +320,14 @@ into `MANGO_BUILD_DIR`):
     python3 scripts/stream/evaluate.py            # the truth for every game -> truth.json
     scripts/stream/both.sh 'RULES_OFF=align'      # a change against your recordings and the stream
 
+A third set is a GBL player's own counts: ItsAXN's video "Everyone FORGOT Just How Dangerous
+Jellicent Can Be" (YouTube, 2026-11-10), twelve matches on his phone, cropped and padded back to a
+whole screen (`battle-axn-2026-11-10-NN`, local only like the recordings). Each count he says in
+his commentary ("they're at five": energy in fast moves) is an energy checkpoint, a quarter second
+after he says the number (YouTube's captions give each word's time). ManGo agrees with all 25.
+Four throws miss: Fearow's Drill Run (match 10: 72, his 64), and three ManGo couldn't have paid
+for (matches 3, 5 and 11).
+
 `both.sh` lists the recordings a change alters and how many fail validation with and without it,
 then the stream score with and without it. `situations.py` tallies the stream's misses by what
 happened in the stretch; `side.py` lines up ManGo's count with the truth for one game.

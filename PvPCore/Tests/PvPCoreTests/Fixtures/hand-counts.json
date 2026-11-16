@@ -1800,5 +1800,227 @@
       "fastMove": "Dragon Breath: a pink cloud on your Thievul about every half second (2:51-2:55 in the video). ManGo's HP-rhythm rule took it for Peck until 2026-11-13.",
       "unknown": "No throw was hand-counted."
     }
+  },
+  "battle-axn-2026-11-10-01": {
+    "video": "Test Videos/battle-axn-2026-11-10-01.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 1 (Jellicent vs Cramorant) from 0:38.00, his phone cropped. Opponent: Cramorant, Furret, Diggersby.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 61.25,
+        "speciesId": "furret",
+        "energy": 37
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "1:39.00 (1:01.25 in): \"They're at five right now, so they have a Swift ready to go. They're one away from another Brick Break.\" = 37 (5 × 7 + 2 left over); ManGo 37"
+    }
+  },
+  "battle-axn-2026-11-10-03": {
+    "video": "Test Videos/battle-axn-2026-11-10-03.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 3 (Melmetal lead) from 6:39.00, his phone cropped. Opponent: Cramorant, Ursaluna, Melmetal, Altaria, Quagsire (Shadow).",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 149.05,
+        "speciesId": "quagsire_shadow",
+        "energy": 63
+      },
+      {
+        "time": 159.75,
+        "speciesId": "quagsire_shadow",
+        "energy": 46
+      },
+      {
+        "time": 161.75,
+        "speciesId": "quagsire_shadow",
+        "energy": 55
+      },
+      {
+        "time": 171.75,
+        "speciesId": "quagsire_shadow",
+        "energy": 29
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "9:07.80 (2:29.05 in): \"7 8 9\" = 63 (7 × 9 + 0 left over); ManGo 63 | 9:18.50 (2:39.75 in): \"Yeah, so they're at 5\" = 46 (5 × 9 + 1 left over); ManGo 46 | 9:20.50 (2:41.75 in): \"6 7\" = 55 (6 × 9 + 1 left over); ManGo 55 | 9:30.50 (2:51.75 in): \"Nice. So they're at 3.\" = 29 (3 × 9 + 2 left over); ManGo 29"
+    }
+  },
+  "battle-axn-2026-11-10-04": {
+    "video": "Test Videos/battle-axn-2026-11-10-04.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 4 (Shadow Mawile) from 10:42.00, his phone cropped. Opponent: Mightyena (Shadow), Mimikyu, Corviknight.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 116.85,
+        "speciesId": "mightyena_shadow",
+        "energy": 49
+      },
+      {
+        "time": 124.85,
+        "speciesId": "mightyena_shadow",
+        "energy": 9
+      },
+      {
+        "time": 127.35,
+        "speciesId": "mightyena_shadow",
+        "energy": 16
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "12:38.60 (1:56.85 in): \"They're at seven.\" = 49 (7 × 7 + 0 left over); ManGo 49 | 12:46.60 (2:04.85 in): \"Yeah, they're at one.\" = 9 (1 × 7 + 2 left over); ManGo 9 | 12:49.10 (2:07.35 in): \"Two,\" = 16 (2 × 7 + 2 left over); ManGo 16"
+    }
+  },
+  "battle-axn-2026-11-10-06": {
+    "video": "Test Videos/battle-axn-2026-11-10-06.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 6 (Ninetales) from 17:32.00, his phone cropped. Opponent: Ninetales (Shadow), Melmetal, Altaria.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 41.75,
+        "speciesId": "melmetal",
+        "energy": 10
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "18:13.50 (0:41.75 in): \"They're at one right now.\" = 10 (1 × 9 + 1 left over); ManGo 10"
+    }
+  },
+  "battle-axn-2026-11-10-07": {
+    "video": "Test Videos/battle-axn-2026-11-10-07.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 7 (Swampert) from 20:24.00, his phone cropped. Opponent: Swampert, Morpeko (Full Belly), Mimikyu.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 63.26,
+        "speciesId": "morpeko_full_belly",
+        "energy": 54
+      },
+      {
+        "time": 70.56,
+        "speciesId": "morpeko_full_belly",
+        "energy": 9
+      },
+      {
+        "time": 71.86,
+        "speciesId": "morpeko_full_belly",
+        "energy": 18
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "21:27.01 (1:03.26 in): \"they're at six.\" = 54 (6 × 9 + 0 left over); ManGo 54 | 21:34.31 (1:10.56 in): \"So now another at one,\" = 9 (1 × 9 + 0 left over); ManGo 9 | 21:35.61 (1:11.86 in): \"two,\" = 18 (2 × 9 + 0 left over); ManGo 18"
+    }
+  },
+  "battle-axn-2026-11-10-08": {
+    "video": "Test Videos/battle-axn-2026-11-10-08.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 8 (Mimikyu) from 23:26.00, his phone cropped. Opponent: Mimikyu, Electrode (Hisuian), Talonflame.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 21.86,
+        "speciesId": "mimikyu",
+        "energy": 64
+      },
+      {
+        "time": 25.86,
+        "speciesId": "mimikyu",
+        "energy": 72
+      },
+      {
+        "time": 27.66,
+        "speciesId": "mimikyu",
+        "energy": 88
+      },
+      {
+        "time": 38.46,
+        "speciesId": "mimikyu",
+        "energy": 46
+      },
+      {
+        "time": 75.86,
+        "speciesId": "electrode_hisuian",
+        "energy": 9
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "23:47.61 (0:21.86 in): \"Okay, they're at eight.\" = 64 (8 × 8 + 0 left over); ManGo 64 | 23:51.61 (0:25.86 in): \"Nine, 10,\" = 72 (9 × 8 + 0 left over); ManGo 72 | 23:53.41 (0:27.66 in): \"11, 12. Oh, they are building up energy.\" = 88 (11 × 8 + 0 left over); ManGo 88 | 24:04.21 (0:38.46 in): \"Okay, well they did. Awesome. So they're at five.\" = 46 (5 × 8 + 6 left over); ManGo 46 | 24:41.61 (1:15.86 in): \"they're at one,\" = 9 (1 × 9 + 0 left over); ManGo 9"
+    }
+  },
+  "battle-axn-2026-11-10-09": {
+    "video": "Test Videos/battle-axn-2026-11-10-09.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 9 (Snorlax) from 25:52.00, his phone cropped. Opponent: Snorlax, Electrode (Hisuian), Cramorant.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 47.56,
+        "speciesId": "electrode_hisuian",
+        "energy": 54
+      },
+      {
+        "time": 50.46,
+        "speciesId": "electrode_hisuian",
+        "energy": 81
+      },
+      {
+        "time": 109.66,
+        "speciesId": "cramorant",
+        "energy": 27
+      },
+      {
+        "time": 141.96,
+        "speciesId": "cramorant",
+        "energy": 19
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "26:39.31 (0:47.56 in): \"rather. Six, seven, eight,\" = 54 (6 × 9 + 0 left over); ManGo 54 | 26:42.21 (0:50.46 in): \"nine. Okay, so they're at nine right now. As we all know, that means they're one away from their next move.\" = 81 (9 × 9 + 0 left over); ManGo 81 | 27:41.41 (1:49.66 in): \"They go for a fly, so they're at three.\" = 27 (3 × 8 + 3 left over); ManGo 27 | 28:13.71 (2:21.96 in): \"I hope they're on Dive. They are. Okay, so they're at two.\" = 19 (2 × 8 + 3 left over); ManGo 19"
+    }
+  },
+  "battle-axn-2026-11-10-10": {
+    "video": "Test Videos/battle-axn-2026-11-10-10.mp4",
+    "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 10 (Froslass) from 29:08.00, his phone cropped. Opponent: Fearow, Quagsire (Shadow), Mimikyu.",
+    "counts": [],
+    "energyCheckpoints": [
+      {
+        "time": 14.86,
+        "speciesId": "fearow",
+        "energy": 64
+      },
+      {
+        "time": 53.36,
+        "speciesId": "quagsire_shadow",
+        "energy": 45
+      },
+      {
+        "time": 64.26,
+        "speciesId": "quagsire_shadow",
+        "energy": 63
+      },
+      {
+        "time": 73.36,
+        "speciesId": "quagsire_shadow",
+        "energy": 28
+      }
+    ],
+    "throwEnergy": [
+      {
+        "ordinal": 1,
+        "speciesId": "fearow",
+        "moveId": "DRILL_RUN",
+        "exact": 64
+      }
+    ],
+    "notes": {
+      "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
+      "checkpoints": "29:22.61 (0:14.86 in): \"We're at eight, so they're actually overfarming\" = 64 (8 × 8 + 0 left over); ManGo 64 | 30:01.11 (0:53.36 in): \"They're at five, so they do have maybe a mud bomb\" = 45 (5 × 9 + 0 left over); ManGo 45 | 30:12.01 (1:04.26 in): \"Seven, so they're one away from back-to-back Aqua Tail or they're at the Stone Edge\" = 63 (7 × 9 + 0 left over); ManGo 63 | 30:21.11 (1:13.36 in): \"They go for Aqua Tail. Okay, so they're at three, four.\" = 28 (3 × 9 + 1 left over); ManGo 28",
+      "1": "29:32.31: \"And they wait a turn to throw the drill run. So they should be at three right now\": 8 Pecks (64) before Drill Run, 24 after. ManGo: 7 by your charged move, one in progress at it, then one more: 72."
+    }
   }
 }

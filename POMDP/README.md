@@ -519,6 +519,24 @@ those turns you were fast moving, so the line was probably your plan. Those turn
 scored as plain fast moves, which overstates the regret on them. A catch almost never stands
 out this way, because the planner already weighs catches every turn.
 
+**More rollouts where it's close.** `--adaptive CAP` starts each decision at `--rollouts` and
+keeps doubling, up to CAP rollouts. It stops when the gap between your choice and the best
+other option is more than 2 standard errors either way, or is known to within a point. Each
+decision then records its rollouts, the gap and its standard error. The report adds *not
+worse*: the share of decisions where your choice isn't clearly (by 2 standard errors) worse
+than the planner's best. That replaces an arbitrary "within a few points" with a measured one.
+- **Regret at a fixed count is conservative.** The half that picks the best option sometimes
+  picks a worse one by chance, and the other half then scores a smaller gap than the real one.
+  With up to 2,048 rollouts, your mean regret and blunder rate both rise a little: about one
+  blunder in five, up from one in six.
+- **Agreement doesn't move.** The planner still agrees with about half of your decisions. Its
+  disagreements aren't rollout noise, though about two in five of them are too close to call.
+  About seven in ten of your decisions aren't clearly worse than its best.
+- **Most decisions settle at once.** More than half need only the first 128 rollouts, and about
+  one in ten reaches the cap. Those are genuinely close calls.
+
+`--planner pomcp` scores decisions with POMCP instead (below).
+
 ## A model of your opponents, learned from your recordings
 
 The heuristic styles follow fixed rules, so they can't capture decisions that depend on what
@@ -637,6 +655,17 @@ with intervals from resampling whole battles.
   holds for you and the top players alike, which hints that its blunder calls are too harsh,
   but it's within noise.
 
+**With more rollouts** (`--adaptive 2048`), the picture is the same, but sharper:
+- **Overall,** the two sets still match on regret, blunders, agreement and not worse.
+- **The top players' edge at 3v3 now clears zero,** and so does a new one on throws, where they
+  blunder about half as often as you.
+- **The switching gap widens.** The planner can't tell fewer than half of the top players'
+  switches from its best, against two-thirds of yours.
+- **Who was right, for you.** Where you went against the planner, you won more often than it
+  predicted for your choice. Where you agreed, you won a little less often. The difference
+  just clears zero, where at 128 rollouts it was within noise. It hints that the planner
+  undervalues the choices you make against it. For the top players it's still within noise.
+
 **Your opponent model on top players** (`python3 -m experiments.top_players model`). The model
 fitted on your opponents is scored on the top players' decisions. Next to it are the same
 model refitted on the top players (5-fold, by battle), one fitted on both, the styles and the
@@ -657,6 +686,47 @@ base rates.
 
 So the planner's learned opponent is fine for top players' shields and throws. Their switches
 and picks would need their own data, which means more games.
+
+## Looking further ahead: POMCP
+
+The rollout planner values each option as "this now, then the rollout policy". So it
+undervalues an option that pays off only if you play well afterwards, like a lead switch that
+sets up a bait. More rollouts don't fix that: they make the estimate less noisy, not less
+biased. `pomcp.py` keeps the rollout planner's root and grows a search tree below it (POMCP,
+Silver and Veness, 2010):
+- **The root is unchanged.** Every option is played on the same sampled hypotheses and seeds
+  each round, and the same test against the default picks one. Only your later decisions
+  change. They follow a tree, one per option, and then the rollout policy once they leave it.
+  With `depth=0` it's exactly the rollout planner, and a test checks that.
+- **Nodes are the decisions that matter.** That means a free turn with a charged move
+  affordable, a switch moment or catch window, a shield prompt, or a replacement. Between them,
+  it fast moves. The tree goes 8 decisions deep by default.
+- **Observations are coarsened,** so similar positions share a node. The tree sees who's in,
+  shields, HP in quarters and Pokémon left, plus which charged moves are affordable and whether
+  a switch is possible or their throw is near.
+- **The opponent is simulated** by each particle's style or the learned model, as in rollouts.
+  So this is planning against the belief, not a game-theoretic search.
+- **The tree starts as the rollout policy.** Actions are picked by PUCT, as in AlphaZero, with
+  half the prior on the rollout policy's choice. An action not tried yet counts as a little
+  worse than the node's average. Plain UCB1 instead tries every action once at every node.
+  With a few dozen visits a node, those tries (a random switch, say) dragged down the value of
+  the option above them, and it played worse than the rollout planner.
+
+The players are `pomcp`, `pomcp-mixed` and `pomcp-list-mixed`: the planners of those names,
+with the tree. `--rollouts` still counts rounds, and each root option is played once a round,
+so the cost per decision is about the same.
+
+Head to head against the rollout planner, on random pairs of listed Mega Great League teams,
+each played from both sides. Each player's list prior leaves out its own team.
+(`python3 -m experiments.head_to_head pomcp-list-mixed planner-list-mixed --pairs 150 --rollouts 12`):
+
+| Rounds per decision | Team pairs | `pomcp-list-mixed` vs `planner-list-mixed` |
+|---|---|---|
+| 12 (default) | 150 | **0.568 ± 0.026** |
+| 48 | 100 | 0.550 ± 0.032 |
+
+At the default 12 rounds, the tree wins clearly. At 48 the edge is about the same, but with
+fewer pairs it's within noise.
 
 ## Playing against the planner
 
@@ -694,6 +764,7 @@ At the end you get the result and a timeline of the battle.
     mango_pomdp/policies.py    opponent styles, matchup heuristics, baselines
     mango_pomdp/belief.py      energy counting and the particle belief (plus the Oracle)
     mango_pomdp/planner.py     the rollout planner
+    mango_pomdp/pomcp.py       the rollout planner with a search tree over your later decisions (POMCP)
     mango_pomdp/match.py       building players by name, playing one battle
     mango_pomdp/battle_turns.py  your recorded battles (local Battle Turns): rebuilt HP, opponent decisions in context
     mango_pomdp/opponent_model.py  how your opponents shield, throw, switch and pick, learned from Battle Turns
@@ -704,7 +775,8 @@ At the end you get the result and a timeline of the battle.
                                recorded_battles.py, recorded_paths.py (the same from Battle Turns, local),
                                regret.py (your decisions scored, local), play.py (you against the planner),
                                opponent_model.py (fit and check the opponent model, local),
-                               top_players.py (top players' regret next to yours; your opponent model on them, local)
+                               top_players.py (top players' regret next to yours; your opponent model on them, local),
+                               head_to_head.py (one player against another on listed Mega Great League teams)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps
@@ -719,10 +791,11 @@ At the end you get the result and a timeline of the battle.
   "hard to exploit" is only tested against them: the lowest per-style win rate is a crude
   exploitability number. The Mega Great League experiment also plays the planner against
   itself. A best-response search against it is the next step.
-- **Planner.** It decides one action at a time with fixed rollout policies, and its catches
-  rely on the opponent throwing when its style model says it will. POMCP (a search
-  tree over action–observation histories) or longer open-loop sequences would make it look
-  further ahead, for example to bait now in order to nuke later.
+- **Planner.** The rollout planner decides one action at a time with fixed rollout policies,
+  and its catches rely on the opponent throwing when its style model says it will. POMCP looks
+  further ahead over your own decisions, and beats it head to head. But both still play the
+  opponent by a style or the learned model, so neither plans for an opponent who adapts to
+  them. POMCP isn't the default yet. Its depth, prior and observation keys are untuned.
 - **Real battles.** The learned opponent model comes from about 60 battles, so more recordings
   would tighten it most. The planner's win estimates are overconfident against real results,
   which makes regret only a rough measure. Two things could fix that: a value estimate learned

@@ -1820,7 +1820,15 @@
   "battle-axn-2026-11-10-03": {
     "video": "Test Videos/battle-axn-2026-11-10-03.mp4",
     "description": "ItsAXN's GBL video \"Everyone FORGOT Just How Dangerous Jellicent Can Be\" (YouTube mhxbdwB3nIc, 2026-11-10), match 3 (Melmetal lead) from 6:39.00, his phone cropped. Opponent: Cramorant, Ursaluna, Melmetal, Altaria, Quagsire (Shadow).",
-    "counts": [],
+    "counts": [
+      4
+    ],
+    "countTargets": [
+      {
+        "speciesId": "melmetal",
+        "moveId": "DOUBLE_IRON_BASH"
+      }
+    ],
     "energyCheckpoints": [
       {
         "time": 149.05,
@@ -1845,7 +1853,8 @@
     ],
     "notes": {
       "source": "ItsAXN's own counts, said live in his commentary (YouTube's captions, times in his video): the opponent's energy in its fast moves. A good player's count, not a certain one (28:54: \"I actually wasn't counting as well as I\" should).",
-      "checkpoints": "9:07.80 (2:29.05 in): \"7 8 9\" = 63 (7 × 9 + 0 left over); ManGo 63 | 9:18.50 (2:39.75 in): \"Yeah, so they're at 5\" = 46 (5 × 9 + 1 left over); ManGo 46 | 9:20.50 (2:41.75 in): \"6 7\" = 55 (6 × 9 + 1 left over); ManGo 55 | 9:30.50 (2:51.75 in): \"Nice. So they're at 3.\" = 29 (3 × 9 + 2 left over); ManGo 29"
+      "checkpoints": "9:07.80 (2:29.05 in): \"7 8 9\" = 63 (7 × 9 + 0 left over); ManGo 63 | 9:18.50 (2:39.75 in): \"Yeah, so they're at 5\" = 46 (5 × 9 + 1 left over); ManGo 46 | 9:20.50 (2:41.75 in): \"6 7\" = 55 (6 × 9 + 1 left over); ManGo 55 | 9:30.50 (2:51.75 in): \"Nice. So they're at 3.\" = 29 (3 × 9 + 2 left over); ManGo 29",
+      "1": "User, 2026-11-16: 4 Thunder Shocks before Melmetal's first Double Iron Bash (7:14.8 in his video, 0:35.75 here). His video cuts straight from match 2's YOU WIN! (0:21.50) to this countdown: GO at 0:23.75, before Melmetal's name (0:24.25). ManGo started the battle by its buttons instead, 2s late, and had 18 until 2026-11-16."
     }
   },
   "battle-axn-2026-11-10-04": {

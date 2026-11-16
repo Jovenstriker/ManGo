@@ -126,7 +126,7 @@ A successful behavioral replay is not proof of accurate energy. The accuracy tes
 fail when the model contradicts the evidence; do not change labels to match model output or
 mark these failures as expected. POMDP is separate and is not involved in these checks.
 
-There are **110 exact hand counts across 38 recordings** in
+There are **111 exact hand counts across 39 recordings** in
 `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Each count is the opponent's fast moves
 since that Pokémon's previous charged move (or its first appearance), including moves before
 switching out. Entries follow opponent charged moves in recording order. `null` means unknown,
@@ -179,6 +179,7 @@ only run where they are.
 | battle-2026-11-12-192819 | Quagsire (Shadow), Dunsparce, Mimikyu | 5, 4, 10, 4, unknown |
 | battle-2026-11-12-221608 | Cramorant, Marowak, Ninetales (Shadow) | unknown × 2, 5, unknown |
 | battle-2026-11-13-011620 | Ninetales (Alolan), Annihilape | 6, unknown × 2 |
+| battle-axn-2026-11-10-03 (ItsAXN's video, match 3) | Melmetal, Altaria, Quagsire (Shadow) | 4, unknown × 7 |
 
 Altaria's Dragon Breath counts in testV2 were not counted by eye. Empoleon's first v7 throw
 has no count label, but its observed fast move was Waterfall, not the assumed Metal Sound.
@@ -215,7 +216,7 @@ The user-supplied rules dated November 4, 2026 guide these mechanics; see
 a voluntary switch preserves energy, and a switch interrupts assumptions about uninterrupted
 rhythm. Pending fast moves credited at your charged move forecast energy after that cinematic.
 
-107 of 110 exact hand counts match. A 0-turn switch, made right after anyone's charged move
+108 of 111 exact hand counts match. A 0-turn switch, made right after anyone's charged move
 (thrown, received or shielded), holds your buttons back while its camera plays. When their name
 box no longer shows the Pokémon that was in by the read before your buttons come back, ManGo dates
 the restart from the frame your buttons start fading in, less 0.15s, not from their read. That

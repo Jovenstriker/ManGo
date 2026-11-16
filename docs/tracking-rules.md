@@ -66,6 +66,10 @@ explicitly approximate and are not used to identify moves or compute energy.
   your name box covered (014321: "Go, Jumpluff!" as your buttons became Energy Ball and
   Acrobatics, while Cramorant's box went blank for its Dive; taken for theirs, it made Machamp a
   fourth Pokémon and started a new battle, resetting their energy).
+- A GO read after the last battle ended starts the next one even when it came before the
+  lead's name: a quick change of battle lets the countdown beat the name box (ItsAXN's video,
+  match 3: YOU WIN! at 0:21.50, GO at 0:23.75, Melmetal named at 0:24.25; 4 Thunder Shocks by
+  its Double Iron Bash, not 2 from going by your buttons).
 - The lead starts 0.2s after GO is first read: of the starts tried after the countdown on
   November 8, 2026, the only one that fits every lead's hand count. GO stands about 0.65s, then
   grows as it fades; a first read that caught it fading (taller and wider than it stands) came
@@ -137,7 +141,7 @@ explicitly approximate and are not used to identify moves or compute energy.
   Empoleon's Metal Sound on Toxapex 0.75s after Charjabug's name; Bug Bite, the only fitting
   Charjabug move, needs 1s, and it was on Volt Switch). No text is no evidence.
 
-`BattleAccuracyTests` enforces all 110 supplied count labels, exact energy checkpoints, minimum
+`BattleAccuracyTests` enforces all 111 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag
 raw timing undercounts even after the ledger resynchronizes. v7's Azumarill label was corrected
 from 9 to 10 Bubbles by the user's recount on November 4, 2026.

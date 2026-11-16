@@ -1046,7 +1046,15 @@ public struct BattleAutomation: Sendable {
 
     private mutating func appear(_ match: NameMatcher.Match, at since: TimeInterval, now t: TimeInterval, tracker: inout OpponentTracker) {
         guard let best = match.candidates.first else { return }
-        if isBattleOver { newBattle(&tracker) }
+        // A GO read since the last battle ended is this battle's, even when it came before the
+        // lead's name: with a quick change of battle the countdown can beat the name box (ItsAXN's
+        // video, match 3: YOU WIN! at 0:21.50, GO at 0:23.75, Melmetal named at 0:24.25; 4
+        // Thunder Shocks by its Double Iron Bash, not 2).
+        var goSinceEnd: TimeInterval?
+        if isBattleOver {
+            if !Rules.off("goBeforeName"), let go = goAt, let end = battleEndedAt, go > end { goSinceEnd = go }
+            newBattle(&tracker)
+        }
         var seen = tracker.team.first { p in match.candidates.contains { $0.speciesId == p.speciesId } }
         if let seen, seen.speciesId == tracker.active?.speciesId { return }
         if seen == nil, tracker.team.count >= 3 {
@@ -1155,6 +1163,14 @@ public struct BattleAutomation: Sendable {
                     note("HP damage rhythm suggests \(name(speciesId)) uses \(move.name); recounted its assumed moveset")
                 }
             }
+        }
+        if isLead, let go = goSinceEnd, go <= t {
+            goAt = go
+            buttonsResumedAt = go
+            if battleRecord.start == nil { battleRecord.start = tracker.battleClock(at: go) }
+            tracker.setEnergy(0, at: go)
+            leadStartedAt = go
+            note("GO was read at \(clockString(go)), before \(name(speciesId))'s name: the battle started then")
         }
         if isLead, goAt == nil {
             // Named before the countdown's GO (from "Go, X!"): nothing happens until then.

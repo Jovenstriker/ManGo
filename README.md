@@ -292,6 +292,38 @@ The verified sampler checks the player's rectangular HP-bar outline and follows 
 movement; it does not treat arbitrary colored sprite pixels as HP. Ambiguous or missing damage
 rhythms leave the fast move assumed.
 
+### Second test set: a tournament stream with both phones
+
+The 2027 Pokémon Gdańsk Regional Championships, GO Day 2 stream, shows both players' phones side
+by side. Each phone is cropped into its own recording, and the other player's own charge buttons
+give their true energy. A button of cost C fills exactly e / C of its height. `truthpix.py`
+measures that against the button's real circle, since ManGo's reader samples about 7px high on
+these phones and can't see a button under about 20% full. Each Pokémon's energy is then fitted
+in whole fast moves, which also gives its real fast move. A charged move's energy before is
+taken only where the readings fix it: the last reading plus the fast moves its timing allows,
+and a reading soon enough after the move. Games with Dunsparce, and games the stream joined
+partway, are left out.
+
+Of the 374 opponent charged moves in the 65 stretches, 148 are pinned down; ManGo has 75 of
+them exact (51%) and 64 of 115 fast move counts. On these phones a charged move shows about
+0.5s later on the other player's screen (median over 29 games, 0.1 to 0.8s per game), so the
+clock runs on for up to a turn. Most misses are one fast move either way. No timing setting or
+rule change fixes the stream without breaking the hand-counted recordings, which don't show
+that delay. The stream is used for what the delay doesn't touch: the fast move, hit text,
+switches.
+
+The stream crops and reads are kept on this Mac only (`Stream Battles/`, git-ignored). With
+the tools built (`swift build -c release --product battle-report` and `--product screen-log`,
+into `MANGO_BUILD_DIR`):
+
+    scripts/stream/fetch.sh <start s> <end s>     # a stretch: download, crop, read both phones
+    python3 scripts/stream/evaluate.py            # the truth for every game -> truth.json
+    scripts/stream/both.sh 'RULES_OFF=align'      # a change against your recordings and the stream
+
+`both.sh` lists the recordings a change alters and how many fail validation with and without it,
+then the stream score with and without it. `situations.py` tallies the stream's misses by what
+happened in the stretch; `side.py` lines up ManGo's count with the truth for one game.
+
 ## Overlay on top of Pokémon GO
 
 The card at the top of the app is a Picture-in-Picture "video" (`App/ManGo/PictureInPicture.swift`),

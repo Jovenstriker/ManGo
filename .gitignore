@@ -16,3 +16,4 @@ PvPCore/Tests/PvPCoreTests/Fixtures/gbl-battle-*.json
 Battle Logs/
 # Tournament streams with both phones on screen (scripts/stream/): kept on this Mac only.
 Stream Battles/
+__pycache__/

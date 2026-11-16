@@ -382,39 +382,45 @@ table lists species only.
 | 88 | **Thievul / Blaziken / Jumpluff (yours, the most used)** | 0.448 |
 | 109 | **Blaziken / Jumpluff / Fearow (yours)** | 0.350 |
 
-**Each battle replayed with the solver** (`python3 -m experiments.my_battles --games 4`). In
-each of the 63 battles with a full opponent team, your team that day plays that day's opponent.
-It's replayed 4 times against each heuristic style and 4 times against the planner, from both
-sides. The solver is `planner-list` with the current default, and it knows only PvPoke's list,
-not your opponents. The baiter heuristic plays the same games for comparison. A battle counts as
-won if more than half its replays are wins:
+**Each battle replayed with the planner on your side** (`python3 -m experiments.my_battles
+--games 4`). In each of the 63 battles with a full opponent team, your team that day plays that
+day's opponent. It's replayed 4 times against each heuristic style and 4 times against the
+planner, from both sides. Your side is `planner-list` with the current rules and planner, and it
+knows only PvPoke's list, not your opponents. The baiter heuristic plays the same games for
+comparison. A battle counts as won if more than half its replays are wins, and as a split if
+exactly half are:
 
 | Your side played by | vs heuristic opponents | vs the planner |
 |---|---|---|
-| **solver** | **wins 59 of 63** (0.808 ± 0.012) | **wins 17, ties 14** (0.409 ± 0.031) |
-| baiter heuristic | wins 32 of 63 (0.540 ± 0.016) | wins 5, ties 9 (0.202 ± 0.025) |
+| **planner** | **wins 55 of 63** (0.787 ± 0.013) | **wins 14, splits 18** (0.405 ± 0.031) |
+| baiter heuristic | wins 34 of 63 (0.548 ± 0.016) | wins 4, splits 11 (0.185 ± 0.024) |
 
-| Your team | Battles | Solver vs heuristics | Solver vs the planner |
+| Your team | Battles | Planner vs heuristics | Planner vs the planner |
 |---|---|---|---|
-| Thievul / Jumpluff / Blaziken | 34 | wins 32 (0.79) | wins 10 (0.38) |
-| Altaria / Melmetal / Mimikyu | 23 | wins 21 (0.83) | wins 3 (0.41) |
-| Nidoqueen / Mandibuzz / Clodsire | 4 | wins 4 (0.89) | wins 3 (0.56) |
-| Blaziken / Jumpluff / Fearow | 2 | wins 2 (0.75) | wins 1 (0.50) |
+| Thievul / Jumpluff / Blaziken | 34 | wins 29 (0.76) | wins 8 (0.38) |
+| Altaria / Melmetal / Mimikyu | 23 | wins 20 (0.81) | wins 4 (0.40) |
+| Nidoqueen / Mandibuzz / Clodsire | 4 | wins 4 (0.92) | wins 2 (0.62) |
+| Blaziken / Jumpluff / Fearow | 2 | wins 2 (0.78) | wins 0 (0.50) |
 
 What this says:
-- **Against simple opponents, the solver wins nearly all of your battles.** It wins 59 of 63,
-  where the baiter heuristic playing the same teams wins 32. It loses only to Morpeko / Jirachi
-  / Azumarill (0.31) and Hydreigonˢ / Melmetal / Azumarill (0.41).
-- **Against an equally strong opponent, your teams are the weaker side.** The solver wins 0.41
-  of the replays. That fits the round robin: your two most-used teams rank 64th and 84th of
+- **Against simple opponents, the planner wins most of your battles.** It wins 55 of 63, where
+  the baiter heuristic playing the same teams wins 34. It loses 6, the worst being Morpeko /
+  Jirachi / Azumarill (0.25) and Hydreigonˢ / Melmetal / Azumarill (0.31).
+- **The planner isn't always better than its own default.** In 4 battles the plain baiter
+  heuristic does better on the same games. The biggest gap is against Doublade / Togetic /
+  Stunfisk: 0.94 for the heuristic, 0.44 for the planner.
+- **Against an equally strong opponent, your teams are the weaker side.** Your side wins 0.41
+  of the replays. That fits the round robin: your two most-used teams rank 63rd and 88th of
   115.
-- **Nidoqueen / Mandibuzz / Clodsire is your strongest team here.** It ranks 6th in the round
-  robin and wins 3 of 4 battles even against the planner. It's also your least used.
+- **Nidoqueen / Mandibuzz / Clodsire is your strongest team here.** It ranks 7th in the round
+  robin and does best against the planner too (0.62). It's also your least used.
 
-These are simulations, not a check against what happened. The table doesn't record who won
-each real battle, and movesets are PvPoke's recommended ones. Some battles may have been in
-other formats, such as testV3 in the Fantasy Cup. Against the planner, each battle has only 4
-replays, so per-battle rates are coarse. The full table is in `results/my_battles.txt`.
+These are simulations, with PvPoke's recommended movesets. Some battles may have been in other
+formats, such as testV3 in the Fantasy Cup. Against the planner, each battle has only 4
+replays, so per-battle rates are coarse. The full table is in `results/my_battles.txt`. A
+second set of experiments uses the local Battle Turns export: your real movesets, real
+results, and the opponents' recorded decisions (`experiments/recorded_battles.py`,
+`experiments/recorded_paths.py`). Its output names your recordings, so it stays on the Mac.
 
 ## Layout
 
@@ -425,7 +431,7 @@ replays, so per-battle rates are coarse. The full table is in `results/my_battle
     data/mega_great_league_my_battles.csv   each of your battles: your team and theirs (species, lead first)
     data/openings_25.json      the opening book for team #25, Cramorant leading (top_teams book 25 --lead 2)
     results/mega_team25.txt    team #25's full results and per-opponent game plans
-    results/my_battles.txt     your battles, replayed with the solver (experiments/my_battles.py)
+    results/my_battles.txt     your battles, replayed with the planner (experiments/my_battles.py)
     results/rank_all.txt       every team (PvPoke's, yours, the ones you faced) against every other
     scripts/update_data.sh     re-download and trim PvPoke's data (scripts/trim_data.py)
     mango_pomdp/gamedata.py    types, moves, damage formula
@@ -438,10 +444,12 @@ replays, so per-battle rates are coarse. The full table is in `results/my_battle
     mango_pomdp/belief.py      energy counting and the particle belief (plus the Oracle)
     mango_pomdp/planner.py     the rollout planner
     mango_pomdp/match.py       building players by name, playing one battle
+    mango_pomdp/battle_turns.py  your recorded battles (local Battle Turns): rebuilt HP, opponent decisions in context
     experiments/               duel.py (one 1v1, solved), meta.py (every 1v1 among the top N),
                                tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle),
                                top_teams.py (pick one of PvPoke's top teams and plan against the rest),
-                               my_battles.py (your own battles, replayed with the solver)
+                               my_battles.py (your own battles, replayed with the planner),
+                               recorded_battles.py, recorded_paths.py (the same from Battle Turns, local)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps

@@ -645,10 +645,15 @@ base rates.
   well as a model fitted on them, and better than the base rates and the styles. Fitting on
   both is a little better still for shields. Top players shield less than your opponents,
   about a third of the time against over two-fifths, and hold a little more.
-- **Switches and picks don't.** Your model's switch part is slightly worse than the top
-  players' base rate, which a refit beats, and its picks are no better than a coin flip. There
-  isn't much to learn here anyway: top players switch on about 4% of the free turns where
-  they could.
+- **Switches don't transfer.** A switch is a once-a-battle decision. The 45-second timer
+  outlasts the rest of most battles, so nobody in either set ever got a second chance to
+  switch. That's why the rate per free turn is low, about 4%. It doesn't mean there's nothing
+  to learn: a switch model fitted on the top players beats their base rate. Yours is slightly
+  worse than that base rate, because it expects switches later in the battle than top players
+  make them. Telling the model the turn (the opening turns, or how far in) didn't help either set.
+- **Picks are too few to say.** Your model gets about half of the 87 picks right, like a coin
+  flip, and the styles' best-matchup rule about 60%. With so few, that's within noise
+  (± 5 points).
 
 So the planner's learned opponent is fine for top players' shields and throws. Their switches
 and picks would need their own data, which means more games.

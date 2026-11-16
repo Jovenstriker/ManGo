@@ -354,34 +354,45 @@ class Planner:
     # Rollouts -----------------------------------------------------------------------------
 
     def _controllers(self, first, seed: int, style: str, b: Battle):
-        mine = self._ours(seed)
-        if self.rollout_catch and self.switch_at in ("catch", "any"):
-            mine = _Catcher(mine, b, self.side, style)
+        mine = self._rollout_policy(seed, style, b)
         if first is not None and first[0] == "catch":
             mine = _First(WAIT, _Catch(first[1], mine, b, self.side, style))
         elif first is not None and first[0] == "farm":
             mine = _Farm(mine, b, self.side)
         elif first is not None:
             mine = _First(first, mine)
+        theirs = self._theirs(seed, style, b)
+        return [mine, theirs] if self.side == 0 else [theirs, mine]
+
+    def _rollout_policy(self, seed: int, style: str, b: Battle):
+        """Our side's rollout policy in one rollout."""
+        mine = self._ours(seed)
+        if self.rollout_catch and self.switch_at in ("catch", "any"):
+            mine = _Catcher(mine, b, self.side, style)
+        return mine
+
+    def _theirs(self, seed: int, style: str, b: Battle):
+        """The opponent in one rollout: the sampled style, or the learned model."""
         if style == "learned":   # the model fitted on your recorded opponents (opponent_model)
             from .opponent_model import Learned, default_model
             model = default_model()
             if model is None:
                 raise RuntimeError("no opponent model: run python3 -m experiments.opponent_model first")
-            theirs = Learned(model, b, 1 - self.side, seed + 1)
-        else:
-            theirs = Heuristic(style, eps=self.eps, seed=seed + 1)
-        return [mine, theirs] if self.side == 0 else [theirs, mine]
+            return Learned(model, b, 1 - self.side, seed + 1)
+        return Heuristic(style, eps=self.eps, seed=seed + 1)
 
     def _value(self, b: Battle) -> float:
         hp = [sum(m.hp for m in side.mons) / sum(m.max_hp for m in side.mons) for side in b.sides]
         return b.reward(self.side) + self.margin_weight * (hp[self.side] - hp[1 - self.side])
 
     def outcomes(self, view: View, cands: list, apply=None, first: bool = False,
-                 incoming: Move | None = None, rollouts: int | None = None) -> list[list[float]]:
+                 incoming: Move | None = None, rollouts: int | None = None,
+                 keep: dict | None = None) -> list[list[float]]:
         """For each candidate, its rollout results as wins (1, ½ for a tie, 0), on the same
         sampled hypotheses and seeds for every candidate: a win-probability estimate of each
-        action, for judging decisions rather than making them."""
+        action, for judging decisions rather than making them. Calling it again draws new
+        rollouts, so results can be added up. (`keep` lets a planner that learns as it rolls
+        out, like POMCP, carry on from an earlier call on the same decision.)"""
         self.belief.see(view)
         apply = apply or (lambda b, a, ctrls: None)
         out = [[] for _ in cands]
@@ -401,6 +412,20 @@ class Planner:
               incoming: Move | None = None, zs: list[float] | None = None):
         self.decisions += 1
         self.belief.see(view)   # an opponent that 0-turn switched in this turn is already on screen
+        values = self._values(view, cands, apply, first, incoming)
+        best, best_gain = default, 0.0
+        for j in range(len(cands)):
+            if j == default:
+                continue
+            diffs = [a - d for a, d in zip(values[j], values[default])]
+            mean = sum(diffs) / len(diffs)
+            se = (sum((x - mean) ** 2 for x in diffs) / max(len(diffs) - 1, 1) / len(diffs)) ** 0.5
+            if mean > (zs[j] if zs else self.z) * se and mean > best_gain:
+                best, best_gain = j, mean
+        return cands[best]
+
+    def _values(self, view: View, cands: list, apply, first: bool, incoming: Move | None) -> list[list[float]]:
+        """Each candidate's rollout values, on common hypotheses and seeds."""
         values = [[] for _ in cands]
         for _ in range(self.rollouts):
             p = self.belief.sample(self.rng)
@@ -412,13 +437,4 @@ class Planner:
                 apply(b, c, ctrls)
                 b.play(ctrls)
                 values[j].append(self._value(b))
-        best, best_gain = default, 0.0
-        for j in range(len(cands)):
-            if j == default:
-                continue
-            diffs = [a - d for a, d in zip(values[j], values[default])]
-            mean = sum(diffs) / len(diffs)
-            se = (sum((x - mean) ** 2 for x in diffs) / max(len(diffs) - 1, 1) / len(diffs)) ** 0.5
-            if mean > (zs[j] if zs else self.z) * se and mean > best_gain:
-                best, best_gain = j, mean
-        return cands[best]
+        return values

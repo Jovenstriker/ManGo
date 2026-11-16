@@ -351,6 +351,45 @@ class PlannerTests(unittest.TestCase):
                 score += {0: 1, -1: 0.5, 1: 0}[b.winner]
         self.assertGreaterEqual(score / 12, 0.7)
 
+    def test_pomcp_without_a_tree_is_the_rollout_planner(self):
+        from mango_pomdp.planner import Planner
+        from mango_pomdp.pomcp import POMCP
+        rng = random.Random(3)
+        teams = [prior.sample_team(rng), prior.sample_team(rng)]
+        logs = []
+        for p in (Planner(gd, prior, rollouts=4, seed=5), POMCP(gd, prior, rollouts=4, seed=5, depth=0)):
+            b = play(gd, teams, [p, Heuristic("baiter", seed=2)], seed=9)
+            logs.append([(e.turn, e.kind, e.side, getattr(e, "move", None)) for e in b.log])
+        self.assertEqual(logs[0], logs[1])
+
+    def test_pomcp_grows_a_tree_below_each_option(self):
+        from mango_pomdp.pomcp import POMCP
+        b = Battle([[mon("medicham"), mon("azumarill"), mon("registeel")],
+                    [mon("swampert"), mon("skarmory"), mon("altaria")]], seed=0)
+        p = POMCP(gd, prior, rollouts=12, seed=1, depth=4)
+        p.start(0)
+        p.observe(b.log)
+        keep = {}
+        cands = [FAST, SWITCH(1)]
+        out = p.outcomes(b.view(0), cands, first=True, rollouts=12, keep=keep)
+        self.assertEqual([len(o) for o in out], [12, 12])
+        roots = keep["roots"]
+        self.assertEqual([r.n for r in roots], [12, 12])
+        self.assertTrue(all(r.children for r in roots))   # later decisions got their own nodes
+        p.outcomes(b.view(0), cands, first=True, rollouts=6, keep=keep)
+        self.assertEqual([r.n for r in roots], [18, 18])   # a second call carries on the same trees
+
+    def test_pomcp_beats_random(self):
+        rng = random.Random(7)
+        score = 0.0
+        for g in range(6):
+            teams = [prior.sample_team(rng), prior.sample_team(rng)]
+            for mine, theirs in ((teams[0], teams[1]), (teams[1], teams[0])):
+                b = play(gd, [mine, theirs], [make_player("pomcp", gd, prior, g, rollouts=6),
+                                              make_player("random", gd, prior, g)], seed=g)
+                score += {0: 1, -1: 0.5, 1: 0}[b.winner]
+        self.assertGreaterEqual(score / 12, 0.7)
+
 
 mega = load("mega_great_league")
 

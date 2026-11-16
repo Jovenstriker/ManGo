@@ -4,11 +4,13 @@ from __future__ import annotations
 from .battle import Battle
 from .gamedata import GameData, TopTeam
 from .planner import SWITCH_AT, Planner
+from .pomcp import POMCP
 from .policies import STYLES, Heuristic, RandomPlayer
 from .team_prior import TeamListPrior, TeamPrior, TeamSpec, build_team
 
 PLAYERS = ("random", *STYLES, "planner", "planner-flat", "planner-1style", "planner-list", "oracle",
-           "planner-learned", "planner-list-learned", "planner-mixed", "planner-list-mixed")
+           "planner-learned", "planner-list-learned", "planner-mixed", "planner-list-mixed",
+           "pomcp", "pomcp-mixed", "pomcp-list-mixed")
 
 
 def valid_player(name: str) -> bool:
@@ -50,6 +52,14 @@ def make_player(name: str, gd: GameData, prior: TeamPrior, seed: int,
                        styles=STYLES + ("learned",), seed=seed, name=name, **kw)
     if name == "planner-list":
         return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts, seed=seed, name=name, **kw)
+    # POMCP: the same planners with a search tree over your later decisions (pomcp.py).
+    if name == "pomcp":
+        return POMCP(gd, prior, rollouts=rollouts, seed=seed, name=name, **kw)
+    if name == "pomcp-mixed":
+        return POMCP(gd, prior, rollouts=rollouts, styles=STYLES + ("learned",), seed=seed, name=name, **kw)
+    if name == "pomcp-list-mixed":
+        return POMCP(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts,
+                     styles=STYLES + ("learned",), seed=seed, name=name, **kw)
     if name == "oracle":
         return Planner(gd, prior, rollouts=rollouts, seed=seed, oracle=(truth, truth_style), name=name, **kw)
     raise ValueError(f"unknown player {name!r}; pick from {PLAYERS}")

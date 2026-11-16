@@ -379,6 +379,14 @@ class PlannerTests(unittest.TestCase):
         p.outcomes(b.view(0), cands, first=True, rollouts=6, keep=keep)
         self.assertEqual([r.n for r in roots], [18, 18])   # a second call carries on the same trees
 
+    def test_adaptive_rollouts_stop_when_the_comparison_is_clear(self):
+        from experiments.regret import settled
+        self.assertTrue(settled([[1, 1, 1, 1], [0, 0, 0, 0]], 1)[0])         # clearly worse
+        self.assertTrue(settled([[1, 0, 1, 0], [1, 0, 1, 0]], 1)[0])         # the same every time: a tie
+        done, gap, se = settled([[1, 0, 1, 0, 1, 1], [0, 1, 1, 0, 1, 0]], 1)
+        self.assertFalse(done)                                               # too close to call yet
+        self.assertAlmostEqual(gap, 1 / 6)
+
     def test_pomcp_beats_random(self):
         rng = random.Random(7)
         score = 0.0

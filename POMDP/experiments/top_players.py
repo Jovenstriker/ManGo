@@ -73,19 +73,23 @@ def battles_of(fmt, folder):
 
 # Regret ------------------------------------------------------------------------------------
 
-def rows_for(who, fmt, folder, rollouts, styles, workers, fresh):
-    """Every scored decision, as regret.evaluate gives them, cached by settings."""
-    path = CACHE[who]
-    settings = {"rollouts": rollouts, "styles": list(styles), "format": fmt}
+def rows_for(who, folder, opts, workers, fresh):
+    """Every scored decision, as regret.evaluate gives them, cached by settings (one file per
+    planner, rollouts and cap)."""
+    plain = opts["cap"] == 0 and opts["planner"] == "rollout"
+    settings = ({k: opts[k] for k in ("rollouts", "styles", "format")} if plain else opts)
+    tag = "" if plain else f"-{opts['planner']}" + (f"{opts['depth']}" if opts["planner"] == "pomcp" else "") \
+        + f"-{opts['rollouts']}-{opts['cap']}"
+    path = CACHE[who].with_name(f"regret_rows{tag}.json")
     if not fresh and path.exists():
         raw = json.loads(path.read_text())
         if raw["settings"] == settings:
             return [tuple(r[:10]) + (tuple(r[10]),) + tuple(r[11:]) for r in raw["rows"]], raw["complete"]
-    _, battles = battles_of(fmt, folder)
+    _, battles = battles_of(opts["format"], folder)
     battles = [b for b in battles if b.decisions]
     start = time.time()
     with ProcessPoolExecutor(workers) as pool:
-        res = list(pool.map(regret.evaluate, [(b, rollouts, list(styles), fmt) for b in battles]))
+        res = list(pool.map(regret.evaluate, [(b, opts) for b in battles]))
     rows = [(bid, result, *r) for bid, result, out in res for r in out]
     complete = sorted(b.id for b in battles if b.complete)
     print(f"  {WHO[who]}: {len(rows)} decisions in {len(battles)} battles, {time.time() - start:.0f}s")
@@ -127,21 +131,33 @@ def mean_regret(rows):
     return statistics.mean(r[3] for r in rows) if rows else float("nan")
 
 
+def not_worse(rows):
+    """Share of decisions the planner can't tell from its best: the best other option isn't
+    ahead of the player's by over 2 standard errors (needs adaptive rollouts' rows)."""
+    return statistics.mean(not regret.clearly_worse(r) for r in rows) if rows else float("nan")
+
+
 def side_by_side(title, groups, keep, names):
     print(title)
-    print(f"  {'':<14}{'':<12}{'decisions':>9}  {'mean regret':>11}  {'blunders':>8}  {'agrees':>6}")
+    stats = [("mean regret", mean_regret, "+.3f"), ("blunders", blunders, "+.0%"), ("agrees", agree, ".0%")]
+    if all(len(r) > 16 for rows in groups for r in rows):
+        stats.append(("not worse", not_worse, ".0%"))
+    w = 11
+    print(f"  {'':<14}{'':<12}{'decisions':>9}" + "".join(f"  {h:>{w}}" for h, _, _ in stats))
     for name, k in zip(names, keep):
         sets = [[r for r in rows if k(r)] for rows in groups]
         if not all(sets):
             continue
         for who, xs in zip(("you", "top players"), sets):
-            print(f"  {name if who == 'you' else '':<14}{who:<12}{len(xs):>9}  {mean_regret(xs):>+11.3f}  "
-                  f"{blunders(xs):>8.0%}  {agree(xs):>6.0%}")
-        lo_r, hi_r, lo_b, hi_b, lo_a, hi_a = boot(sets, (mean_regret, blunders, agree))
-        print(f"  {'':<14}{'difference':<12}{'':>9}  {mean_regret(sets[1]) - mean_regret(sets[0]):>+11.3f}  "
-              f"{blunders(sets[1]) - blunders(sets[0]):>+8.0%}  {agree(sets[1]) - agree(sets[0]):>+6.0%}")
-        print(f"  {'':<14}{'  95%':<12}{'':>9}  {f'{lo_r:+.3f}..{hi_r:+.3f}':>11}  "
-              f"{f'{lo_b:+.0%}..{hi_b:+.0%}':>8}  {f'{lo_a:+.0%}..{hi_a:+.0%}':>6}")
+            print(f"  {name if who == 'you' else '':<14}{who:<12}{len(xs):>9}"
+                  + "".join(f"  {format(f(xs), fmt.lstrip('+')):>{w}}" for _, f, fmt in stats))
+        ci = boot(sets, [f for _, f, _ in stats])
+        print(f"  {'':<14}{'difference':<12}{'':>9}"
+              + "".join(f"  {format(f(sets[1]) - f(sets[0]), fmt if fmt[0] == '+' else '+' + fmt):>{w}}"
+                        for _, f, fmt in stats))
+        print(f"  {'':<14}{'  95%':<12}{'':>9}"
+              + "".join(f"  {format(ci[2 * i], '+.3f' if fmt.endswith('f') else '+.0%') + '..' + format(ci[2 * i + 1], '+.3f' if fmt.endswith('f') else '+.0%'):>{w}}"
+                        for i, (_, _, fmt) in enumerate(stats)))
     print()
 
 
@@ -181,10 +197,18 @@ def who_was_right(rows, rollouts, title):
 
 
 def run_regret(args):
-    print(f"Decision regret, {args.rollouts} rollouts, opponents in the belief and rollouts: "
-          f"{', '.join(args.styles)}.")
-    mine, _ = rows_for("you", MINE_FORMAT, args.mine, args.rollouts, args.styles, args.workers, args.fresh)
-    top, _ = rows_for("top", args.stream_format, args.stream, args.rollouts, args.styles, args.workers, args.fresh)
+    opts = {"rollouts": args.rollouts, "styles": list(args.styles), "cap": args.adaptive, "planner": args.planner,
+            "depth": args.depth}
+    print(f"Decision regret, {args.planner} planner" + (f" (tree depth {args.depth})" if args.planner == "pomcp" else "")
+          + f", {args.rollouts} rollouts" + (f", doubled up to {args.adaptive} until settled" if args.adaptive else "")
+          + f", opponents in the belief and rollouts: {', '.join(args.styles)}.")
+    mine, _ = rows_for("you", args.mine, {**opts, "format": MINE_FORMAT}, args.workers, args.fresh)
+    top, _ = rows_for("top", args.stream, {**opts, "format": args.stream_format}, args.workers, args.fresh)
+    for who, rows in (("You", mine), ("Top players", top)):
+        if rows and len(rows[0]) > 16:
+            n = [r[14] for r in rows]
+            print(f"  {who}: {statistics.mean(n):.0f} rollouts a decision on average, "
+                  f"{sum(x >= args.adaptive for x in n) / len(n):.0%} reached the cap")
     games = {game(r[0]) for r in top}
     print(f"You: {len(mine)} decisions in {len({r[0] for r in mine})} battles (Mega Great League). Top players: "
           f"{len(top)} decisions in {len({r[0] for r in top})} player views of {len(games)} battles (Great League).\n")
@@ -289,6 +313,10 @@ def main():
     ap.add_argument("--styles", nargs="+", default=list(STYLES) + ["learned"])
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--fresh", action="store_true", help="rerun the regret instead of using cached rows")
+    ap.add_argument("--adaptive", type=int, default=0, metavar="CAP",
+                    help="adaptive rollouts: double them on a decision until it's settled, up to CAP")
+    ap.add_argument("--planner", choices=("rollout", "pomcp"), default="rollout")
+    ap.add_argument("--depth", type=int, default=8, help="POMCP's tree depth, in decisions")
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--l2", type=float, default=1.0)
     args = ap.parse_args()

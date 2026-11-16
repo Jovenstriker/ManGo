@@ -48,6 +48,7 @@ from mango_pomdp.battle_turns import battle_at, load
 from mango_pomdp.gamedata import DATA_DIR
 from mango_pomdp.opponent_model import _sigmoid, fit_logistic
 from mango_pomdp.planner import FARM, Planner
+from mango_pomdp.pomcp import POMCP
 from mango_pomdp.policies import STYLES
 from mango_pomdp.team_prior import TeamPrior
 
@@ -63,11 +64,47 @@ def label(d) -> str:
             "replace": "replace"}[d.choice[0]]
 
 
+def settled(outs, j, z=2.0, tol=0.01) -> tuple[bool, float, float]:
+    """Is it clear how your choice (candidate j) compares with the best of the others? Returns
+    (settled, gap, its standard error), where gap is the best other option's P(win) minus yours,
+    from paired rollouts. Settled when the gap is over z standard errors either way, or known
+    to within `tol` (then it's a tie for practical purposes)."""
+    others = [k for k in range(len(outs)) if k != j]
+    if not others:
+        return True, 0.0, 0.0
+    best = max(others, key=lambda k: sum(outs[k]))
+    diffs = [a - b for a, b in zip(outs[best], outs[j])]
+    n = len(diffs)
+    gap = sum(diffs) / n
+    se = math.sqrt(sum((x - gap) ** 2 for x in diffs) / max(n - 1, 1) / n)
+    return abs(gap) > z * se or se < tol, gap, se
+
+
+def clearly_worse(row, z=2.0) -> bool:
+    """A report row (battle id and result first) where the best other option beat yours by over
+    z standard errors of the paired rollouts. Rows from adaptive runs only."""
+    return len(row) > 16 and row[15] > z * row[16] and row[15] > 0
+
+
+def make_planner(gd, opts, seed):
+    kind = opts.get("planner", "rollout")
+    kw = dict(rollouts=opts["rollouts"], seed=seed, styles=tuple(opts["styles"]))
+    if kind == "pomcp":
+        return POMCP(gd, TeamPrior(gd), depth=opts.get("depth", 8), **kw)
+    return Planner(gd, TeamPrior(gd), **kw)
+
+
 def evaluate(args):
-    """[(decision type, regret, P(win) of yours, P(win) of best, what you did, the best)] for one battle."""
-    rb, rollouts, styles, fmt = args
-    gd = gamedata.use(fmt)
-    planner = Planner(gd, TeamPrior(gd), rollouts=rollouts, seed=zlib.crc32(rb.id.encode()), styles=tuple(styles))
+    """For one battle: (battle id, result, rows), a row for each of your decisions it could
+    score: (decision type, regret, P(win) of yours, P(win) of best, what you did, the best, ...).
+
+    `opts`: rollouts, styles, format; "cap" for adaptive rollouts (keep doubling the rollouts
+    on a decision until it's settled() or there are `cap`; 0 for a fixed number); "planner",
+    "rollout" or "pomcp" (with "depth")."""
+    rb, opts = args
+    rollouts, cap = opts["rollouts"], opts.get("cap", 0)
+    gd = gamedata.use(opts["format"])
+    planner = make_planner(gd, opts, zlib.crc32(rb.id.encode()))
     planner.start(0)
     fed = -1   # events fed through this turn
     out = []
@@ -112,8 +149,9 @@ def evaluate(args):
             # Win-condition lines, on the same rollouts: farm their Pokémon down with fast moves
             # (banking energy for the next matchup), or stay free and catch their throw with a switch.
             macros = [FARM] + ([("catch", i) for i in me.bench()] if me.switch_timer == 0 else [])
-            every = planner.outcomes(view, cands + macros, first=True, rollouts=rollouts)
-            outs, macro_outs = every[:len(cands)], every[len(cands):]
+
+            def run(n, keep, view=view, every=cands + macros):
+                return planner.outcomes(view, every, first=True, rollouts=n, keep=keep)
         elif d.kind == "shield":
             if me.shields == 0 or d.move not in gd.moves:
                 continue
@@ -132,7 +170,9 @@ def evaluate(args):
             b.sides[1].mon.energy = max(b.sides[1].mon.energy, move.energy)
             if move not in b.sides[1].mon.charged:
                 continue
-            outs = planner.outcomes(view, cands, apply, incoming=move, rollouts=rollouts)
+
+            def run(n, keep, view=view, cands=cands, apply=apply, move=move):
+                return planner.outcomes(view, cands, apply, incoming=move, rollouts=n, keep=keep)
         else:
             bench = [i for i, m in enumerate(me.mons) if m.hp > 0 and i != me.active]
             arg = d.choice[1]
@@ -140,12 +180,22 @@ def evaluate(args):
                 continue
             cands = bench
             mine = ids.index(arg)
-            outs = planner.outcomes(view, cands, lambda bb, i, ctrls: bb.switch_in(0, i, timer=False),
-                                    rollouts=rollouts)
+
+            def run(n, keep, view=view, cands=cands):
+                return planner.outcomes(view, cands, lambda bb, i, ctrls: bb.switch_in(0, i, timer=False),
+                                        rollouts=n, keep=keep)
+        j = cands.index(mine)
+        keep = {}
+        every = run(rollouts, keep)
+        done, gap, se = settled(every[:len(cands)], j)
+        while cap and not done and len(every[0]) < cap:
+            more = run(min(len(every[0]), cap - len(every[0])), keep)
+            every = [a + b for a, b in zip(every, more)]
+            done, gap, se = settled(every[:len(cands)], j)
+        outs, macro_outs = every[:len(cands)], every[len(cands):]
         half = len(outs[0]) // 2
         pick = max(range(len(cands)), key=lambda j: sum(outs[j][:half]))
         score = [sum(o[half:]) / (len(o) - half) for o in outs]
-        j = cands.index(mine)
         full = [sum(o) / len(o) for o in outs]
         line, gain = "", 0.0   # the best win-condition line, and how much it beats every single action by
         if d.kind == "act" and macro_outs:
@@ -154,7 +204,8 @@ def evaluate(args):
             line = "farm down" if macros[k] == FARM else f"catch with {ids[macros[k][1]]}"
             gain = mfull[k] - max(full)
         out.append((label(d), score[pick] - score[j], full[j], full[pick], str(mine), str(cands[pick]),
-                    score[pick], score[j], (me.remaining(), b.sides[1].remaining()), d.turn, line, gain))
+                    score[pick], score[j], (me.remaining(), b.sides[1].remaining()), d.turn, line, gain,
+                    len(outs[0]), gap, se))
     return rb.id, rb.result, out
 
 
@@ -201,6 +252,11 @@ def calibrate(rows, rollouts, folds=5):
             [(whole[2 * g], whole[2 * g + 1]) for g in range(len(STAGES))])
 
 
+def options(args) -> dict:
+    return {"rollouts": args.rollouts, "styles": list(args.styles), "format": args.format, "cap": args.adaptive,
+            "planner": args.planner, "depth": args.depth}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--turns", type=Path, default=TURNS)
@@ -211,12 +267,17 @@ def main():
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--format", default=FORMAT, help="the battles' format, a data/<format>.json")
     ap.add_argument("--calibration", type=Path, default=CALIBRATION, help="where to save the calibration fit")
+    ap.add_argument("--adaptive", type=int, default=0, metavar="CAP",
+                    help="keep doubling the rollouts on a decision until it's clear how yours compares with the "
+                         "best other option, up to CAP rollouts")
+    ap.add_argument("--planner", choices=("rollout", "pomcp"), default="rollout")
+    ap.add_argument("--depth", type=int, default=8, help="POMCP's tree depth, in decisions")
     args = ap.parse_args()
     gd = gamedata.use(args.format)
     battles = [b for b in load(gd, args.turns) if b.seen == 3 and not b.misread and b.decisions]
     start = time.time()
     with ProcessPoolExecutor(args.workers) as pool:
-        res = list(pool.map(evaluate, [(b, args.rollouts, args.styles, args.format) for b in battles]))
+        res = list(pool.map(evaluate, [(b, options(args)) for b in battles]))
     rows = [(bid, result, *r) for bid, result, out in res for r in out]
     print(f"{len(rows)} of your decisions in {len(battles)} recorded battles, {args.rollouts} rollouts each "
           f"(opponents in the belief and rollouts: {', '.join(args.styles)}), "
@@ -255,6 +316,12 @@ def report(rows, title, complete=frozenset(), flips=False):
         if xs:
             print(f"{kind:<10}{summary(xs)}")
     print(f"{'all':<10}{summary(rows)}")
+    if rows and len(rows[0]) > 16 and max(r[14] for r in rows) > min(r[14] for r in rows):
+        n = [r[14] for r in rows]
+        print(f"Adaptive rollouts: {statistics.mean(n):.0f} a decision on average (from {min(n)} to {max(n)}). "
+              f"The best other option is clearly ahead of yours (by over 2 standard errors) on "
+              f"{statistics.mean(clearly_worse(r) for r in rows):.0%} of decisions; on the rest the planner "
+              f"can't tell yours from its best.")
 
     per = defaultdict(list)
     for r in rows:

@@ -151,7 +151,10 @@ public struct BattleScreenParser: Sendable {
 
     public init(data: GameData) {
         matcher = NameMatcher(data: data)
-        chargedMoveNames = Set(data.moves.values.filter { !$0.isFast && $0.energy > 0 }.map { NameMatcher.normalize($0.name) })
+        // A button says "WEATHER BALL" for each of the forms PvPoke names "Weather Ball (Ice)" and so on.
+        chargedMoveNames = Set(data.moves.values.filter { !$0.isFast && $0.energy > 0 }.flatMap { m in
+            [NameMatcher.normalize(m.name), NameMatcher.normalize(m.name.split(separator: "(").first.map(String.init) ?? m.name)]
+        })
         chargedMoveNameById = Dictionary(data.moves.values.filter { !$0.isFast }.map { ($0.moveId, NameMatcher.normalize($0.name)) }, uniquingKeysWith: { a, _ in a })
     }
 

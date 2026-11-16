@@ -713,10 +713,10 @@ public struct BattleAutomation: Sendable {
     /// Also the Pokémon that learn both (best-ranked first) and the charged moves' ids.
     private func fastMove(forButtons labels: Set<String>) -> (turns: Int, type: String?, moveId: String, species: [String], charged: [String])? {
         guard labels.count == 2 else { return nil }
-        let moves = data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }
+        let moves = data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(buttonLabel($0)) }
         // A label can name more than one move ("Dynamic Punch" and "Dynamic Punch+", Weather Ball's
         // forms): a Pokémon needs one of each (171449's Melmetal).
-        let byLabel = Dictionary(grouping: moves.map(\.moveId)) { NameMatcher.normalize(data.moves[$0]!.name) }
+        let byLabel = Dictionary(grouping: moves.map(\.moveId)) { buttonLabel(data.moves[$0]!) }
         guard Set(byLabel.keys) == labels else { return nil }
         let ranked = data.species.values
             .filter { s in s.rank != nil && byLabel.values.allSatisfy { $0.contains(where: s.chargedMoves.contains) } }
@@ -727,12 +727,18 @@ public struct BattleAutomation: Sendable {
         return (top.turns, top.type, top.moveId, ranked.map(\.speciesId), charged)
     }
 
+    /// A charged move's name as its button and banner show it: "Weather Ball" for each of the
+    /// forms PvPoke names "Weather Ball (Ice)" and so on (the stream's Alolan Ninetales).
+    private func buttonLabel(_ move: Move) -> String {
+        NameMatcher.normalize(move.name.split(separator: "(").first.map(String.init) ?? move.name)
+    }
+
     /// The charged moves on your buttons, as the summary last read them.
     private var yourButtonMoves: [String] {
         // The ones your Pokémon learns: "Dynamic Punch" is Melmetal's, not Dynamic Punch+.
         if !summaryButtonLabels.isEmpty, let charged = battleRecord.yourMoves.last?.charged, !charged.isEmpty { return charged }
         let labels = summaryButtonLabels.isEmpty ? parser.yourButtonLabels : summaryButtonLabels
-        return data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(NameMatcher.normalize($0.name)) }.map(\.moveId)
+        return data.moves.values.filter { !$0.isFast && $0.energy > 0 && labels.contains(buttonLabel($0)) }.map(\.moveId)
     }
 
     /// Your banner ("Blaziken used Blaze Kick!") names your charged move: the one on your buttons
@@ -746,7 +752,7 @@ public struct BattleAutomation: Sendable {
         }
         guard let i = battleRecord.charged.lastIndex(where: { $0.move.side == .you }), battleRecord.charged[i].move.name == nil else { return }
         let read = NameMatcher.normalize(banner.move)
-        func distance(_ m: Move) -> Int { NameMatcher.editDistance(NameMatcher.normalize(m.name), read, limit: 6) }
+        func distance(_ m: Move) -> Int { NameMatcher.editDistance(buttonLabel(m), read, limit: 6) }
         var move = yourButtonMoves.compactMap { data.moves[$0] }.min { distance($0) < distance($1) }
         if move.map({ distance($0) > 2 }) ?? true {
             // Not one on the buttons last read (171449: Melmetal's Double Iron Bash with Altaria's

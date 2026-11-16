@@ -292,9 +292,16 @@ public enum TurnByTurn {
             }
         }
 
+        // Where the results screen wasn't seen (the stream cuts away first), whoever lost all three.
+        func down(_ side: BattleSummary.Side) -> Int {
+            max(fainted[side]!.count, s.markers.filter { $0.side == side && $0.kind == .fainted }.count)
+        }
+        let result = s.result ?? (down(.you) >= 3 && down(.them) >= 3 ? "draw" : down(.you) >= 3 ? "lost" : down(.them) >= 3 ? "won" : "")
+        for k in rows.indices { rows[k]["result"] = result }
+
         var battle: [String: String] = [
             "battle_id": id, "recording": recording, "battle_number": "\(number)", "video": video ?? "",
-            "result": s.result ?? "", "turns": "\(turnCount)", "play_seconds": clock(s.duration),
+            "result": result, "turns": "\(turnCount)", "play_seconds": clock(s.duration),
             "video_start": s.readTime(at: 0).map { String(format: "%.2f", $0) } ?? "",
             "video_end": s.readTime(at: s.duration).map { String(format: "%.2f", $0) } ?? "",
             "you_charged_moves": "\(counts.youCharged)", "them_charged_moves": "\(counts.themCharged)",

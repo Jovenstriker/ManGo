@@ -497,6 +497,16 @@ class PlayTests(unittest.TestCase):
 class RecordedBattleTests(unittest.TestCase):
     """Habits from a made-up Battle Turns folder (the real one stays local)."""
 
+    def test_stream_views_share_their_result(self):
+        from mango_pomdp.battle_turns import fill_paired_results, partner
+        self.assertEqual(partner("battle-gdansk-g03648-L#1"), "battle-gdansk-g03648-R#1")
+        self.assertEqual(partner("battle-gdansk-g03648-R#2"), "battle-gdansk-g03648-L#2")
+        self.assertIsNone(partner("battle-2026-10-23-132243#1"))
+        rows = [{"battle_id": "battle-g1-L#1", "result": ""}, {"battle_id": "battle-g1-R#1", "result": "won"},
+                {"battle_id": "battle-g2-L#1", "result": ""}, {"battle_id": "battle-2026-10-23#1", "result": ""}]
+        fill_paired_results(rows)
+        self.assertEqual([r["result"] for r in rows], ["lost", "won", "", ""])
+
     def folder(self):
         import tempfile
         from pathlib import Path

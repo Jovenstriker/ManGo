@@ -65,8 +65,8 @@ def label(d) -> str:
 
 def evaluate(args):
     """[(decision type, regret, P(win) of yours, P(win) of best, what you did, the best)] for one battle."""
-    rb, rollouts, styles = args
-    gd = gamedata.use(FORMAT)
+    rb, rollouts, styles, fmt = args
+    gd = gamedata.use(fmt)
     planner = Planner(gd, TeamPrior(gd), rollouts=rollouts, seed=zlib.crc32(rb.id.encode()), styles=tuple(styles))
     planner.start(0)
     fed = -1   # events fed through this turn
@@ -209,12 +209,14 @@ def main():
                     help="opponent types for the belief and the rollouts: any of the heuristic styles, and "
                          "learned (the opponent model in data/local/opponent_model.json)")
     ap.add_argument("--workers", type=int, default=None)
+    ap.add_argument("--format", default=FORMAT, help="the battles' format, a data/<format>.json")
+    ap.add_argument("--calibration", type=Path, default=CALIBRATION, help="where to save the calibration fit")
     args = ap.parse_args()
-    gd = gamedata.use(FORMAT)
+    gd = gamedata.use(args.format)
     battles = [b for b in load(gd, args.turns) if b.seen == 3 and not b.misread and b.decisions]
     start = time.time()
     with ProcessPoolExecutor(args.workers) as pool:
-        res = list(pool.map(evaluate, [(b, args.rollouts, args.styles) for b in battles]))
+        res = list(pool.map(evaluate, [(b, args.rollouts, args.styles, args.format) for b in battles]))
     rows = [(bid, result, *r) for bid, result, out in res for r in out]
     print(f"{len(rows)} of your decisions in {len(battles)} recorded battles, {args.rollouts} rollouts each "
           f"(opponents in the belief and rollouts: {', '.join(args.styles)}), "
@@ -229,11 +231,11 @@ def main():
           + ". Below, each battle is corrected by a fit on the other folds (5-fold, by battle).\n")
     cal = [(r[0], r[1], r[2], f(r[8]) - f(r[9]), f(r[4]), f(r[5]), *r[6:]) for r, f in zip(rows, fs)]
     report(cal, "Calibrated:", complete)
-    CALIBRATION.parent.mkdir(parents=True, exist_ok=True)
-    CALIBRATION.write_text(json.dumps({"styles": args.styles, "rollouts": args.rollouts,
+    args.calibration.parent.mkdir(parents=True, exist_ok=True)
+    args.calibration.write_text(json.dumps({"styles": args.styles, "rollouts": args.rollouts,
                                        "stages": {name: {"a": a, "b": b} for name, (a, b) in zip(STAGES, fits)}},
                                       indent=1))
-    print(f"Saved the fit to {CALIBRATION.relative_to(CALIBRATION.parents[2])} (local, git-ignored).")
+    print(f"Saved the fit to {args.calibration} (local, git-ignored).")
 
 
 def report(rows, title, complete=frozenset(), flips=False):

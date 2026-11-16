@@ -536,9 +536,30 @@ def fits_result(rb: RecordedBattle) -> bool:
     return len(down[loser]) == 3 and len(down[winner]) < 3
 
 
+def partner(battle_id: str) -> str | None:
+    """The same battle seen from the other phone, for a stream export where both players' phones
+    were read: `<game>-L#n` and `<game>-R#n`. None for an ordinary recording."""
+    rec, _, n = battle_id.rpartition("#")
+    for a, b in (("-L", "-R"), ("-R", "-L")):
+        if rec.endswith(a):
+            return f"{rec[:-2]}{b}#{n}"
+    return None
+
+
+def fill_paired_results(rows: list[dict]) -> None:
+    """Where one phone's view missed the results screen, the other's tells it (flipped)."""
+    by_id = {r["battle_id"]: r for r in rows}
+    flip = {"won": "lost", "lost": "won", "draw": "draw"}
+    for r in rows:
+        other = by_id.get(partner(r["battle_id"]) or "")
+        if not r["result"] and other and other["result"] in flip:
+            r["result"] = flip[other["result"]]
+
+
 def load(gd: GameData, folder: Path) -> list[RecordedBattle]:
     with (folder / "battles.csv").open() as f:
         rows = list(csv.DictReader(f))
+    fill_paired_results(rows)
     turns: dict[str, list[dict]] = defaultdict(list)
     with (folder / "turns.csv").open() as f:
         for t in csv.DictReader(f):

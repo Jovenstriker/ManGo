@@ -506,6 +506,20 @@ class RecordedBattleTests(unittest.TestCase):
                 {"battle_id": "battle-g2-L#1", "result": ""}, {"battle_id": "battle-2026-10-23#1", "result": ""}]
         fill_paired_results(rows)
         self.assertEqual([r["result"] for r in rows], ["lost", "won", "", ""])
+        both = [{"battle_id": "battle-g3-L#1", "result": "won"}, {"battle_id": "battle-g3-R#1", "result": "won"}]
+        fill_paired_results(both)
+        self.assertEqual([r["result"] for r in both], ["", ""])
+
+    def test_stream_view_that_misnames_a_pokemon_is_set_aside(self):
+        from mango_pomdp.battle_turns import disagrees_with_owner
+        cols = {f"{s}_{k}": "" for s in ("you", "them") for k in (1, 2, 3)}
+        left = {**cols, "battle_id": "battle-g1-L#1", "you_1": "ninetales_alolan", "them_1": "empoleon"}
+        right = {**cols, "battle_id": "battle-g1-R#1", "you_1": "empoleon", "them_1": "ninetales_shadow"}
+        by_id = {r["battle_id"]: r for r in (left, right)}
+        self.assertFalse(disagrees_with_owner(left, by_id))
+        self.assertTrue(disagrees_with_owner(right, by_id))
+        right["them_1"] = "carbink"   # a different species: either could be the misread
+        self.assertFalse(disagrees_with_owner(right, by_id))
 
     def folder(self):
         import tempfile

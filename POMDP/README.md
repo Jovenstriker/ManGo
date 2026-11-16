@@ -593,6 +593,66 @@ What it shows:
   0.18, and it loses to the styles planner head to head, because it no longer recognizes
   simpler opponents.
 
+## Top players, from a tournament stream
+
+The Pokémon GO Day 2 stream of the 2027 Gdańsk Regional Championships shows both players'
+phones side by side. Each phone, cropped out of the stream, was read by ManGo like one of your
+recordings and exported by battle-turns. `scripts/stream_fixtures.py` gathers the reads, which
+stay local. Games with Dunsparce are left out, as you asked, and so are games the stream joined
+late, which leaves 31 games. Each phone is one player's battle, so a top player's decisions are
+scored from their own screen, the same way yours are.
+
+Having both phones allows some cleaning:
+- **Results.** Many views miss the results screen, so the other phone's result is used, flipped.
+  Two games where both phones claimed the win are left without a result.
+- **Forms.** One phone can only guess the opponent's form from the moves it saw: a Weather Ball
+  doesn't say fire or ice. Where it names a different form from the one on the opponent's own
+  screen (Shadow Ninetales for Alolan), that view is set aside.
+- **Species.** Poliwrath, Ursaluna and Lokix were added to `great_league.json`, with every
+  existing entry unchanged. One view with a name the data lacks (a misread) is set aside.
+
+That leaves 59 player views of 32 battles. Fewer than half have a result, because the stream
+often cuts away before the end. These are Great League battles, and the belief over a top
+player's opponent uses the ordinary Great League prior, not the open team sheets. Yours are
+Mega Great League, so the two sets aren't played under quite the same conditions.
+
+**Regret** (`python3 -m experiments.top_players regret`) is the same measure as for your
+battles: same planner, same rollouts. It's shown side by side by stage and by decision type,
+with intervals from resampling whole battles.
+- **Overall, the top players and you look the same** by the planner's measure. Mean regret,
+  blunder rate (about one decision in six) and agreement (about half) all match.
+- **At 3v3, the top players blunder less,** by about 5 points, though the interval just reaches
+  zero. Later in the battle they're no better by its measure.
+- **Switching is where they part.** The planner agrees with only about a fifth of the top
+  players' switches, against half of yours, and scores them as costlier. That's the one clear
+  difference. Most are lead switches in the first three turns, where the planner would usually
+  have stayed in. The planner may undervalue what a lead switch buys, or it may be right.
+- **So the planner's judgment doesn't track expertise here.** Top players don't agree with it
+  more than you do, and its blunders aren't what separates them from you.
+- **The results can't yet say who was right.** Where top players went against the planner, they
+  won about as often as it predicted for the choice they made, the same as where they agreed.
+  The same holds for you. With results for only 15 games, the interval is too wide to settle
+  it either way.
+- Where it called a choice a blunder, players won somewhat more often than it predicted. That
+  holds for you and the top players alike, which hints that its blunder calls are too harsh,
+  but it's within noise.
+
+**Your opponent model on top players** (`python3 -m experiments.top_players model`). The model
+fitted on your opponents is scored on the top players' decisions. Next to it are the same
+model refitted on the top players (5-fold, by battle), one fitted on both, the styles and the
+base rates.
+- **Shields and throws transfer.** Your model predicts the top players' shields and throws as
+  well as a model fitted on them, and better than the base rates and the styles. Fitting on
+  both is a little better still for shields. Top players shield less than your opponents,
+  about a third of the time against over two-fifths, and hold a little more.
+- **Switches and picks don't.** Your model's switch part is slightly worse than the top
+  players' base rate, which a refit beats, and its picks are no better than a coin flip. There
+  isn't much to learn here anyway: top players switch on about 4% of the free turns where
+  they could.
+
+So the planner's learned opponent is fine for top players' shields and throws. Their switches
+and picks would need their own data, which means more games.
+
 ## Playing against the planner
 
 `python3 -m experiments.play` is a 3v3 battle in the terminal: you play one side, and the
@@ -608,7 +668,8 @@ At the end you get the result and a timeline of the battle.
 
 ## Layout
 
-    data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves
+    data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves,
+                               plus three seen on the Gdańsk stream (Poliwrath, Ursaluna, Lokix)
     data/mega_great_league.json          the same for Mega Great League, plus its top teams, decoded
     data/mega_great_league_top_teams.csv PvPoke's top Mega Great League teams export
     data/mega_great_league_faced_teams.csv  your teams and the full teams you faced (species, lead first)
@@ -618,6 +679,7 @@ At the end you get the result and a timeline of the battle.
     results/my_battles.txt     your battles, replayed with the planner (experiments/my_battles.py)
     results/rank_all.txt       every team (PvPoke's, yours, the ones you faced) against every other
     scripts/update_data.sh     re-download and trim PvPoke's data (scripts/trim_data.py)
+    scripts/stream_fixtures.py a tournament stream's per-phone ManGo reads, gathered for battle-turns
     mango_pomdp/gamedata.py    types, moves, damage formula
     mango_pomdp/battle.py      the simulator and the player's View
     mango_pomdp/duel.py        the exact 1v1 solver, the player that plays its solution, and CDuel
@@ -636,7 +698,8 @@ At the end you get the result and a timeline of the battle.
                                my_battles.py (your own battles, replayed with the planner),
                                recorded_battles.py, recorded_paths.py (the same from Battle Turns, local),
                                regret.py (your decisions scored, local), play.py (you against the planner),
-                               opponent_model.py (fit and check the opponent model, local)
+                               opponent_model.py (fit and check the opponent model, local),
+                               top_players.py (top players' regret next to yours; your opponent model on them, local)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps

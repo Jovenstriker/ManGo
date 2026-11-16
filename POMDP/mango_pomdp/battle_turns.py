@@ -547,19 +547,49 @@ def partner(battle_id: str) -> str | None:
 
 
 def fill_paired_results(rows: list[dict]) -> None:
-    """Where one phone's view missed the results screen, the other's tells it (flipped)."""
+    """Where one phone's view missed the results screen, the other's tells it (flipped). Where
+    both views claim the same win (or loss), one of them misread it, so neither is trusted."""
     by_id = {r["battle_id"]: r for r in rows}
     flip = {"won": "lost", "lost": "won", "draw": "draw"}
+    clash = {r["battle_id"] for r in rows
+             if r["result"] in ("won", "lost") and by_id.get(partner(r["battle_id"]) or "", {}).get("result") == r["result"]}
+    for r in rows:
+        if r["battle_id"] in clash:
+            r["result"] = ""
     for r in rows:
         other = by_id.get(partner(r["battle_id"]) or "")
         if not r["result"] and other and other["result"] in flip:
             r["result"] = flip[other["result"]]
 
 
+def disagrees_with_owner(row: dict, by_id: dict) -> bool:
+    """A stream view that has the opponent's Pokémon in a different form from the one on the
+    opponent's own phone (Shadow Ninetales for Alolan). Their own screen shows both charged
+    moves; the other phone can only guess the form from the moves it saw (a Weather Ball
+    doesn't say if it's fire or ice), so where they differ, the other phone is wrong. A
+    different species altogether is left alone: either phone could have misread the name."""
+    other = by_id.get(partner(row["battle_id"]) or "")
+    if not other:
+        return False
+    theirs = {other[f"you_{k}"] for k in (1, 2, 3)} - {""}
+    base = {t.split("_")[0] for t in theirs}
+    return any(row[f"them_{k}"] and row[f"them_{k}"] not in theirs and row[f"them_{k}"].split("_")[0] in base
+               for k in (1, 2, 3))
+
+
 def load(gd: GameData, folder: Path) -> list[RecordedBattle]:
     with (folder / "battles.csv").open() as f:
         rows = list(csv.DictReader(f))
     fill_paired_results(rows)
+    # A Pokémon the format's data doesn't have can't be simulated (usually a misread name):
+    # its battle is kept as a misread with no teams.
+    # On a stream with both phones read, a view that names the opponent's Pokémon differently
+    # from the opponent's own phone is set aside the same way.
+    by_id = {r["battle_id"]: r for r in rows}
+    unknown = [r for r in rows if any(r[f"{s}_{k}"] and r[f"{s}_{k}"] not in gd.species
+                                      for s in ("you", "them") for k in (1, 2, 3))
+               or disagrees_with_owner(r, by_id)]
+    rows = [r for r in rows if r not in unknown]
     turns: dict[str, list[dict]] = defaultdict(list)
     with (folder / "turns.csv").open() as f:
         for t in csv.DictReader(f):
@@ -592,6 +622,10 @@ def load(gd: GameData, folder: Path) -> list[RecordedBattle]:
             replay(gd, second, rows_, faint_at=faint_at)
             replay(gd, b, rows_, anchor_scale(gd, second), faint_at)
             b.complete = fits_result(b)
+        out.append(b)
+    for row in unknown:
+        b = RecordedBattle(row["battle_id"], row["result"], [], [], 0)
+        b.misread = True
         out.append(b)
     return out
 

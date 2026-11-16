@@ -128,6 +128,21 @@ class BattleTests(unittest.TestCase):
         self.assertEqual(hit.info["target"], "registeel")
         self.assertLess(registeel.hp, hp)
 
+    def test_a_switch_costs_a_turn_unless_right_after_a_charged_move(self):
+        # Mid-matchup: Azumarill comes in and does nothing until next turn.
+        b = Battle([[mon("medicham"), mon("azumarill")], [mon("swampert")]], seed=0)
+        b.turn = 10
+        b.step([Scripted([SWITCH(1)]), Scripted()])
+        self.assertEqual((b.sides[0].mon.species.id, b.sides[0].busy_until, b.sides[0].fast_due), ("azumarill", 11, -1))
+        # The turn after a charged move: the switch is free and Azumarill starts its fast move now.
+        b = Battle([[mon("medicham"), mon("azumarill")], [mon("swampert")]], seed=0)
+        b.sides[1].mon.energy = 100
+        b.step([Scripted(), Scripted([CHARGED(0)])])          # turn 0: Swampert throws
+        self.assertEqual(b.last_charged, 0)
+        b.step([Scripted([SWITCH(1)]), Scripted()])           # turn 1: 0-turn switch
+        bubble = b.sides[0].mon.fast.turns
+        self.assertEqual((b.sides[0].mon.species.id, b.sides[0].busy_until), ("azumarill", 1 + bubble))
+
     def test_choices_are_simultaneous(self):
         # Side 1 decides turn 0 without seeing side 0's switch on that same turn.
         seen = []

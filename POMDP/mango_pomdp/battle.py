@@ -5,9 +5,12 @@ Each turn:
   1. Every side whose Pokémon isn't mid fast move picks an action: a fast move, a charged move
      it has the energy for, a switch (once its 45s switch timer has run out), or waiting (doing
      nothing, so it's free again next turn). Both choose from the start-of-turn state.
-  2. Switches happen first. The incoming Pokémon takes any fast move that lands this turn, and
-     any charged move thrown this turn: switching the turn they throw "catches" it, which takes
-     being free that turn (hence waiting) and predicting the throw from their counted energy.
+  2. Switches happen first. A switch costs the turn (the incoming Pokémon acts next turn),
+     except a 0-turn switch on the turn right after a charged move (either side's), which is
+     made in the pause and lets the incoming Pokémon act this turn too. The incoming Pokémon
+     takes any fast move that lands this turn, and any charged move thrown this turn: switching
+     the turn they throw "catches" it, which takes being free that turn (hence waiting) and
+     predicting the throw from their counted energy.
   3. Fast moves register on their last turn (duration − 1 turns after they're used): damage to
      the opponent, energy to the user. A 1-turn move registers the turn it's used.
   4. Charged moves resolve in CMP order (higher attack first). A charged move interrupts every
@@ -176,12 +179,13 @@ class Controller(Protocol):
 
 
 class Battle:
-    __slots__ = ("sides", "turn", "clock", "done", "winner", "rng", "seen", "log")
+    __slots__ = ("sides", "turn", "clock", "done", "winner", "rng", "seen", "log", "last_charged")
 
     def __init__(self, teams: list[list[Mon]], seed: int | None = None, shields: int = SHIELDS, log: bool = True):
         self.sides = [Side(teams[0], shields), Side(teams[1], shields)]
         self.turn = 0
         self.clock = 0
+        self.last_charged = -10   # turn the last charged move landed (either side)
         self.done = False
         self.winner: int | None = None   # 0, 1, or -1 for a tie
         self.rng = random.Random(seed)
@@ -198,6 +202,7 @@ class Battle:
         b = Battle.__new__(Battle)
         b.sides = [self.sides[0].clone(), self.sides[1].clone()]
         b.turn, b.clock, b.done, b.winner = self.turn, self.clock, self.done, self.winner
+        b.last_charged = self.last_charged
         b.rng = random.Random(seed)
         b.seen = [{k: {"fast": v["fast"], "charged": set(v["charged"])} for k, v in d.items()} for d in self.seen]
         b.log = None
@@ -205,10 +210,11 @@ class Battle:
 
     @classmethod
     def from_sides(cls, sides: list[Side], turn: int, clock: int,
-                   seen: list[dict[str, dict]], seed: int | None = None) -> Battle:
+                   seen: list[dict[str, dict]], seed: int | None = None, last_charged: int = -10) -> Battle:
         b = Battle.__new__(Battle)
         b.sides = sides
         b.turn, b.clock, b.done, b.winner = turn, clock, False, None
+        b.last_charged = last_charged
         b.rng = random.Random(seed)
         b.seen = seen
         b.log = None
@@ -246,7 +252,14 @@ class Battle:
             side = self.sides[s]
             if kind == "switch" and side.switch_timer == 0 and arg in side.bench():
                 self._switch_in(s, arg, timer=True)
-            elif kind == "charged" and 0 <= arg < len(side.mon.charged) and side.mon.energy >= side.mon.charged[arg].energy:
+                if t != self.last_charged + 1:
+                    continue   # a switch costs the turn: the incoming Pokémon acts next turn
+                # A 0-turn switch, in the pause right after a charged move: the incoming Pokémon
+                # acts this turn too.
+                kind, arg = controllers[s].act(View(self, s))
+                if kind == "switch":
+                    kind = "fast"
+            if kind == "charged" and 0 <= arg < len(side.mon.charged) and side.mon.energy >= side.mon.charged[arg].energy:
                 queued.append((s, arg))
             elif kind == "wait":
                 side.busy_until = t + 1   # idle: free again next turn
@@ -285,6 +298,7 @@ class Battle:
         if mon.hp <= 0 or target.hp <= 0 or mon.energy < move.energy:
             return False
         mon.energy -= move.energy
+        self.last_charged = t
         full = damage(move, mon.species, target.species, mon.atk_stage, target.def_stage)
         shields_before, hp_before = foe.shields, target.hp
         if foe.shields > 0:
@@ -475,6 +489,11 @@ class View:
     @property
     def foe_remaining(self) -> int:
         return self._b.sides[1 - self.side].remaining()
+
+    @property
+    def last_charged(self) -> int:
+        """The turn the last charged move landed (either side's): a switch the turn after is free."""
+        return self._b.last_charged
 
     @property
     def foe_entered(self) -> int:

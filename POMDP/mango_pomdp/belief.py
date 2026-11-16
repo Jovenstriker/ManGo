@@ -238,7 +238,7 @@ class Belief:
         foe.fast_due = view.turn + lands if lands >= 0 else -1
         foe.entered = view.foe_entered
         sides = [view.me.clone(), foe] if view.side == 0 else [foe, view.me.clone()]
-        return Battle.from_sides(sides, view.turn, view.clock, view.seen_copy(), seed)
+        return Battle.from_sides(sides, view.turn, view.clock, view.seen_copy(), seed, view.last_charged)
 
 
 class Oracle(Belief):

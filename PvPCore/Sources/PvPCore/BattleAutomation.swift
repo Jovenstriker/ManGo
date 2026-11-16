@@ -651,6 +651,15 @@ public struct BattleAutomation: Sendable {
         let fitting = forms.filter { !allowed($0).isEmpty }
         // Nothing it could be fits: a misread, or a type ManGo has wrong. Leave it.
         guard let first = fitting.first else { return }
+        // Switched in during play, it takes the switch's turn and then a fast move before its
+        // first hit lands: a text sooner is the last hit of the one it replaced (Gdańsk stream,
+        // Day 2, 0:42:00: Empoleon's Metal Sound "NOT VERY EFFECTIVE..." on Toxapex 0.75s after
+        // Charjabug's name showed; Bug Bite, the only Charjabug move that fits, takes 1s with the
+        // switch, and it was on Volt Switch).
+        if switchedInSinceRestart, !Rules.off("firstHitTime") {
+            let soonest = fitting.flatMap(allowed).map { Double($0.turns) * turnDuration }.min() ?? 0
+            if since < opponentSeenAt + turnDuration + soonest { return }
+        }
         tracker.ruleOutFastMoves(wrong)
         let form = fitting.contains(active.speciesId) ? active.speciesId : first
         let moves = allowed(form)

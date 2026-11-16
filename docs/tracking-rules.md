@@ -131,7 +131,11 @@ explicitly approximate and are not used to identify moves or compute energy.
   a while (155536: Altaria's on your Mimikyu, 2s into Florges). A text missing from reads for
   under 1s is still the same one: the reader loses it under attack effects (Gdańsk Regional
   stream, Day 2, 1:58:13: Empoleon's Metal Sound on Stunfisk, unread twice as Dunsparce came
-  in, isn't Dunsparce's hit; it was on Astonish, neutral there). No text is no evidence.
+  in, isn't Dunsparce's hit; it was on Astonish, neutral there). A Pokémon switched in during
+  play takes the switch's turn and then a fast move before its first hit: a text sooner than
+  that, for every move the text fits, is the replaced one's last hit (0:42:00 on that stream:
+  Empoleon's Metal Sound on Toxapex 0.75s after Charjabug's name; Bug Bite, the only fitting
+  Charjabug move, needs 1s, and it was on Volt Switch). No text is no evidence.
 
 `BattleAccuracyTests` enforces all 110 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag

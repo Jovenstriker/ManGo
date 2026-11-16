@@ -61,6 +61,22 @@ class ThrowCase:
     choice: str         # the charged move they threw, or "" if they held and fast moved
 
 
+@dataclass(frozen=True)
+class State:
+    """Who's in, shields, and HP (share of max) on both sides, at the end of a turn."""
+    you: str
+    them: str
+    you_shields: int
+    them_shields: int
+    you_hp: float
+    them_hp: float
+
+    def like(self, other: State, hp: float = HP_TOLERANCE) -> bool:
+        return (self.you, self.them, self.you_shields, self.them_shields) == \
+            (other.you, other.them, other.you_shields, other.them_shields) and \
+            abs(self.you_hp - other.you_hp) <= hp and abs(self.them_hp - other.them_hp) <= hp
+
+
 @dataclass
 class RecordedBattle:
     id: str
@@ -71,6 +87,7 @@ class RecordedBattle:
     shields: list[ShieldCase] = field(default_factory=list)
     throws: list[ThrowCase] = field(default_factory=list)
     unplaced: set[str] = field(default_factory=set)   # active Pokémon not on the team list (misreads)
+    path: dict[int, State] = field(default_factory=dict)   # the real battle at the end of each turn
     misread: bool = False   # your Pokémon don't fit any of your teams
 
 
@@ -110,7 +127,7 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
 
     def share(side):
         sid = active[side]
-        if (side, sid) not in hp:   # a Pokémon the team list doesn't have (a misread): treat as full
+        if (side, sid) not in hp or sid not in gd.species:   # not on the team list (a misread): treat as full
             battle.unplaced.add(sid)
             return 1.0
         return hp[side, sid] / gd.species[sid].hp
@@ -188,11 +205,13 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                     stages[other[s], dfn][1] = _stage(stages[other[s], dfn][1] + mv.buff_opponent[1])
         # Faints, then who's in at the end of the turn.
         for s in ("you", "them"):
-            if "faint" in acts[s]:
+            if "faint" in acts[s] and (s, active[s]) in hp:
                 hp[s, active[s]] = 0
             if row[f"{s}_active"]:
                 active[s] = row[f"{s}_active"]
             shields[s] = int(row[f"{s}_shields"] or shields[s])
+        battle.path[t] = State(active["you"], active["them"], shields["you"], shields["them"],
+                               share("you"), share("them"))
         prev_row = row
 
 

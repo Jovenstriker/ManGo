@@ -191,9 +191,10 @@ styles:
 | `any`, waits and switches off key moments need 2 standard errors | 0.843 ± 0.024 | 4.0 |
 | **`any`, 3 standard errors (default)** | **0.858 ± 0.024** | 4.7 |
 
-The tables below, and the Mega Great League experiment, were run before good timing and
-`any`, with `catch` as the default. The newest experiment, your own battles, uses the current
-default. With `catch`, measured on paired games:
+The two tables above, and the switching comparisons just below, come from earlier versions:
+before free 0-turn switches, and (below) before good timing and `any`, when `catch` was the
+default. The 3v3 tournament, team #25's results and your battles further down were rerun with
+the current rules and planner. With `catch`, measured on paired games:
 
 | Switching | Great League tournament | #25 vs heuristic styles | #25 vs the planner (`@start`) | Catches per game |
 |---|---|---|---|---|
@@ -232,31 +233,31 @@ Ablations, by player name:
 
 `python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner oracle`:
 each player plays 300 battles. Each game is 2 battles with the teams swapped, and the opponent
-style is drawn uniformly. Ties count as half a win. The run took about 4 minutes on 10 cores.
-These numbers use the current rules: charged moves reset cooldowns, and both sides choose
-simultaneously. The planner is the `catch` version, which waits and catches but has no good
-timing (above).
+style is drawn uniformly. Ties count as half a win. The run took about 11 minutes on 10 cores.
+These numbers use the current rules and planner: charged moves reset cooldowns, both sides
+choose simultaneously, 0-turn switches are free, and the planner weighs every legal action on
+every free turn with good timing as its default.
 
 | Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
 |---|---|---|---|---|---|
-| random | 0.367 ± 0.028 | 0.324 | 0.297 | 0.447 | 0.390 |
-| shielder | 0.555 ± 0.029 | 0.471 | 0.466 | 0.645 | 0.622 |
-| baiter | 0.555 ± 0.029 | 0.574 | 0.426 | 0.618 | 0.598 |
-| nuker | 0.455 ± 0.029 | 0.397 | 0.318 | 0.467 | 0.616 |
-| casual | 0.403 ± 0.028 | 0.338 | 0.297 | 0.428 | 0.530 |
-| planner-flat | 0.780 ± 0.024 | 0.794 | 0.743 | 0.737 | 0.841 |
-| planner-1style | 0.795 ± 0.023 | 0.846 | 0.743 | 0.763 | 0.829 |
-| **planner** | **0.803 ± 0.023** | 0.794 | 0.662 | 0.868 | 0.878 |
-| oracle | 0.900 ± 0.017 | 0.912 | 0.797 | 0.934 | 0.951 |
+| random | 0.353 ± 0.028 | 0.309 | 0.284 | 0.421 | 0.390 |
+| shielder | 0.545 ± 0.029 | 0.471 | 0.439 | 0.632 | 0.622 |
+| baiter | 0.565 ± 0.029 | 0.603 | 0.453 | 0.605 | 0.598 |
+| nuker | 0.452 ± 0.029 | 0.382 | 0.345 | 0.441 | 0.616 |
+| casual | 0.400 ± 0.028 | 0.368 | 0.297 | 0.388 | 0.530 |
+| planner-flat | 0.807 ± 0.023 | 0.794 | 0.770 | 0.763 | 0.890 |
+| planner-1style | 0.763 ± 0.025 | 0.750 | 0.743 | 0.737 | 0.817 |
+| **planner** | **0.800 ± 0.023** | 0.824 | 0.703 | 0.816 | 0.854 |
+| oracle | 0.897 ± 0.018 | 0.897 | 0.797 | 0.947 | 0.939 |
 
 What this says so far:
 
-- **Lookahead is most of the win.** Every planner beats every heuristic by about 22–25
+- **Lookahead is most of the win.** Every planner beats every heuristic by about 20–24
   points, including baiter, which is the planner's own rollout policy.
 - **A prior over all Great League teams isn't paying for itself yet.** The full belief, the
-  single-style belief and the flat prior are within about one standard error of each other
-  (0.78–0.80). When the opponent's team is known to come from a short list, the belief does
-  pay: see the Mega Great League experiment below.
+  single-style belief and the flat prior are within about one and a half standard errors of
+  each other (0.76–0.81). When the opponent's team is known to come from a short list, the
+  belief does pay: see the Mega Great League experiment below.
 - **There's real value in information left to capture.** The oracle wins 10 points more.
   Telling apart what it gains from knowing the team and moves versus knowing the style is the
   obvious next ablation. The 1v1 solver offers a cleaner way in: with the opponent's moveset as
@@ -290,8 +291,12 @@ outputs, including a game plan for every opponent.
 **Picking the team** (`top_teams rank`, then `select`):
 
 1. *Round robin with heuristic play* (all pairs, both sides the same style). Thievul / Cramorant
-   / Stunfisk (#25) is strongest: it wins 0.67 and beats 35 of 47. PvPoke's team rating barely
-   agrees with simulated strength; its top-rated team (#1) comes 29th.
+   / Stunfisk (#25) is strongest: it wins 0.66 and beats 34 of 47. PvPoke's team rating barely
+   agrees with simulated strength; its top-rated team (#1) comes 31st.
+
+Steps 2 and 3, which picked team #25 and its lead, ran on the earlier planner (`catch`, before
+free 0-turn switches and good timing). They weren't rerun.
+
 2. *The planner against the heuristic styles*, with each of the top 6 teams and each lead. This
    doesn't separate them: every team's best lead scores 0.955–0.979 and beats all 47.
 3. *The tiebreak is a stronger opponent:* the same planner, which also knows the list. Each
@@ -314,18 +319,20 @@ Cramorant lead edges it on win rate, and it beats #33 head to head (#33 wins 0.0
 earlier planner (before waiting, catching and the rollout timing fix), #25 led by Thievul came
 first, at 0.741 against that planner.
 
-**Team #25, Cramorant / Thievul / Stunfisk, leading Cramorant.** Against the heuristic styles,
-4 games per opponent per style; against the planner, 16 games per opponent:
+**Team #25, Cramorant / Thievul / Stunfisk, leading Cramorant**, with the current rules and
+planner. Against the heuristic styles, 4 games per opponent per style; against the planner, 16
+games per opponent:
 
 | Our player | vs heuristic styles | Beaten | vs the planner | Beaten |
 |---|---|---|---|---|
-| baiter heuristic | 0.676 ± 0.017 | 33 | | |
-| planner (format prior) | 0.894 ± 0.011 | 45 | 0.557 ± 0.018 | 26 |
-| **planner-list** | **0.961 ± 0.007** | **47** | **0.638 ± 0.017** | **35** |
-| planner-list + opening book | | | 0.640 ± 0.017 | 35 |
-| oracle (knows team and style) | 0.987 ± 0.004 | 47 | | |
+| baiter heuristic | 0.686 ± 0.017 | 34 | | |
+| planner (format prior) | 0.891 ± 0.011 | 46 | 0.569 ± 0.018 | 25 |
+| **planner-list** | **0.949 ± 0.008** | **47** | **0.625 ± 0.017** | **31** |
+| planner-list + opening book (earlier planner) | | | 0.640 ± 0.017 | 35 |
+| oracle (knows team and style) | 0.977 ± 0.005 | 47 | | |
 
-The opening book is learned (`top_teams book 25 --lead 2`). For each lead the opponents can
+The opening book is from the earlier planner, against which plain planner-list scored 0.638
+and beat 35. It's learned (`top_teams book 25 --lead 2`). For each lead the opponents can
 show, it plays every opening against every listed team with that lead: the planner's own
 opening, or a swap to either bench Pokémon on turn 0. It keeps a swap only if the swap wins 0.1
 more. It swaps to Stunfisk against Araquanid, Marowak, Ninetales and Sableyeˢ leads, and to
@@ -334,18 +341,19 @@ was then measured on games it wasn't built from.
 
 What this says:
 
-- **Against heuristic opponents, the strategy beats every team.** planner-list wins 96.1%,
+- **Against heuristic opponents, the strategy beats every team.** planner-list wins 94.9%,
   within 3 points of the oracle. Its worst matchup is #32 Cramorant / Marowak / Tinkaton, at
-  0.56. The same team played by the baiter heuristic wins only 68% and fails to beat 14 teams.
+  0.53. The same team played by the baiter heuristic wins only 69% and fails to beat 13 teams.
   The heuristic plays a Cramorant lead badly; the planner doesn't.
-- **Knowing the list pays:** 8 points against the planner (0.638 vs 0.557), 7 against the
-  heuristics (0.961 vs 0.894).
-- **Against an equally strong opponent, nothing found beats all 47.** #25 beats 35. #17
-  Mimikyu / Sableyeˢ / Tinkaton wins 15 of 16 games. #10, #12, #29 and #32 each win 12 of 16.
-- **The opening book adds nothing** (0.640 vs 0.638).
+- **Knowing the list pays:** 6 points against the planner (0.625 vs 0.569), and 6 against the
+  heuristics (0.949 vs 0.891).
+- **Against an equally strong opponent, nothing found beats all 47.** #25 beats 31. #17
+  Mimikyu / Sableyeˢ / Tinkaton and #27 Mimikyu / Empoleon / Jumpluff each win 13 of 16
+  games, and #29 and #32 win 12 of 16.
+- **The opening book added nothing** with the earlier planner (0.640 vs 0.638).
 - **A better planner helps both sides.** The waiting, catching and timing fix improved the
   opponent planner as much as ours. Against an equally strong opponent, the best team's win
-  rate fell from 0.72 to 0.64, so team choice matters less once both sides play well.
+  rate fell from 0.72 to 0.63, so team choice matters less once both sides play well.
 
 ## Your battles, replayed
 
@@ -365,14 +373,14 @@ table lists species only.
 
 | Rank of 115 | Team | Win rate |
 |---|---|---|
-| 1 | Forretressˢ / Carbink / Marowak (faced) | 0.713 |
-| 2 | Sandslash (Alolan) / Marowak / Carbink (faced) | 0.694 |
-| 3 | Turtonator / Mimikyu / Forretressˢ (faced) | 0.681 |
-| 4 | #25 Thievul / Cramorant / Stunfisk (PvPoke's best) | 0.670 |
-| 6 | **Nidoqueen / Mandibuzz / Clodsire (yours)** | 0.643 |
-| 64 | **Altaria / Melmetal / Mimikyu (yours)** | 0.488 |
-| 84 | **Thievul / Blaziken / Jumpluff (yours, the most used)** | 0.454 |
-| 109 | **Blaziken / Jumpluff / Fearow (yours)** | 0.353 |
+| 1 | Forretressˢ / Carbink / Marowak (faced) | 0.717 |
+| 2 | Sandslash (Alolan) / Marowak / Carbink (faced) | 0.696 |
+| 3 | Turtonator / Mimikyu / Forretressˢ (faced) | 0.684 |
+| 4 | #25 Thievul / Cramorant / Stunfisk (PvPoke's best) | 0.664 |
+| 7 | **Nidoqueen / Mandibuzz / Clodsire (yours)** | 0.640 |
+| 63 | **Altaria / Melmetal / Mimikyu (yours)** | 0.489 |
+| 88 | **Thievul / Blaziken / Jumpluff (yours, the most used)** | 0.448 |
+| 109 | **Blaziken / Jumpluff / Fearow (yours)** | 0.350 |
 
 **Each battle replayed with the solver** (`python3 -m experiments.my_battles --games 4`). In
 each of the 63 battles with a full opponent team, your team that day plays that day's opponent.

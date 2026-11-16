@@ -143,6 +143,23 @@ class BattleTests(unittest.TestCase):
         bubble = b.sides[0].mon.fast.turns
         self.assertEqual((b.sides[0].mon.species.id, b.sides[0].busy_until), ("azumarill", 1 + bubble))
 
+    def test_planner_shields_against_a_pokemon_that_just_0_turn_switched_in(self):
+        # Swampert throws; the opponent then 0-turn switches to Azumarill and throws at
+        # once: the planner has to decide on a shield before the turn's "enter" event reaches it.
+        from mango_pomdp.planner import Planner
+        b = Battle([[mon("registeel")], [mon("swampert"), mon("azumarill")]], seed=0)
+        b.sides[1].mons[0].energy = b.sides[1].mons[1].energy = 100
+        p = Planner(gd, prior, rollouts=2, seed=1)
+        p.start(0)
+        p.observe(b.log)
+        foe = Scripted([CHARGED(0), SWITCH(1), CHARGED(0)])
+        for _ in range(2):
+            start = len(b.log)
+            b.step([p, foe])
+            p.observe(b.log[start:])
+        self.assertEqual(b.sides[1].mon.species.id, "azumarill")
+        self.assertEqual(sum(e.kind == "charged" and e.side == 1 for e in b.log), 2)
+
     def test_choices_are_simultaneous(self):
         # Side 1 decides turn 0 without seeing side 0's switch on that same turn.
         seen = []

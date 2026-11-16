@@ -319,6 +319,7 @@ class Planner:
     def _best(self, view: View, cands: list, apply, default: int, first: bool = False,
               incoming: Move | None = None, zs: list[float] | None = None):
         self.decisions += 1
+        self.belief.see(view)   # an opponent that 0-turn switched in this turn is already on screen
         values = [[] for _ in cands]
         for _ in range(self.rollouts):
             p = self.belief.sample(self.rng)

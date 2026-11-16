@@ -206,6 +206,14 @@ class Belief:
 
     # Determinizing ------------------------------------------------------------------------
 
+    def see(self, view: View) -> None:
+        """Takes in an opponent Pokémon that's on screen before its "enter" event arrives: one
+        that came in with a 0-turn switch and acts on the same turn, before the turn's events
+        are reported."""
+        sid = view.foe_species.id
+        if sid not in self.revealed:
+            self._foe_event(Event(view.turn, 1 - self.me, "enter", sid))
+
     def determinize(self, view: View, p: Particle, seed: int | None = None, incoming: Move | None = None) -> Battle:
         """A full battle state: your side as it is, the opponent's filled in from particle p.
 

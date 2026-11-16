@@ -72,7 +72,8 @@ def SWITCH(i: int) -> tuple[str, int]:
 
 
 class Mon:
-    __slots__ = ("species", "fast", "charged", "hp", "energy", "atk_stage", "def_stage", "form", "native", "alt")
+    __slots__ = ("species", "fast", "charged", "hp", "energy", "atk_stage", "def_stage", "form", "native", "alt",
+                 "thrown", "taken")
 
     def __init__(self, species: Species, fast: Move, charged: tuple[Move, ...], hp: int | None = None, energy: int = 0,
                  alt: dict[str, Move] | None = None):
@@ -87,6 +88,8 @@ class Mon:
         self.form = "disguised" if species.ability == "disguise" else ""
         self.native = (0, 0)     # stat stages the form keeps through switches
         self.alt = alt or {}     # move id -> the other form's version of it
+        self.thrown = 0          # charged moves this Pokémon has thrown, and taken (shielded or not)
+        self.taken = 0
 
     @classmethod
     def build(cls, gd: GameData, species_id: str, fast: str, charged: tuple[str, ...]) -> Mon:
@@ -124,6 +127,7 @@ class Mon:
         m.species, m.fast, m.charged = self.species, self.fast, self.charged
         m.hp, m.energy, m.atk_stage, m.def_stage = self.hp, self.energy, self.atk_stage, self.def_stage
         m.form, m.native, m.alt = self.form, self.native, self.alt
+        m.thrown, m.taken = self.thrown, self.taken
         return m
 
     def __repr__(self) -> str:
@@ -132,7 +136,8 @@ class Mon:
 
 
 class Side:
-    __slots__ = ("mons", "active", "shields", "switch_timer", "busy_until", "fast_due", "entered")
+    __slots__ = ("mons", "active", "shields", "switch_timer", "busy_until", "fast_due", "entered",
+                 "last_shielded", "shielded_last")
 
     def __init__(self, mons: list[Mon], shields: int = SHIELDS):
         self.mons = mons
@@ -142,6 +147,8 @@ class Side:
         self.busy_until = 0   # first turn this side can act again
         self.fast_due = -1    # turn its fast move in progress lands, or -1
         self.entered = 0      # turn the active Pokémon came in
+        self.last_shielded: bool | None = None   # was this side's last charged move shielded?
+        self.shielded_last: bool | None = None   # did it shield the last charged move it could have?
 
     @property
     def mon(self) -> Mon:
@@ -158,6 +165,7 @@ class Side:
         s.mons = [m.clone() for m in self.mons]
         s.active, s.shields, s.switch_timer = self.active, self.shields, self.switch_timer
         s.busy_until, s.fast_due, s.entered = self.busy_until, self.fast_due, self.entered
+        s.last_shielded, s.shielded_last = self.last_shielded, self.shielded_last
         return s
 
 
@@ -325,6 +333,11 @@ class Battle:
         elif mon.species.ability == "hunger_switch":
             mon.set_form("" if mon.form == "hangry" else "hangry")
         self.seen[s][mon.species.id]["charged"].add(shown.id)
+        mon.thrown += 1
+        target.taken += 1
+        side.last_shielded = shield
+        if shields_before > 0:
+            foe.shielded_last = shield
         for x in self.sides:   # every cooldown resets: both act again next turn
             x.busy_until = t + 1
             x.fast_due = -1

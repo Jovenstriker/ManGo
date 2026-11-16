@@ -35,6 +35,7 @@ from mango_pomdp import gamedata
 from mango_pomdp.battle import CHARGED, FAST, SWITCH
 from mango_pomdp.battle_turns import battle_at, load
 from mango_pomdp.planner import Planner
+from mango_pomdp.policies import STYLES
 from mango_pomdp.team_prior import TeamPrior
 
 FORMAT = "mega_great_league"
@@ -49,9 +50,9 @@ def label(d) -> str:
 
 def evaluate(args):
     """[(decision type, regret, P(win) of yours, P(win) of best, what you did, the best)] for one battle."""
-    rb, rollouts = args
+    rb, rollouts, styles = args
     gd = gamedata.use(FORMAT)
-    planner = Planner(gd, TeamPrior(gd), rollouts=rollouts, seed=zlib.crc32(rb.id.encode()))
+    planner = Planner(gd, TeamPrior(gd), rollouts=rollouts, seed=zlib.crc32(rb.id.encode()), styles=tuple(styles))
     planner.start(0)
     fed = -1   # events fed through this turn
     out = []
@@ -127,15 +128,18 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--turns", type=Path, default=TURNS)
     ap.add_argument("--rollouts", type=int, default=64)
+    ap.add_argument("--styles", nargs="+", default=list(STYLES),
+                    help="opponent models for the rollouts: the heuristic styles, or learned (opponent_model)")
     ap.add_argument("--workers", type=int, default=None)
     args = ap.parse_args()
     gd = gamedata.use(FORMAT)
     battles = [b for b in load(gd, args.turns) if b.seen == 3 and not b.misread and b.decisions]
     start = time.time()
     with ProcessPoolExecutor(args.workers) as pool:
-        res = list(pool.map(evaluate, [(b, args.rollouts) for b in battles]))
+        res = list(pool.map(evaluate, [(b, args.rollouts, args.styles) for b in battles]))
     rows = [(bid, result, *r) for bid, result, out in res for r in out]
-    print(f"{len(rows)} of your decisions in {len(battles)} recorded battles, {args.rollouts} rollouts each, "
+    print(f"{len(rows)} of your decisions in {len(battles)} recorded battles, {args.rollouts} rollouts each "
+          f"(opponents in rollouts: {', '.join(args.styles)}), "
           f"{time.time() - start:.0f}s. Regret in win-probability points; a blunder costs over "
           f"{BLUNDER:.0%}.\n")
 

@@ -108,6 +108,8 @@ def preferred_throw(style: str, ctx: ThrowContext) -> int | None:
 
 def throw_probs(style: str, ctx: ThrowContext, eps: float) -> dict[int | None, float]:
     options: list[int | None] = [None] + [i for i, c in enumerate(ctx.charged) if ctx.energy >= c.energy]
+    if style == "learned":   # opponent_model.Learned: the belief learns nothing from it about style
+        return {o: 1 / len(options) for o in options}
     if style == "casual" and len(options) > 1:
         # Throws something as soon as it can, any of them.
         probs = {o: eps / len(options) for o in options}
@@ -123,6 +125,8 @@ def throw_probs(style: str, ctx: ThrowContext, eps: float) -> dict[int | None, f
 def shield_prob(style: str, ctx: ShieldContext, eps: float) -> float:
     if ctx.shields <= 0:
         return 0.0
+    if style == "learned":   # uninformative about style, as in throw_probs
+        return 0.5
     lethal = ctx.full_damage >= ctx.hp
     if style == "shielder":
         want = True

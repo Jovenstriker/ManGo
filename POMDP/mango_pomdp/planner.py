@@ -59,6 +59,23 @@ from .team_prior import TeamPrior, TeamSpec
 SWITCH_AT = ("start", "zero-turn", "catch", "any")
 
 
+def _learned_throw(b: Battle, s: int, energy: int) -> Move | None:
+    """The learned opponent's most likely choice at this energy: a charged move, or None to hold."""
+    from .opponent_model import allowed_throws, cheap_big, default_model
+    mon, model = b.sides[s].mon, default_model()
+    if model is None or cheap_big(mon) is None:
+        return None
+    saved, mon.energy = mon.energy, energy
+    try:
+        if not allowed_throws(mon)[1]:
+            return None
+        p = model.p_throw(b, s)
+    finally:
+        mon.energy = saved
+    choice = max(range(3), key=lambda k: p[k])
+    return None if choice == 0 else mon.charged[cheap_big(mon)[choice - 1]]
+
+
 def next_throw(b: Battle, s: int, style: str) -> tuple[int, Move] | None:
     """(turns until side s throws a charged move, which move), if it plays `style` and throws
     within its next fast move; None if it won't be ready that soon. Reads s's real energy, so in a
@@ -67,6 +84,8 @@ def next_throw(b: Battle, s: int, style: str) -> tuple[int, Move] | None:
     mon, target, t = side.mon, other.mon, b.turn
 
     def throw(energy: int) -> Move | None:
+        if style == "learned":
+            return _learned_throw(b, s, min(energy, MAX_ENERGY))
         ctx = ThrowContext(mon.species, mon.charged, min(energy, MAX_ENERGY), mon.atk_stage,
                            target.species, target.hp, target.def_stage, other.shields)
         i = preferred_throw(style, ctx)
@@ -309,7 +328,14 @@ class Planner:
             mine = _First(WAIT, _Catch(first[1], mine, b, self.side, style))
         elif first is not None:
             mine = _First(first, mine)
-        theirs = Heuristic(style, eps=self.eps, seed=seed + 1)
+        if style == "learned":   # the model fitted on your recorded opponents (opponent_model)
+            from .opponent_model import Learned, default_model
+            model = default_model()
+            if model is None:
+                raise RuntimeError("no opponent model: run python3 -m experiments.opponent_model first")
+            theirs = Learned(model, b, 1 - self.side, seed + 1)
+        else:
+            theirs = Heuristic(style, eps=self.eps, seed=seed + 1)
         return [mine, theirs] if self.side == 0 else [theirs, mine]
 
     def _value(self, b: Battle) -> float:

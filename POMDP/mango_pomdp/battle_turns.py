@@ -48,6 +48,7 @@ class ShieldCase:
     shields: tuple[int, int]   # (theirs, yours) before the hit
     faced: int          # your charged moves this Pokémon had already taken (shielded or not)
     shielded: bool
+    turn: int = -1
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class ThrowCase:
     shields: tuple[int, int]   # (theirs, yours)
     last_shielded: bool | None  # their previous throw with this Pokémon: shielded? None if none yet
     choice: str         # the charged move they threw, or "" if they held and fast moved
+    turn: int = -1
 
 
 @dataclass(frozen=True)
@@ -146,6 +148,9 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
     last_charged = -10
     my_cheapest = {sid: min(gd.moves[c].energy for c in cs) for sid, _, cs in battle.you if cs}
     my_throws: set[int] = set()
+    thrown = defaultdict(int)          # (side, species) -> charged moves thrown
+    taken = defaultdict(int)           # (side, species) -> charged moves taken
+    history = {"you": [None, None], "them": [None, None]}   # [last throw shielded?, shielded the last one?]
     # When each side's fast moves started and landed, for who's mid fast move at a turn's start.
     landings = {"you": [], "them": []}
     for row in turns:
@@ -197,11 +202,13 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                 look(s, active[s])
         battle.snapshots[t] = {
             "mons": {s: {sid: (hp.get((s, sid), 0), energy_of(prev_row, s, sid) if prev_row else 0,
-                               tuple(stages[s, sid]), (s, sid) in busted) for sid, _, _ in team}
+                               tuple(stages[s, sid]), (s, sid) in busted, thrown[s, sid], taken[s, sid])
+                               for sid, _, _ in team}
                      for s, team in (("you", battle.you), ("them", battle.them))},
             "active": dict(active), "shields": dict(shields),
             "timer": {s: max(0, SWITCH_TURNS - (t - last_switch[s])) for s in active},
             "busy": {s: busy(s, t) for s in active}, "last_charged": last_charged,
+            "history": {s: tuple(v) for s, v in history.items()},
             "seen": {s: {sid: (v[0], frozenset(v[1])) for sid, v in seen[s].items()} for s in seen}}
         theirs = active["them"]
         start = (theirs, active["you"], energy_of(prev_row, "them", theirs) if prev_row else 0,
@@ -248,7 +255,7 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                         begun = t - mv.turns + 1
                         ctx = starts.get(begun)
                         if ctx and ctx[0] == att and ctx[2] >= cheapest.get(att, 101) and begun not in threw_on:
-                            battle.throws.append(ThrowCase(*ctx, choice=""))
+                            battle.throws.append(ThrowCase(*ctx, choice="", turn=begun))
         # Charged moves, in the recorded order when both threw.
         order = ["you", "them"] if row.get("charged_first", "") != "them" else ["them", "you"]
         for s in order:
@@ -265,12 +272,12 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                 if s == "you" and shields["them"] > 0 and not body.endswith("(disguise)") and ("them", dfn) in hp:
                     battle.shields.append(ShieldCase(dfn, att, mid, share("them"), full >= hp["them", dfn],
                                                      (shields["them"], shields["you"]), faced[dfn],
-                                                     body.endswith("(shielded)")))
+                                                     body.endswith("(shielded)"), turn=t))
                 if s == "them":
                     # Their energy just before the throw: what's left after it, plus its cost.
                     before = min(100, energy_of(row, "them", att) + mv.energy)
                     ctx = starts[t]
-                    battle.throws.append(ThrowCase(att, ctx[1], before, ctx[3], ctx[4], ctx[5], choice=mid))
+                    battle.throws.append(ThrowCase(att, ctx[1], before, ctx[3], ctx[4], ctx[5], choice=mid, turn=t))
                     last_shielded[att] = body.endswith("(shielded)")
                     threw_on.add(t)
                 if s == "you":
@@ -288,6 +295,11 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                     "target_shields": shields[other[s]], "target_form": "disguised" if body.endswith("(disguise)") else "",
                     "attacker_hp": hp[s, att], "type": mv.type})
                 last_charged = t
+                thrown[s, att] += 1
+                taken[other[s], dfn] += 1
+                history[s][0] = body.endswith("(shielded)")
+                if shields[other[s]] > 0:
+                    history[other[s]][1] = body.endswith("(shielded)")
                 hp[other[s], dfn] = max(0, hp[other[s], dfn] - (1 if blocked else full))
                 if body.endswith("(disguise)"):
                     busted.add((other[s], dfn))
@@ -323,29 +335,33 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                               key=lambda d: d.turn)
 
 
-def battle_at(gd: GameData, rb: RecordedBattle, t: int, energy: int | None = None, active: str | None = None) -> Battle:
-    """The rebuilt real battle at the start of turn t, you as side 0 and free to act. `energy` sets
-    your active Pokémon's energy, `active` who you have in (a fainted one, for a replacement)."""
+def battle_at(gd: GameData, rb: RecordedBattle, t: int, energy: int | None = None, active: str | None = None,
+              free: str = "you") -> Battle:
+    """The rebuilt real battle at the start of turn t, you as side 0. The `free` side ("you" or
+    "them") is free to act and the other is as the recording had it; `energy` sets the free side's
+    active Pokémon's energy, and `active` who you have in (a fainted one, for a replacement)."""
     snap = rb.snapshots[t]
     sides = []
     for s, spec in (("you", rb.you), ("them", rb.them)):
         mons = []
         for sid, fast, charged in spec:
             m = Mon.build(gd, sid, fast, charged)
-            hp, en, (atk, df), busted = snap["mons"][s][sid]
+            hp, en, (atk, df), busted, thrown, taken = snap["mons"][s][sid]
             if busted:
                 m.set_form("busted")
             m.hp, m.energy, m.atk_stage, m.def_stage = hp, en, atk, df
+            m.thrown, m.taken = thrown, taken
             mons.append(m)
         side = Side(mons, snap["shields"][s])
         ids = [sid for sid, _, _ in spec]
         who = active if s == "you" and active else snap["active"][s]
         side.active = ids.index(who) if who in ids else 0
         side.switch_timer = snap["timer"][s]
-        side.busy_until, side.fast_due = (t, -1) if s == "you" else snap["busy"][s]
+        side.busy_until, side.fast_due = (t, -1) if s == free else snap["busy"][s]
+        side.last_shielded, side.shielded_last = snap["history"][s]
         sides.append(side)
     if energy is not None and energy >= 0:
-        sides[0].mon.energy = energy
+        sides[0 if free == "you" else 1].mon.energy = energy
     seen = [{sid: {"fast": gd.moves[f] if f else None, "charged": set(cs)} for sid, (f, cs) in snap["seen"][s].items()}
             for s in ("you", "them")]
     return Battle.from_sides(sides, t, t, seen, last_charged=snap["last_charged"])

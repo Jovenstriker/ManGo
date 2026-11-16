@@ -536,6 +536,106 @@ class RecordedBattleTests(unittest.TestCase):
         self.assertEqual(opp.act(view), FAST)                 # no recorded case with you out of shields
 
 
+class OpponentModelTests(unittest.TestCase):
+    """The learned opponent, on made-up weights (the fitted model stays local)."""
+
+    def battle(self):
+        return Battle([[mon("medicham", fast="COUNTER", charged=["ICE_PUNCH", "DYNAMIC_PUNCH"]), mon("azumarill")],
+                       [mon("azumarill", fast="BUBBLE", charged=["ICE_BEAM", "PLAY_ROUGH"]), mon("medicham")]], seed=0)
+
+    def model(self, shield=0.0, cheap=0.0, big=0.0):
+        from mango_pomdp.opponent_model import SHIELD, THROW, OpponentModel
+        return OpponentModel([shield] + [0.0] * (len(SHIELD) - 1),
+                             [[0.0] * len(THROW), [cheap] + [0.0] * (len(THROW) - 1), [big] + [0.0] * (len(THROW) - 1)])
+
+    def test_history_is_counted_as_charged_moves_land(self):
+        b = self.battle()
+        ice_punch = b.sides[0].mon.charged[0]
+        b.sides[0].mon.energy = 100
+        b.land_charged(0, ice_punch, [Scripted(), Scripted()], shield=True)
+        self.assertEqual((b.sides[0].mon.thrown, b.sides[1].mon.taken), (1, 1))
+        self.assertTrue(b.sides[0].last_shielded)         # their throw was shielded
+        self.assertTrue(b.sides[1].shielded_last)         # we shielded the last one we could
+        self.assertIsNone(b.sides[1].last_shielded)
+        c = b.clone()
+        self.assertEqual((c.sides[0].mon.thrown, c.sides[0].last_shielded, c.sides[1].shielded_last), (1, True, True))
+
+    def test_features_read_the_situation(self):
+        from mango_pomdp.opponent_model import SHIELD, THROW, allowed_throws, cheap_big, features_shield, features_throw
+        b = self.battle()
+        dynamic = b.sides[0].mon.charged[1]
+        x = dict(zip(SHIELD, features_shield(b, 1, dynamic)))
+        self.assertEqual(len(x), len(SHIELD))
+        self.assertEqual((x["bias"], x["hp"], x["shields"], x["left"]), (1.0, 1.0, 1.0, 2 / 3))   # 2 of 3
+        self.assertEqual(x["is their cheaper move"], 0.0)   # Dynamic Punch costs more than Ice Punch
+        self.assertEqual(x["shielded last one"], 0.5)       # no history yet
+        b.sides[1].mon.hp = 1
+        self.assertEqual(dict(zip(SHIELD, features_shield(b, 1, dynamic)))["knocks out"], 1.0)
+        b.sides[1].mon.energy = 100
+        x = dict(zip(THROW, features_throw(b, 1)))
+        self.assertEqual(len(x), len(THROW))
+        self.assertEqual((x["big move ready"], x["big knocks out"]), (1.0, 0.0))   # azumarill's 1 HP, medicham's full
+        mon_ = b.sides[1].mon
+        self.assertEqual([mon_.charged[i].id for i in cheap_big(mon_)], ["ICE_BEAM", "PLAY_ROUGH"])
+        mon_.energy = mon_.charged[cheap_big(mon_)[0]].energy
+        self.assertEqual(allowed_throws(mon_), [True, True, mon_.energy >= mon_.charged[cheap_big(mon_)[1]].energy])
+
+    def test_fitting_recovers_the_signal_and_respects_masks(self):
+        from mango_pomdp.opponent_model import _sigmoid, _softmax, fit_logistic, fit_softmax
+        rng = random.Random(0)
+        X = [[1.0, rng.random()] for _ in range(300)]
+        y = [int(rng.random() < _sigmoid(-2 + 4 * x[1])) for x in X]
+        w = fit_logistic(X, y, l2=0.1)
+        self.assertGreater(w[1], 2)
+        self.assertLess(w[0], -0.5)
+        # Three choices; the last is only sometimes available, and taken when x is high.
+        masks = [[True, True, x[1] > 0.5] for x in X]
+        labels = [2 if m[2] and x[1] > 0.7 else int(x[1] > 0.3) for x, m in zip(X, masks)]
+        W = fit_softmax(X, labels, masks, l2=0.1)
+        self.assertEqual(W[0], [0.0, 0.0])
+        p = _softmax([sum(a * b for a, b in zip(row, [1.0, 0.9])) for row in W], [True, True, True])
+        self.assertEqual(max(range(3), key=lambda k: p[k]), 2)
+        self.assertEqual(_softmax([0.0, 0.0, 9.0], [True, True, False])[2], 0.0)
+
+    def test_learned_opponent_throws_and_shields_as_its_model_says(self):
+        import tempfile
+        from pathlib import Path
+        from mango_pomdp.opponent_model import Learned, OpponentModel
+        b = self.battle()
+        b.sides[1].mon.energy = 100
+        ice_punch = b.sides[0].mon.charged[0]
+        bait = Learned(self.model(shield=-30, cheap=30), b, 1, seed=0)
+        self.assertEqual(bait.act(b.view(1)), CHARGED(0))       # Ice Beam, the cheaper one
+        self.assertFalse(bait.shield(b.view(1), ice_punch))
+        nuke = Learned(self.model(shield=30, big=30), b, 1, seed=0)
+        self.assertEqual(nuke.act(b.view(1)), CHARGED(1))
+        self.assertTrue(nuke.shield(b.view(1), ice_punch))
+        b.sides[1].shields = 0
+        self.assertFalse(nuke.shield(b.view(1), ice_punch))     # nothing to shield with
+        b.sides[1].mon.energy = 0
+        self.assertEqual(Learned(self.model(cheap=30), b, 1, seed=0).act(b.view(1)), FAST)   # can't afford one
+        path = Path(tempfile.mkdtemp()) / "model.json"
+        m = self.model(shield=1.5, cheap=-0.5)
+        m.save(path)
+        back = OpponentModel.load(path)
+        self.assertEqual((back.shield, back.throw), (m.shield, m.throw))
+
+    def test_planner_rolls_out_against_the_learned_opponent(self):
+        from mango_pomdp import opponent_model
+        saved = opponent_model._cached.get("model", "unset")
+        opponent_model._cached["model"] = self.model(shield=1.0, cheap=0.5, big=-0.5)
+        try:
+            me = make_player("planner-learned", gd, prior, 0, rollouts=4)
+            b = play(gd, [prior.sample_team(random.Random(1)), prior.sample_team(random.Random(2))],
+                     [me, Heuristic("baiter", seed=3)], seed=4)
+            self.assertTrue(b.done)
+        finally:
+            if saved == "unset":
+                opponent_model._cached.pop("model", None)
+            else:
+                opponent_model._cached["model"] = saved
+
+
 def payoff(battle, duel):
     a, b = duel.f
     margin = battle.sides[0].mon.hp / a.species.hp - battle.sides[1].mon.hp / b.species.hp

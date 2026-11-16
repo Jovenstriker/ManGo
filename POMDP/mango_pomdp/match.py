@@ -7,7 +7,8 @@ from .planner import SWITCH_AT, Planner
 from .policies import STYLES, Heuristic, RandomPlayer
 from .team_prior import TeamListPrior, TeamPrior, TeamSpec, build_team
 
-PLAYERS = ("random", *STYLES, "planner", "planner-flat", "planner-1style", "planner-list", "oracle")
+PLAYERS = ("random", *STYLES, "planner", "planner-flat", "planner-1style", "planner-list", "oracle",
+           "planner-learned", "planner-list-learned")
 
 
 def valid_player(name: str) -> bool:
@@ -37,6 +38,11 @@ def make_player(name: str, gd: GameData, prior: TeamPrior, seed: int,
         return Planner(gd, flat, rollouts=rollouts, styles=("baiter",), seed=seed, name=name, **kw)
     if name == "planner-1style":
         return Planner(gd, prior, rollouts=rollouts, styles=("baiter",), seed=seed, name=name, **kw)
+    if name == "planner-learned":   # rollouts against the opponent model fitted on your recordings
+        return Planner(gd, prior, rollouts=rollouts, styles=("learned",), seed=seed, name=name, **kw)
+    if name == "planner-list-learned":
+        return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts, styles=("learned",),
+                       seed=seed, name=name, **kw)
     if name == "planner-list":
         return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts, seed=seed, name=name, **kw)
     if name == "oracle":

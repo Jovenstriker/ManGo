@@ -128,7 +128,10 @@ explicitly approximate and are not used to identify moves or compute energy.
   other rule picks a ruled-out move. Only a text that first shows after the restart, your
   switch and theirs counts, and not within 0.5s of the restart: a charged move's text shows
   as play restarts and drifts over your Pokémon (020853, 022052, 124534), and a text stays up
-  a while (155536: Altaria's on your Mimikyu, 2s into Florges). No text is no evidence.
+  a while (155536: Altaria's on your Mimikyu, 2s into Florges). A text missing from reads for
+  under 1s is still the same one: the reader loses it under attack effects (Gdańsk Regional
+  stream, Day 2, 1:58:13: Empoleon's Metal Sound on Stunfisk, unread twice as Dunsparce came
+  in, isn't Dunsparce's hit; it was on Astonish, neutral there). No text is no evidence.
 
 `BattleAccuracyTests` enforces all 110 supplied count labels, exact energy checkpoints, minimum
 spends, and the observed Waterfall moveset. Unknown labels remain unknown. Reports also flag

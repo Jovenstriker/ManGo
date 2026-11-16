@@ -151,6 +151,12 @@ public struct BattleAutomation: Sendable {
     private var opponentSeenAt: TimeInterval = -.infinity
     /// Since when a hit's text has shown over your Pokémon without a break, if it shows now.
     private var hitTextSince: TimeInterval?
+    private var hitTextLastSeen: TimeInterval = -.infinity
+    /// A hit's text missing from reads for less than this is still the same text: the reader
+    /// loses it under attack effects (Gdańsk stream, 1:58:13: Empoleon's Metal Sound "NOT VERY
+    /// EFFECTIVE..." on your Stunfisk, unread for two reads under Stunfisk's attack as Dunsparce
+    /// came in, then read again: not Dunsparce's hit, which was Astonish, neutral).
+    static let hitTextGap: TimeInterval = 1.0
     /// A charged move's text shows over the Pokémon it hit as play restarts (Persian's Night
     /// Slash "NOT VERY EFFECTIVE..." on your Thievul, 020853; Ursaluna's Fire Punch on your
     /// Jumpluff, 022052); a fast move started at the restart lands a turn later at the soonest.
@@ -624,7 +630,12 @@ public struct BattleAutomation: Sendable {
         let showing = read.lines.contains {
             NameMatcher.normalize($0.text).contains("effective") && !Self.isHitOnThem($0) && (0.12...0.7).contains($0.box.midY)
         }
-        hitTextSince = showing ? hitTextSince ?? t : nil
+        if showing {
+            if hitTextSince == nil { hitTextSince = t }
+            hitTextLastSeen = t
+        } else if Rules.off("hitTextGap") || t - hitTextLastSeen >= Self.hitTextGap {
+            hitTextSince = nil
+        }
         guard !Rules.off("hitType"), !stopped, !awaitingGo, !isBattleOver, let active = tracker.active,
               let since = hitTextSince, since > max(resumedAt + Self.hitTextAfterRestart, yourLabelsSince, opponentSeenAt) else { return }
         let notVery = said.contains { $0.contains("not") || $0.contains("very") }

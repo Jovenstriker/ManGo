@@ -113,8 +113,9 @@ notes live in `PvPCore/Tests/PvPCoreTests/Fixtures/hand-counts.json`. Regenerate
 To add a battle: put the video in `Test Videos/`, run `screen-log <video> 0.25 --json` to get its
 screen text, trim it into a fixture like the others, add its hand counts, and add it to the script.
 
-The screen only shows the base name, so the app picks the highest-ranked form until a move reveals
-it. Nicknamed Pokémon won't match. The app has no manual controls: start the reader with the record
+The screen only shows the base name ("Ninetales" for Alolan or Shadow Ninetales), so the app picks
+the highest-ranked form until a move reveals it. A Mega or Primal form says so ("Mega Sableye",
+"Mega Charizard X"), and is matched by that. Nicknamed Pokémon won't match. The app has no manual controls: start the reader with the record
 button, and everything else comes from the screen.
 
 ## Accuracy evidence and validation

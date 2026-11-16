@@ -30,6 +30,15 @@ private func makeData() -> GameData {
     #expect(m.match("Mr. Mime")?.candidates.first?.speciesId == "mr_mime_galarian")
 }
 
+@Test func megaAndPrimalFormsGoByTheNameTheScreenShows() {
+    // "Go, Mega Sableye!": the name box says "Mega Sableye", PvPoke "Sableye (Mega)".
+    #expect(NameMatcher.screenName("Sableye (Mega)") == "Mega Sableye")
+    #expect(NameMatcher.screenName("Charizard (Mega X)") == "Mega Charizard X")
+    #expect(NameMatcher.screenName("Kyogre (Primal)") == "Primal Kyogre")
+    #expect(NameMatcher.screenName("Ninetales (Alolan)") == "Ninetales")
+    #expect(NameMatcher.screenName("Sableye (Shadow)") == "Sableye")
+}
+
 @Test func toleratesSmallOCRErrors() {
     let m = NameMatcher(data: makeData())
     #expect(m.match("Azumari1l")?.key == "azumarill")  // "1" for "l": dropped digit, 1 edit

@@ -17,7 +17,7 @@ public struct NameMatcher: Sendable {
     public init(data: GameData) {
         var byKey: [String: [Species]] = [:]
         for s in data.species.values {
-            byKey[Self.baseKey(s.speciesName), default: []].append(s)
+            byKey[Self.screenKey(s.speciesName), default: []].append(s)
         }
         self.byKey = byKey.mapValues { $0.sorted { ($0.rank ?? .max) < ($1.rank ?? .max) } }
     }
@@ -46,6 +46,26 @@ public struct NameMatcher: Sendable {
         let base = speciesName.split(separator: "(").first.map(String.init) ?? speciesName
         return normalize(base)
     }
+
+    /// The name the battle screen shows: the base name, except that a Mega or Primal form says
+    /// so in front ("Sableye (Mega)" is "Mega Sableye", "Charizard (Mega X)" is "Mega Charizard X",
+    /// "Kyogre (Primal)" is "Primal Kyogre"; ItsAXN's GBL video of 2026-11-07, 7:49: "Go, Mega
+    /// Sableye!", which ManGo didn't know, so it kept counting the fainted Cramorant).
+    public static func screenName(_ speciesName: String) -> String {
+        let base = (speciesName.split(separator: "(").first.map(String.init) ?? speciesName).trimmingCharacters(in: .whitespaces)
+        for part in speciesName.split(separator: "(").dropFirst() {
+            let form = part.split(separator: ")").first.map(String.init) ?? ""
+            if form.hasPrefix("Mega") {
+                let letter = form.dropFirst(4).trimmingCharacters(in: .whitespaces)
+                return "Mega \(base)" + (letter.isEmpty ? "" : " \(letter)")
+            }
+            if form == "Primal" { return "Primal \(base)" }
+        }
+        return base
+    }
+
+    /// `screenName`, normalized: "megasableye", "ninetales".
+    static func screenKey(_ speciesName: String) -> String { normalize(screenName(speciesName)) }
 
     static func normalize(_ text: String) -> String {
         let folded = text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)

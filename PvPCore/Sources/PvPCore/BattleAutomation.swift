@@ -683,7 +683,7 @@ public struct BattleAutomation: Sendable {
         let options = labels.map { Set(named[$0]?.map(\.moveId) ?? []) }
         guard options.allSatisfy({ !$0.isEmpty }) else { return nil }
         let all = data.species.values.filter { s in !s.types.isEmpty && options.allSatisfy { !$0.isDisjoint(with: s.chargedMoves) } }
-        let seen = all.filter { parser.myTeam.contains(NameMatcher.baseKey($0.speciesName)) }
+        let seen = all.filter { parser.myTeam.contains(NameMatcher.screenKey($0.speciesName)) }
         let candidates = seen.isEmpty ? all.filter { $0.rank != nil } : seen
         guard let best = candidates.min(by: { ($0.rank ?? .max) < ($1.rank ?? .max) }),
               candidates.allSatisfy({ Set($0.types) == Set(best.types) }) else { return nil }
@@ -1191,7 +1191,7 @@ public struct BattleAutomation: Sendable {
         func moveKey(_ m: Move) -> String {
             NameMatcher.normalize(m.name.split(separator: "(").first.map(String.init) ?? m.name)
         }
-        let base = s.speciesName.split(separator: "(").first.map(String.init) ?? s.speciesName
+        let base = NameMatcher.screenName(s.speciesName)
         let forms = [active] + (parser.matcher.match(base)?.candidates.map(\.speciesId).filter { $0 != active } ?? [])
         for id in forms {
             let moves = data.chargedMoves(for: id)

@@ -454,6 +454,30 @@ class TopTeamTests(unittest.TestCase):
             gamedata.use("great_league")
 
 
+class PlayTests(unittest.TestCase):
+    def test_a_human_can_play_a_whole_battle(self):
+        from experiments.play import Human
+        said, asked = [], []
+
+        def ask(prompt):
+            asked.append(prompt)
+            if "Shield" in prompt:
+                return "y"
+            if "Bring in" in prompt:
+                return "1"
+            return ["", "a", "1", "2", "s1", "w", "x"][len(asked) % 7]   # "x" is not a command: asked again
+
+        gamedata.use("mega_great_league")
+        try:
+            you = Human(mega, ask=ask, say=said.append)
+            b = play(mega, [list(mega.teams[24].spec), list(mega.teams[2].spec)], [you, Heuristic("baiter", seed=1)], seed=2)
+        finally:
+            gamedata.use("great_league")
+        self.assertTrue(b.done)
+        self.assertTrue(any("YOU" in s and "THEM" in s for s in said))
+        self.assertTrue(any("Shield" in a for a in asked))
+
+
 class RecordedBattleTests(unittest.TestCase):
     """Habits from a made-up Battle Turns folder (the real one stays local)."""
 

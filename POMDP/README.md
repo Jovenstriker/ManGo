@@ -19,6 +19,7 @@ counting that `belief.EnergyCounter` does here.
     python3 -m experiments.tournament --games 150              # 3v3 win rates
     python3 -m experiments.top_teams select                    # pick a top Mega Great League team
     python3 -m experiments.top_teams evaluate 25 --lead 2 --plan   # and a game plan against the rest
+    python3 -m experiments.play --hints                        # play a 3v3 against the planner
     python3 -m unittest discover tests
 
 The work starts with 1v1s, which can be solved exactly, then builds up to full 3v3 battles with
@@ -422,6 +423,47 @@ second set of experiments uses the local Battle Turns export: your real movesets
 results, and the opponents' recorded decisions (`experiments/recorded_battles.py`,
 `experiments/recorded_paths.py`). Its output names your recordings, so it stays on the Mac.
 
+## Decision regret on your recorded battles
+
+`python3 -m experiments.regret --rollouts 128` scores your real decisions, like a chess engine's
+accuracy score. Each recorded battle in the local Battle Turns export is rebuilt at the start of
+every turn where you decided something:
+- HP, rebuilt from the recorded moves, and energy, buffs, shields and switch timers;
+- whether the opponent was mid fast move;
+- what each side had seen so far.
+
+The planner's belief is fed everything you'd seen up to then, so it knows what you knew. It then
+estimates each option's chance of winning by rollouts:
+- *act*, on a free turn: fast move (a hold, if you could have thrown), each charged move you
+  could afford, or each switch;
+- *shield*, when they threw at you: shield or not;
+- *replace*, after a faint: who comes in.
+
+Regret is P(win) with the planner's best option minus P(win) with yours. Half the rollouts pick
+the best option and the other half score both, so noise doesn't inflate the regret. The output
+gives mean regret and the share of blunders (over 5 points) for each kind of decision, total
+regret per battle split by whether you really won, and the costliest decisions. It names your
+recordings, so it stays on the Mac.
+
+It also checks the estimates against the real results. The planner's P(win) is higher in the
+battles you won than in the ones you lost, but it's overconfident: its Brier score is worse
+than always guessing your overall win rate. Until that improves, read regret as regret by the
+planner's model of the battle, not ground truth. The rollouts' rule-based opponents are much
+more predictable than people, which is the likely cause.
+
+## Playing against the planner
+
+`python3 -m experiments.play` is a 3v3 battle in the terminal: you play one side, and the
+planner (or a heuristic style, `--opponent baiter`) plays the other. Teams are labels as in
+`top_teams` (`--you M1 --them F3`), and `--lead` picks who you lead with. On each free turn:
+- Enter fast moves once, and `a` keeps fast moving until something changes;
+- `1` or `2` throws a charged move, `s1` or `s2` switches, and `w` waits;
+- with `--hints`, `h` asks the planner what it would do in your place.
+
+When they throw at you, the game says how much the hit would do and asks whether to shield. You
+see what the screen would show, plus their energy counted from their moves the way ManGo does.
+At the end you get the result and a timeline of the battle.
+
 ## Layout
 
     data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves
@@ -449,7 +491,8 @@ results, and the opponents' recorded decisions (`experiments/recorded_battles.py
                                tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle),
                                top_teams.py (pick one of PvPoke's top teams and plan against the rest),
                                my_battles.py (your own battles, replayed with the planner),
-                               recorded_battles.py, recorded_paths.py (the same from Battle Turns, local)
+                               recorded_battles.py, recorded_paths.py (the same from Battle Turns, local),
+                               regret.py (your decisions scored, local), play.py (you against the planner)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps

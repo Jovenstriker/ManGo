@@ -227,7 +227,9 @@ class Belief:
             fast, charged = p.moves[sid]
             m = Mon.build(gd, sid, fast, charged)
             if sid in self.revealed:
-                m.hp = view.foe_hp_of(sid)
+                seen_hp = view.foe_hp_of(sid)
+                if seen_hp is not None:   # None: a Pokémon not on their real team (a misread report)
+                    m.hp = seen_hp
                 m.energy = self.counter.energy.get(sid, 0)
                 m.set_form(view.foe_form_of(sid))
             mons.append(m)

@@ -316,6 +316,26 @@ class Planner:
         hp = [sum(m.hp for m in side.mons) / sum(m.max_hp for m in side.mons) for side in b.sides]
         return b.reward(self.side) + self.margin_weight * (hp[self.side] - hp[1 - self.side])
 
+    def outcomes(self, view: View, cands: list, apply=None, first: bool = False,
+                 incoming: Move | None = None, rollouts: int | None = None) -> list[list[float]]:
+        """For each candidate, its rollout results as wins (1, ½ for a tie, 0), on the same
+        sampled hypotheses and seeds for every candidate: a win-probability estimate of each
+        action, for judging decisions rather than making them."""
+        self.belief.see(view)
+        apply = apply or (lambda b, a, ctrls: None)
+        out = [[] for _ in cands]
+        for _ in range(rollouts or self.rollouts):
+            p = self.belief.sample(self.rng)
+            seed = self.rng.randrange(1 << 30)
+            root = self.belief.determinize(view, p, incoming=incoming)
+            for j, c in enumerate(cands):
+                b = root.clone(seed)
+                ctrls = self._controllers(c if first else None, seed, p.style, b)
+                apply(b, c, ctrls)
+                b.play(ctrls)
+                out[j].append({1: 1.0, 0: 0.5, -1: 0.0}[b.reward(self.side)])
+        return out
+
     def _best(self, view: View, cands: list, apply, default: int, first: bool = False,
               incoming: Move | None = None, zs: list[float] | None = None):
         self.decisions += 1

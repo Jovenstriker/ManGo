@@ -248,6 +248,11 @@ class Planner:
                 self.last_charged = e.turn
         self.belief.observe(events)
 
+    def before_turn(self, view) -> None:
+        """Called at the start of every turn (Battle.play): the belief keeps the battle as you see
+        it then, to score the opponent's choices this turn under the learned model."""
+        self.belief.before_turn(view)
+
     # Decisions ----------------------------------------------------------------------------
 
     def may_switch(self, view: View) -> bool:

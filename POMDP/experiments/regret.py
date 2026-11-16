@@ -17,11 +17,22 @@ half: one half picks the best option and the other half scores both, so noise in
 doesn't inflate the regret (it can come out slightly negative). Like a chess engine's accuracy
 score, it measures decisions, not results.
 
+Then it checks the estimates against how your battles really ended, and corrects them: Platt
+scaling, P(won) = σ(a + b·logit(estimate)), fitted by 5-fold cross-validation by battle, so each
+battle is corrected by a fit that never saw it. It prints everything twice, as estimated and
+corrected, with a table of estimated P(win) against how often you really won, and saves the
+fit (on every battle) to data/local/calibration.json.
+
+`--styles` sets the opponent types the belief weighs and the rollouts play: the heuristic
+styles, and "learned" (the opponent model fitted on your recorded opponents,
+experiments/opponent_model.py), alone or mixed in with the styles.
+
 The output names your recordings, so keep it local.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import random
 import statistics
@@ -34,6 +45,8 @@ from pathlib import Path
 from mango_pomdp import gamedata
 from mango_pomdp.battle import CHARGED, FAST, SWITCH
 from mango_pomdp.battle_turns import battle_at, load
+from mango_pomdp.gamedata import DATA_DIR
+from mango_pomdp.opponent_model import _sigmoid, fit_logistic
 from mango_pomdp.planner import Planner
 from mango_pomdp.policies import STYLES
 from mango_pomdp.team_prior import TeamPrior
@@ -41,6 +54,7 @@ from mango_pomdp.team_prior import TeamPrior
 FORMAT = "mega_great_league"
 TURNS = Path(__file__).resolve().parents[2] / "Battle Turns"
 BLUNDER = 0.05
+CALIBRATION = DATA_DIR / "local" / "calibration.json"
 
 
 def label(d) -> str:
@@ -56,16 +70,24 @@ def evaluate(args):
     planner.start(0)
     fed = -1   # events fed through this turn
     out = []
+
+    def feed(t):
+        # With the learned opponent in the belief, it also needs the battle as you saw it at the
+        # start of each turn, to score their choices that turn.
+        if planner.belief.model is not None and t in rb.snapshots:
+            planner.before_turn(battle_at(gd, rb, t, free="them").view(0))
+        planner.observe(rb.events.get(t, []))
+
     for d in rb.decisions:
         if d.turn not in rb.snapshots:
             continue
         for t in range(fed + 1, d.turn):   # what you'd seen before this turn
-            planner.observe(rb.events.get(t, []))
+            feed(t)
         fed = max(fed, d.turn - 1)
         if d.kind == "replace":
             if d.turn + 1 not in rb.snapshots:
                 continue
-            planner.observe(rb.events.get(d.turn, []))   # the faint itself
+            feed(d.turn)   # the faint itself
             fed = d.turn
             b = battle_at(gd, rb, d.turn + 1, active=d.fainted)
             b.sides[0].mon.hp = 0
@@ -120,8 +142,35 @@ def evaluate(args):
         score = [sum(o[half:]) / (len(o) - half) for o in outs]
         j = cands.index(mine)
         full = [sum(o) / len(o) for o in outs]
-        out.append((label(d), score[pick] - score[j], full[j], full[pick], str(mine), str(cands[pick])))
+        out.append((label(d), score[pick] - score[j], full[j], full[pick], str(mine), str(cands[pick]),
+                    score[pick], score[j], me.remaining() + b.sides[1].remaining()))
     return rb.id, rb.result, out
+
+
+def calibrate(rows, rollouts, folds=5):
+    """Platt scaling of the planner's P(win) against your real results: P(won) = σ(a + b·logit(p)),
+    fitted with battle-level cross-validation, so each battle's estimates are corrected by a fit
+    that never saw it. Returns (each row's correction, (a, b) fitted on every battle)."""
+    floor = 1 / (2 * rollouts)
+
+    def logit(p):
+        p = min(max(p, floor), 1 - floor)
+        return math.log(p / (1 - p))
+
+    def fit(rs):
+        return fit_logistic([[1.0, logit(r[4])] for r in rs], [int(r[1] == "won") for r in rs], l2=0.01)
+
+    def corrected(w):
+        return lambda p: _sigmoid(w[0] + w[1] * logit(p))
+
+    known = [r for r in rows if r[1] in ("won", "lost")]
+    ids = sorted({r[0] for r in known})
+    random.Random(0).shuffle(ids)
+    fold = {bid: k % folds for k, bid in enumerate(ids)}
+    fs = {k: corrected(fit([r for r in known if fold[r[0]] != k])) for k in range(folds)}
+    whole = fit(known)
+    every = corrected(whole)
+    return [fs[fold[r[0]]] if r[0] in fold else every for r in rows], tuple(whole)
 
 
 def main():
@@ -129,7 +178,8 @@ def main():
     ap.add_argument("--turns", type=Path, default=TURNS)
     ap.add_argument("--rollouts", type=int, default=64)
     ap.add_argument("--styles", nargs="+", default=list(STYLES),
-                    help="opponent models for the rollouts: the heuristic styles, or learned (opponent_model)")
+                    help="opponent types for the belief and the rollouts: any of the heuristic styles, and "
+                         "learned (the opponent model in data/local/opponent_model.json)")
     ap.add_argument("--workers", type=int, default=None)
     args = ap.parse_args()
     gd = gamedata.use(FORMAT)
@@ -139,9 +189,24 @@ def main():
         res = list(pool.map(evaluate, [(b, args.rollouts, args.styles) for b in battles]))
     rows = [(bid, result, *r) for bid, result, out in res for r in out]
     print(f"{len(rows)} of your decisions in {len(battles)} recorded battles, {args.rollouts} rollouts each "
-          f"(opponents in rollouts: {', '.join(args.styles)}), "
+          f"(opponents in the belief and rollouts: {', '.join(args.styles)}), "
           f"{time.time() - start:.0f}s. Regret in win-probability points; a blunder costs over "
           f"{BLUNDER:.0%}.\n")
+    report(rows, "The planner's estimates as they are:")
+    fs, (a, b) = calibrate(rows, args.rollouts)
+    print(f"Calibrated against your real results: P(won) = σ({a:+.2f} {b:+.2f}·logit(estimate)) fitted on "
+          f"every battle (a slope under 1 means the raw estimates are overconfident). Below, each battle "
+          f"is corrected by a fit on the other folds (5-fold, by battle).\n")
+    cal = [(bid, result, kind, f(s_best) - f(s_mine), f(p_mine), f(p_best), mine, best, s_best, s_mine, left)
+           for (bid, result, kind, reg, p_mine, p_best, mine, best, s_best, s_mine, left), f in zip(rows, fs)]
+    report(cal, "Calibrated:")
+    CALIBRATION.parent.mkdir(parents=True, exist_ok=True)
+    CALIBRATION.write_text(json.dumps({"styles": args.styles, "rollouts": args.rollouts, "a": a, "b": b}, indent=1))
+    print(f"Saved the fit to {CALIBRATION.relative_to(CALIBRATION.parents[2])} (local, git-ignored).")
+
+
+def report(rows, title):
+    print(title)
 
     def summary(xs):
         reg = [x[3] for x in xs]
@@ -161,7 +226,7 @@ def main():
     per = defaultdict(list)
     for r in rows:
         per[r[0], r[1]].append(r[3])
-    print("\nPer battle: total regret (win probability given up over the battle), by how it really ended:")
+    print("Per battle: total regret (win probability given up over the battle), by how it really ended:")
     for result in ("won", "lost", ""):
         tot = [sum(v) for (bid, res_), v in per.items() if res_ == result]
         each = [x for (bid, res_), v in per.items() if res_ == result for x in v]
@@ -180,11 +245,26 @@ def main():
         base = statistics.mean(r[1] == "won" for r in known)
         print(f"  Brier score {brier:.3f} (0 is perfect; always guessing the {base:.0%} base rate scores "
               f"{base * (1 - base):.3f})")
+        print("  Estimated P(win) of your choices against how often you really won:")
+        for lo in (0.0, 0.2, 0.4, 0.6, 0.8):
+            xs = [r for r in known if lo <= r[4] < lo + 0.2 or (lo == 0.8 and r[4] >= 1.0)]
+            if xs:
+                print(f"    {lo:.1f}–{lo + 0.2:.1f}: {len(xs):>4} decisions, estimated "
+                      f"{statistics.mean(r[4] for r in xs):.2f}, won {statistics.mean(r[1] == 'won' for r in xs):.2f}")
+        print("  By how far the battle had got (Pokémon left on both sides):")
+        for name, lo, hi in (("start (5–6 left)", 5, 6), ("middle (3–4)", 3, 4), ("last 1v1 (2)", 2, 2)):
+            xs = [r for r in known if lo <= r[10] <= hi]
+            if len(xs) > 1:
+                rate = statistics.mean(r[1] == "won" for r in xs)
+                print(f"    {name:<17} {len(xs):>4} decisions: Brier {statistics.mean((r[4] - (r[1] == 'won')) ** 2 for r in xs):.3f}"
+                      f" (base rate {rate * (1 - rate):.3f}); estimated {statistics.mean(r[4] for r in xs):.2f},"
+                      f" won {rate:.2f}")
     worst = sorted(rows, key=lambda r: -r[3])[:12]
-    print("\nCostliest decisions:")
-    for bid, result, kind, reg, p_mine, p_best, mine, best in worst:
+    print("Costliest decisions:")
+    for bid, result, kind, reg, p_mine, p_best, mine, best, *_ in worst:
         print(f"  {bid:<30}{kind:<8} regret {reg:+.2f}: you {mine} (P(win) {p_mine:.2f}), "
               f"planner {best} ({p_best:.2f})")
+    print()
 
 
 if __name__ == "__main__":

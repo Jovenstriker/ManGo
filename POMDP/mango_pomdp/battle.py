@@ -241,6 +241,9 @@ class Battle:
     def play(self, controllers: list[Controller], observers: list | None = None, max_turns: int = 10_000) -> int | None:
         while not self.done and max_turns > 0:
             start = len(self.log) if self.log is not None else 0
+            for o in observers or ():
+                if hasattr(o, "before_turn"):   # the start-of-turn screen, as that observer sees it
+                    o.before_turn(View(self, o.side))
             self.step(controllers)
             if observers and self.log is not None:
                 new = self.log[start:]

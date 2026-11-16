@@ -519,6 +519,40 @@ class RecordedBattleTests(unittest.TestCase):
         throw = next(c for c in b.throws if c.choice)
         self.assertEqual((throw.choice, throw.energy, throw.shields), ("ICE_BEAM", 55, (2, 2)))
 
+    def test_their_switches_and_replacements_are_kept(self):
+        import tempfile
+        from pathlib import Path
+        from mango_pomdp.battle_turns import ReplaceCase, SwitchCase, battle_at, load as load_turns
+        d = Path(tempfile.mkdtemp())
+        cols = ["battle_id", "result"] + [f"{s}_{k}{x}" for s in ("you", "them") for k in (1, 2, 3)
+                                           for x in ("", "_fast", "_charged")]
+        row = dict.fromkeys(cols, "")
+        row.update(battle_id="b#2", result="won", you_1="medicham", you_1_fast="COUNTER",
+                   you_1_charged="ICE_PUNCH;DYNAMIC_PUNCH", them_1="azumarill", them_2="registeel", them_3="skarmory")
+        with (d / "battles.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, cols)
+            w.writeheader()
+            w.writerow(row)
+        turns = [  # turn, them_active, them_action
+            (0, "azumarill", ""),                   # free, could switch, stayed
+            (1, "registeel", "switch:registeel"),   # switched
+            (2, "registeel", ""),                   # the switch timer is running: no case
+            (3, "registeel", "faint"),
+            (4, "azumarill", "switch:azumarill"),   # a replacement, not a switch
+        ]
+        with (d / "turns.csv").open("w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["battle_id", "turn", "you_active", "them_active", "you_shields", "them_shields",
+                        "you_action", "them_action", "charged_first"])
+            for t, active, action in turns:
+                w.writerow(["b#2", t, "medicham", active, 2, 2, "", action, ""])
+        rb = load_turns(gd, d)[0]
+        self.assertEqual(rb.switches, [SwitchCase(0, "azumarill", ""), SwitchCase(1, "azumarill", "registeel")])
+        self.assertEqual(rb.replaces, [ReplaceCase(4, "registeel", "azumarill")])
+        b = battle_at(gd, rb, 2, free="them")
+        self.assertEqual((b.sides[1].mon.species.id, b.sides[1].entered, b.sides[1].switch_timer > 0),
+                         ("registeel", 1, True))
+
     def test_context_opponent_copies_only_matching_situations(self):
         from mango_pomdp.battle_turns import ContextOpponent, load as load_turns
         rec = load_turns(gd, self.folder())[0]
@@ -619,6 +653,49 @@ class OpponentModelTests(unittest.TestCase):
         m.save(path)
         back = OpponentModel.load(path)
         self.assertEqual((back.shield, back.throw), (m.shield, m.throw))
+
+    def test_learned_opponent_switches_and_picks_as_its_model_says(self):
+        from mango_pomdp.opponent_model import PICK, SWITCH_F, Learned, features_pick, features_switch
+        b = Battle([[mon("medicham"), mon("azumarill"), mon("swampert")],
+                    [mon("azumarill"), mon("registeel"), mon("skarmory")]], seed=0)
+        self.assertEqual(len(features_switch(b, 1)), len(SWITCH_F))
+        self.assertEqual(len(features_pick(b, 1, 2)), len(PICK))
+        m = self.model()
+        m.switch = [30.0] + [0.0] * (len(SWITCH_F) - 1)
+        m.pick = [0.0, -30.0, 0.0]   # brings in the one with the least HP
+        b.sides[1].mons[1].hp = 50
+        always = Learned(m, b, 1, seed=0)
+        self.assertEqual(always.act(b.view(1)), SWITCH(1))
+        m.switch[0] = -30.0
+        self.assertNotEqual(Learned(m, b, 1, seed=0).act(b.view(1))[0], "switch")
+        b.sides[1].mons[0].hp = 0
+        self.assertEqual(Learned(m, b, 1, seed=0).replace(b.view(1)), 1)
+        self.assertEqual(m.p_pick(b, 1, [1, 2])[0] > 0.99, True)
+
+    def test_belief_picks_out_an_opponent_that_plays_like_the_model(self):
+        from mango_pomdp import opponent_model
+        from mango_pomdp.opponent_model import Learned
+        from mango_pomdp.policies import STYLES
+        saved = opponent_model._cached.get("model", "unset")
+        model = self.model(shield=30, cheap=-30, big=-30)   # shields everything, never throws
+        opponent_model._cached["model"] = model
+        try:
+            rng = random.Random(3)
+            hits = 0
+            for g in range(4):
+                teams = [prior.sample_team(rng), prior.sample_team(rng)]
+                battle = Battle([build_team(gd, teams[0]), build_team(gd, teams[1])], seed=g)
+                belief = Belief(gd, prior, me=0, n=200, styles=STYLES + ("learned",), seed=g)
+                belief.observe(battle.log)
+                battle.play([Heuristic("baiter", seed=g), Learned(model, battle, 1, seed=g)], [belief])
+                post = belief.style_posterior()
+                hits += max(post, key=post.get) == "learned"
+            self.assertGreaterEqual(hits, 3)
+        finally:
+            if saved == "unset":
+                opponent_model._cached.pop("model", None)
+            else:
+                opponent_model._cached["model"] = saved
 
     def test_planner_rolls_out_against_the_learned_opponent(self):
         from mango_pomdp import opponent_model

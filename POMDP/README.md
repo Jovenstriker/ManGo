@@ -445,11 +445,89 @@ gives mean regret and the share of blunders (over 5 points) for each kind of dec
 regret per battle split by whether you really won, and the costliest decisions. It names your
 recordings, so it stays on the Mac.
 
-It also checks the estimates against the real results. The planner's P(win) is higher in the
-battles you won than in the ones you lost, but it's overconfident: its Brier score is worse
-than always guessing your overall win rate. Until that improves, read regret as regret by the
-planner's model of the battle, not ground truth. The rollouts' rule-based opponents are much
-more predictable than people, which is the likely cause.
+It also checks the estimates against the real results, and corrects them. The planner's P(win)
+is higher in the battles you won than in the ones you lost, but it's strongly overconfident.
+Where it says you're nearly lost, you went on to win close to half the time. Its Brier score
+is worse than always guessing your overall win rate. `regret.py` therefore fits a Platt
+correction, P(won) = σ(a + b·logit(estimate)), with 5-fold cross-validation by battle. It then
+reports everything twice, as estimated and as corrected, with a table of estimated P(win)
+against how often you really won, overall and by stage of the battle.
+
+The fitted slope is far below 1, so the corrected estimates stay close to your overall win
+rate. Corrected regret is a fraction of the raw number, and the corrected estimates only tie
+always guessing your win rate. The overconfidence is there from the start of a battle. Two
+likely causes:
+- the rollouts play both sides with fixed policies, so a position's result looks much more
+  settled than it is between people;
+- the rebuilt HP uses PvPoke's default IVs, so it drifts from the real battle.
+
+Read regret as regret by the planner's model of the battle, not ground truth. Adding the
+learned opponent (below) doesn't fix the calibration.
+
+## A model of your opponents, learned from your recordings
+
+The heuristic styles follow fixed rules, so they can't capture decisions that depend on what
+just happened. `python3 -m experiments.opponent_model` instead learns how your recorded
+opponents really play. Each of their decisions in the local Battle Turns export becomes a case:
+the battle rebuilt at that turn from their side, and what they did. Four small models are
+fitted with an L2 penalty:
+
+| Part | Decision | Model |
+|---|---|---|
+| shield | shield your charged move or not | logistic |
+| throw | hold, throw the cheaper move, or throw the bigger one, with energy for the cheaper | softmax over the moves they can afford |
+| switch | switch or stay, on a free turn when they could switch | logistic |
+| pick | which Pokémon they bring in, on a switch or after a faint | conditional logit |
+
+The features cover the situation and its history:
+- HP, shields, and Pokémon left on each side;
+- the HP left on their bench, and the matchup;
+- your energy, whether your charged move is ready, and whether your fast move lands soon;
+- whether a hit knocks out, and whether it's a bait;
+- whether their last throw was shielded, and whether they shielded the last one they could;
+- charged moves thrown and taken;
+- for switches, how much better their best Pokémon in the back matches up, whether a switch is
+  free right now, and whether the matchup just started.
+
+Five-fold cross-validation by battle compares the model with the four styles and with base
+rates. The model has the lowest held-out log loss on all four parts; on most of them the margin
+is small. On throws the styles do much worse than base rates: people hold far more often than
+any style does. What the model picks up:
+- **Timing:** they throw when your fast move is about to land.
+- **Planning ahead:** they shield less with a healthy bench.
+- **Switching:** they switch more out of a bad matchup and when your charged move is ready.
+- **Picks:** they bring in the better matchup but the lower-HP Pokémon, keeping the healthy
+  one for last.
+
+The cases and the fitted model (`data/local/opponent_model.json`) stay on the Mac.
+
+**In the planner**, "learned" is a fifth opponent type next to the four styles:
+- *In the belief*, each particle with that type is reweighted by the model's probability of
+  what the opponent did. That probability is read off the battle as the planner saw it at the
+  start of the turn they chose in (`Belief.before_turn`), so the model sees the same energy,
+  timing and history the opponent did.
+- *In rollouts*, those particles play `opponent_model.Learned`.
+
+Each recorded battle was scored with a model fitted on the other folds. On your recorded
+opponents, the belief ends up putting most of its weight on "learned" in most battles. The
+belief also now tracks the opponent's history (charged moves thrown and taken, and shields), so
+determinized states, the full states it fills in for rollouts, carry it.
+
+| Win rate vs | `planner-list` (styles) | `planner-list-mixed` (styles + learned) | `planner-list-learned` (learned only) |
+|---|---|---|---|
+| an opponent that plays like the model | 0.933 ± 0.014 | **0.972 ± 0.009** | 0.967 ± 0.010 |
+| shielder | 0.943 ± 0.013 | 0.947 ± 0.013 | 0.792 ± 0.022 |
+| baiter | 0.870 ± 0.018 | 0.893 ± 0.018 | 0.725 ± 0.024 |
+| nuker | 0.903 ± 0.016 | 0.877 ± 0.018 | 0.733 ± 0.025 |
+| casual | 0.955 ± 0.012 | 0.937 ± 0.013 | 0.840 ± 0.020 |
+| `planner-list` | — | 0.515 ± 0.019 | 0.467 ± 0.019 |
+
+The table covers 150 random pairs of listed Mega Great League teams, played from both sides,
+and 250 pairs for the last row. The mixture beats the styles planner against an opponent that
+plays like the model (+0.038 ± 0.015, paired). Against the styles themselves, the differences
+are all within noise, and it plays the styles planner evenly. Relying on the learned model alone
+is a mistake: against the styles it loses 0.12 to 0.17, because it no longer recognizes simpler
+opponents.
 
 ## Playing against the planner
 
@@ -487,12 +565,14 @@ At the end you get the result and a timeline of the battle.
     mango_pomdp/planner.py     the rollout planner
     mango_pomdp/match.py       building players by name, playing one battle
     mango_pomdp/battle_turns.py  your recorded battles (local Battle Turns): rebuilt HP, opponent decisions in context
+    mango_pomdp/opponent_model.py  how your opponents shield, throw, switch and pick, learned from Battle Turns
     experiments/               duel.py (one 1v1, solved), meta.py (every 1v1 among the top N),
                                tournament.py (3v3 win rates), demo.py (one narrated 3v3 battle),
                                top_teams.py (pick one of PvPoke's top teams and plan against the rest),
                                my_battles.py (your own battles, replayed with the planner),
                                recorded_battles.py, recorded_paths.py (the same from Battle Turns, local),
-                               regret.py (your decisions scored, local), play.py (you against the planner)
+                               regret.py (your decisions scored, local), play.py (you against the planner),
+                               opponent_model.py (fit and check the opponent model, local)
     tests/                     simulator, solver, prior, belief and planner checks
 
 ## Simplifications and next steps
@@ -511,6 +591,7 @@ At the end you get the result and a timeline of the battle.
   rely on the opponent throwing when its style model says it will. POMCP (a search
   tree over action–observation histories) or longer open-loop sequences would make it look
   further ahead, for example to bait now in order to nuke later.
-- **Real battles.** ManGo's battle logs (`../Battle Logs/`) record the opponent's moves and the
-  counted energy. Replaying them through `Belief` would check the style model against real
-  people and show what the planner would have done at each decision.
+- **Real battles.** The learned opponent model comes from about 60 battles, so more recordings
+  would tighten it most. The planner's win estimates are overconfident against real results,
+  which makes regret only a rough measure. Two things could fix that: a value estimate learned
+  from real results, and rollouts that play your own side less deterministically.

@@ -16,6 +16,8 @@ out. Then each opponent decision is kept with its context:
   ThrowCase   a turn they chose their next action with enough energy for a charged move: who
               was in, their energy, both sides' shields and HP, whether their last throw was
               shielded, and what they did (which charged move, or held and fast moved)
+  SwitchCase  a free turn when they could switch: whom they switched to, or "" if they stayed
+  ReplaceCase one of theirs fainted with two left behind it: whom they brought in
 
 `ContextOpponent` is the strong planner playing their team, except where the simulated battle
 reaches a situation that matches one of that opponent's recorded decisions: then it does what
@@ -64,6 +66,20 @@ class ThrowCase:
 
 
 @dataclass(frozen=True)
+class SwitchCase:
+    turn: int
+    active: str
+    choice: str         # the Pokémon they switched to, or "" if they stayed in
+
+
+@dataclass(frozen=True)
+class ReplaceCase:
+    turn: int           # the turn whose start (battle_at) is the state they chose in
+    fainted: str
+    choice: str
+
+
+@dataclass(frozen=True)
 class State:
     """Who's in, shields, and HP (share of max) on both sides, at the end of a turn."""
     you: str
@@ -103,6 +119,8 @@ class RecordedBattle:
     seen: int            # how many of their Pokémon came in
     shields: list[ShieldCase] = field(default_factory=list)
     throws: list[ThrowCase] = field(default_factory=list)
+    switches: list[SwitchCase] = field(default_factory=list)
+    replaces: list[ReplaceCase] = field(default_factory=list)
     unplaced: set[str] = field(default_factory=set)   # active Pokémon not on the team list (misreads)
     path: dict[int, State] = field(default_factory=dict)   # the real battle at the end of each turn
     misread: bool = False   # your Pokémon don't fit any of your teams
@@ -145,6 +163,7 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
     last_shielded: dict[str, bool] = {}
     seen = {"you": {}, "them": {}}    # species -> [fast move or None, set of charged moves]
     last_switch = {"you": -999, "them": -999}
+    entered = {"you": 0, "them": 0}   # the turn each side's active Pokémon came in
     last_charged = -10
     my_cheapest = {sid: min(gd.moves[c].energy for c in cs) for sid, _, cs in battle.you if cs}
     my_throws: set[int] = set()
@@ -207,13 +226,18 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                      for s, team in (("you", battle.you), ("them", battle.them))},
             "active": dict(active), "shields": dict(shields),
             "timer": {s: max(0, SWITCH_TURNS - (t - last_switch[s])) for s in active},
-            "busy": {s: busy(s, t) for s in active}, "last_charged": last_charged,
+            "busy": {s: busy(s, t) for s in active}, "last_charged": last_charged, "entered": dict(entered),
             "history": {s: tuple(v) for s, v in history.items()},
             "seen": {s: {sid: (v[0], frozenset(v[1])) for sid, v in seen[s].items()} for s in seen}}
         theirs = active["them"]
         start = (theirs, active["you"], energy_of(prev_row, "them", theirs) if prev_row else 0,
                  (share("them"), share("you")), (shields["them"], shields["you"]), last_shielded.get(theirs))
         starts[t] = start
+        # Could they switch this turn? Free (not mid fast move), timer run out, one behind them.
+        could_switch = (busy("them", t)[0] == t and t - last_switch["them"] >= SWITCH_TURNS and not pending["them"]
+                        and hp.get(("them", theirs), 0) > 0
+                        and any(hp.get(("them", sid), 0) > 0 for sid, _, _ in battle.them if sid != theirs))
+        switched_to = ""
         # Switches.
         for s in ("you", "them"):
             for a in acts[s]:
@@ -227,10 +251,17 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                         battle.decisions.append(Decision("replace", t, ("replace", active[s]), fainted=out)
                                                 if replacing else Decision("act", t, ("switch", active[s])))
                         my_switches.add(t)
+                    elif replacing:
+                        battle.replaces.append(ReplaceCase(t, out, active[s]))
+                    else:
+                        switched_to = active[s]
                     if not replacing:
                         last_switch[s] = t
+                    entered[s] = t
                     note(t, s, "enter", active[s], info={"switch": not replacing})
                     look(s, active[s])
+        if could_switch:
+            battle.switches.append(SwitchCase(t, theirs, switched_to))
         # Fast moves.
         for s in ("you", "them"):
             for a in acts[s]:
@@ -320,6 +351,9 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
             if new and new != active[s]:   # a replacement the export shows only as who's in now
                 if pending[s] and s == "you":
                     battle.decisions.append(Decision("replace", t, ("replace", new), fainted=active[s]))
+                elif pending[s]:   # chosen with the fainted one still in: the state at the next turn's start
+                    battle.replaces.append(ReplaceCase(t + 1, active[s], new))
+                entered[s] = t
                 note(t, s, "enter", new, info={"switch": not pending[s]})
                 look(s, new)
                 pending[s] = False
@@ -359,6 +393,7 @@ def battle_at(gd: GameData, rb: RecordedBattle, t: int, energy: int | None = Non
         side.switch_timer = snap["timer"][s]
         side.busy_until, side.fast_due = (t, -1) if s == free else snap["busy"][s]
         side.last_shielded, side.shielded_last = snap["history"][s]
+        side.entered = snap.get("entered", {}).get(s, 0)
         sides.append(side)
     if energy is not None and energy >= 0:
         sides[0 if free == "you" else 1].mon.energy = energy
@@ -422,6 +457,10 @@ class ContextOpponent:
                 self.last_shielded[e.species] = e.info["shielded"]
         if hasattr(self.planner, "observe"):
             self.planner.observe(events)
+
+    def before_turn(self, view: View) -> None:
+        if hasattr(self.planner, "before_turn"):
+            self.planner.before_turn(view)
 
     def shield(self, view: View, move: Move) -> bool:
         mon = view.mon

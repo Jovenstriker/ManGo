@@ -8,7 +8,7 @@ from .policies import STYLES, Heuristic, RandomPlayer
 from .team_prior import TeamListPrior, TeamPrior, TeamSpec, build_team
 
 PLAYERS = ("random", *STYLES, "planner", "planner-flat", "planner-1style", "planner-list", "oracle",
-           "planner-learned", "planner-list-learned")
+           "planner-learned", "planner-list-learned", "planner-mixed", "planner-list-mixed")
 
 
 def valid_player(name: str) -> bool:
@@ -43,6 +43,11 @@ def make_player(name: str, gd: GameData, prior: TeamPrior, seed: int,
     if name == "planner-list-learned":
         return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts, styles=("learned",),
                        seed=seed, name=name, **kw)
+    if name == "planner-mixed":    # the four styles and the learned opponent, weighed by the belief
+        return Planner(gd, prior, rollouts=rollouts, styles=STYLES + ("learned",), seed=seed, name=name, **kw)
+    if name == "planner-list-mixed":
+        return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts,
+                       styles=STYLES + ("learned",), seed=seed, name=name, **kw)
     if name == "planner-list":
         return Planner(gd, TeamListPrior(gd, teams, fallback=prior), rollouts=rollouts, seed=seed, name=name, **kw)
     if name == "oracle":

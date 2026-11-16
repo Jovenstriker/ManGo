@@ -171,6 +171,14 @@ With `any`, a wait or switch at a moment the mechanics don't favor has to beat t
 error test let the planner wander off its default by chance. It then played worse (0.805,
 below).
 
+**Farming down.** The planner weighs one more line on every free turn: fast moves only, no
+charged moves and no switches, until the opponent's Pokémon in now faints (`planner._Farm`).
+That banks the energy for the next matchup. A plain fast move can't show what this is worth,
+because its rollouts then go back to the default policy, which throws whenever it can. The
+planner with this line beats the same planner without it 0.552 ± 0.021. That's
+`planner-list-mixed`, over 250 random pairs of listed Mega Great League teams, played from both
+sides.
+
 **Good timing.** The planner's default, which is also its rollout policy, is the baiter
 heuristic with two additions:
 - *Throw timing* (`policies.Timed`). A charged move registers the opponent's fast move in
@@ -445,24 +453,51 @@ gives mean regret and the share of blunders (over 5 points) for each kind of dec
 regret per battle split by whether you really won, and the costliest decisions. It names your
 recordings, so it stays on the Mac.
 
-It also checks the estimates against the real results, and corrects them. The planner's P(win)
-is higher in the battles you won than in the ones you lost, but it's strongly overconfident.
-Where it says you're nearly lost, you went on to win close to half the time. Its Brier score
-is worse than always guessing your overall win rate. `regret.py` therefore fits a Platt
-correction, P(won) = σ(a + b·logit(estimate)), with 5-fold cross-validation by battle. It then
-reports everything twice, as estimated and as corrected, with a table of estimated P(win)
-against how often you really won, overall and by stage of the battle.
+**Rebuilding the recordings right mattered most.** At first the planner was strongly
+overconfident: in positions it called nearly lost, you went on to win close to half the time.
+Most of that came from the rebuilt states, not the planner. Three problems in
+`battle_turns.py`, now fixed:
+- *HP drifted.* The damage formula uses PvPoke's default IVs, and the export misses some hits,
+  so rebuilt HP hit 0 for Pokémon that were still in (in most battles) or left a third of it
+  when they really fainted. Each faint is now an anchor: a Pokémon's damage is scaled so its HP
+  reaches 0 on the turn it fainted. Until then it keeps at least 1 HP.
+- *Faints were missed.* The export often records a faint and its replacement as a plain
+  switch. In most of the battles you lost, one of your faints was missing, so your last
+  Pokémon always seemed to have a teammate behind it. A switch marked "(0 turns)" without a
+  charged move just before can only be a replacement, unless that Pokémon comes back later.
+  The losing side's three all fainted. With both rules, nearly every battle's faints fit its
+  result, up from fewer than half.
+- *The active column lags.* On a turn with a switch, it can still show the Pokémon that left,
+  and the rebuild switched it back in for a turn. The recorded switch now wins.
 
-The fitted slope is far below 1, so the corrected estimates stay close to your overall win
-rate. Corrected regret is a fraction of the raw number, and the corrected estimates only tie
-always guessing your win rate. The overconfidence is there from the start of a battle. Two
-likely causes:
-- the rollouts play both sides with fixed policies, so a position's result looks much more
-  settled than it is between people;
-- the rebuilt HP uses PvPoke's default IVs, so it drifts from the real battle.
+With those fixed, the opponent model fits better on every part. The planner's raw estimates
+also beat always guessing your win rate.
 
-Read regret as regret by the planner's model of the battle, not ground truth. Adding the
-learned opponent (below) doesn't fix the calibration.
+**Calibration by stage.** At 3v3 the estimates say little: it's too early to call a battle,
+and they're overconfident there. After the first faint they say much more. Where the planner
+called a 2v1 or 1v2 lost, you never won. So `regret.py` corrects the estimates with a separate
+Platt fit for each stage: P(won) = σ(a + b·logit(estimate)), for 3v3, one down, and later. It
+uses 5-fold cross-validation by battle. Everything is reported twice, as estimated and as
+corrected, with tables by stage: Brier score, and how often a position called lost (under 0.1)
+or won (over 0.9) went the other way. The output lists those positions.
+
+The confident misses that remain cluster in a few battles, and the ones checked are data:
+- Galarian and regular Stunfisk show the same name on screen, so the export can't tell them
+  apart. That turns a winning matchup into a losing one.
+- Some opponents' Pokémon hit harder than default IVs allow.
+
+Read regret as regret by the planner's model of the battle, not ground truth.
+
+**Win conditions.** On every free turn, `regret.py` also rolls out two lines a single action
+can't show:
+- *farm down:* fast moves until their Pokémon goes, banking energy;
+- *catch:* stay free and switch the turn they throw, with each Pokémon on your bench.
+
+It lists the turns where a line beats every single action by over 10 points. Farming down is
+rare, about 1% of your free turns, but where it shows up it's worth a lot. On nearly all of
+those turns you were fast moving, so the line was probably your plan. Those turns are still
+scored as plain fast moves, which overstates the regret on them. A catch almost never stands
+out this way, because the planner already weighs catches every turn.
 
 ## A model of your opponents, learned from your recordings
 
@@ -523,7 +558,8 @@ determinized states, the full states it fills in for rollouts, carry it.
 | `planner-list` | — | 0.515 ± 0.019 | 0.467 ± 0.019 |
 
 The table covers 150 random pairs of listed Mega Great League teams, played from both sides,
-and 250 pairs for the last row. The mixture beats the styles planner against an opponent that
+and 250 pairs for the last row. It was measured with the model fitted before the fixes to the
+rebuilt recordings described under decision regret, and without the farm-down line. The mixture beats the styles planner against an opponent that
 plays like the model (+0.038 ± 0.015, paired). Against the styles themselves, the differences
 are all within noise, and it plays the styles planner evenly. Relying on the learned model alone
 is a mistake: against the styles it loses 0.12 to 0.17, because it no longer recognizes simpler

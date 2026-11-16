@@ -47,7 +47,7 @@ from mango_pomdp.battle import CHARGED, FAST, SWITCH
 from mango_pomdp.battle_turns import battle_at, load
 from mango_pomdp.gamedata import DATA_DIR
 from mango_pomdp.opponent_model import _sigmoid, fit_logistic
-from mango_pomdp.planner import Planner
+from mango_pomdp.planner import FARM, Planner
 from mango_pomdp.policies import STYLES
 from mango_pomdp.team_prior import TeamPrior
 
@@ -55,6 +55,7 @@ FORMAT = "mega_great_league"
 TURNS = Path(__file__).resolve().parents[2] / "Battle Turns"
 BLUNDER = 0.05
 CALIBRATION = DATA_DIR / "local" / "calibration.json"
+WIN_LINE = 0.10   # a win-condition line counts when it beats every single action by this much
 
 
 def label(d) -> str:
@@ -108,7 +109,11 @@ def evaluate(args):
                     SWITCH(ids.index(arg)) if arg in ids else None)
             if mine not in cands:
                 continue   # the rebuilt state doesn't allow it (energy or timer off by a little)
-            outs = planner.outcomes(view, cands, first=True, rollouts=rollouts)
+            # Win-condition lines, on the same rollouts: farm their Pokémon down with fast moves
+            # (banking energy for the next matchup), or stay free and catch their throw with a switch.
+            macros = [FARM] + ([("catch", i) for i in me.bench()] if me.switch_timer == 0 else [])
+            every = planner.outcomes(view, cands + macros, first=True, rollouts=rollouts)
+            outs, macro_outs = every[:len(cands)], every[len(cands):]
         elif d.kind == "shield":
             if me.shields == 0 or d.move not in gd.moves:
                 continue
@@ -142,35 +147,58 @@ def evaluate(args):
         score = [sum(o[half:]) / (len(o) - half) for o in outs]
         j = cands.index(mine)
         full = [sum(o) / len(o) for o in outs]
+        line, gain = "", 0.0   # the best win-condition line, and how much it beats every single action by
+        if d.kind == "act" and macro_outs:
+            mfull = [sum(o) / len(o) for o in macro_outs]
+            k = max(range(len(mfull)), key=mfull.__getitem__)
+            line = "farm down" if macros[k] == FARM else f"catch with {ids[macros[k][1]]}"
+            gain = mfull[k] - max(full)
         out.append((label(d), score[pick] - score[j], full[j], full[pick], str(mine), str(cands[pick]),
-                    score[pick], score[j], me.remaining() + b.sides[1].remaining()))
+                    score[pick], score[j], (me.remaining(), b.sides[1].remaining()), d.turn, line, gain))
     return rb.id, rb.result, out
 
 
+STAGES = ("3v3", "one down", "later")
+
+
+def stage(left) -> int:
+    """0 at 3v3, 1 with one Pokémon down, 2 after that."""
+    return 0 if left == (3, 3) else 1 if sum(left) == 5 else 2
+
+
 def calibrate(rows, rollouts, folds=5):
-    """Platt scaling of the planner's P(win) against your real results: P(won) = σ(a + b·logit(p)),
-    fitted with battle-level cross-validation, so each battle's estimates are corrected by a fit
-    that never saw it. Returns (each row's correction, (a, b) fitted on every battle)."""
+    """Platt scaling of the planner's P(win) against your real results, one fit per stage of the
+    battle: P(won) = σ(a + b·logit(p)), with a and b for 3v3, one down, and later. An estimate at
+    3v3 says little, and one later should say more, so they get their own slopes. It's fitted with
+    battle-level cross-validation, so each battle's estimates are corrected by a fit that never saw
+    it. Returns (each row's correction, the (a, b) of each stage fitted on every battle)."""
     floor = 1 / (2 * rollouts)
 
     def logit(p):
         p = min(max(p, floor), 1 - floor)
         return math.log(p / (1 - p))
 
-    def fit(rs):
-        return fit_logistic([[1.0, logit(r[4])] for r in rs], [int(r[1] == "won") for r in rs], l2=0.01)
+    def features(r):
+        x = [0.0] * (2 * len(STAGES))
+        g = stage(r[10])
+        x[2 * g], x[2 * g + 1] = 1.0, logit(r[4])
+        return x
 
-    def corrected(w):
-        return lambda p: _sigmoid(w[0] + w[1] * logit(p))
+    def fit(rs):
+        return fit_logistic([features(r) for r in rs], [int(r[1] == "won") for r in rs], l2=0.01)
+
+    def corrected(w, r):
+        g = stage(r[10])
+        return lambda p: _sigmoid(w[2 * g] + w[2 * g + 1] * logit(p))
 
     known = [r for r in rows if r[1] in ("won", "lost")]
     ids = sorted({r[0] for r in known})
     random.Random(0).shuffle(ids)
     fold = {bid: k % folds for k, bid in enumerate(ids)}
-    fs = {k: corrected(fit([r for r in known if fold[r[0]] != k])) for k in range(folds)}
+    ws = {k: fit([r for r in known if fold[r[0]] != k]) for k in range(folds)}
     whole = fit(known)
-    every = corrected(whole)
-    return [fs[fold[r[0]]] if r[0] in fold else every for r in rows], tuple(whole)
+    return ([corrected(ws[fold[r[0]]] if r[0] in fold else whole, r) for r in rows],
+            [(whole[2 * g], whole[2 * g + 1]) for g in range(len(STAGES))])
 
 
 def main():
@@ -192,20 +220,23 @@ def main():
           f"(opponents in the belief and rollouts: {', '.join(args.styles)}), "
           f"{time.time() - start:.0f}s. Regret in win-probability points; a blunder costs over "
           f"{BLUNDER:.0%}.\n")
-    report(rows, "The planner's estimates as they are:")
-    fs, (a, b) = calibrate(rows, args.rollouts)
-    print(f"Calibrated against your real results: P(won) = σ({a:+.2f} {b:+.2f}·logit(estimate)) fitted on "
-          f"every battle (a slope under 1 means the raw estimates are overconfident). Below, each battle "
-          f"is corrected by a fit on the other folds (5-fold, by battle).\n")
-    cal = [(bid, result, kind, f(s_best) - f(s_mine), f(p_mine), f(p_best), mine, best, s_best, s_mine, left)
-           for (bid, result, kind, reg, p_mine, p_best, mine, best, s_best, s_mine, left), f in zip(rows, fs)]
-    report(cal, "Calibrated:")
+    complete = frozenset(b.id for b in battles if b.complete)
+    report(rows, "The planner's estimates as they are:", complete, flips=True)
+    fs, fits = calibrate(rows, args.rollouts)
+    print("Calibrated against your real results, P(won) = σ(a + b·logit(estimate)) for each stage, fitted on "
+          "every battle (a slope b under 1 means the raw estimates are overconfident; near 0, they say "
+          "nothing): " + "; ".join(f"{name} a {a:+.2f}, b {b:+.2f}" for name, (a, b) in zip(STAGES, fits))
+          + ". Below, each battle is corrected by a fit on the other folds (5-fold, by battle).\n")
+    cal = [(r[0], r[1], r[2], f(r[8]) - f(r[9]), f(r[4]), f(r[5]), *r[6:]) for r, f in zip(rows, fs)]
+    report(cal, "Calibrated:", complete)
     CALIBRATION.parent.mkdir(parents=True, exist_ok=True)
-    CALIBRATION.write_text(json.dumps({"styles": args.styles, "rollouts": args.rollouts, "a": a, "b": b}, indent=1))
+    CALIBRATION.write_text(json.dumps({"styles": args.styles, "rollouts": args.rollouts,
+                                       "stages": {name: {"a": a, "b": b} for name, (a, b) in zip(STAGES, fits)}},
+                                      indent=1))
     print(f"Saved the fit to {CALIBRATION.relative_to(CALIBRATION.parents[2])} (local, git-ignored).")
 
 
-def report(rows, title):
+def report(rows, title, complete=frozenset(), flips=False):
     print(title)
 
     def summary(xs):
@@ -251,14 +282,46 @@ def report(rows, title):
             if xs:
                 print(f"    {lo:.1f}–{lo + 0.2:.1f}: {len(xs):>4} decisions, estimated "
                       f"{statistics.mean(r[4] for r in xs):.2f}, won {statistics.mean(r[1] == 'won' for r in xs):.2f}")
-        print("  By how far the battle had got (Pokémon left on both sides):")
-        for name, lo, hi in (("start (5–6 left)", 5, 6), ("middle (3–4)", 3, 4), ("last 1v1 (2)", 2, 2)):
-            xs = [r for r in known if lo <= r[10] <= hi]
+        # Early on nothing is decided; later it should be, and a position called lost should be
+        # lost unless something flips it. Only battles whose recorded faints fit the result.
+        print("  By Pokémon left (yours v theirs), battles whose faints fit the result; 'called lost' is an"
+              " estimate under 0.1, 'called won' over 0.9:")
+        for name, keep in (("3v3", lambda l: l == (3, 3)), ("one down", lambda l: sum(l) == 5),
+                           ("2v2, 3v1, 1v3", lambda l: sum(l) == 4), ("2v1, 1v2", lambda l: sum(l) == 3),
+                           ("1v1", lambda l: l == (1, 1))):
+            xs = [r for r in known if r[0] in complete and keep(r[10])]
             if len(xs) > 1:
                 rate = statistics.mean(r[1] == "won" for r in xs)
-                print(f"    {name:<17} {len(xs):>4} decisions: Brier {statistics.mean((r[4] - (r[1] == 'won')) ** 2 for r in xs):.3f}"
+                lost = [r for r in xs if r[4] < 0.1]
+                won = [r for r in xs if r[4] > 0.9]
+                print(f"    {name:<14}{len(xs):>5} decisions: Brier {statistics.mean((r[4] - (r[1] == 'won')) ** 2 for r in xs):.3f}"
                       f" (base rate {rate * (1 - rate):.3f}); estimated {statistics.mean(r[4] for r in xs):.2f},"
-                      f" won {rate:.2f}")
+                      f" won {rate:.2f}; called lost {len(lost)}"
+                      + (f" (won {statistics.mean(r[1] == 'won' for r in lost):.0%})" if lost else "")
+                      + f", called won {len(won)}"
+                      + (f" (lost {statistics.mean(r[1] == 'lost' for r in won):.0%})" if won else ""))
+        if flips:
+            # Where it was sure and wrong: the positions to look in for a way out it can't see.
+            xs = sorted({(r[0], r[11], r[10], r[1], round(r[4], 2)) for r in known if r[0] in complete
+                         and r[10] != (3, 3) and ((r[4] < 0.1 and r[1] == "won") or (r[4] > 0.9 and r[1] == "lost"))})
+            print("  Called lost but won, or called won but lost (after 3v3; battle, turn, left, result, estimate):")
+            for x in xs:
+                print(f"    {x[0]:<30} turn {x[1]:>3}  {x[2][0]}v{x[2][1]}  {x[3]:<5} {x[4]:.2f}")
+    if flips:
+        # Win conditions: plans no single action shows, found by rolling the line out.
+        wins = sorted((r for r in rows if r[2] in ("throw", "hold", "switch") and r[13] > WIN_LINE), key=lambda r: -r[13])
+        acts = [r for r in rows if r[2] in ("throw", "hold", "switch")]
+        print(f"Win conditions: free turns where a farm-down or catch line beats every single action by over "
+              f"{WIN_LINE:.0%}: {len(wins)} of {len(acts)}")
+        for line in ("farm down", "catch"):
+            xs = [r for r in wins if r[12].startswith(line)]
+            if xs:
+                print(f"  {line:<10} {len(xs):>4}: by {statistics.mean(r[13] for r in xs):+.2f} on average; "
+                      f"you held (fast moved) on {sum(r[2] == 'hold' for r in xs)}, threw on "
+                      f"{sum(r[2] == 'throw' for r in xs)}, switched on {sum(r[2] == 'switch' for r in xs)}; in battles you "
+                      f"won {sum(r[1] == 'won' for r in xs)}, lost {sum(r[1] == 'lost' for r in xs)}")
+        for r in wins[:15]:
+            print(f"    {r[0]:<30} turn {r[11]:>3}  {r[10][0]}v{r[10][1]}  {r[12]:<22} {r[13]:+.2f}  you: {r[6]}")
     worst = sorted(rows, key=lambda r: -r[3])[:12]
     print("Costliest decisions:")
     for bid, result, kind, reg, p_mine, p_best, mine, best, *_ in worst:

@@ -8,7 +8,23 @@ side's actions (fast and charged moves, shields, switches, faints), energy and s
 The export has no HP, so `replay` rebuilds it: it plays each turn's recorded actions through the
 damage formula (switches, then fast moves, then charged moves in the recorded order; a faint
 sets HP to 0). Buffs that always happen are applied; chance ones aren't known, so they're left
-out. Then each opponent decision is kept with its context:
+out. The formula uses PvPoke's default IVs and the export can miss a hit, so the rebuilt HP
+drifts. Each faint is an exact anchor: that Pokémon's HP is 0 on that turn. So `load` replays
+each battle twice. The first pass adds up the damage every Pokémon took. The second scales
+the damage each one takes (within ×0.5 to ×2) so its HP reaches 0 on the turn it really
+fainted. A Pokémon that never fainted but whose hits add up to its HP is scaled to end at 10%.
+Until its faint is recorded a Pokémon keeps at least 1 HP, since the export can mark a faint a
+turn or two after the hit.
+
+The export also misses faints. Sometimes it records a faint and the replacement after it as a
+plain switch, so two rules fill them in:
+- a switch while the switch timer is still running can't have been one, so it's taken as a
+  faint and its replacement;
+- the losing side's three Pokémon all fainted, so one still alive in the back at the end
+  fainted when it last left the field, and one still in at the end fainted on the last turn.
+`complete` says whether the faints then fit the result: the loser's three all fainted and
+the winner's didn't.
+Then each opponent decision is kept with its context:
 
   ShieldCase  one of your charged moves they could have shielded: who was in on each side, the
               move, the share of their HP it would take, both sides' shields, how many of your
@@ -122,6 +138,14 @@ class RecordedBattle:
     switches: list[SwitchCase] = field(default_factory=list)
     replaces: list[ReplaceCase] = field(default_factory=list)
     unplaced: set[str] = field(default_factory=set)   # active Pokémon not on the team list (misreads)
+    dealt: dict = field(default_factory=dict)        # (side, species) -> damage taken, unscaled
+    dealt_at_faint: dict = field(default_factory=dict)   # (side, species) -> damage taken by its faint
+    scale: dict = field(default_factory=dict)        # (side, species) -> the factor its damage was scaled by
+    inferred: list = field(default_factory=list)     # (turn, side, species): faints the export missed
+    exits: dict = field(default_factory=dict)        # (side, species) -> the last turn it switched out
+    end_hp: dict = field(default_factory=dict)       # (side, species) -> rebuilt HP when the recording ends
+    end_active: dict = field(default_factory=dict)   # side -> who was in when the recording ends
+    complete: bool = False   # the faints fit the result
     path: dict[int, State] = field(default_factory=dict)   # the real battle at the end of each turn
     misread: bool = False   # your Pokémon don't fit any of your teams
     snapshots: dict[int, dict] = field(default_factory=dict)   # turn -> full state at its start
@@ -148,9 +172,24 @@ def _stage(s: int) -> int:
     return max(-4, min(4, s))
 
 
-def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
+def replay(gd: GameData, battle: RecordedBattle, turns: list[dict], scale: dict | None = None,
+           faint_at: frozenset = frozenset()) -> None:
     """Rebuilds HP turn by turn and fills in battle.shields, .throws, .path, .snapshots, .events
-    and .decisions."""
+    and .decisions. `scale` multiplies the damage each (side, species) takes, and `faint_at` has
+    (turn, side, species) for switches that were really a faint and its replacement."""
+    last_in = _last_in(turns)
+    scale = scale or {}
+    battle.scale = dict(scale)
+    dealt: dict = defaultdict(int)
+    fainted: set = set()   # (side, species) whose faint has been recorded; the rest stay at 1 HP or more
+
+    def floor(side, sid):
+        return 0 if (side, sid) in fainted else 1
+
+    def hit(side, sid, raw):
+        """The damage a hit of `raw` does to that Pokémon, scaled; and counted, unscaled."""
+        dealt[side, sid] += raw
+        return raw if raw <= 1 else max(1, round(raw * scale.get((side, sid), 1.0)))
     moves = {("you", sid): (f, cs) for sid, f, cs in battle.you} | {("them", sid): (f, cs) for sid, f, cs in battle.them}
     hp = {key: gd.species[key[1]].hp for key in moves}
     stages = defaultdict(lambda: [0, 0])
@@ -210,6 +249,16 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
         return 0
 
     pending = {"you": False, "them": False}   # a fainted Pokémon is waiting to be replaced
+
+    def missed_faint(t, s, out):
+        """The export showed a switch that can't have been one: a faint it missed, then the replacement."""
+        if (s, out) in hp:
+            hp[s, out] = 0
+            fainted.add((s, out))
+            battle.dealt_at_faint.setdefault((s, out), dealt[s, out])
+        note(t, s, "faint", out)
+        battle.inferred.append((t, s, out))
+        pending[s] = True
     my_switches: set[int] = set()
     prev_row: dict = {}
     for row in sorted(turns, key=lambda r: int(r["turn"])):
@@ -238,11 +287,21 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                         and hp.get(("them", theirs), 0) > 0
                         and any(hp.get(("them", sid), 0) > 0 for sid, _, _ in battle.them if sid != theirs))
         switched_to = ""
+        switched_now = set()   # sides with a switch recorded this turn
+        charged_near = any(x.startswith("charged:") for side in ("you", "them")
+                           for x in acts[side] + [y for y in prev_row.get(f"{side}_action", "").split(";") if y])
         # Switches.
         for s in ("you", "them"):
             for a in acts[s]:
                 if a.startswith("switch:"):
+                    switched_now.add(s)
                     out = active[s]
+                    # "(0 turns)" is a switch that cost no turn: a replacement, or a 0-turn switch
+                    # right after a charged move. With no charged move just before, a replacement.
+                    # And only if it never comes back: one that's in again later didn't faint.
+                    free = a.endswith("(0 turns)") and not charged_near and last_in.get((s, out), -1) <= t + 2
+                    if not pending[s] and ((t, s, out) in faint_at or free):
+                        missed_faint(t, s, out)
                     stages[s, out] = [0, -1 if (s, out) in busted else 0]
                     active[s] = a[len("switch:"):].split("(")[0]
                     replacing = pending[s]
@@ -257,10 +316,11 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                         switched_to = active[s]
                     if not replacing:
                         last_switch[s] = t
+                        battle.exits[s, out] = t
                     entered[s] = t
                     note(t, s, "enter", active[s], info={"switch": not replacing})
                     look(s, active[s])
-        if could_switch:
+        if could_switch and not any(x[:2] == (t, "them") for x in battle.inferred):   # not if it fainted
             battle.switches.append(SwitchCase(t, theirs, switched_to))
         # Fast moves.
         for s in ("you", "them"):
@@ -269,8 +329,9 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                     att, dfn = active[s], active[other[s]]
                     mv = gd.moves[a[len("fast:"):]]
                     before_hit = hp[other[s], dfn]
-                    dmg = damage(mv, gd.species[att], gd.species[dfn], stages[s, att][0], stages[other[s], dfn][1])
-                    hp[other[s], dfn] = max(0, before_hit - dmg)
+                    dmg = hit(other[s], dfn, damage(mv, gd.species[att], gd.species[dfn], stages[s, att][0],
+                                                    stages[other[s], dfn][1]))
+                    hp[other[s], dfn] = max(floor(other[s], dfn), before_hit - dmg)
                     look(s, att)[0] = mv.id
                     note(t, s, "fast", att, mv, {"damage": dmg, "target": dfn, "target_hp": before_hit,
                                                  "target_shields": shields[other[s]], "started": t - mv.turns + 1})
@@ -299,7 +360,8 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                 if (s, att) not in moves or (other[s], dfn) not in moves or mid not in gd.moves:
                     continue
                 mv = gd.moves[mid]
-                full = damage(mv, gd.species[att], gd.species[dfn], stages[s, att][0], stages[other[s], dfn][1])
+                raw = damage(mv, gd.species[att], gd.species[dfn], stages[s, att][0], stages[other[s], dfn][1])
+                full = raw if raw <= 1 else max(1, round(raw * scale.get((other[s], dfn), 1.0)))
                 if s == "you" and shields["them"] > 0 and not body.endswith("(disguise)") and ("them", dfn) in hp:
                     battle.shields.append(ShieldCase(dfn, att, mid, share("them"), full >= hp["them", dfn],
                                                      (shields["them"], shields["you"]), faced[dfn],
@@ -331,7 +393,8 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
                 history[s][0] = body.endswith("(shielded)")
                 if shields[other[s]] > 0:
                     history[other[s]][1] = body.endswith("(shielded)")
-                hp[other[s], dfn] = max(0, hp[other[s], dfn] - (1 if blocked else full))
+                hp[other[s], dfn] = max(floor(other[s], dfn),
+                                        hp[other[s], dfn] - (1 if blocked else hit(other[s], dfn, raw)))
                 if body.endswith("(disguise)"):
                     busted.add((other[s], dfn))
                     stages[other[s], dfn][1] = _stage(stages[other[s], dfn][1] - 1)
@@ -345,9 +408,19 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
             if "faint" in acts[s]:
                 if (s, active[s]) in hp:
                     hp[s, active[s]] = 0
+                    fainted.add((s, active[s]))
+                    battle.dealt_at_faint.setdefault((s, active[s]), dealt[s, active[s]])
                 note(t, s, "faint", active[s])
                 pending[s] = True
-            new = row[f"{s}_active"]
+            # Who's in, as the export shows it. On a turn with a switch recorded, the column can
+            # still show the one that left, so the switch is trusted over it.
+            new = "" if s in switched_now else row[f"{s}_active"]
+            if new and new != active[s] and not pending[s]:   # a change of who's in, with no switch recorded
+                if (t, s, active[s]) in faint_at:
+                    missed_faint(t, s, active[s])
+                else:
+                    last_switch[s] = t
+                    battle.exits[s, active[s]] = t
             if new and new != active[s]:   # a replacement the export shows only as who's in now
                 if pending[s] and s == "you":
                     battle.decisions.append(Decision("replace", t, ("replace", new), fainted=active[s]))
@@ -363,6 +436,9 @@ def replay(gd: GameData, battle: RecordedBattle, turns: list[dict]) -> None:
         battle.path[t] = State(active["you"], active["them"], shields["you"], shields["them"],
                                share("you"), share("them"))
         prev_row = row
+    battle.dealt = dict(dealt)
+    battle.end_hp = dict(hp)
+    battle.end_active = dict(active)
     # A 1-turn fast move that lands the turn you throw isn't a hold: the throw was the decision.
     battle.decisions = sorted((d for d in battle.decisions
                                if not (d.choice[0] == "fast" and d.turn in my_throws | my_switches)),
@@ -402,6 +478,64 @@ def battle_at(gd: GameData, rb: RecordedBattle, t: int, energy: int | None = Non
     return Battle.from_sides(sides, t, t, seen, last_charged=snap["last_charged"])
 
 
+def _last_in(turns: list[dict]) -> dict:
+    """(side, species) -> the last turn the export shows it in, or switching in."""
+    out = {}
+    for row in turns:
+        t = int(row["turn"])
+        for s in ("you", "them"):
+            names = [row.get(f"{s}_active", "")] + [a[len("switch:"):].split("(")[0]
+                                                    for a in row.get(f"{s}_action", "").split(";") if a.startswith("switch:")]
+            for sid in names:
+                if sid:
+                    out[s, sid] = max(out.get((s, sid), -1), t)
+    return out
+
+
+def _loser(rb: RecordedBattle) -> str | None:
+    return {"lost": "you", "won": "them"}.get(rb.result)
+
+
+def loser_faints(rb: RecordedBattle) -> frozenset:
+    """(turn, side, species) for the loser's Pokémon still alive in the back when the recording
+    ends: each fainted when it last left the field."""
+    s = _loser(rb)
+    if s is None:
+        return frozenset()
+    return frozenset((rb.exits[s, sid], s, sid) for (side, sid), hp in rb.end_hp.items()
+                     if side == s and hp > 0 and sid != rb.end_active.get(s) and (s, sid) in rb.exits)
+
+
+def anchor_scale(gd: GameData, rb: RecordedBattle) -> dict:
+    """Per (side, species), the factor that makes its rebuilt HP reach 0 on the turn it fainted.
+    The loser's Pokémon still in when the recording ends fainted then."""
+    out = {}
+    loser = _loser(rb)
+    for key, total in rb.dealt.items():
+        hp = gd.species[key[1]].hp
+        at = rb.dealt_at_faint.get(key)
+        if at is None and key[0] == loser and rb.end_active.get(loser) == key[1]:
+            at = total
+        if at is not None:
+            out[key] = min(2.0, max(0.5, hp / max(at, 1)))
+        elif total >= hp:   # still in at the end, though its hits add up to its HP
+            out[key] = max(0.5, 0.9 * hp / total)
+    return out
+
+
+def fits_result(rb: RecordedBattle) -> bool:
+    """The loser's three fainted (the one still in at the end counts) and the winner's didn't."""
+    loser = _loser(rb)
+    if loser is None:
+        return False
+    winner = "them" if loser == "you" else "you"
+    down = {side: {sid for (t, s_, sid) in [(e.turn, e.side, e.species) for evs in rb.events.values() for e in evs
+                                               if e.kind == "faint"] if s_ == (0 if side == "you" else 1)}
+            for side in ("you", "them")}
+    down[loser].add(rb.end_active.get(loser))
+    return len(down[loser]) == 3 and len(down[winner]) < 3
+
+
 def load(gd: GameData, folder: Path) -> list[RecordedBattle]:
     with (folder / "battles.csv").open() as f:
         rows = list(csv.DictReader(f))
@@ -428,7 +562,15 @@ def load(gd: GameData, folder: Path) -> list[RecordedBattle]:
             else:
                 b.misread = True   # not one of your teams: a misread
         if b.you and them:
-            replay(gd, b, turns[row["battle_id"]])
+            # First the faints the export missed, then how much to scale each one's damage.
+            rows_ = turns[row["battle_id"]]
+            first = RecordedBattle(b.id, b.result, b.you, b.them, b.seen)
+            replay(gd, first, rows_)
+            faint_at = loser_faints(first)
+            second = RecordedBattle(b.id, b.result, b.you, b.them, b.seen)
+            replay(gd, second, rows_, faint_at=faint_at)
+            replay(gd, b, rows_, anchor_scale(gd, second), faint_at)
+            b.complete = fits_result(b)
         out.append(b)
     return out
 

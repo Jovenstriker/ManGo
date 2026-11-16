@@ -324,6 +324,22 @@ class PlannerTests(unittest.TestCase):
         self.assertIn(("catch", 1), cands)
         self.assertIn(SWITCH(1), cands)
 
+    def test_farm_down_fast_moves_until_their_pokemon_goes_down(self):
+        from mango_pomdp.planner import FARM, Planner, _Farm
+        b = Battle([[mon("medicham"), mon("azumarill")], [mon("registeel"), mon("skarmory")]], seed=0)
+        b.sides[0].mon.energy = 100
+        farm = _Farm(Scripted([CHARGED(0)]), b, 0)
+        self.assertEqual(farm.act(b.view(0)), FAST)        # energy for a charged move, but farming
+        b.sides[1].mon.hp = 0
+        self.assertEqual(farm.act(b.view(0)), CHARGED(0))  # their Pokémon is down: back to the plan
+        p = Planner(gd, prior, rollouts=4, seed=0)
+        p.start(0)
+        b = Battle([[mon("medicham"), mon("azumarill")], [mon("registeel"), mon("skarmory")]], seed=0)
+        p.observe(b.log)
+        b.sides[0].mon.energy = 100
+        self.assertIn(p.act(b.view(0)), b.view(0).legal_actions())
+        self.assertEqual(FARM, ("farm", 0))
+
     def test_planner_beats_random(self):
         rng = random.Random(7)
         score = 0.0
@@ -552,6 +568,70 @@ class RecordedBattleTests(unittest.TestCase):
         b = battle_at(gd, rb, 2, free="them")
         self.assertEqual((b.sides[1].mon.species.id, b.sides[1].entered, b.sides[1].switch_timer > 0),
                          ("registeel", 1, True))
+
+    def test_missed_faints_are_filled_in_and_hp_reaches_zero_when_they_faint(self):
+        import tempfile
+        from pathlib import Path
+        from mango_pomdp.battle_turns import load as load_turns
+        d = Path(tempfile.mkdtemp())
+        cols = ["battle_id", "result"] + [f"{s}_{k}{x}" for s in ("you", "them") for k in (1, 2, 3)
+                                           for x in ("", "_fast", "_charged")]
+        row = dict.fromkeys(cols, "")
+        row.update(battle_id="b#3", result="won", you_1="medicham", you_1_fast="COUNTER",
+                   you_1_charged="ICE_PUNCH;DYNAMIC_PUNCH", them_1="azumarill", them_2="registeel", them_3="skarmory")
+        with (d / "battles.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, cols)
+            w.writeheader()
+            w.writerow(row)
+        # Their Azumarill takes three Counters and goes, with no faint recorded: the "(0 turns)" switch
+        # without a charged move before it was a replacement. Registeel then faints, recorded, after
+        # one Counter (it really had less HP than the formula says, or a hit was missed). Skarmory's
+        # faint, the last, isn't recorded: they lost, so it fainted then.
+        turns = [(0, "azumarill", "fast:COUNTER", ""), (1, "azumarill", "fast:COUNTER", ""),
+                 (2, "azumarill", "fast:COUNTER", ""), (3, "registeel", "", "switch:registeel(0 turns)"),
+                 (4, "registeel", "fast:COUNTER", "faint"), (5, "skarmory", "", "switch:skarmory(0 turns)"),
+                 (6, "skarmory", "fast:COUNTER", "")]
+        with (d / "turns.csv").open("w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["battle_id", "turn", "you_active", "them_active", "you_shields", "them_shields",
+                        "you_action", "them_action", "charged_first"])
+            for t, active, mine, theirs in turns:
+                w.writerow(["b#3", t, "medicham", active, 2, 2, mine, theirs, ""])
+        rb = load_turns(gd, d)[0]
+        self.assertEqual(rb.inferred, [(3, "them", "azumarill")])
+        self.assertTrue(rb.complete)
+        snap = rb.snapshots[4]
+        self.assertEqual(snap["mons"]["them"]["azumarill"][0], 0)
+        self.assertGreater(snap["mons"]["them"]["registeel"][0], 0)   # in, and alive, until its faint
+        self.assertEqual(rb.scale["them", "registeel"], 2.0)          # a single Counter: scaled up, to the cap
+        self.assertEqual(rb.scale["them", "azumarill"],
+                         min(2.0, max(0.5, gd.species["azumarill"].hp / rb.dealt_at_faint["them", "azumarill"])))
+
+    def test_a_pokemon_that_comes_back_did_not_faint(self):
+        import tempfile
+        from pathlib import Path
+        from mango_pomdp.battle_turns import load as load_turns
+        d = Path(tempfile.mkdtemp())
+        cols = ["battle_id", "result"] + [f"{s}_{k}{x}" for s in ("you", "them") for k in (1, 2, 3)
+                                           for x in ("", "_fast", "_charged")]
+        row = dict.fromkeys(cols, "")
+        row.update(battle_id="b#4", result="", you_1="medicham", them_1="azumarill", them_2="registeel",
+                   them_3="skarmory")
+        with (d / "battles.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, cols)
+            w.writeheader()
+            w.writerow(row)
+        turns = [(0, "azumarill", ""), (1, "registeel", "switch:registeel(0 turns)")] + \
+            [(t, "registeel", "") for t in range(2, 9)] + [(9, "azumarill", "switch:azumarill(1 turn)")]   # back
+        with (d / "turns.csv").open("w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["battle_id", "turn", "you_active", "them_active", "you_shields", "them_shields",
+                        "you_action", "them_action", "charged_first"])
+            for t, active, theirs in turns:
+                w.writerow(["b#4", t, "medicham", active, 2, 2, "", theirs, ""])
+        rb = load_turns(gd, d)[0]
+        self.assertEqual(rb.inferred, [])
+        self.assertGreater(rb.snapshots[9]["mons"]["them"]["azumarill"][0], 0)
 
     def test_context_opponent_copies_only_matching_situations(self):
         from mango_pomdp.battle_turns import ContextOpponent, load as load_turns

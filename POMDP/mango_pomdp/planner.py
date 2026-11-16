@@ -57,6 +57,7 @@ from .policies import STYLES, Heuristic, ThrowContext, Timed, preferred_throw
 from .team_prior import TeamPrior, TeamSpec
 
 SWITCH_AT = ("start", "zero-turn", "catch", "any")
+FARM = ("farm", 0)   # a candidate: farm their Pokémon down with fast moves (_Farm)
 
 
 def _learned_throw(b: Battle, s: int, energy: int) -> Move | None:
@@ -184,6 +185,29 @@ class _Catch:
         return self.then.replace(view)
 
 
+class _Farm:
+    """Rollout policy for "farm down": fast moves only, no charged moves and no switches, until the
+    opponent's Pokémon in now faints or leaves, banking the energy for the next matchup. Then it
+    hands over to `then`. A win condition the default rollout policy never plays, since it throws
+    whenever it can."""
+
+    def __init__(self, then, battle: Battle, side: int):
+        self.then, self.b, self.side = then, battle, side
+        self.target = battle.sides[1 - side].mon
+
+    def act(self, view):
+        if self.target is not None and self.target.hp > 0 and self.b.sides[1 - self.side].mon is self.target:
+            return FAST
+        self.target = None
+        return self.then.act(view)
+
+    def shield(self, view, move):
+        return self.then.shield(view, move)
+
+    def replace(self, view):
+        return self.then.replace(view)
+
+
 class _First:
     """Plays a fixed first action, then hands over."""
 
@@ -208,10 +232,11 @@ class Planner:
                  styles: tuple[str, ...] = STYLES, eps: float = 0.1, rollout_style: str = "baiter",
                  seed: int | None = None, oracle: tuple[TeamSpec, str] | None = None, name: str = "planner",
                  z: float = 1.0, margin_weight: float = 0.2, switch_at: str = "any",
-                 rollout_catch: bool = True, timing: bool = True, z_extra: float = 3.0):
+                 rollout_catch: bool = True, timing: bool = True, z_extra: float = 3.0, farm: bool = True):
         if switch_at not in SWITCH_AT:
             raise ValueError(f"switch_at must be one of {SWITCH_AT}")
         self.switch_at = switch_at
+        self.farm = farm   # weigh farming down (fast moves only until their Pokémon goes down) every free turn
         self.rollout_catch = rollout_catch
         self.last_charged = -10   # turn of the last charged move either side threw
         self.gd, self.prior = gd, prior
@@ -294,6 +319,9 @@ class Planner:
             extra = [a for a in switches + [WAIT] if a not in cands]
             cands += extra
             zs += [self.z_extra] * len(extra)
+        if self.farm and len(cands) > 1:   # the farm-down line: fast moves until their Pokémon in now goes down
+            cands.append(FARM)
+            zs.append(self.z)
         if len(cands) == 1:
             return FAST
         default = self.default.act(view)
@@ -301,7 +329,7 @@ class Planner:
             cands.append(default)
             zs.append(self.z)
         best = self._best(view, cands, lambda b, a, ctrls: None, cands.index(default), first=True, zs=zs)
-        return WAIT if best[0] == "catch" else best
+        return WAIT if best[0] == "catch" else FAST if best[0] == "farm" else best
 
     def shield(self, view: View, move: Move) -> bool:
         if view.me.shields == 0:
@@ -331,6 +359,8 @@ class Planner:
             mine = _Catcher(mine, b, self.side, style)
         if first is not None and first[0] == "catch":
             mine = _First(WAIT, _Catch(first[1], mine, b, self.side, style))
+        elif first is not None and first[0] == "farm":
+            mine = _Farm(mine, b, self.side)
         elif first is not None:
             mine = _First(first, mine)
         if style == "learned":   # the model fitted on your recorded opponents (opponent_model)

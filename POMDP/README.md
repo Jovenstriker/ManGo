@@ -240,12 +240,12 @@ Ablations, by player name:
 
 ## 3v3 results
 
-`python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner oracle`:
+`python3 -m experiments.tournament --games 150 --players random shielder baiter nuker casual planner-flat planner-1style planner planner-mixed oracle`:
 each player plays 300 battles. Each game is 2 battles with the teams swapped, and the opponent
-style is drawn uniformly. Ties count as half a win. The run took about 11 minutes on 10 cores.
-These numbers use the current rules and planner: charged moves reset cooldowns, both sides
-choose simultaneously, 0-turn switches are free, and the planner weighs every legal action on
-every free turn with good timing as its default.
+style is drawn uniformly. Ties count as half a win. The run took about 18 minutes on 10 cores.
+These numbers use the final rules and planner: charged moves reset cooldowns, both sides choose
+simultaneously, 0-turn switches are free, and the planner weighs every legal action on every
+free turn, with good timing as its default and the farm-down line.
 
 | Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
 |---|---|---|---|---|---|
@@ -254,26 +254,39 @@ every free turn with good timing as its default.
 | baiter | 0.565 ± 0.029 | 0.603 | 0.453 | 0.605 | 0.598 |
 | nuker | 0.452 ± 0.029 | 0.382 | 0.345 | 0.441 | 0.616 |
 | casual | 0.400 ± 0.028 | 0.368 | 0.297 | 0.388 | 0.530 |
-| planner-flat | 0.807 ± 0.023 | 0.794 | 0.770 | 0.763 | 0.890 |
-| planner-1style | 0.763 ± 0.025 | 0.750 | 0.743 | 0.737 | 0.817 |
-| **planner** | **0.800 ± 0.023** | 0.824 | 0.703 | 0.816 | 0.854 |
-| oracle | 0.897 ± 0.018 | 0.897 | 0.797 | 0.947 | 0.939 |
+| planner-flat | 0.820 ± 0.022 | 0.794 | 0.770 | 0.803 | 0.902 |
+| planner-1style | 0.780 ± 0.024 | 0.765 | 0.743 | 0.750 | 0.854 |
+| **planner** | **0.830 ± 0.022** | 0.853 | 0.757 | 0.829 | 0.878 |
+| planner-mixed | 0.827 ± 0.022 | 0.824 | 0.797 | 0.816 | 0.866 |
+| oracle | 0.910 ± 0.017 | 0.926 | 0.811 | 0.961 | 0.939 |
 
-What this says so far:
+**What these win rates are, and aren't.** The opponents are the four heuristic styles, and
+the planner's opponent model is those same four styles, so its belief soon finds which one it
+faces and its rollouts predict it closely. The styles are weak: fixed rules for throws and
+shields, switching only at a new matchup, no waiting and no throw timing. So 0.83 means much
+stronger than simple rule-based play, not that it would beat people 83% of the time. Against an
+equally strong planner it's 0.5 by symmetry, and the Mega Great League experiments below play it
+against itself. It hasn't been played against people. Automated live play is against Niantic's
+terms, so the real-world checks are your recorded battles and decision regret.
 
-- **Lookahead is most of the win.** Every planner beats every heuristic by about 20–24
-  points, including baiter, which is the planner's own rollout policy.
+What this says:
+
+- **Lookahead is most of the win.** Every planner beats every heuristic by over 20 points,
+  including baiter, which is the planner's own rollout policy.
+- **Farming down helps everyone.** Adding the farm-down line raised every planner by 1–3
+  points, the planner from 0.800 to 0.830. The planner's worst style, baiter, went from 0.703
+  to 0.757.
 - **A prior over all Great League teams isn't paying for itself yet.** The full belief, the
-  single-style belief and the flat prior are within about one and a half standard errors of
-  each other (0.76–0.81). When the opponent's team is known to come from a short list, the
-  belief does pay: see the Mega Great League experiment below.
-- **There's real value in information left to capture.** The oracle wins 10 points more.
+  single-style belief and the flat prior are within about two standard errors of each other
+  (0.78–0.83). When the opponent's team is known to come from a short list, the belief does
+  pay: see the Mega Great League experiment below.
+- **The learned opponent doesn't cost anything here.** `planner-mixed` adds the opponent
+  model learned from your recordings (below) as a fifth type, and plays these opponents as well
+  as `planner` does (0.827), with the best result against baiter.
+- **There's real value in information left to capture.** The oracle wins 8 points more.
   Telling apart what it gains from knowing the team and moves versus knowing the style is the
   obvious next ablation. The 1v1 solver offers a cleaner way in: with the opponent's moveset as
   the only hidden information, it can measure exactly what knowing their moves is worth.
-  Other candidate improvements: more rollouts per decision, reweighting on switches and
-  replacements, and rollout opponents built from the opponent's own belief about you rather
-  than a fixed style.
 
 ## Picking a team from PvPoke's top Mega Great League teams
 
@@ -303,8 +316,8 @@ outputs, including a game plan for every opponent.
    / Stunfisk (#25) is strongest: it wins 0.66 and beats 34 of 47. PvPoke's team rating barely
    agrees with simulated strength; its top-rated team (#1) comes 31st.
 
-Steps 2 and 3, which picked team #25 and its lead, ran on the earlier planner (`catch`, before
-free 0-turn switches and good timing). They weren't rerun.
+Steps 2 and 3, which picked team #25 and its lead, ran on an earlier planner (`catch`, before
+free 0-turn switches, good timing and farming down). They weren't rerun.
 
 2. *The planner against the heuristic styles*, with each of the top 6 teams and each lead. This
    doesn't separate them: every team's best lead scores 0.955–0.979 and beats all 47.
@@ -328,41 +341,49 @@ Cramorant lead edges it on win rate, and it beats #33 head to head (#33 wins 0.0
 earlier planner (before waiting, catching and the rollout timing fix), #25 led by Thievul came
 first, at 0.741 against that planner.
 
-**Team #25, Cramorant / Thievul / Stunfisk, leading Cramorant**, with the current rules and
-planner. Against the heuristic styles, 4 games per opponent per style; against the planner, 16
-games per opponent:
+**Team #25, Cramorant / Thievul / Stunfisk, leading Cramorant**, with the final rules and
+planner (farming down included). Against the heuristic styles, 4 games per opponent per style;
+against the planner, 16 games per opponent. The opponent planner is `planner-list-mixed`, which
+knows the list too:
 
 | Our player | vs heuristic styles | Beaten | vs the planner | Beaten |
 |---|---|---|---|---|
 | baiter heuristic | 0.686 ± 0.017 | 34 | | |
-| planner (format prior) | 0.891 ± 0.011 | 46 | 0.569 ± 0.018 | 25 |
-| **planner-list** | **0.949 ± 0.008** | **47** | **0.625 ± 0.017** | **31** |
-| planner-list + opening book (earlier planner) | | | 0.640 ± 0.017 | 35 |
-| oracle (knows team and style) | 0.977 ± 0.005 | 47 | | |
+| planner (format prior) | 0.916 ± 0.010 | 47 | | |
+| planner-list | 0.959 ± 0.007 | 47 | 0.639 ± 0.017 | 32 |
+| **planner-list-mixed** (styles + learned) | **0.975 ± 0.006** | **47** | **0.608 ± 0.018** | **31** |
+| oracle (knows team and style) | 0.983 ± 0.005 | 47 | | |
 
-The opening book is from the earlier planner, against which plain planner-list scored 0.638
-and beat 35. It's learned (`top_teams book 25 --lead 2`). For each lead the opponents can
-show, it plays every opening against every listed team with that lead: the planner's own
-opening, or a swap to either bench Pokémon on turn 0. It keeps a swap only if the swap wins 0.1
-more. It swaps to Stunfisk against Araquanid, Marowak, Ninetales and Sableyeˢ leads, and to
-Thievul against Charjabug, Ursalunaˢ and Dusknoirˢ. Against the rest the planner chooses. It
-was then measured on games it wasn't built from.
+Before farming down and the learned opponent, planner-list won 0.949 against the heuristics, and
+0.625 (beating 31) against planner-list.
+
+The opening book (`top_teams book 25 --lead 2`) was learned with an earlier planner. For each
+lead the opponents can show, it played every opening against every listed team with that lead:
+the planner's own opening, or a swap to either bench Pokémon on turn 0. It kept a swap only if
+the swap won 0.1 more. It swaps to Stunfisk against Araquanid, Marowak, Ninetales and Sableyeˢ
+leads, and to Thievul against Charjabug, Ursalunaˢ and Dusknoirˢ; against the rest the planner
+chooses. Measured on games it wasn't built from, it added nothing (0.640 vs 0.638 for plain
+planner-list then), so it wasn't rerun.
 
 What this says:
 
-- **Against heuristic opponents, the strategy beats every team.** planner-list wins 94.9%,
-  within 3 points of the oracle. Its worst matchup is #32 Cramorant / Marowak / Tinkaton, at
-  0.53. The same team played by the baiter heuristic wins only 69% and fails to beat 13 teams.
-  The heuristic plays a Cramorant lead badly; the planner doesn't.
-- **Knowing the list pays:** 6 points against the planner (0.625 vs 0.569), and 6 against the
-  heuristics (0.949 vs 0.891).
-- **Against an equally strong opponent, nothing found beats all 47.** #25 beats 31. #17
-  Mimikyu / Sableyeˢ / Tinkaton and #27 Mimikyu / Empoleon / Jumpluff each win 13 of 16
-  games, and #29 and #32 win 12 of 16.
-- **The opening book added nothing** with the earlier planner (0.640 vs 0.638).
-- **A better planner helps both sides.** The waiting, catching and timing fix improved the
-  opponent planner as much as ours. Against an equally strong opponent, the best team's win
-  rate fell from 0.72 to 0.63, so team choice matters less once both sides play well.
+- **Against heuristic opponents, the strategy beats every team.** planner-list-mixed wins
+  97.5%, within 1 point of the oracle. Its worst matchup is #32 Cramorant / Marowak /
+  Tinkaton, at 0.75. The same team played by the baiter heuristic wins only 69% and fails to
+  beat 13 teams. These are wins against the heuristics, though, which the planner models
+  exactly (see the 3v3 results).
+- **Against an equally strong opponent, #25 still wins about 61–64%,** but nothing found beats
+  all 47. It beats 31–32. The hardest are #29 Morpeko / Florges / Mimikyu, #4 Charjabug /
+  Cradily / Empoleon and #17 Mimikyu / Sableyeˢ / Tinkaton, each won under a third of the time.
+- **Knowing the list pays** against the heuristics: 4 points over the format prior (0.959 vs
+  0.916).
+- **The learned opponent doesn't help against a planner.** On our side it scores 0.608 against
+  0.639 without it, within noise. That's expected, since the opponent here is a planner and not
+  someone like your recorded opponents.
+- **A better planner helps both sides.** Each improvement (waiting, catching, timing, farming
+  down) improved the opponent planner as much as ours. Against an equally strong opponent, the
+  best team's win rate fell from 0.72 with the earliest planner to about 0.6, so team choice
+  matters less once both sides play well.
 
 ## Your battles, replayed
 
@@ -394,35 +415,34 @@ table lists species only.
 **Each battle replayed with the planner on your side** (`python3 -m experiments.my_battles
 --games 4`). In each of the 63 battles with a full opponent team, your team that day plays that
 day's opponent. It's replayed 4 times against each heuristic style and 4 times against the
-planner, from both sides. Your side is `planner-list` with the current rules and planner, and it
-knows only PvPoke's list, not your opponents. The baiter heuristic plays the same games for
-comparison. A battle counts as won if more than half its replays are wins, and as a split if
-exactly half are:
+planner, from both sides. Your side is the final planner, `planner-list-mixed`, and so is the
+opponent planner. Each knows only PvPoke's list, not your opponents. The baiter heuristic plays
+the same games for comparison. A battle counts as won if more than half its replays are wins,
+and as a split if exactly half are:
 
 | Your side played by | vs heuristic opponents | vs the planner |
 |---|---|---|
-| **planner** | **wins 55 of 63** (0.787 ± 0.013) | **wins 14, splits 18** (0.405 ± 0.031) |
-| baiter heuristic | wins 34 of 63 (0.548 ± 0.016) | wins 4, splits 11 (0.185 ± 0.024) |
+| **planner** | **wins 59 of 63** (0.834 ± 0.012) | **wins 21, splits 20** (0.498 ± 0.031) |
+| baiter heuristic | wins 34 of 63 (0.548 ± 0.016) | wins 4, splits 6 (0.188 ± 0.025) |
 
 | Your team | Battles | Planner vs heuristics | Planner vs the planner |
 |---|---|---|---|
-| Thievul / Jumpluff / Blaziken | 34 | wins 29 (0.76) | wins 8 (0.38) |
-| Altaria / Melmetal / Mimikyu | 23 | wins 20 (0.81) | wins 4 (0.40) |
-| Nidoqueen / Mandibuzz / Clodsire | 4 | wins 4 (0.92) | wins 2 (0.62) |
-| Blaziken / Jumpluff / Fearow | 2 | wins 2 (0.78) | wins 0 (0.50) |
+| Thievul / Jumpluff / Blaziken | 34 | wins 32 (0.82) | wins 11 (0.48) |
+| Altaria / Melmetal / Mimikyu | 23 | wins 21 (0.84) | wins 6 (0.48) |
+| Nidoqueen / Mandibuzz / Clodsire | 4 | wins 4 (0.97) | wins 3 (0.78) |
+| Blaziken / Jumpluff / Fearow | 2 | wins 2 (0.75) | wins 1 (0.50) |
 
 What this says:
-- **Against simple opponents, the planner wins most of your battles.** It wins 55 of 63, where
-  the baiter heuristic playing the same teams wins 34. It loses 6, the worst being Morpeko /
-  Jirachi / Azumarill (0.25) and Hydreigonˢ / Melmetal / Azumarill (0.31).
-- **The planner isn't always better than its own default.** In 4 battles the plain baiter
-  heuristic does better on the same games. The biggest gap is against Doublade / Togetic /
-  Stunfisk: 0.94 for the heuristic, 0.44 for the planner.
-- **Against an equally strong opponent, your teams are the weaker side.** Your side wins 0.41
-  of the replays. That fits the round robin: your two most-used teams rank 63rd and 88th of
-  115.
+- **Against simple opponents, the planner wins nearly all of your battles:** 59 of 63, where
+  the baiter heuristic playing the same teams wins 34.
+- **Against an equally strong opponent, your teams now break even.** With the planner on both
+  sides, your side wins 0.50 of the replays. With the planner before farming down and the
+  learned opponent, it won 0.41. The shift is about two standard errors. It doesn't hold with
+  your real movesets, though. Replayed from the local Battle Turns export with the movesets your
+  buttons showed, the planner on your side still loses the even matchup, about as often as
+  before. So the break-even depends on PvPoke's recommended movesets, or is partly noise.
 - **Nidoqueen / Mandibuzz / Clodsire is your strongest team here.** It ranks 7th in the round
-  robin and does best against the planner too (0.62). It's also your least used.
+  robin and does best against the planner too (0.78). It's also your least used.
 
 These are simulations, with PvPoke's recommended movesets. Some battles may have been in other
 formats, such as testV3 in the Fantasy Cup. Against the planner, each battle has only 4
@@ -534,7 +554,9 @@ any style does. What the model picks up:
 - **Picks:** they bring in the better matchup but the lower-HP Pokémon, keeping the healthy
   one for last.
 
-The cases and the fitted model (`data/local/opponent_model.json`) stay on the Mac.
+The cases and the fitted model (`data/local/opponent_model.json`) stay on the Mac. So the
+`-mixed` and `-learned` planners run only where the model has been fitted. Anywhere else they
+stop with a message to run `experiments.opponent_model` first.
 
 **In the planner**, "learned" is a fifth opponent type next to the four styles:
 - *In the belief*, each particle with that type is reweighted by the model's probability of
@@ -550,20 +572,26 @@ determinized states, the full states it fills in for rollouts, carry it.
 
 | Win rate vs | `planner-list` (styles) | `planner-list-mixed` (styles + learned) | `planner-list-learned` (learned only) |
 |---|---|---|---|
-| an opponent that plays like the model | 0.933 ± 0.014 | **0.972 ± 0.009** | 0.967 ± 0.010 |
-| shielder | 0.943 ± 0.013 | 0.947 ± 0.013 | 0.792 ± 0.022 |
-| baiter | 0.870 ± 0.018 | 0.893 ± 0.018 | 0.725 ± 0.024 |
-| nuker | 0.903 ± 0.016 | 0.877 ± 0.018 | 0.733 ± 0.025 |
-| casual | 0.955 ± 0.012 | 0.937 ± 0.013 | 0.840 ± 0.020 |
-| `planner-list` | — | 0.515 ± 0.019 | 0.467 ± 0.019 |
+| an opponent that plays like the model | 0.950 ± 0.012 | **0.973 ± 0.009** | 0.970 ± 0.010 |
+| shielder | 0.967 ± 0.010 | 0.967 ± 0.010 | 0.785 ± 0.024 |
+| baiter | 0.878 ± 0.017 | 0.905 ± 0.017 | 0.702 ± 0.024 |
+| nuker | 0.915 ± 0.015 | 0.912 ± 0.016 | 0.763 ± 0.025 |
+| casual | 0.957 ± 0.011 | 0.952 ± 0.012 | 0.882 ± 0.018 |
+| `planner-list` | — | **0.554 ± 0.020** | 0.453 ± 0.020 |
 
 The table covers 150 random pairs of listed Mega Great League teams, played from both sides,
-and 250 pairs for the last row. It was measured with the model fitted before the fixes to the
-rebuilt recordings described under decision regret, and without the farm-down line. The mixture beats the styles planner against an opponent that
-plays like the model (+0.038 ± 0.015, paired). Against the styles themselves, the differences
-are all within noise, and it plays the styles planner evenly. Relying on the learned model alone
-is a mistake: against the styles it loses 0.12 to 0.17, because it no longer recognizes simpler
-opponents.
+and 250 pairs for the last row. It uses the final planner, farming down included, and the
+model fitted on the rebuilt recordings described under decision regret.
+
+What it shows:
+- **Against an opponent that plays like the model,** the mixture beats the styles planner
+  (+0.023 ± 0.013, paired).
+- **Against the styles themselves,** the differences are all within noise.
+- **Head to head,** the mixture now beats the styles planner, 0.554 ± 0.020. Before the rebuild
+  fixes and farming down it was even (0.515 ± 0.019).
+- **Relying on the learned model alone is a mistake.** Against the styles it loses 0.08 to
+  0.18, and it loses to the styles planner head to head, because it no longer recognizes
+  simpler opponents.
 
 ## Playing against the planner
 

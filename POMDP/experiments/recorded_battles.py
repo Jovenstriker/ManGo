@@ -4,7 +4,7 @@
 
 Each battle where all three of their Pokémon came in is played with the real teams and
 movesets: yours from your buttons, theirs from the moves they threw (PvPoke's for the rest).
-The planner (`planner-list`) plays your side. The opponent is played two ways:
+The planner (`planner-list-mixed`) plays your side. The opponent is played two ways:
 
   context  the strong planner, except that wherever the battle matches a situation where that
            opponent shielded or not, or threw (bait or nuke) or held, it does what they did
@@ -30,6 +30,7 @@ from mango_pomdp.match import make_player, play
 from mango_pomdp.team_prior import TeamPrior
 
 FORMAT = "mega_great_league"
+PLANNER = "planner-list-mixed"   # the four styles and the learned opponent, farming down
 SCORE = {0: 1.0, -1: 0.5, 1: 0.0}
 TURNS = Path(__file__).resolve().parents[2] / "Battle Turns"
 OPPONENTS = ("context", "planner")
@@ -42,8 +43,8 @@ def job(args):
     pvpoke = [gd.teams[k] for k in gd.team_pool("pvpoke")]
     rng = random.Random(zlib.crc32(repr((battle.id, game)).encode()))   # same game for both opponents
     seeds = [rng.randrange(1 << 30) for _ in range(3)]
-    me = make_player("planner-list", gd, prior, seeds[0], rollouts=rollouts, teams=pvpoke)
-    foe = make_player("planner-list", gd, prior, seeds[1], rollouts=rollouts, teams=pvpoke)
+    me = make_player(PLANNER, gd, prior, seeds[0], rollouts=rollouts, teams=pvpoke)
+    foe = make_player(PLANNER, gd, prior, seeds[1], rollouts=rollouts, teams=pvpoke)
     if opp == "context":
         foe = ContextOpponent(foe, battle)
     side = game % 2

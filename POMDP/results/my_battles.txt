@@ -1,78 +1,78 @@
-63 of your battles, each replayed 4× per opponent (shielder, baiter, nuker, casual, planner-list), 923s.
+63 of your battles, each replayed 4× per opponent (shielder, baiter, nuker, casual, planner-list-mixed), 658s.
 
   #  your team                 opponent                                baiter vs heuristicsyour planner vs heuristics         baiter vs planner   your planner vs planner
-  1  Altaria/Melmetal/Mimikyu  Marowak/Sableyeˢ/Talonflame                             0.75                      1.00                      0.00                      0.25
-  2  Altaria/Melmetal/Mimikyu  Melmetal/Ninetalesˢ/Altaria                             0.22                      0.81                      0.00                      0.00
-  3  Altaria/Melmetal/Mimikyu  Mimikyu/Turtonator/Granbull                             0.00                      0.88                      0.00                      0.50
-  4  Altaria/Mimikyu/Melmetal  Azumarill/Empoleon/Magnezone                            0.62                      0.94                      0.00                      0.25
+  1  Altaria/Melmetal/Mimikyu  Marowak/Sableyeˢ/Talonflame                             0.75                      1.00                      0.00                      0.50
+  2  Altaria/Melmetal/Mimikyu  Melmetal/Ninetalesˢ/Altaria                             0.22                      0.94                      0.00                      0.00
+  3  Altaria/Melmetal/Mimikyu  Mimikyu/Turtonator/Granbull                             0.00                      0.75                      0.00                      0.25
+  4  Altaria/Mimikyu/Melmetal  Azumarill/Empoleon/Magnezone                            0.62                      1.00                      0.00                      0.00
   5  Altaria/Mimikyu/Melmetal  Azumarill/Lucario/Mawile                                1.00                      1.00                      0.00                      0.50
-  6  Altaria/Mimikyu/Melmetal  Turtonator/Mimikyu/Forretressˢ                          0.69                      0.94                      0.00                      0.75
-  7  Altaria/Melmetal/Mimikyu  Doublade/Togetic/Stunfisk                               0.94                      0.44                      0.75                      0.25
+  6  Altaria/Mimikyu/Melmetal  Turtonator/Mimikyu/Forretressˢ                          0.69                      0.88                      0.00                      0.50
+  7  Altaria/Melmetal/Mimikyu  Doublade/Togetic/Stunfisk                               0.94                      0.62                      0.00                      0.50
   8  Altaria/Melmetal/Mimikyu  Turtonator/Florges/Tinkaton                             0.88                      1.00                      0.25                      1.00
-  9  Melmetal/Altaria/Mimikyu  Turtonator/Mimikyu/Stunfisk                             0.00                      0.69                      0.00                      0.00
- 10  Altaria/Melmetal/Mimikyu  Flygon/Corviknight/Azumarill                            1.00                      1.00                      0.50                      1.00
- 11  Altaria/Melmetal/Mimikyu  Corviknight/Turtonator/Mimikyu                          0.12                      0.62                      0.00                      0.50
+  9  Melmetal/Altaria/Mimikyu  Turtonator/Mimikyu/Stunfisk                             0.00                      0.94                      0.00                      0.00
+ 10  Altaria/Melmetal/Mimikyu  Flygon/Corviknight/Azumarill                            1.00                      0.81                      1.00                      0.50
+ 11  Altaria/Melmetal/Mimikyu  Corviknight/Turtonator/Mimikyu                          0.12                      0.81                      0.00                      0.25
  12  Altaria/Mimikyu/Melmetal  Altaria/Mimikyu/Empoleon                                0.75                      0.88                      0.00                      0.75
- 13  Altaria/Mimikyu/Melmetal  Mimikyu/Magnezone/Togetic                               0.44                      0.81                      0.25                      0.50
- 14  Altaria/Mimikyu/Melmetal  Corviknight/Azumarill/Turtonator                        0.12                      0.75                      0.00                      0.00
- 15  Altaria/Mimikyu/Melmetal  Dragoniteˢ/Melmetal/Togetic                             0.91                      0.94                      0.00                      0.00
- 16  Altaria/Mimikyu/Melmetal  Hydreigonˢ/Stunfisk-G/Melmetal                          0.69                      1.00                      0.00                      0.50
- 17  Altaria/Mimikyu/Melmetal  Flygon/Melmetal/Turtonator                              0.19                      0.81                      0.00                      0.25
- 18  Altaria/Mimikyu/Melmetal  Primarina/Stunfisk-G/Melmetal                           0.44                      0.88                      0.00                      0.50
- 19  Altaria/Melmetal/Mimikyu  Stunfisk-G/Forretressˢ/Melmetal                         0.19                      0.62                      0.00                      0.00
- 20  Altaria/Mimikyu/Melmetal  Melmetal/Azumarill/Mimikyu                              0.34                      0.38                      0.50                      0.50
- 21  Altaria/Mimikyu/Melmetal  Altaria/Forretressˢ/Magnezone                           0.69                      1.00                      0.25                      0.50
- 22  Nidoqueen/Mandibuzz/ClodsireGreninjaˢ/Florges/Charjabug                             0.62                      1.00                      0.50                      0.50
- 23  Nidoqueen/Mandibuzz/ClodsireScizorˢ/Guzzlord/Nidoqueen                              0.88                      0.94                      0.50                      1.00
- 24  Nidoqueen/Mandibuzz/ClodsireGreninjaˢ/Forretressˢ/Mimikyu                           0.56                      1.00                      0.25                      0.25
- 25  Nidoqueen/Mandibuzz/ClodsireForretressˢ/Greninjaˢ/Nidoqueen                         0.81                      0.75                      0.25                      0.75
- 26  Altaria/Mimikyu/Melmetal  Altaria/Florges/Melmetal                                0.75                      1.00                      0.50                      0.25
- 28  Altaria/Mimikyu/Melmetal  Morpeko/Jirachi/Azumarill                               0.56                      0.25                      0.00                      0.50
- 29  Thievul/Jumpluff/Blaziken Machampˢ/Dunsparce/Toxapex                              0.75                      0.94                      0.25                      0.75
- 30  Thievul/Blaziken/Jumpluff Mightyenaˢ/Corviknight/Charjabug                        0.31                      0.56                      0.00                      0.75
- 32  Jumpluff/Thievul/Blaziken Florges/Mimikyu/Sableyeˢ                                0.47                      0.81                      0.25                      0.50
- 33  Thievul/Blaziken/Jumpluff Cramorant/Melmetal/Clodsire                             0.69                      0.44                      0.25                      0.00
- 34  Thievul/Blaziken/Jumpluff Morpeko/Corsola-G/Corviknight                           0.62                      0.62                      0.00                      0.50
- 35  Thievul/Blaziken/Jumpluff Marowak/Furret/Talonflame                               0.44                      1.00                      0.50                      0.25
- 36  Thievul/Blaziken/Jumpluff Ninetales-A/Quagsireˢ/Jumpluff                          0.94                      0.81                      0.00                      0.00
- 37  Thievul/Blaziken/Jumpluff Forretressˢ/Carbink/Marowak                             0.19                      0.81                      0.00                      0.00
- 38  Thievul/Jumpluff/Blaziken Stunfisk/Annihilape/Fearow                              0.25                      0.69                      0.50                      0.50
- 39  Thievul/Jumpluff/Blaziken Wigglytuff/Stunfisk/Quagsireˢ                           0.59                      0.81                      0.25                      0.50
- 40  Thievul/Blaziken/Jumpluff Diggersby/Fearow/Jumpluff                               0.69                      0.62                      0.50                      0.25
- 41  Thievul/Blaziken/Jumpluff Clodsire/Altaria/Mimikyu                                0.31                      0.69                      0.00                      0.25
- 42  Thievul/Jumpluff/Blaziken Empoleon/Nidoqueen/Forretressˢ                          0.31                      0.94                      0.50                      0.25
- 43  Thievul/Blaziken/Jumpluff Pangoro/Dunsparce/Azumarill                             0.62                      0.75                      0.25                      0.25
- 45  Thievul/Blaziken/Jumpluff Miltank/Forretressˢ/Marowak                             0.69                      0.94                      0.00                      1.00
- 46  Thievul/Jumpluff/Blaziken Sandslash-A/Marowak/Carbink                             0.19                      0.88                      0.75                      0.00
- 47  Thievul/Jumpluff/Blaziken Corsola-G/Ursaluna/Tinkaton                             0.94                      1.00                      0.50                      1.00
- 49  Jumpluff/Thievul/Blaziken Froslass/Swanna/Rapidash                                0.31                      0.69                      0.00                      0.25
- 50  Thievul/Jumpluff/Blaziken Hydreigonˢ/Melmetal/Azumarill                           0.25                      0.31                      0.00                      0.00
- 51  Thievul/Blaziken/Jumpluff Cramorant/Hydreigonˢ/Clodsire                           0.50                      0.69                      0.00                      0.25
- 52  Thievul/Jumpluff/Blaziken Cramorant/Dunsparce/Diggersby                           0.94                      1.00                      0.75                      0.75
- 53  Thievul/Blaziken/Jumpluff Ninetales-A/Ursaluna/Stunfisk                           1.00                      1.00                      0.00                      0.00
- 55  Thievul/Blaziken/Jumpluff Altaria/Empoleon/Melmetal                               0.62                      0.50                      0.00                      0.00
- 56  Thievul/Jumpluff/Blaziken Cramorant/Charjabug/Machampˢ                            0.81                      0.75                      0.00                      0.25
- 57  Thievul/Jumpluff/Blaziken Diggersby/Cramorant/Forretressˢ                         0.75                      0.66                      0.25                      0.25
- 58  Thievul/Jumpluff/Blaziken Quagsireˢ/Dunsparce/Mimikyu                             0.88                      1.00                      0.25                      1.00
- 60  Thievul/Blaziken/Jumpluff Cramorant/Marowak/Ninetalesˢ                            0.56                      0.44                      0.00                      0.50
- 61  Thievul/Blaziken/Jumpluff Marowak/Lickilicky/Carbink                              0.41                      0.94                      0.00                      0.25
- 62  Thievul/Blaziken/Jumpluff Persian/Corviknight/Nidoking                            0.38                      0.75                      0.50                      0.25
- 63  Thievul/Blaziken/Jumpluff Charjabug/Blastoise/Dunsparce                           0.94                      0.94                      0.00                      0.75
+ 13  Altaria/Mimikyu/Melmetal  Mimikyu/Magnezone/Togetic                               0.44                      0.88                      0.50                      0.50
+ 14  Altaria/Mimikyu/Melmetal  Corviknight/Azumarill/Turtonator                        0.12                      0.75                      0.25                      0.50
+ 15  Altaria/Mimikyu/Melmetal  Dragoniteˢ/Melmetal/Togetic                             0.91                      1.00                      0.25                      1.00
+ 16  Altaria/Mimikyu/Melmetal  Hydreigonˢ/Stunfisk-G/Melmetal                          0.69                      0.94                      0.00                      0.75
+ 17  Altaria/Mimikyu/Melmetal  Flygon/Melmetal/Turtonator                              0.19                      0.94                      0.00                      1.00
+ 18  Altaria/Mimikyu/Melmetal  Primarina/Stunfisk-G/Melmetal                           0.44                      0.94                      0.00                      0.25
+ 19  Altaria/Melmetal/Mimikyu  Stunfisk-G/Forretressˢ/Melmetal                         0.19                      0.56                      0.00                      0.25
+ 20  Altaria/Mimikyu/Melmetal  Melmetal/Azumarill/Mimikyu                              0.34                      0.44                      0.25                      1.00
+ 21  Altaria/Mimikyu/Melmetal  Altaria/Forretressˢ/Magnezone                           0.69                      0.94                      0.00                      0.25
+ 22  Nidoqueen/Mandibuzz/ClodsireGreninjaˢ/Florges/Charjabug                             0.62                      1.00                      0.25                      0.50
+ 23  Nidoqueen/Mandibuzz/ClodsireScizorˢ/Guzzlord/Nidoqueen                              0.88                      1.00                      0.75                      1.00
+ 24  Nidoqueen/Mandibuzz/ClodsireGreninjaˢ/Forretressˢ/Mimikyu                           0.56                      0.94                      0.00                      0.62
+ 25  Nidoqueen/Mandibuzz/ClodsireForretressˢ/Greninjaˢ/Nidoqueen                         0.81                      0.94                      0.25                      1.00
+ 26  Altaria/Mimikyu/Melmetal  Altaria/Florges/Melmetal                                0.75                      0.94                      0.50                      0.50
+ 28  Altaria/Mimikyu/Melmetal  Morpeko/Jirachi/Azumarill                               0.56                      0.44                      0.25                      0.25
+ 29  Thievul/Jumpluff/Blaziken Machampˢ/Dunsparce/Toxapex                              0.75                      0.94                      0.25                      0.50
+ 30  Thievul/Blaziken/Jumpluff Mightyenaˢ/Corviknight/Charjabug                        0.31                      0.88                      0.25                      0.50
+ 32  Jumpluff/Thievul/Blaziken Florges/Mimikyu/Sableyeˢ                                0.47                      0.88                      0.25                      0.75
+ 33  Thievul/Blaziken/Jumpluff Cramorant/Melmetal/Clodsire                             0.69                      0.38                      0.00                      0.00
+ 34  Thievul/Blaziken/Jumpluff Morpeko/Corsola-G/Corviknight                           0.62                      0.75                      0.00                      0.75
+ 35  Thievul/Blaziken/Jumpluff Marowak/Furret/Talonflame                               0.44                      0.88                      0.75                      0.25
+ 36  Thievul/Blaziken/Jumpluff Ninetales-A/Quagsireˢ/Jumpluff                          0.94                      0.94                      0.00                      0.25
+ 37  Thievul/Blaziken/Jumpluff Forretressˢ/Carbink/Marowak                             0.19                      0.94                      0.00                      0.00
+ 38  Thievul/Jumpluff/Blaziken Stunfisk/Annihilape/Fearow                              0.25                      0.75                      0.25                      0.25
+ 39  Thievul/Jumpluff/Blaziken Wigglytuff/Stunfisk/Quagsireˢ                           0.59                      0.88                      0.25                      0.75
+ 40  Thievul/Blaziken/Jumpluff Diggersby/Fearow/Jumpluff                               0.69                      0.69                      0.00                      0.75
+ 41  Thievul/Blaziken/Jumpluff Clodsire/Altaria/Mimikyu                                0.31                      0.81                      0.25                      0.75
+ 42  Thievul/Jumpluff/Blaziken Empoleon/Nidoqueen/Forretressˢ                          0.31                      0.88                      0.25                      0.50
+ 43  Thievul/Blaziken/Jumpluff Pangoro/Dunsparce/Azumarill                             0.62                      0.75                      0.00                      0.75
+ 45  Thievul/Blaziken/Jumpluff Miltank/Forretressˢ/Marowak                             0.69                      0.94                      0.25                      1.00
+ 46  Thievul/Jumpluff/Blaziken Sandslash-A/Marowak/Carbink                             0.19                      0.81                      0.00                      0.50
+ 47  Thievul/Jumpluff/Blaziken Corsola-G/Ursaluna/Tinkaton                             0.94                      1.00                      0.25                      1.00
+ 49  Jumpluff/Thievul/Blaziken Froslass/Swanna/Rapidash                                0.31                      0.88                      0.00                      0.50
+ 50  Thievul/Jumpluff/Blaziken Hydreigonˢ/Melmetal/Azumarill                           0.25                      0.34                      0.00                      0.00
+ 51  Thievul/Blaziken/Jumpluff Cramorant/Hydreigonˢ/Clodsire                           0.50                      0.75                      0.00                      0.00
+ 52  Thievul/Jumpluff/Blaziken Cramorant/Dunsparce/Diggersby                           0.94                      0.94                      0.50                      1.00
+ 53  Thievul/Blaziken/Jumpluff Ninetales-A/Ursaluna/Stunfisk                           1.00                      0.94                      0.00                      0.25
+ 55  Thievul/Blaziken/Jumpluff Altaria/Empoleon/Melmetal                               0.62                      0.75                      0.50                      0.50
+ 56  Thievul/Jumpluff/Blaziken Cramorant/Charjabug/Machampˢ                            0.81                      0.69                      0.25                      0.25
+ 57  Thievul/Jumpluff/Blaziken Diggersby/Cramorant/Forretressˢ                         0.75                      0.94                      0.00                      0.75
+ 58  Thievul/Jumpluff/Blaziken Quagsireˢ/Dunsparce/Mimikyu                             0.88                      1.00                      0.75                      0.50
+ 60  Thievul/Blaziken/Jumpluff Cramorant/Marowak/Ninetalesˢ                            0.56                      0.81                      0.25                      0.50
+ 61  Thievul/Blaziken/Jumpluff Marowak/Lickilicky/Carbink                              0.41                      0.81                      0.00                      0.25
+ 62  Thievul/Blaziken/Jumpluff Persian/Corviknight/Nidoking                            0.38                      0.84                      0.50                      0.50
+ 63  Thievul/Blaziken/Jumpluff Charjabug/Blastoise/Dunsparce                           0.94                      0.94                      0.38                      0.75
  64  Thievul/Jumpluff/Blaziken Hydreigonˢ/Ninetalesˢ/Melmetal                          0.31                      1.00                      0.00                      0.25
- 65  Thievul/Jumpluff/Blaziken Clefable/Stunfisk/Hydreigonˢ                            0.38                      0.69                      0.75                      0.75
- 67  Thievul/Jumpluff/Blaziken Morpeko/Azumarill/Altaria                               0.44                      0.56                      0.00                      0.00
- 68  Thievul/Blaziken/Jumpluff Charjabug/Cramorant/Diggersby                           0.44                      0.50                      0.00                      0.50
- 70  Blaziken/Jumpluff/Fearow  Sableyeˢ/Ninetalesˢ/Empoleon                            0.25                      0.62                      0.00                      0.50
- 71  Jumpluff/Blaziken/Fearow  Clodsire/Electrode-H/Dunsparce                          0.19                      0.94                      0.12                      0.50
+ 65  Thievul/Jumpluff/Blaziken Clefable/Stunfisk/Hydreigonˢ                            0.38                      0.59                      0.25                      0.50
+ 67  Thievul/Jumpluff/Blaziken Morpeko/Azumarill/Altaria                               0.44                      0.75                      0.25                      0.50
+ 68  Thievul/Blaziken/Jumpluff Charjabug/Cramorant/Diggersby                           0.44                      0.75                      0.00                      0.00
+ 70  Blaziken/Jumpluff/Fearow  Sableyeˢ/Ninetalesˢ/Empoleon                            0.25                      0.69                      0.50                      0.75
+ 71  Jumpluff/Blaziken/Fearow  Clodsire/Electrode-H/Dunsparce                          0.19                      0.81                      0.25                      0.25
 
 Battles won (more than half the replays), and the win rate over every replay:
   baiter                 vs the heuristic styles  wins 34 of 63, ties  1   win rate 0.548 ± 0.016
-  planner (your side)    vs the heuristic styles  wins 55 of 63, ties  2   win rate 0.787 ± 0.013
-  baiter                 vs the planner           wins  4 of 63, ties 11   win rate 0.185 ± 0.024
-  planner (your side)    vs the planner           wins 14 of 63, ties 18   win rate 0.405 ± 0.031
+  planner (your side)    vs the heuristic styles  wins 59 of 63, ties  0   win rate 0.834 ± 0.012
+  baiter                 vs the planner           wins  4 of 63, ties  6   win rate 0.188 ± 0.025
+  planner (your side)    vs the planner           wins 21 of 63, ties 20   win rate 0.498 ± 0.031
 
 By your team (planner on your side):
-  Thievul/Jumpluff/Blaziken    34 battles   vs heuristics wins 29/34 (0.76)   vs planner wins 8/34 (0.38)
-  Altaria/Melmetal/Mimikyu     23 battles   vs heuristics wins 20/23 (0.81)   vs planner wins 4/23 (0.40)
-  Nidoqueen/Mandibuzz/Clodsire  4 battles   vs heuristics wins 4/4 (0.92)   vs planner wins 2/4 (0.62)
-  Blaziken/Jumpluff/Fearow      2 battles   vs heuristics wins 2/2 (0.78)   vs planner wins 0/2 (0.50)
+  Thievul/Jumpluff/Blaziken    34 battles   vs heuristics wins 32/34 (0.82)   vs planner wins 11/34 (0.48)
+  Altaria/Melmetal/Mimikyu     23 battles   vs heuristics wins 21/23 (0.84)   vs planner wins 6/23 (0.48)
+  Nidoqueen/Mandibuzz/Clodsire  4 battles   vs heuristics wins 4/4 (0.97)   vs planner wins 3/4 (0.78)
+  Blaziken/Jumpluff/Fearow      2 battles   vs heuristics wins 2/2 (0.75)   vs planner wins 1/2 (0.50)

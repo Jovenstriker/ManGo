@@ -6,7 +6,7 @@ with the planner playing your side.
 data/mega_great_league_my_battles.csv lists each battle's two teams (species only, lead first;
 Pokémon you didn't bring out are added in your usual order). Movesets are PvPoke's recommended
 ones. Your real opponents were people, so each battle is played against each heuristic style
-and against the planner itself (`planner-list`, which knows PvPoke's top teams, as yours does),
+and against the planner itself (`planner-list-mixed`, which knows PvPoke's top teams, as yours does),
 `--games` times each, alternating sides. Every player sees the same games (same seeds), so the
 planner and the baiter heuristic are compared on identical battles. Battles where fewer than three
 of their Pokémon were seen, or the read was unreliable, are left out.
@@ -30,6 +30,7 @@ from mango_pomdp.team_prior import TeamPrior
 FORMAT = "mega_great_league"
 BATTLES = gamedata.DATA_DIR / "mega_great_league_my_battles.csv"
 SCORE = {0: 1.0, -1: 0.5, 1: 0.0}
+PLANNER = "planner-list-mixed"   # the four styles and the learned opponent, farming down
 
 
 def load_battles(gd):
@@ -74,8 +75,8 @@ def job(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--games", type=int, default=4, help="games per battle per opponent")
-    ap.add_argument("--players", nargs="+", default=["baiter", "planner-list"])
-    ap.add_argument("--opponents", nargs="+", default=[*STYLES, "planner-list"])
+    ap.add_argument("--players", nargs="+", default=["baiter", PLANNER])
+    ap.add_argument("--opponents", nargs="+", default=[*STYLES, PLANNER])
     ap.add_argument("--rollouts", type=int, default=12)
     ap.add_argument("--workers", type=int, default=None)
     args = ap.parse_args()
@@ -96,7 +97,8 @@ def main():
           f"({', '.join(args.opponents)}), {time.time() - start:.0f}s.\n")
 
     cols = [(p, k) for k in kinds for p in args.players]
-    head = "".join(f"{(p if p != 'planner-list' else 'your planner') + ' vs ' + ('heuristics' if k == 'styles' else 'planner'):>26}"
+    mine = next((p for p in args.players if p.startswith("planner")), None)   # the planner on your side
+    head = "".join(f"{(p if p != mine else 'your planner') + ' vs ' + ('heuristics' if k == 'styles' else 'planner'):>26}"
                    for p, k in cols)
     print(f"{'#':>3}  {'your team':<26}{'opponent':<34}{head}")
     for n, y, t in battles:
@@ -109,12 +111,12 @@ def main():
         allx = [s for n, _, _ in battles for s in res[p, n, k]]
         m = sum(allx) / len(allx)
         se = math.sqrt(sum((x - m) ** 2 for x in allx) / (len(allx) - 1) / len(allx))
-        who = "planner (your side)" if p == "planner-list" else p
+        who = "planner (your side)" if p == mine else p
         vs = "the heuristic styles" if k == "styles" else "the planner"
         print(f"  {who:<22} vs {vs:<21} wins {sum(r > 0.5 for r in rates):>2} of {len(battles)}, "
               f"ties {sum(r == 0.5 for r in rates):>2}   win rate {m:.3f} ± {se:.3f}")
 
-    if "planner-list" not in args.players:
+    if mine is None:
         return
     print("\nBy your team (planner on your side):")
     by = defaultdict(list)
@@ -123,7 +125,7 @@ def main():
     for team, ns in sorted(by.items(), key=lambda kv: -len(kv[1])):
         parts = []
         for k in kinds:
-            rates = [sum(res["planner-list", n, k]) / len(res["planner-list", n, k]) for n in ns]
+            rates = [sum(res[mine, n, k]) / len(res[mine, n, k]) for n in ns]
             parts.append(f"vs {'heuristics' if k == 'styles' else 'planner'} wins {sum(r > 0.5 for r in rates)}"
                          f"/{len(ns)} ({sum(rates) / len(rates):.2f})")
         first = next(y for n, y, t in battles if n == ns[0])

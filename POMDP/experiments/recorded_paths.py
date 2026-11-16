@@ -27,6 +27,7 @@ from mango_pomdp.match import make_player
 from mango_pomdp.team_prior import TeamPrior, build_team
 
 FORMAT = "mega_great_league"
+PLANNER = "planner-list-mixed"   # the four styles and the learned opponent, farming down
 TURNS = Path(__file__).resolve().parents[2] / "Battle Turns"
 
 
@@ -65,8 +66,8 @@ def job(args):
     pvpoke = [gd.teams[k] for k in gd.team_pool("pvpoke")]
     rng = random.Random(zlib.crc32(repr((battle.id, game)).encode()))
     seeds = [rng.randrange(1 << 30) for _ in range(3)]
-    me = make_player("planner-list", gd, prior, seeds[0], rollouts=rollouts, teams=pvpoke)
-    foe = make_player("planner-list", gd, prior, seeds[1], rollouts=rollouts, teams=pvpoke)
+    me = make_player(PLANNER, gd, prior, seeds[0], rollouts=rollouts, teams=pvpoke)
+    foe = make_player(PLANNER, gd, prior, seeds[1], rollouts=rollouts, teams=pvpoke)
     side = game % 2
     specs, players = [battle.you, battle.them], [me, foe]
     if side:

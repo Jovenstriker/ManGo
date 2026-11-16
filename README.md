@@ -335,6 +335,18 @@ for (matches 3, 5 and 11).
 then the stream score with and without it. `situations.py` tallies the stream's misses by what
 happened in the stretch; `side.py` lines up ManGo's count with the truth for one game.
 
+To watch what ManGo did, draw it over the video (into `Overlays/`, git-ignored):
+
+    python3 scripts/stream/overlay.py "Stream Battles/…/gNNNNN" Overlays/stream/gNNNNN.mp4
+    python3 scripts/video_overlay.py match.mp4 match.json out.mp4 --label "ItsAXN video 2," \
+        --offset 588 --vtt captions.en.vtt --checkpoints counts.json
+
+A stream game shows both phones, and under each one ManGo's count of the opponent next to the
+truth from the other phone. At each of their charged moves it shows when their buttons went,
+when this phone froze, and both counts. ManGo's notes show as it makes them. A single-phone
+video shows ManGo's count, the player's words from the captions, and each count they say against
+ManGo's. The clock in the corner is the original video's time.
+
 ## Overlay on top of Pokémon GO
 
 The card at the top of the app is a Picture-in-Picture "video" (`App/ManGo/PictureInPicture.swift`),

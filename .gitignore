@@ -16,4 +16,6 @@ PvPCore/Tests/PvPCoreTests/Fixtures/gbl-battle-*.json
 Battle Logs/
 # Tournament streams with both phones on screen (scripts/stream/): kept on this Mac only.
 Stream Battles/
+# Battle videos with ManGo drawn over them (scripts/stream/overlay.py, scripts/video_overlay.py).
+Overlays/
 __pycache__/

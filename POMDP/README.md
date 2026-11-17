@@ -829,6 +829,39 @@ When they throw at you, the game says how much the hit would do and asks whether
 see what the screen would show, plus their energy counted from their moves the way ManGo does.
 At the end you get the result and a timeline of the battle.
 
+### In real time, in your browser
+
+`python3 -m experiments.arena` plays the same battles in real time. It opens a page at
+`http://127.0.0.1:8228`, and `--phone` also serves it on your Wi-Fi, so you can play on your phone.
+The battle runs in this engine at the game's pace:
+- a turn every half second, and a pause after each charged move;
+- a shield prompt with a time limit (4 or 8 seconds, or none), which lets the hit through when it
+  runs out;
+- a pick after a faint, with its own timer.
+
+Tap the field (or Space) for a fast move, or leave Auto on to keep fast moving. A charged move you
+press goes off when your fast move finishes, as in the game, and a switch pressed during the pause
+after a charged move is a free (0-turn) switch.
+
+The page gets only what your screen would show: their bench stays hidden until it comes in.
+Two options sit on the setup screen:
+- **ManGo info** adds their energy and switch timer, counted from what they've done, and the damage
+  each move would do.
+- **Coach** shows what the planner would do in your place.
+
+The setup screen also picks:
+- **your team:** yours, PvPoke's, or one you faced;
+- **your lead;**
+- **their team:** a random top team, a random one you faced, or a given one;
+- **the opponent:** any of the planners or heuristic styles.
+
+The **blind** opponent picks the rollout planner or POMCP at random and names it only at the end.
+That's a way to compare them by playing them yourself. Telling a 10-point gap in win rate apart
+takes about 100 games against each.
+
+Finished games go to `data/local/arena/games.jsonl`, which is local only. The setup screen and
+`python3 -m experiments.arena --record` show your record against each opponent.
+
 ## Layout
 
     data/great_league.json     PvPoke's top 200 Great League Pokémon (stats, types, move usage, counters) and their moves,
@@ -862,6 +895,7 @@ At the end you get the result and a timeline of the battle.
                                my_battles.py (your own battles, replayed with the planner),
                                recorded_battles.py, recorded_paths.py (the same from Battle Turns, local),
                                regret.py (your decisions scored, local), play.py (you against the planner),
+                               arena.py and arena.html (the same in real time, in your browser),
                                opponent_model.py (fit and check the opponent model, local),
                                top_players.py (top players' regret next to yours; your opponent model on them;
                                planners compared against real results, local),

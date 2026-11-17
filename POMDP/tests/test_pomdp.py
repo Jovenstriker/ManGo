@@ -562,6 +562,80 @@ class PlayTests(unittest.TestCase):
         self.assertTrue(any("Shield" in a for a in asked))
 
 
+class ArenaTests(unittest.TestCase):
+    """The browser simulator (experiments.arena), run without its pacing or its web server."""
+
+    def setUp(self):
+        gamedata.use("mega_great_league")
+
+    def tearDown(self):
+        gamedata.use("great_league")
+
+    def game(self, **kw):
+        from experiments.arena import Game
+        pool = mega.team_pool("pvpoke")
+        mine = pool[24]
+        ours = set(mega.teams[mine].species)
+        theirs = next(k for k in pool if k != mine and not ours & set(mega.teams[k].species))
+        opts = dict(opponent="baiter", shield_secs=0, replace_secs=0, seed=3, log=None, pace=False)
+        opts.update(kw)
+        return Game(mega, TeamPrior(mega), mine, theirs, **opts)
+
+    def test_a_game_plays_through_and_is_logged(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from experiments.arena import record
+        log = Path(tempfile.mkdtemp()) / "games.jsonl"
+        for seed in (3, 4):
+            g = self.game(opponent="planner-list", rollouts=4, coach=True, seed=seed, log=log)
+            g.run()
+            s = g.state()
+            self.assertEqual(s["phase"], "over", s["error"])
+            self.assertIn(s["result"]["winner"], ("you", "them", "tie"))
+            self.assertTrue(s["result"]["timeline"])
+            json.dumps(s)   # what the page gets is plain JSON
+        rows = [json.loads(line) for line in log.read_text().splitlines()]
+        self.assertEqual(len(rows), 2)
+        (r,) = record(log)
+        self.assertEqual((r["opponent"], r["games"]), ("planner-list", 2))
+
+    def test_the_page_sees_only_what_your_screen_shows(self):
+        import json
+        g = self.game(info=False)
+        g.battle = Battle([build_team(mega, g.ours), build_team(mega, list(mega.teams[g.theirs].spec))], seed=1)
+        g._publish()
+        shown = json.dumps(g.state())
+        lead, *bench = (mega.species[s].name for s in mega.teams[g.theirs].species)
+        self.assertIn(lead, shown)
+        for name in bench:
+            self.assertNotIn(name, shown)
+        self.assertIsNone(g.state()["foe"]["energy"])
+        blind = self.game(opponent="blind")
+        self.assertIn(blind.opponent, ("planner-list-mixed", "pomcp-list-mixed"))
+        self.assertEqual(blind.state()["opponent"], "hidden")
+
+    def test_presses_become_actions_on_your_next_free_turn(self):
+        g = self.game()
+        g.battle = Battle([build_team(mega, g.ours), build_team(mega, list(mega.teams[g.theirs].spec))], seed=1)
+        view = g.battle.view(0)
+        self.assertEqual(g.act(view), FAST)            # auto attack is on to start
+        g.press({"do": "auto", "on": False})
+        self.assertEqual(g.act(view), WAIT)            # nothing pressed: idle
+        g.press({"do": "fast"})
+        self.assertEqual(g.act(view), FAST)
+        g.press({"do": "charged", "i": 0})             # no energy yet: dropped
+        self.assertEqual(g.act(view), WAIT)
+        view.mon.energy = 100
+        g.press({"do": "charged", "i": 1})
+        self.assertEqual(g.act(view), CHARGED(1))
+        g.press({"do": "switch", "i": 2})
+        self.assertEqual(g.act(view), SWITCH(2))
+        g.battle.sides[0].switch_timer = 10
+        g.press({"do": "switch", "i": 1})               # the switch timer isn't ready
+        self.assertEqual(g.act(view), WAIT)
+
+
 class RecordedBattleTests(unittest.TestCase):
     """Habits from a made-up Battle Turns folder (the real one stays local)."""
 

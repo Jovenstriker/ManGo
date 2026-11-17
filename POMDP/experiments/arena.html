@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Battle Arena</title>
+<style>
+:root {
+  --bg: #0f1420; --panel: #182030; --panel-2: #212b3e; --line: #2c3850; --text: #e9eef7; --muted: #93a0b8;
+  --you: #4fb3ff; --them: #ff7a6b; --good: #46d37e; --warn: #ffc443; --bad: #ff5a5a; --accent: #8f7bff;
+  --radius: 14px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 15px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+button, select, input { font: inherit; color: inherit; }
+button { touch-action: manipulation; cursor: pointer; }
+.hidden { display: none !important; }
+#app { max-width: 520px; margin: 0 auto; padding: 10px 16px 16px; min-height: 100%; display: flex; flex-direction: column; }
+h1 { font-size: 22px; margin: 8px 0 2px; }
+.sub { color: var(--muted); margin: 0 0 14px; font-size: 13px; }
+
+/* Setup ---------------------------------------------------------------------------------- */
+.form { display: grid; gap: 12px; }
+.field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.field select { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.field .note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.check { display: flex; gap: 10px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.check input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); }
+.check span small { display: block; color: var(--muted); font-size: 12px; }
+.primary { background: var(--accent); border: 0; border-radius: 12px; padding: 14px; font-weight: 700; font-size: 17px; }
+.secondary { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 600; }
+table.record { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+table.record th, table.record td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+table.record td.num, table.record th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.help { color: var(--muted); font-size: 12px; margin-top: 14px; }
+
+/* Battle --------------------------------------------------------------------------------- */
+#battle { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.topbar { display: flex; align-items: center; gap: 8px; }
+.clock { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; min-width: 52px; }
+.opp { flex: 1; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+.topbar select { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; position: relative; }
+.card.foe { border-color: color-mix(in srgb, var(--them) 35%, var(--line)); }
+.card.me { border-color: color-mix(in srgb, var(--you) 35%, var(--line)); }
+.head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mon-name { font-weight: 700; font-size: 18px; }
+.types { display: flex; gap: 4px; }
+.type { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; color: #10131a; }
+.buffs { font-size: 12px; color: var(--warn); }
+.spacer { flex: 1; }
+.dots { display: flex; gap: 4px; align-items: center; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; }
+.dot.on { background: currentColor; }
+.shields { color: #b7c7ff; }
+.shields .dot { border-radius: 3px 3px 7px 7px; width: 11px; height: 13px; }
+.balls { color: var(--muted); }
+.ball { width: 12px; height: 12px; border-radius: 50%; background: var(--text); border: 2px solid var(--text); }
+.ball.out { background: transparent; border-color: var(--line); }
+.hpbar { position: relative; height: 16px; background: #0b0f18; border-radius: 8px; overflow: hidden; margin-top: 8px; }
+.hpfill { height: 100%; width: 100%; background: var(--good); transition: width .25s ease, background .25s; }
+.hptext { position: absolute; right: 8px; top: 0; font-size: 11px; line-height: 16px; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000; }
+.flash { animation: flash .35s ease; }
+@keyframes flash { 0% { filter: brightness(2.2); } 100% { filter: none; } }
+.meta { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.meta b { color: var(--text); font-weight: 600; }
+.seen { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.chip { font-size: 11px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 7px; }
+.chip.active { border-color: var(--them); }
+.chip.down { opacity: .45; text-decoration: line-through; }
+.float { position: absolute; right: 14px; top: 6px; font-weight: 800; font-size: 16px; pointer-events: none; animation: rise .7s ease forwards; }
+@keyframes rise { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-18px); } }
+
+#field {
+  flex: 1; min-height: 150px; border-radius: var(--radius); position: relative; overflow: hidden; cursor: pointer;
+  background: radial-gradient(120% 90% at 50% 100%, #1d2a44 0%, #121827 70%); border: 1px solid var(--line);
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 12px; touch-action: manipulation;
+}
+#field:active { background: radial-gradient(120% 90% at 50% 100%, #24355a 0%, #141b2c 70%); }
+.feed { list-style: none; margin: 0; padding: 0; font-size: 13px; display: grid; gap: 3px; }
+.feed li { opacity: .55; }
+.feed li:last-child, .feed li:nth-last-child(2) { opacity: 1; }
+.feed .you { color: var(--you); }
+.feed .them { color: var(--them); }
+.tap { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; }
+.hint { text-align: center; font-size: 13px; color: var(--warn); margin-top: 4px; min-height: 18px; }
+.banner {
+  position: absolute; left: 10px; right: 10px; top: 14px; text-align: center; padding: 12px; border-radius: 12px;
+  font-weight: 800; font-size: 17px; background: #0009; border: 2px solid var(--line); animation: pop .2s ease;
+}
+@keyframes pop { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.center-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; background: #0008; }
+
+.energy { position: relative; height: 8px; background: #0b0f18; border-radius: 4px; margin-top: 6px; overflow: hidden; }
+.energy .fill { height: 100%; background: var(--accent); transition: width .2s ease; }
+.energy .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff8; }
+.busy { height: 3px; border-radius: 2px; background: var(--you); margin-top: 4px; transition: width .2s linear; }
+
+.charged { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cbtn {
+  --p: 0; --c: #888; position: relative; border: 2px solid var(--line); border-radius: 16px; padding: 10px 8px 9px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--c) 45%, transparent) calc(var(--p) * 1%), var(--panel) 0);
+  text-align: center; min-height: 66px; transition: border-color .15s, box-shadow .15s;
+}
+.cbtn .mv { font-weight: 800; font-size: 15px; }
+.cbtn .cost { font-size: 11px; color: var(--muted); }
+.cbtn.ready { border-color: var(--c); box-shadow: 0 0 16px -2px var(--c); }
+.cbtn.ready .cost { color: var(--text); }
+.cbtn.queued { outline: 3px solid var(--warn); outline-offset: 1px; }
+.cbtn:disabled { cursor: default; }
+.cbtn .x2 { position: absolute; top: 4px; right: 8px; font-size: 11px; font-weight: 800; color: var(--warn); }
+.lower { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: stretch; }
+.sbtn { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 7px 8px; text-align: left; position: relative; overflow: hidden; }
+.sbtn .nm { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbtn .mini { height: 4px; background: #0b0f18; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.sbtn .mini div { height: 100%; background: var(--good); }
+.sbtn .tm { position: absolute; right: 7px; top: 6px; font-size: 11px; color: var(--warn); font-variant-numeric: tabular-nums; }
+.sbtn:disabled { opacity: .5; cursor: default; }
+.sbtn.queued { outline: 3px solid var(--warn); }
+.auto { border-radius: 12px; border: 1px solid var(--line); background: var(--panel); padding: 0 12px; font-weight: 700; font-size: 12px; }
+.auto.on { background: color-mix(in srgb, var(--you) 30%, var(--panel)); border-color: var(--you); }
+.keys { color: var(--muted); font-size: 11px; text-align: center; }
+
+/* Modals --------------------------------------------------------------------------------- */
+.modal { position: fixed; inset: 0; background: #000a; display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; }
+.box h2 { margin: 0 0 6px; font-size: 22px; }
+.box p { margin: 4px 0; color: var(--muted); }
+.box p b { color: var(--text); }
+.choices { display: grid; gap: 10px; margin-top: 14px; }
+.choices.two { grid-template-columns: 1fr 1fr; }
+.big { border-radius: 14px; padding: 16px 10px; font-weight: 800; font-size: 17px; border: 2px solid var(--line); background: var(--panel-2); }
+.big.shield { background: #3150a8; border-color: #7f9cff; }
+.big small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+.timer { height: 5px; background: #0b0f18; border-radius: 3px; margin-top: 14px; overflow: hidden; }
+.timer div { height: 100%; background: var(--warn); transition: width .1s linear; }
+.ko { color: var(--bad) !important; font-weight: 700; }
+pre.timeline { background: #0b0f18; border-radius: 10px; padding: 10px; font-size: 11px; line-height: 1.25; overflow-x: auto; margin: 12px 0; user-select: text; -webkit-user-select: text; }
+.result-win { color: var(--good); }
+.result-lose { color: var(--bad); }
+.err { white-space: pre-wrap; font-size: 11px; color: var(--bad); user-select: text; }
+@media (max-height: 700px) { #field { min-height: 110px; } .mon-name { font-size: 16px; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Setup -->
+  <section id="setup">
+    <h1>Battle Arena</h1>
+    <p class="sub">Mega Great League, 3v3, in real time against the planner. Everything runs on this computer.</p>
+    <div class="form">
+      <div class="field"><label for="you">Your team</label><select id="you"></select></div>
+      <div class="row2">
+        <div class="field"><label for="lead">Lead</label><select id="lead"></select></div>
+        <div class="field"><label for="speed0">Speed</label>
+          <select id="speed0">
+            <option value="1">Real time</option><option value="0.75">0.75×</option>
+            <option value="0.5">Half speed</option><option value="0.25">Quarter speed</option>
+          </select></div>
+      </div>
+      <div class="field"><label for="them">Their team</label><select id="them"></select>
+        <div class="note">Hidden until each one comes in, as in the game.</div></div>
+      <div class="field"><label for="opponent">Opponent</label><select id="opponent"></select></div>
+      <div class="row2">
+        <div class="field"><label for="shield">Shield prompt</label>
+          <select id="shield"><option value="4">4 seconds</option><option value="8">8 seconds</option><option value="none">No limit</option></select></div>
+        <div class="field"><label for="rollouts">Opponent thinking</label>
+          <select id="rollouts"><option value="12">12 rollouts</option><option value="48">48 rollouts</option></select></div>
+      </div>
+      <label class="check"><input type="checkbox" id="info" checked>
+        <span>ManGo info<small>Their energy counted from their moves, and the damage each move would do.</small></span></label>
+      <label class="check"><input type="checkbox" id="coach">
+        <span>Coach<small>Shows what the planner would do in your place.</small></span></label>
+      <button class="primary" id="start">Battle</button>
+    </div>
+    <div id="record-wrap" class="hidden">
+      <h3 style="margin:22px 0 0">Your record here</h3>
+      <table class="record" id="record"></table>
+    </div>
+    <p class="help">Tap the field (or Space) for a fast move; Auto keeps fast moving. 1 and 2 throw charged moves
+      when your fast move finishes. S and D switch. Y and N answer the shield prompt. P pauses.</p>
+  </section>
+
+  <!-- Battle -->
+  <section id="battle" class="hidden">
+    <div class="topbar">
+      <span class="clock" id="clock">4:00</span>
+      <span class="opp" id="opp"></span>
+      <select id="speed" aria-label="Speed">
+        <option value="1">1×</option><option value="0.75">0.75×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option>
+      </select>
+      <button class="icon" id="pause" aria-label="Pause">❚❚</button>
+      <button class="icon" id="quit" aria-label="Quit">✕</button>
+    </div>
+
+    <div class="card foe" id="foe-card">
+      <div class="head">
+        <span class="mon-name" id="foe-name">—</span><span class="types" id="foe-types"></span>
+        <span class="buffs" id="foe-buffs"></span><span class="spacer"></span>
+        <span class="dots shields" id="foe-shields"></span><span class="dots balls" id="foe-balls"></span>
+      </div>
+      <div class="hpbar"><div class="hpfill" id="foe-hp"></div><span class="hptext" id="foe-hp-text"></span></div>
+      <div class="meta"><span id="foe-energy"></span><span id="foe-moves"></span></div>
+      <div class="seen" id="foe-seen"></div>
+    </div>
+
+    <div id="field">
+      <ol class="feed" id="feed"></ol>
+      <div class="hint" id="hint"></div>
+      <div class="tap" id="tap">Tap here for a fast move</div>
+    </div>
+
+    <div class="card me" id="me-card">
+      <div class="head">
+        <span class="mon-name" id="me-name">—</span><span class="types" id="me-types"></span>
+        <span class="buffs" id="me-buffs"></span><span class="spacer"></span>
+        <span class="dots shields" id="me-shields"></span>
+      </div>
+      <div class="hpbar"><div class="hpfill" id="me-hp"></div><span class="hptext" id="me-hp-text"></span></div>
+      <div class="energy" id="me-energy"><div class="fill" id="me-energy-fill"></div></div>
+      <div class="busy" id="me-busy" style="width:0"></div>
+      <div class="meta"><span id="me-fast"></span><span id="me-energy-text"></span></div>
+    </div>
+
+    <div class="charged" id="charged"></div>
+    <div class="lower">
+      <div id="bench" style="display:contents"></div>
+      <button class="auto on" id="auto">AUTO</button>
+    </div>
+    <div class="keys">Space fast · A auto · 1 2 charged · S D switch · P pause</div>
+  </section>
+</div>
+
+<div class="modal hidden" id="modal"><div class="box" id="box"></div></div>
+
+<script>
+const TYPE = {
+  normal: "#a8a77a", fire: "#ee8130", water: "#6390f0", electric: "#f7d02c", grass: "#7ac74c", ice: "#96d9d6",
+  fighting: "#c22e28", poison: "#a33ea1", ground: "#e2bf65", flying: "#a98ff3", psychic: "#f95587", bug: "#a6b91a",
+  rock: "#b6a136", ghost: "#735797", dragon: "#6f35fc", dark: "#705746", steel: "#b7b7ce", fairy: "#d685ad",
+};
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+let setup = null, S = { phase: "setup" }, settings = null;
+// -1: the page just loaded, so skip what already happened; -2: a game we started, show it all.
+let seenFx = -1, seenBanner = -1, bannerTimer = null, modalKey = "", answeredKey = "", lastHp = {};
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem("arena." + k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem("arena." + k, JSON.stringify(v)); } catch {} },
+};
+
+async function api(path, body) {
+  const opts = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  const r = await fetch(path, opts);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+const press = (msg) => api("/api/press", msg).catch(() => {});
+
+// Setup -------------------------------------------------------------------------------------
+function option(sel, value, text) { const o = el("option", null, text); o.value = value; sel.append(o); return o; }
+function group(sel, label, items) {
+  if (!items.length) return;
+  const g = el("optgroup"); g.label = label;
+  for (const t of items) { const o = el("option", null, t.text); o.value = t.value; g.append(o); }
+  sel.append(g);
+}
+function members(value) {
+  for (const k of ["mine", "pvpoke", "faced"]) { const t = setup[k].find((x) => x.value === value); if (t) return t.members; }
+  return [];
+}
+function fillLead() {
+  const sel = $("#lead"), keep = sel.value;
+  sel.innerHTML = "";
+  members($("#you").value).forEach((m, i) => option(sel, i + 1, m));
+  if (keep && sel.querySelector(`option[value="${keep}"]`)) sel.value = keep;
+}
+async function loadSetup() {
+  setup = await api("/api/setup");
+  const you = $("#you"), them = $("#them"), opp = $("#opponent");
+  you.innerHTML = them.innerHTML = opp.innerHTML = "";
+  group(you, "Your teams", setup.mine); group(you, "PvPoke top teams", setup.pvpoke); group(you, "Teams you faced", setup.faced);
+  option(them, "random-pvpoke", "Random PvPoke top team");
+  if (setup.faced.length) option(them, "random-faced", "Random team you faced");
+  group(them, "Teams you faced", setup.faced); group(them, "PvPoke top teams", setup.pvpoke);
+  for (const o of setup.opponents) option(opp, o.value, `${o.value} — ${o.text}`);
+  const saved = store.get("settings");
+  if (saved) for (const [id, v] of Object.entries(saved)) {
+    const e = document.getElementById(id === "speed" ? "speed0" : id);
+    if (!e) continue;
+    if (e.type === "checkbox") e.checked = !!v; else if ([...e.options].some((o) => o.value === String(v))) e.value = String(v);
+  }
+  fillLead();
+  if (saved && saved.lead) $("#lead").value = String(saved.lead);
+  renderRecord(setup.record);
+}
+function renderRecord(rows) {
+  const t = $("#record");
+  t.innerHTML = "";
+  $("#record-wrap").classList.toggle("hidden", !rows.length);
+  if (!rows.length) return;
+  const h = el("tr");
+  for (const [txt, cls] of [["Opponent"], ["Games", "num"], ["W-L-T", "num"], ["Win rate", "num"]]) h.append(el("th", cls, txt));
+  t.append(h);
+  for (const r of rows) {
+    const tr = el("tr");
+    tr.append(el("td", null, r.opponent), el("td", "num", r.games), el("td", "num", `${r.wins}-${r.losses}-${r.ties}`),
+      el("td", "num", (r.rate * 100).toFixed(0) + "%" + (r.se != null ? ` ± ${(r.se * 100).toFixed(0)}` : "")));
+    t.append(tr);
+  }
+}
+function readSettings() {
+  return {
+    you: $("#you").value, lead: +$("#lead").value, them: $("#them").value, opponent: $("#opponent").value,
+    speed: +$("#speed0").value, shield_secs: $("#shield").value === "none" ? "none" : +$("#shield").value,
+    rollouts: +$("#rollouts").value, info: $("#info").checked, coach: $("#coach").checked,
+  };
+}
+async function start(s) {
+  settings = s; store.set("settings", s);
+  seenFx = seenBanner = -2; modalKey = answeredKey = ""; lastHp = {};
+  try { await api("/api/new", s); } catch (e) { alert(e.message); }
+}
+
+// Rendering ---------------------------------------------------------------------------------
+const fmtClock = (secs) => `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}`;
+function types(node, ts) { node.innerHTML = ""; for (const t of ts || []) { const c = el("span", "type", t); c.style.background = TYPE[t] || "#999"; node.append(c); } }
+function buffs(node, a, d) {
+  const part = (n, s) => (n ? `${s}${n > 0 ? "↑" : "↓"}${Math.abs(n)}` : "");
+  node.textContent = [part(a, "Atk"), part(d, "Def")].filter(Boolean).join(" ");
+}
+function dots(node, n, of, cls) {
+  node.innerHTML = "";
+  for (let i = 0; i < of; i++) node.append(el("span", (cls || "dot") + (cls ? (i < n ? "" : " out") : (i < n ? " on" : ""))));
+}
+function hp(fill, text, cur, max, key) {
+  const f = Math.max(0, cur) / max;
+  fill.style.width = (f * 100).toFixed(1) + "%";
+  fill.style.background = f > 0.5 ? "var(--good)" : f > 0.2 ? "var(--warn)" : "var(--bad)";
+  text.textContent = `${cur} / ${max}`;
+  lastHp[key] = cur;
+}
+function floatDamage(card, n, color) {
+  const f = el("span", "float", `−${n}`); f.style.color = color; card.append(f); setTimeout(() => f.remove(), 700);
+}
+
+function render(s) {
+  const prev = S; S = s;
+  const inBattle = s.phase !== "setup" && s.phase !== "quit";
+  $("#setup").classList.toggle("hidden", inBattle);
+  $("#battle").classList.toggle("hidden", !inBattle);
+  if (!inBattle) { if (prev.phase !== "setup" && prev.phase !== "quit") loadSetup(); hideModal(); return; }
+  if (s.phase === "error") return showModal("error", () => {
+    const b = $("#box"); b.innerHTML = "";
+    b.append(el("h2", null, "Something broke"), el("pre", "err", s.error));
+    const back = el("button", "secondary", "Back to setup");
+    back.onclick = async () => { await press({ do: "quit" }); hideModal(); S = { phase: "setup" }; render({ phase: "setup" }); };
+    b.append(back);
+  });
+  if (!s.me) return;
+
+  $("#clock").textContent = fmtClock(s.left);
+  $("#opp").textContent = `vs ${s.opponent}`;
+  $("#opp").title = s.opponent_note || "";
+  $("#pause").textContent = s.paused ? "▶" : "❚❚";
+  if (document.activeElement !== $("#speed")) $("#speed").value = String(s.speed);
+  $("#auto").classList.toggle("on", s.auto);
+
+  // Them
+  const foe = s.foe;
+  $("#foe-name").textContent = foe.name + (foe.form ? ` (${foe.form})` : "");
+  types($("#foe-types"), foe.types); buffs($("#foe-buffs"), foe.atk, foe.def);
+  dots($("#foe-shields"), foe.shields, 2); dots($("#foe-balls"), foe.remaining, 3, "ball");
+  hp($("#foe-hp"), $("#foe-hp-text"), foe.hp, foe.max, "foe");
+  $("#foe-energy").innerHTML = foe.energy == null ? "" : `energy <b>~${foe.energy}</b> counted · switch ` +
+    (foe.switch > 0 ? `<b>${fmtClock(foe.switch)}</b>` : "ready");
+  const active = foe.seen.find((x) => x.active);
+  $("#foe-moves").textContent = active ? [active.fast, ...active.charged].filter(Boolean).join(" · ") || "no moves seen" : "";
+  const seen = $("#foe-seen"); seen.innerHTML = "";
+  for (const m of foe.seen) {
+    const c = el("span", "chip" + (m.active ? " active" : "") + (m.hp === 0 ? " down" : ""),
+      `${m.name} ${m.hp}/${m.max}` + (!m.active && m.energy != null && m.hp > 0 ? ` · ~${m.energy}e` : ""));
+    seen.append(c);
+  }
+  for (let i = foe.seen.length; i < 3; i++) seen.append(el("span", "chip", "?"));
+
+  // You
+  const me = s.me, mon = me.mons[me.active];
+  $("#me-name").textContent = mon.name + (mon.form ? ` (${mon.form})` : "");
+  types($("#me-types"), mon.types); buffs($("#me-buffs"), mon.atk, mon.def);
+  dots($("#me-shields"), me.shields, 2);
+  hp($("#me-hp"), $("#me-hp-text"), mon.hp, mon.max, "me");
+  const bar = $("#me-energy");
+  bar.querySelectorAll(".tick").forEach((t) => t.remove());
+  $("#me-energy-fill").style.width = (mon.energy / s.max_energy * 100) + "%";
+  for (const c of mon.charged) { const t = el("span", "tick"); t.style.left = (c.energy / s.max_energy * 100) + "%"; bar.append(t); }
+  $("#me-busy").style.width = me.busy ? (me.busy / mon.fast.turns * 100) + "%" : "0";
+  $("#me-fast").textContent = `${mon.fast.name} · ${mon.fast.turns * 0.5}s · +${mon.fast.gain}` + (mon.fast.damage != null ? ` · ${mon.fast.damage} dmg` : "");
+  $("#me-energy-text").textContent = `energy ${mon.energy}`;
+
+  const ch = $("#charged"); ch.innerHTML = "";
+  mon.charged.forEach((c, i) => {
+    const b = el("button", "cbtn");
+    const ready = mon.energy >= c.energy, queued = s.queued && s.queued[0] === "charged" && s.queued[1] === i;
+    b.style.setProperty("--c", TYPE[c.type] || "#888");
+    b.style.setProperty("--p", Math.min(100, mon.energy / c.energy * 100));
+    b.classList.toggle("ready", ready); b.classList.toggle("queued", !!queued);
+    b.append(el("div", "mv", c.name), el("div", "cost", `${c.energy} energy` + (c.damage != null ? ` · ${c.damage} dmg` : "") + ` · [${i + 1}]`));
+    if (mon.energy >= 2 * c.energy) b.append(el("span", "x2", "×2"));
+    b.disabled = !ready || s.phase !== "play";
+    b.onpointerdown = (e) => { e.preventDefault(); throwCharged(i); };
+    ch.append(b);
+  });
+
+  const bench = $("#bench"); bench.innerHTML = "";
+  const others = me.mons.filter((m) => m.i !== me.active);
+  others.forEach((m, k) => {
+    const b = el("button", "sbtn");
+    const queued = s.queued && s.queued[0] === "switch" && s.queued[1] === m.i;
+    b.classList.toggle("queued", !!queued);
+    b.append(el("div", "nm", `${m.name}`));
+    const mini = el("div", "mini"), f = el("div"); f.style.width = (m.hp / m.max * 100) + "%"; mini.append(f); b.append(mini);
+    b.append(el("div", "tm", m.hp === 0 ? "fainted" : me.switch > 0 ? fmtClock(me.switch) : ["S", "D"][k]));
+    b.disabled = m.hp === 0 || me.switch > 0 || s.phase !== "play";
+    b.onpointerdown = (e) => { e.preventDefault(); switchTo(k); };
+    bench.append(b);
+  });
+
+  // Field: feed, hits, banner, hint
+  const feed = $("#feed"); feed.innerHTML = "";
+  for (const f of s.feed.slice(-5)) feed.append(el("li", f.who, f.text));
+  if (seenFx === -1) seenFx = s.fx.length ? s.fx[s.fx.length - 1].id : -2;
+  for (const f of s.fx) if (f.id > seenFx) {
+    seenFx = f.id;
+    const card = f.who === "you" ? $("#foe-card") : $("#me-card");
+    card.querySelector(".hpfill").classList.remove("flash"); void card.offsetWidth; card.querySelector(".hpfill").classList.add("flash");
+    if (f.damage) floatDamage(card, f.damage, f.who === "you" ? "var(--you)" : "var(--them)");
+  }
+  const lastCharged = [...s.feed].reverse().find((f) => f.kind === "charged" || f.kind === "faint");
+  if (seenBanner === -1) seenBanner = lastCharged ? lastCharged.id : -2;
+  if (lastCharged && lastCharged.id > seenBanner) { banner(lastCharged); seenBanner = lastCharged.id; }
+  $("#hint").textContent = s.hint ? `Coach: ${s.hint}` : "";
+  $("#tap").textContent = s.phase === "countdown" ? "Get ready…" : s.auto ? "Auto attack on · tap or Space for one more" : "Tap here (or Space) for a fast move";
+  let center = $("#field .center-msg");
+  const msg = s.phase === "countdown" ? "Ready…" : s.paused ? "Paused" : "";
+  if (msg && !center) { center = el("div", "center-msg"); $("#field").append(center); }
+  if (center) { if (msg) center.textContent = msg; else center.remove(); }
+
+  // Prompts and the end
+  if (s.phase === "over" && s.result) return showResult(s.result);
+  if (s.prompt) return showPrompt(s.prompt);
+  hideModal();
+}
+
+function banner(f) {
+  const field = $("#field");
+  field.querySelectorAll(".banner").forEach((b) => b.remove());
+  const b = el("div", "banner", f.text);
+  b.style.borderColor = f.kind === "charged" ? (TYPE[f.type] || "var(--line)") : "var(--bad)";
+  b.style.color = f.who === "you" ? "var(--you)" : "var(--them)";
+  field.append(b);
+  clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.remove(), 1600);
+}
+
+function showModal(key, build) {
+  const m = $("#modal");
+  if (modalKey !== key) { modalKey = key; build(); }
+  m.classList.remove("hidden");
+}
+function hideModal() { modalKey = ""; $("#modal").classList.add("hidden"); }
+
+function showPrompt(p) {
+  const key = p.kind + ":" + S.turn + ":" + (p.move || p.fainted);
+  if (key === answeredKey) return;   // answered; the server hasn't caught up yet
+  showModal(key, () => {
+    const b = $("#box"); b.innerHTML = "";
+    if (p.kind === "shield") {
+      b.append(el("h2", null, `${p.attacker} throws ${p.move}!`));
+      if (p.damage != null) {
+        const line = el("p"); line.innerHTML = `It would do <b>${p.damage}</b> to your ${S.me.mons[S.me.active].name} at <b>${p.hp}</b> HP.`;
+        b.append(line);
+        if (p.ko) b.append(el("p", "ko", "That knocks you out."));
+      }
+      if (p.hint) b.append(el("p", "hint", `Coach: ${p.hint}`));
+      const c = el("div", "choices two");
+      const yes = el("button", "big shield"); yes.append("Shield", el("small", null, `${p.shields} left · Y`));
+      const no = el("button", "big"); no.append("Take it", el("small", null, "N"));
+      yes.onclick = () => answerShield(true); no.onclick = () => answerShield(false);
+      c.append(yes, no); b.append(c);
+    } else {
+      b.append(el("h2", null, `${p.fainted} fainted`), el("p", null, "Bring in:"));
+      if (p.hint) b.append(el("p", "hint", `Coach: ${p.hint}`));
+      const c = el("div", "choices two");
+      p.options.forEach((o, k) => {
+        const btn = el("button", "big"); btn.append(o.name, el("small", null, `${o.hp}/${o.max} HP · ${k + 1}`));
+        btn.onclick = () => answerReplace(k); c.append(btn);
+      });
+      b.append(c);
+    }
+    const t = el("div", "timer"); t.append(el("div")); b.append(t);
+    b.dataset.total = p.left == null ? "" : p.left;
+  });
+  const t = $("#box .timer div"), total = +$("#box").dataset.total;
+  if (t) { if (p.left == null || !total) t.parentElement.classList.add("hidden"); else t.style.width = Math.max(0, p.left / total * 100) + "%"; }
+}
+
+function showResult(r) {
+  showModal("result", () => {
+    const b = $("#box"); b.innerHTML = "";
+    const h = el("h2", r.winner === "you" ? "result-win" : r.winner === "them" ? "result-lose" : "", r.text);
+    b.append(h);
+    b.append(el("p", null, `${r.left[0]} left on your side, ${r.left[1]} on theirs` + (r.timeout ? ", on time." : ".")));
+    const t = el("p"); t.innerHTML = `Their team (${r.their_label}): <b>${r.their_team.join(" / ")}</b>`; b.append(t);
+    const o = el("p"); o.innerHTML = `Opponent: <b>${r.opponent}</b>` + (settings && settings.opponent === "blind" ? " (it was blind)" : ""); b.append(o);
+    b.append(el("pre", "timeline", r.timeline));
+    const c = el("div", "choices two");
+    const again = el("button", "primary", "Rematch"), back = el("button", "secondary", "Setup");
+    again.onclick = () => { hideModal(); start(settings || readSettings()); };
+    back.onclick = async () => { await press({ do: "quit" }); hideModal(); S = { phase: "setup" }; render({ phase: "setup" }); };
+    c.append(again, back); b.append(c);
+  });
+}
+
+// Input -------------------------------------------------------------------------------------
+function throwCharged(i) {
+  const mon = S.me && S.me.mons[S.me.active];
+  if (S.phase !== "play" || !mon || mon.energy < mon.charged[i].energy) return;
+  S.queued = ["charged", i]; press({ do: "charged", i });
+}
+function switchTo(k) {
+  if (S.phase !== "play" || !S.me || S.me.switch > 0) return;
+  const m = S.me.mons.filter((x) => x.i !== S.me.active)[k];
+  if (!m || m.hp === 0) return;
+  S.queued = ["switch", m.i]; press({ do: "switch", i: m.i });
+}
+function fast() { if (S.phase === "play") press({ do: "fast" }); }
+function answered() { answeredKey = modalKey; hideModal(); }
+function answerShield(on) { if (S.prompt && S.prompt.kind === "shield") { answered(); press({ do: "shield", on }); } }
+function answerReplace(k) { if (S.prompt && S.prompt.kind === "replace" && S.prompt.options[k]) { answered(); press({ do: "replace", i: S.prompt.options[k].i }); } }
+
+$("#field").addEventListener("pointerdown", (e) => { e.preventDefault(); fast(); });
+$("#auto").onclick = () => press({ do: "auto", on: !S.auto });
+$("#pause").onclick = () => press({ do: "pause", on: !S.paused });
+$("#quit").onclick = () => { if (S.phase === "over" || confirm("Quit this battle?")) press({ do: "quit" }); };
+$("#speed").onchange = (e) => press({ do: "speed", x: +e.target.value });
+$("#you").onchange = fillLead;
+$("#start").onclick = () => start(readSettings());
+document.addEventListener("visibilitychange", () => {   // don't keep playing in a hidden tab
+  if (document.hidden && S.phase === "play" && !S.paused) press({ do: "pause", on: true });
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (S.phase === "setup" || S.phase === "quit") { if (k === "enter" && e.target.tagName !== "SELECT") start(readSettings()); return; }
+  if (S.prompt && S.prompt.kind === "shield") { if (k === "y") answerShield(true); else if (k === "n") answerShield(false); return; }
+  if (S.prompt && S.prompt.kind === "replace") { if (k === "1" || k === "2") answerReplace(+k - 1); return; }
+  if (k === " " || k === "f") { e.preventDefault(); fast(); }
+  else if (k === "1" || k === "2" || k === "j" || k === "k") throwCharged({ 1: 0, j: 0, 2: 1, k: 1 }[k]);
+  else if (k === "s" || k === "d") switchTo(k === "s" ? 0 : 1);
+  else if (k === "a") press({ do: "auto", on: !S.auto });
+  else if (k === "p") press({ do: "pause", on: !S.paused });
+});
+
+let failures = 0;
+async function poll() {
+  try {
+    const s = await api("/api/state");
+    failures = 0;
+    if (s.seq !== S.seq || s.phase !== S.phase) render(s);
+    else if (s.prompt) showPrompt(s.prompt);
+  } catch (e) {
+    if (++failures === 20) alert("Lost the connection to the arena server. Is it still running?");
+  }
+  setTimeout(poll, 70);
+}
+loadSetup().then(poll).catch((e) => { document.body.prepend(el("pre", "err", "Couldn't reach the arena server: " + e.message)); });
+</script>
+</body>
+</html>

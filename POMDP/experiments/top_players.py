@@ -2,6 +2,7 @@
 
     cd POMDP && python3 -m experiments.top_players regret --rollouts 128
     cd POMDP && python3 -m experiments.top_players model
+    cd POMDP && python3 -m experiments.top_players compare rollout:128:2048 pomcp:128:2048
 
 The top players' battles come from a tournament stream that showed both players' phones,
 read by ManGo and exported by battle-turns (scripts/stream_fixtures.py, then battle-turns into
@@ -23,7 +24,18 @@ regret   The same decision regret as experiments/regret.py, with the same planne
          estimate says. So it compares won − estimate (calibrated by stage, cross-validated
          by battle) where the player disagreed with where they agreed.
 
-model    The opponent model fitted on your opponents (data/local/opponent_model.json, what
+         Last, the planner's estimates against the real results, by stage: how well they
+         rank positions from battles that were won above ones that were lost (AUC), and
+         their squared error (Brier), as estimated and calibrated.
+
+compare  The same check on the real results for two or more planner settings, scored on the
+         same decisions, with paired intervals for the differences. A setting is
+         planner:rollouts[:adaptive cap]: rollout:128, rollout:128:2048, pomcp:128:2048
+         (POMCP's tree depth is --depth). It's the one measure of a planner against how real
+         battles went, so it's how to tell whether a planner change helps off the simulator.
+         Settings without cached rows are run first, as by regret.
+
+model   The opponent model fitted on your opponents (data/local/opponent_model.json, what
          the planner's "learned" opponent uses), scored on the top players' decisions. Next
          to it: the same model refitted on the top players (5-fold cross-validation by
          battle), one fitted on both, the four heuristic styles, and the base rates.
@@ -34,6 +46,7 @@ reruns them. Everything here comes from your recordings or the stream reads, so 
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import math
 import random
@@ -196,6 +209,137 @@ def who_was_right(rows, rollouts, title):
         f"{k} {len(v)}, {m(v):+.3f}" for k, v in sorted(per.items(), key=lambda kv: -len(kv[1]))))
 
 
+# Against real results ----------------------------------------------------------------------
+
+
+def auc(pairs) -> float:
+    """Of (estimate, won) pairs: the chance that a decision from a battle that was won has a
+    higher estimate than one from a battle that was lost, ties counting half. It measures how well
+    the estimates rank positions, whatever their calibration: 0.5 is chance, 1 is perfect."""
+    won = sorted(p for p, w in pairs if w)
+    lost = [p for p, w in pairs if not w]
+    if not won or not lost:
+        return float("nan")
+    below = sum(bisect.bisect_left(won, x) + 0.5 * (bisect.bisect_right(won, x) - bisect.bisect_left(won, x))
+                for x in lost)
+    return 1 - below / (len(won) * len(lost))
+
+
+def brier(pairs) -> float:
+    return statistics.mean((p - w) ** 2 for p, w in pairs) if pairs else float("nan")
+
+
+def scored(rows, rollouts):
+    """Each decision in a battle with a result: (row, estimate, calibrated estimate, won). The
+    estimate is the planner's P(win) for what the player chose. The calibration is
+    regret.calibrate's: one Platt fit per stage, cross-validated by battle."""
+    known = [r for r in rows if r[1] in ("won", "lost")]
+    if not known:
+        return []
+    fs, _ = regret.calibrate(known, rollouts)
+    return [(r, r[4], f(r[4]), r[1] == "won") for r, f in zip(known, fs)]
+
+
+REAL = (("ranking (AUC)", lambda xs: auc([(x[1], x[3]) for x in xs]), "higher is better"),
+        ("Brier", lambda xs: brier([(x[1], x[3]) for x in xs]), "lower is better"),
+        ("Brier, calibrated", lambda xs: brier([(x[2], x[3]) for x in xs]), "lower is better"))
+STAGE_KEEP = [(name, lambda r, g=g: regret.stage(r[10]) == g) for g, name in enumerate(regret.STAGES)] \
+    + [("all", lambda r: True)]
+
+
+def against_real_results(title, xs):
+    """One planner's estimates against the real results, by stage."""
+    if not xs:
+        return
+    rate = statistics.mean(x[3] for x in xs)
+    print(f"  {title}: {len(xs)} decisions in {len({game(x[0][0]) for x in xs})} battles with a result "
+          f"(always guessing the base rate scores Brier {rate * (1 - rate):.3f})")
+    print(f"    {'':<12}{'decisions':>9}" + "".join(f"{name:>20}" for name, _, _ in REAL))
+    for name, keep in STAGE_KEEP:
+        sub = [x for x in xs if keep(x[0])]
+        if sub:
+            print(f"    {name:<12}{len(sub):>9}" + "".join(f"{f(sub):>20.3f}" for _, f, _ in REAL))
+
+
+def paired_boot(sets, stat, n=1000, seed=0):
+    """95% intervals of stat(sets[k]) − stat(sets[0]) for k ≥ 1, the sets being the same
+    decisions scored by different planners, resampling whole games."""
+    by = defaultdict(list)
+    for i, x in enumerate(sets[0]):
+        by[game(x[0][0])].append(i)
+    keys = list(by)
+    rng = random.Random(seed)
+    diffs = [[] for _ in sets[1:]]
+    for _ in range(n):
+        idx = [i for k in (rng.choice(keys) for _ in keys) for i in by[k]]
+        base = stat([sets[0][i] for i in idx])
+        for d, s in zip(diffs, sets[1:]):
+            d.append(stat([s[i] for i in idx]) - base)
+    out = []
+    for d in diffs:
+        d = sorted(x for x in d if x == x)   # a resample can lack a won or a lost battle
+        out.append((d[int(0.025 * len(d))], d[int(0.975 * len(d)) - 1]) if d else (float("nan"),) * 2)
+    return out
+
+
+def spec_options(spec: str, args) -> dict:
+    """"rollout:128", "rollout:128:2048" or "pomcp:128:2048": planner, rollouts, adaptive cap."""
+    parts = spec.split(":")
+    if parts[0] not in ("rollout", "pomcp") or not 2 <= len(parts) <= 3:
+        raise SystemExit(f"bad setting {spec!r}: use planner:rollouts[:cap], e.g. rollout:128 or pomcp:128:2048")
+    return {"rollouts": int(parts[1]), "styles": list(args.styles), "cap": int(parts[2]) if len(parts) == 3 else 0,
+            "planner": parts[0], "depth": args.depth}
+
+
+def run_compare(args):
+    if len(args.settings) < 2:
+        raise SystemExit("compare needs two or more settings, e.g. compare rollout:128:2048 pomcp:128:2048")
+    specs = [(s, spec_options(s, args)) for s in args.settings]
+    print("Against real results: each planner's P(win) for the choice the player made, scored against who "
+          "really won, on the same decisions.")
+    print("  ranking (AUC): the chance a decision from a battle that was won gets a higher estimate than one "
+          "from a battle that was lost (higher is better; calibration doesn't affect it).")
+    print("  Brier: squared error (lower is better), as estimated and after the per-stage calibration.")
+    print(f"  Differences are each setting minus {specs[0][0]}, with 95% intervals from resampling whole games.\n")
+    for who, folder, fmt in (("you", args.mine, MINE_FORMAT), ("top", args.stream, args.stream_format)):
+        rows = [rows_for(who, folder, {**o, "format": fmt}, args.workers, args.fresh)[0] for _, o in specs]
+        # The same decisions in each: match them by battle, turn, kind and order.
+        keyed = []
+        for rs in rows:
+            seen, d = defaultdict(int), {}
+            for r in rs:
+                k = (r[0], r[11], r[2])
+                d[k + (seen[k],)] = r
+                seen[k] += 1
+            keyed.append(d)
+        common = [k for k in keyed[0] if all(k in d for d in keyed[1:])]
+        sets = []
+        for (_, o), d in zip(specs, keyed):
+            by = {id(x[0]): x for x in scored([d[k] for k in common], o["rollouts"])}
+            sets.append([by[id(d[k])] for k in common if id(d[k]) in by])
+        if not sets[0]:
+            continue
+        rate = statistics.mean(x[3] for x in sets[0])
+        print(f"{WHO[who].capitalize()}: {len(sets[0])} decisions in {len({game(x[0][0]) for x in sets[0]})} "
+              f"battles with a result (always guessing the base rate scores Brier {rate * (1 - rate):.3f})")
+        w = max(16, *(len(s) + 2 for s, _ in specs))
+        dw = [max(26, len(s) + 14) for s, _ in specs[1:]]
+        for name, f, better in REAL:
+            print(f"  {name} ({better})")
+            print(f"    {'':<12}{'decisions':>9}" + "".join(f"{s:>{w}}" for s, _ in specs)
+                  + "".join(f"{'difference, ' + s:>{x}}" for (s, _), x in zip(specs[1:], dw)))
+            for stage_name, keep in STAGE_KEEP:
+                subs = [[x for x in xs if keep(x[0])] for xs in sets]
+                if not subs[0]:
+                    continue
+                cis = paired_boot(subs, f)
+                vals = [f(xs) for xs in subs]
+                diffs = [f"{v - vals[0]:+.3f} ({lo:+.3f}..{hi:+.3f})" for v, (lo, hi) in zip(vals[1:], cis)]
+                print(f"    {stage_name:<12}{len(subs[0]):>9}" + "".join(f"{v:>{w}.3f}" for v in vals)
+                      + "".join(f"{d:>{x}}" for d, x in zip(diffs, dw)))
+        print()
+
+
 def run_regret(args):
     opts = {"rollouts": args.rollouts, "styles": list(args.styles), "cap": args.adaptive, "planner": args.planner,
             "depth": args.depth}
@@ -223,6 +367,11 @@ def run_regret(args):
     print("Who was right, where a player went against the planner:")
     who_was_right(mine, args.rollouts, "You")
     who_was_right(top, args.rollouts, "Top players")
+    print()
+    print("Against real results: the planner's P(win) for the choice made, against who really won "
+          "(ranking: higher is better; Brier: lower is better; compare scores two planners):")
+    against_real_results("You", scored(mine, args.rollouts))
+    against_real_results("Top players", scored(top, args.rollouts))
     print()
     worst = sorted(top, key=lambda r: -r[3])[:12]
     print("Top players' costliest decisions by the planner (view, turn, left):")
@@ -305,7 +454,8 @@ def run_model(args):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("what", choices=("regret", "model"))
+    ap.add_argument("what", choices=("regret", "model", "compare"))
+    ap.add_argument("settings", nargs="*", help="for compare: planner:rollouts[:cap], e.g. rollout:128:2048")
     ap.add_argument("--mine", type=Path, default=MINE, help="your Battle Turns export")
     ap.add_argument("--stream", type=Path, default=STREAM, help="the stream's battle-turns export")
     ap.add_argument("--stream-format", default=STREAM_FORMAT)
@@ -320,7 +470,7 @@ def main():
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--l2", type=float, default=1.0)
     args = ap.parse_args()
-    (run_regret if args.what == "regret" else run_model)(args)
+    {"regret": run_regret, "model": run_model, "compare": run_compare}[args.what](args)
 
 
 if __name__ == "__main__":

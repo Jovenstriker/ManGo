@@ -362,6 +362,27 @@ class PlannerTests(unittest.TestCase):
             logs.append([(e.turn, e.kind, e.side, getattr(e, "move", None)) for e in b.log])
         self.assertEqual(logs[0], logs[1])
 
+    def test_pomcp_settings_from_the_player_name(self):
+        from mango_pomdp.match import valid_player
+        p = make_player("pomcp:depth=4,lean=0.75,c=2,fpu=0", gd, prior, seed=1)
+        self.assertEqual((p.max_depth, p.lean, p.c, p.fpu), (4, 0.75, 2.0, 0.0))
+        self.assertEqual(p.name, "pomcp:depth=4,lean=0.75,c=2,fpu=0")
+        self.assertEqual(make_player("pomcp@catch:depth=2", gd, prior, seed=1).max_depth, 2)
+        self.assertTrue(valid_player("pomcp-list-mixed:depth=16"))
+        self.assertFalse(valid_player("pomcp:depht=4"))
+        self.assertFalse(valid_player("planner:depth=4"))   # settings are only for POMCP
+        with self.assertRaises(ValueError):
+            make_player("planner:depth=4", gd, prior, seed=1)
+
+    def test_ranking_against_real_results(self):
+        from experiments.top_players import auc, brier
+        self.assertEqual(auc([(0.9, True), (0.8, True), (0.2, False)]), 1.0)
+        self.assertEqual(auc([(0.1, True), (0.9, False)]), 0.0)
+        self.assertEqual(auc([(0.5, True), (0.5, False)]), 0.5)          # ties count half
+        self.assertEqual(auc([(0.6, True), (0.4, True), (0.5, False)]), 0.5)
+        self.assertNotEqual(auc([(0.5, True)]), auc([(0.5, True)]))      # nan without a lost battle
+        self.assertAlmostEqual(brier([(0.8, True), (0.3, False)]), (0.04 + 0.09) / 2)
+
     def test_pomcp_grows_a_tree_below_each_option(self):
         from mango_pomdp.pomcp import POMCP
         b = Battle([[mon("medicham"), mon("azumarill"), mon("registeel")],

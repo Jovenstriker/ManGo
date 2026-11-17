@@ -658,7 +658,7 @@ with intervals from resampling whole battles.
 **With more rollouts** (`--adaptive 2048`), the picture is the same, but sharper:
 - **Overall,** the two sets still match on regret, blunders, agreement and not worse.
 - **The top players' edge at 3v3 now clears zero,** and so does a new one on throws, where they
-  blunder about half as often as you.
+  blunder about half as often as you. Neither holds when POMCP does the scoring (below).
 - **The switching gap widens.** The planner can't tell fewer than half of the top players'
   switches from its best, against two-thirds of yours.
 - **Who was right, for you.** Where you went against the planner, you won more often than it
@@ -727,6 +727,26 @@ each played from both sides. Each player's list prior leaves out its own team.
 
 At the default 12 rounds, the tree wins clearly. At 48 the edge is about the same, but with
 fewer pairs it's within noise.
+
+**As a measuring stick** (`--planner pomcp` in `regret.py` and `top_players.py`). Compared
+with the rollout planner at the same precision (`--adaptive 2048` for both):
+- **Its estimates are noisier,** so decisions take more rollouts to settle. About one in five
+  reaches the cap, twice as many as with the rollout planner. At a fixed 128 rollouts its
+  regret looked about half the rollout planner's. Much of that was the noise, which shrinks
+  split-half regret by itself.
+- **It's milder.** At equal precision, mean regret is about a quarter lower for both sets, and
+  agreement is unchanged at about half.
+- **On the top players' switches,** it puts about a third less cost, and the gap with yours is
+  within noise. It still agrees with fewer than a third of them, so it mostly still disagrees
+  with their lead switches.
+- **The top players' small edges don't survive the change.** Their lower blunder rates at 3v3
+  and on throws disappear, and a new one shows up on shields. The only difference between the
+  two sets that holds under both planners is switching.
+- **Who was right, for you:** the same as with the rollout planner. Where you went against it,
+  you won more often than it predicted, and the difference clears zero. For the top players
+  it's within noise. So both planners undervalue the choices you make against them, but not
+  the top players'. One guess at why: you know how players at your rating actually play, and
+  the belief about them doesn't capture all of it.
 
 ## Playing against the planner
 

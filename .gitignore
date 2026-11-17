@@ -18,4 +18,6 @@ Battle Logs/
 Stream Battles/
 # Battle videos with ManGo drawn over them (scripts/stream/overlay.py, scripts/video_overlay.py).
 Overlays/
+# Other players' GBL videos: each match's screen reads, the captions and their spoken counts.
+Video Battles/
 __pycache__/

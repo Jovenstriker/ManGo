@@ -365,8 +365,10 @@ public struct BattleScreenParser: Sendable {
             // real banner, "Stunfisk used Earthquakel •", so only the arrow rules it out.)
             guard !line.text.contains("→"), let banner = Self.parseBanner(line.text) else { continue }
             let moveKey = NameMatcher.normalize(banner.move)
-            // The banner stays up for ~2s and OCR varies ("Discharge!", "Dischargel"): count it once.
-            let seen = bannersSeen.contains { NameMatcher.editDistance($0, moveKey, limit: 2) <= 2 }
+            // The banner stays up for ~2s and OCR varies ("Discharge!", "Dischargel"), or cuts it
+            // short as it fades ("Clodsire used Sludge" after "…Sludge Bomb!"): count it once. Not
+            // the whole name after a short read, which ManGo couldn't match ("Disch", "Discharge").
+            let seen = bannersSeen.contains { NameMatcher.editDistance($0, moveKey, limit: 2) <= 2 || $0.hasPrefix(moveKey) }
             guard moveKey.count >= 3, !seen else { continue }
             let byOpponent: Bool
             if let userMatch = banner.user.flatMap({ matcher.match($0) }) {

@@ -55,6 +55,9 @@ explicitly approximate and are not used to identify moves or compute energy.
   charged move PvPoke has, with its cost ("+" is part of the name: Surf+ 35, Surf 45). A move
   PvPoke doesn't list for that species says nothing about its form (ItsAXN 2026-11-07, 12:30.75:
   Mega Sableye's "Night Shade+", dropped before, so it counted on as if Sableye kept 45 energy).
+  Not the start of one of its own moves: that's its banner cut short as it fades, and so is a
+  read that starts the move just read (ItsAXN 2026-11-06, 2:39.0: "Clodsire used Sludge" after
+  "…Sludge Bomb!" was a second charged move, Sludge, which set Clodsire to 0).
 - A charged move requires at least its cost. If an observed spend contradicts the clock,
   preserve the raw discrepancy and record a minimum-energy constraint (the card shows no
   uncertainty marks, at the user's request).

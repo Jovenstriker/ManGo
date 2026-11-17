@@ -1205,6 +1205,9 @@ public struct BattleAutomation: Sendable {
                 return (id, move)
             }
         }
+        // The start of a move it learns is a banner cut short ("Sludge" for Clodsire's Sludge Bomb,
+        // ItsAXN's GBL video of 2026-11-06, 2:39.0), not another move.
+        if forms.contains(where: { data.chargedMoves(for: $0).contains { moveKey($0.name).hasPrefix(key) } }) { return nil }
         // A move PvPoke doesn't list for it still shows they threw, and PvPoke's moves give its
         // cost: Mega Sableye's "Night Shade+" (ItsAXN's GBL video of 2026-11-07, 12:30.75 and
         // 17:05.25), which ManGo dropped, so it counted on as if Sableye had kept its 45 energy.

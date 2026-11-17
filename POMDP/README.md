@@ -728,6 +728,56 @@ each played from both sides. Each player's list prior leaves out its own team.
 At the default 12 rounds, the tree wins clearly. At 48 the edge is about the same, but with
 fewer pairs it's within noise.
 
+**Unlisted teams.** In those games, the opponent's team is always on the list the belief knows.
+Most real opponents' teams aren't. With `--unlisted`, both teams are left off both lists. On the
+same 150 pairs, the tree then wins 0.535 ± 0.024. The edge is smaller, but the drop is within
+noise.
+
+**Its settings** go in the player name after a colon, as in `pomcp-list-mixed:depth=4,lean=0.75`:
+- `depth`: how many decisions deep the tree goes;
+- `c`: how hard it explores;
+- `lean`: the prior on the rollout policy's choice;
+- `fpu`: how much worse an untried action counts.
+
+Changed one at a time from the defaults, on the same 150 pairs at 12 rounds, against
+`planner-list-mixed` (each ± about 0.026):
+
+| Setting | Win rate at each value (default in bold) |
+|---|---|
+| `depth` | 2: 0.522 · 4, **8**, 16: 0.568 |
+| `lean` | 0.25: 0.497 · **0.5: 0.568** · 0.75: 0.533 |
+| `c` | 0.5: 0.550 · **1: 0.568** · 2: 0.513 |
+| `fpu` | 0: 0.575 · **0.1: 0.568** · 0.3: 0.515 |
+
+- **At 12 rounds the tree is shallow.** Depths 4, 8 and 16 play exactly the same games, because
+  a dozen simulations per option never get deeper than 4 decisions. Cutting it to 2 loses most
+  of the edge.
+- **The defaults sit at about the peak.** A prior that leans less on the rollout policy, or
+  harder exploration, costs the most. So does counting untried actions much worse, which delays
+  trying the alternatives. `fpu=0` is a hair better than the default, but within noise. The
+  best of nine variants on the same games would overstate any gain, so the default stays.
+
+**Against the heuristic styles** (the 3v3 tournament above, the same 150 games × 2 sides for
+every player):
+
+| Player | Win rate | vs shielder | vs baiter | vs nuker | vs casual |
+|---|---|---|---|---|---|
+| `planner` | 0.830 ± 0.022 | 0.853 | 0.757 | 0.829 | 0.878 |
+| `pomcp` | 0.802 ± 0.023 | 0.838 | 0.696 | 0.776 | 0.890 |
+| `planner-mixed` | 0.827 ± 0.022 | 0.824 | 0.797 | 0.816 | 0.866 |
+| `pomcp-mixed` | 0.832 ± 0.022 | 0.882 | 0.730 | 0.822 | 0.890 |
+
+The tree doesn't help here. `pomcp` does a little worse than `planner`, mostly against baiter,
+by about one standard error, and `pomcp-mixed` matches `planner-mixed`. These styles are weak
+and predictable, so the rollout policy's follow-ups are already good enough against them.
+
+**Your battles, replayed** (`experiments.recorded_battles --players planner-list-mixed
+pomcp-list-mixed`). Your 64 battles were played with your real teams and movesets, 8 times
+each against each opponent. POMCP and the rollout planner finish level, both against the
+planner and against the planner copying your real opponents' decisions. Nearly all of those
+battles are contested, so the teams aren't deciding them. That falls about two standard errors
+short of the head-to-head edge. Unlisted teams may explain part of the gap, and noise the rest.
+
 **As a measuring stick** (`--planner pomcp` in `regret.py` and `top_players.py`). Compared
 with the rollout planner at the same precision (`--adaptive 2048` for both):
 - **Its estimates are noisier,** so decisions take more rollouts to settle. About one in five
@@ -747,6 +797,24 @@ with the rollout planner at the same precision (`--adaptive 2048` for both):
   it's within noise. So both planners undervalue the choices you make against them, but not
   the top players'. One guess at why: you know how players at your rating actually play, and
   the belief about them doesn't capture all of it.
+
+**Against real results** (`python3 -m experiments.top_players compare rollout:128:2048
+pomcp:128:2048`). Each planner's chance of winning for the choice the player made is scored
+against who really won, on the same decisions, by stage, with intervals from resampling whole
+games. *Ranking* (AUC) is the chance a position from a battle that was won gets a higher
+estimate than one from a battle that was lost. Calibration doesn't affect it. *Brier* is the
+squared error, both as estimated and after the per-stage calibration. The `regret` report ends
+with the same check for its own planner.
+- **POMCP ranks real positions better** on both your battles and the top players'. The margin
+  is small but clears zero on both, and most of the gain comes late in battles.
+- **After calibration, its error is a little lower too,** on both sets. As estimated, its
+  numbers are no better calibrated than the rollout planner's.
+- **More rollouts don't help the rollout planner on any of these.** Its errors are bias, not
+  noise, and bias is what the tree addresses.
+
+So POMCP is the better judge of real positions, and it beats the rollout planner head to head.
+It isn't the default, because it doesn't win more of your replayed battles or more games
+against the heuristic styles.
 
 ## Playing against the planner
 
@@ -795,7 +863,8 @@ At the end you get the result and a timeline of the battle.
                                recorded_battles.py, recorded_paths.py (the same from Battle Turns, local),
                                regret.py (your decisions scored, local), play.py (you against the planner),
                                opponent_model.py (fit and check the opponent model, local),
-                               top_players.py (top players' regret next to yours; your opponent model on them, local),
+                               top_players.py (top players' regret next to yours; your opponent model on them;
+                               planners compared against real results, local),
                                head_to_head.py (one player against another on listed Mega Great League teams)
     tests/                     simulator, solver, prior, belief and planner checks
 
@@ -815,7 +884,9 @@ At the end you get the result and a timeline of the battle.
   and its catches rely on the opponent throwing when its style model says it will. POMCP looks
   further ahead over your own decisions, and beats it head to head. But both still play the
   opponent by a style or the learned model, so neither plans for an opponent who adapts to
-  them. POMCP isn't the default yet. Its depth, prior and observation keys are untuned.
+  them. POMCP isn't the default yet. Its depth, prior, exploration and fpu have been swept
+  one at a time, but its observation keys haven't been tuned. At 12 rounds its tree only
+  reaches about 4 decisions deep.
 - **Real battles.** The learned opponent model comes from about 60 battles, so more recordings
   would tighten it most. The planner's win estimates are overconfident against real results,
   which makes regret only a rough measure. Two things could fix that: a value estimate learned

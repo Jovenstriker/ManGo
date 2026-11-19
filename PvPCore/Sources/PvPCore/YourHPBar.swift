@@ -109,4 +109,39 @@ public enum YourHPBar {
             return (y, fill(atY: y, aspect: aspect, sample: sample, width: w, height: h))
         } ?? nil
     }
+
+    /// When their hits landed on your bar, from its readings (time, fill, width in pixels), in
+    /// order. HP only falls in play: a hit is the bar's level (the middle of five readings, so one
+    /// misread doesn't count) falling and staying down for 0.15s. A fall spread over the bar's
+    /// drain (within 0.45s) is one hit; a dip that comes back is an effect over the bar; a small
+    /// rise is a misread; a big one, or the bar gone over 0.6s, is a new bar.
+    public static func hits(in samples: [[Double]]) -> [TimeInterval] {
+        let shown = samples.filter { $0.count == 3 && $0[1] * $0[2] > 0.5 }
+        guard shown.count >= 5 else { return [] }
+        let pixels = shown.map { $0[1] * $0[2] }
+        let level = pixels.indices.map { i -> Double in
+            let around = pixels[max(0, i - 2)...min(pixels.count - 1, i + 2)].sorted()
+            return around[around.count / 2]
+        }
+        var hits: [TimeInterval] = []
+        var settled = level[0]
+        var i = 1
+        while i < shown.count {
+            let t = shown[i][0]
+            let threshold = max(1.5, 0.004 * shown[i][2])
+            if t - shown[i - 1][0] > 0.6 || level[i] > settled + 3 * threshold {
+                settled = level[i]
+            } else if level[i] < settled - threshold {
+                var j = i
+                while j < shown.count, shown[j][0] - t < 0.15, level[j] < settled - threshold { j += 1 }
+                if j < shown.count, shown[j][0] - t >= 0.15 {
+                    if hits.last.map({ t - $0 >= 0.45 }) ?? true { hits.append(t) }
+                    settled = level[i...j].min()!
+                    i = j
+                }
+            }
+            i += 1
+        }
+        return hits
+    }
 }

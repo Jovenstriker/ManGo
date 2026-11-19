@@ -89,6 +89,19 @@ explicitly approximate and are not used to identify moves or compute energy.
   0.70 wide by 0.16 high; Marowak's 4 Mud Slaps). Taller but no wider is the text box read
   loosely (192819: 0.60 by 0.16 while it stood; Quagsire's 5 Mud Shots before Aqua Tail, not 6). Your HP bar doesn't date the lead: Stunfisk in 223847 waited about a second after its
   sixth Thunder Shock before Mud Bomb, so dated from its first hit it got 7, not the user's 6.
+- It can count the lead, though. At the lead's first charged move (no charged move of yours
+  before it), when your HP bar showed every one of its fast moves, the hits are its count, not
+  the clock: 3 or more, each one fast move after the last (within 0.25s), the first within 1.5
+  moves and 0.3s of the start so none came before it, and the bar read without a break of 0.5s
+  from the last hit to the stop. The clock assumes they throw as soon as they stop tapping; one
+  that waits a turn gets an extra (224117: Froslass's 6 Powder Snows hit your Quagsire a second
+  apart, the last 1.45s before "Attack incoming!"; the clock had 7). A hit is the bar's level
+  (middle of 5 readings) falling by 1.5 pixels or more and staying down 0.15s; a fall within
+  0.45s of one is its drain, not another hit. Of every recording, only Froslass changes: the
+  others it can read agree with the clock. Not when two hits are two moves apart: that's a
+  missed hit or a pause (192819: Quagsire's 5, a pause), which the bar can't tell apart. Taking
+  back a fast move wherever your bar held where the clock had one land broke 9 hand counts: the
+  bar's lag behind the clock is anything up to a whole fast move.
 - Their charged move starts as one of their fast moves finishes, so a restart shown late may hide
   one more, if the restart that implies is within 0.5s before to 0.4s after your buttons came back
   (also after they blocked yours: Mimikyu in 221337 threw 6, not 7, after the 6:36 tie). Your HP bar

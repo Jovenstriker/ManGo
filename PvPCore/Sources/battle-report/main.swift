@@ -51,7 +51,6 @@ if let v = env["PLAYER_FREEZE_BEFORE_CUE"].flatMap(Double.init) { automation.pla
 if let v = env["GO_DELAY"].flatMap(Double.init) { automation.goDelay = v }
 if let off = env["RULES_OFF"] { Rules.disabled = Set(off.split(separator: ",").map(String.init)) }
 if env["HIT_TEXT"] == "0" { automation.useFirstHitText = false }
-if env["HIT_COUNT"] == "1" { automation.useHitCount = true }
 var tracker = OpponentTracker(data: data)
 var timeline: [String] = []
 var throwsSeen: [BattleAutomation.ChargedMoveObservation] = []

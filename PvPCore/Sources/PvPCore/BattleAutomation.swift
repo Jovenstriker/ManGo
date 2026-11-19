@@ -61,12 +61,6 @@ public struct BattleAutomation: Sendable {
     static let fadeInMinimumFill = 0.15
     /// This stop's restart from the frames, if they showed it.
     private var fadeInRestart: TimeInterval?
-    /// Testing: count the lead's fast moves in the opening stretch (GO to the first stop)
-    /// from the drops in your HP bar instead of timing them. Off: exact for big hits (testV2's
-    /// 6 Thunder Shocks, Doublade's 7 Shadow Claws), but in half-size recordings a small hit
-    /// (Mud Shot on Altaria, Sand Attack) is a pixel and most are missed. To be tried on
-    /// phone-recorded battles, whose bar is measured at full size.
-    public var useHitCount = false
     /// Start the lead's clock later if its first hit on you ("…EFFECTIVE" over your Pokémon)
     /// shows it began later than GO + `goDelay`.
     public var useFirstHitText = true
@@ -192,16 +186,9 @@ public struct BattleAutomation: Sendable {
     /// A switch this soon after the battle resumes counts as part of that stop.
     static let afterStopWindow: TimeInterval = 1.5
 
-    // Your HP bar in the opening stretch: its smoothed level, the lowest it has settled at,
-    // a drop waiting for a second frame, and the time and size of each hit.
-    private var hpRecent: [Double] = []
-    private var hpLowest: Double?
-    private var hpDropSince: TimeInterval?
-    private var leadHits: [(t: TimeInterval, pixels: Double)] = []
-    private var openingDone = false
-    /// A hit counts if your bar drops at least this many pixels and holds for two frames
-    /// (a bar flickers by a pixel).
-    static let hitPixels = 1.5
+    /// Your HP bar (time, fill, width) from the lead's start until play resumes after the first stop.
+    private var leadHP: [[Double]] = []
+    private var leadHitsChecked = false
     /// This battle so far, for its summary, and the ones finished since the app last took them.
     private var battleRecord = BattleSummaryRecord()
     private var completedBattles: [BattleSummary] = []
@@ -247,6 +234,11 @@ public struct BattleAutomation: Sendable {
         if read.hpTraceVerified == true {
             recentVerifiedHP += (read.hpTrace ?? []).filter { $0.count == 3 && $0[0] <= t && $0[2] > 0 }
             recentVerifiedHP.removeAll { $0[0] < t - 15 }
+            if Self.inLeadOpening(tracker) {
+                for s in read.hpTrace ?? [] where s.count == 3 && s[0] <= t && s[2] > 0 && s[0] > (leadHP.last?[0] ?? -.infinity) {
+                    leadHP.append(s)
+                }
+            }
         }
         if !stopped, !awaitingGo, read.hpTraceVerified == true {
             for sample in read.hpTrace ?? [] where sample.count == 3 && sample[0] <= t && sample[2] > 0 {
@@ -261,7 +253,6 @@ public struct BattleAutomation: Sendable {
         fillSamples += (read.fillTrace ?? []).filter { $0.count == 3 }
         if let first = fillSamples.first, t - first[0] > 20 { fillSamples.removeAll { t - $0[0] > 20 } }
         if !stopped { checkRestartAgainstYourFastMoves(before: max(t, fillSamples.last?[0] ?? t), tracker: &tracker) }
-        if useHitCount { countLeadHits(read, tracker: tracker) }
         if useFirstHitText, !Rules.off("hitText") { checkLeadStartFromHitText(read, tracker: &tracker) }
         // After your charged move their fast move in progress finishes as play resumes, often
         // before your buttons can be read: a fresh "…EFFECTIVE" over your Pokémon in the stop
@@ -373,7 +364,6 @@ public struct BattleAutomation: Sendable {
                 awaitingYourReplacement = false
                 lastStopAt = stop
                 tracker.pause(at: stop)
-                if goAt != nil { settleLeadFromHits(at: t, tracker: &tracker) }
                 // Your fast moves landing this stretch tell their length better than your buttons.
                 if parser.yourButtonLabels == summaryButtonLabels, let turns = YourFastMoves.turns(fromGaps: yourGaps),
                    let last = battleRecord.yourMoves.indices.last {
@@ -469,6 +459,7 @@ public struct BattleAutomation: Sendable {
                     note("\(name(tracker.active?.speciesId)) uses \(change.to.name), not \(change.from.name): \(move.name) needs \(move.energy) energy")
                 }
                 alignToOpponentChargedMove(&tracker)
+                countLeadFromHits(&tracker)
                 // A move PvPoke doesn't list for this species says nothing about its form.
                 if data.species[speciesId]?.chargedMoves.contains(move.moveId) == true {
                     tracker.restrictForms(learning: move.moveId)
@@ -508,6 +499,7 @@ public struct BattleAutomation: Sendable {
                 // Corrects the count as the battle freezes, not only once the banner names the move.
                 if !Rules.off("sameTurn") { sameTurnAsYours(&tracker) }
                 alignToOpponentChargedMove(&tracker)
+                countLeadFromHits(&tracker)
 
             case .yourPokemonFainted:
                 yourFaintThisStop = true
@@ -868,48 +860,39 @@ public struct BattleAutomation: Sendable {
         NameMatcher.normalize(line.text).contains("effective") && line.box.midX > 0.6 && (0.12...0.7).contains(line.box.midY)
     }
 
-    /// The opponent's fast moves landing on your HP bar in the opening stretch, GO to the
-    /// first stop: each drop (held for two frames) is one. Their energy at the stop is then
-    /// counted, not timed: the lead's start and the stop are each only seen to within a
-    /// fraction of a second (testV2's Melmetal started right at GO and its Double Iron Bash
-    /// showed 0.8s late; the drops are exactly its 6 Thunder Shocks).
-    private mutating func countLeadHits(_ read: ScreenRead, tracker: OpponentTracker) {
-        guard let go = goAt, !openingDone, !awaitingGo else { return }
-        for sample in read.hpTrace ?? [] where sample.count == 3 {
-            let (t, fill, width) = (sample[0], sample[1], sample[2] > 0 ? sample[2] : 1)
-            guard t > go - 0.3 else { continue }
-            hpRecent.append(fill * width)
-            if hpRecent.count > 3 { hpRecent.removeFirst() }
-            let level = hpRecent.sorted()[hpRecent.count / 2]  // median of 3: no one-frame flicker
-            guard let lowest = hpLowest else { hpLowest = level; continue }
-            if lowest - level >= Self.hitPixels {
-                guard let since = hpDropSince else { hpDropSince = t; continue }
-                leadHits.append((since, lowest - level))
-                hpLowest = level
-                hpDropSince = nil
-            } else {
-                hpDropSince = nil
-                // The bar settling back up after a glint isn't a heal; a higher level only
-                // counts before the first hit (while the bar is still appearing).
-                if leadHits.isEmpty { hpLowest = max(lowest, level) }
-            }
-        }
+    /// The lead is still in its first stretch: nothing thrown, and no charged move of yours to end it.
+    private static func inLeadOpening(_ tracker: OpponentTracker) -> Bool {
+        guard tracker.team.count == 1, let lead = tracker.active else { return false }
+        return lead.history.isEmpty && lead.chargedMovesThrown.isEmpty
     }
 
-    /// At the first stop: the lead's energy from its hits, if they were clear. Their
-    /// rhythm runs from the last hit, so a fast move in progress still counts if you throw.
-    private mutating func settleLeadFromHits(at stop: TimeInterval, tracker: inout OpponentTracker) {
-        guard useHitCount, !openingDone else { return }
-        openingDone = true
-        let hits = leadHits.filter { $0.t <= stop + 0.1 }
-        guard let last = hits.last, tracker.team.count == 1, let fast = tracker.active?.fastMove,
-              let go = goAt, hits.first!.t > go else { return }
-        let before = tracker.snapshot(at: stop).energy
-        // No move finished after the last hit, however late the stop was seen: the clock
-        // restarts within one move of the stop, so one in progress still counts if you threw.
+    /// The lead's first charged move, with nothing before it since the start: when your HP bar
+    /// showed every one of its fast moves, they're counted, not timed. The clock assumes no
+    /// pause before the throw; an opponent that waits a turn or so gets one too many
+    /// (224117: Froslass's 6 Powder Snows hit your Quagsire a second apart, the last 1.45s
+    /// before "Attack incoming!"; the clock had a 7th). Only when the hits leave no doubt: 3 or
+    /// more, each one fast move after the last, the first soon enough after the start that none
+    /// came before it, and the bar read without a break from the last hit to the stop. A gap of
+    /// two moves is a missed hit or a pause, which the bar can't tell apart (192819: Quagsire).
+    private mutating func countLeadFromHits(_ tracker: inout OpponentTracker) {
+        guard !Rules.off("leadHits"), !leadHitsChecked, Self.inLeadOpening(tracker), !playerChargedThisStop,
+              let fast = tracker.active?.fastMove, let chain = tracker.active?.chainStart else { return }
+        leadHitsChecked = true
         let move = Double(fast.turns) * turnDuration
-        tracker.setEnergy(hits.count * fast.energyGain, at: max(last.t, lastStopAt - 0.9 * move))
-        note("\(hits.count) hits on your HP bar: \(name(tracker.active?.speciesId)) had \(before) by the clock, \(tracker.snapshot(at: stop).energy) by its hits")
+        let start = lastStopAt - (tracker.battleClock(at: lastStopAt) - chain)
+        let hits = YourHPBar.hits(in: leadHP).filter { $0 > start && $0 <= lastStopAt + 0.6 }
+        guard hits.count >= 3, let first = hits.first, let last = hits.last,
+              first - start < 1.5 * move + 0.3,
+              zip(hits, hits.dropFirst()).allSatisfy({ abs($1 - $0 - move) <= 0.25 }) else { return }
+        let read = leadHP.filter { $0[0] >= last && $0[0] <= lastStopAt && $0[1] * $0[2] > 0.5 }.map { $0[0] }
+        guard let lastRead = read.last, lastStopAt - lastRead < 0.3,
+              zip(read, read.dropFirst()).allSatisfy({ $1 - $0 < 0.5 }) else { return }
+        let before = tracker.snapshot(at: lastStopAt).energy
+        guard tracker.setFinishedFastMoves(hits.count, stop: lastStopAt) else { return }
+        let after = tracker.snapshot(at: lastStopAt).energy
+        if after != before {
+            note("\(hits.count) hits on your HP bar, a \(fast.name) apart, the last at \(clockString(last)): \(name(tracker.active?.speciesId)) had \(after), not \(before) by the clock")
+        }
     }
 
     /// Their charged move started as a fast move finished: the stretch since the battle
@@ -1034,11 +1017,8 @@ public struct BattleAutomation: Sendable {
         restartSeen = false
         opponentAlive = nil
         opponentAliveAt = -.infinity
-        hpRecent = []
-        hpLowest = nil
-        hpDropSince = nil
-        leadHits = []
-        openingDone = false
+        leadHP = []
+        leadHitsChecked = false
         aliveDroppedAt = -.infinity
         unconfirmedFaint = nil
         guard !tracker.team.isEmpty else { return }

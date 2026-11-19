@@ -255,7 +255,10 @@ caught GO already growing as it fades, it came late and the start is 0.5s earlie
 read, any countdown digit read dates it (2.7s after a "3", 1.6s after a "2", 0.8s after a "1"),
 not your buttons, which show about a second before play starts. Your HP bar
 doesn't date the lead: in 223847 (November 8, 2026) Stunfisk threw 6 Thunder Shocks, not 7. Dated from
-its first hit it got 7, since it waited about a second after its sixth before Mud Bomb. A Pokémon switching out in play has
+its first hit it got 7, since it waited about a second after its sixth before Mud Bomb. It can count
+the lead: at its first charged move, when your bar showed every fast move one apart from GO to the
+freeze, the hits are the count (224117, November 18, 2026: Froslass's 6 Powder Snows, the last 1.45s
+before "Attack incoming!"; the clock, which assumes no pause before a throw, had 7). A Pokémon switching out in play has
 thrown a whole number of fast moves (the switch waits for the one in progress, like a charged move):
 your counts on November 9, 2026 put Marowak, Florges, Quagsire, Turtonator, Hydreigon and Altaria at
 their time on the field over their fast move, to the nearest, except a lead leaving the opening

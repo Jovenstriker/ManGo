@@ -506,6 +506,16 @@ public struct OpponentTracker: Sendable {
         return true
     }
 
+    /// Their fast moves were counted, not timed: exactly `count` finished by `stop`, none in
+    /// progress. Only while paused, in the active Pokémon's first stretch.
+    @discardableResult
+    public mutating func setFinishedFastMoves(_ count: Int, stop: TimeInterval) -> Bool {
+        guard isPaused, let i = activeIndex, let fast = team[i].fastMove, team[i].chainStart != nil,
+              team[i].history.isEmpty, team[i].chargedMovesThrown.isEmpty else { return false }
+        team[i].chainStart = battleTime(at: stop) - Double(count * fast.turns) * turnDuration
+        return true
+    }
+
     /// Marks the active Pokémon fainted without touching the clock, for when the screen
     /// reader has already stopped it and will restart it when the battle resumes. Its
     /// energy is kept in case it was really a switch and it comes back.

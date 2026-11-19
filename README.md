@@ -251,7 +251,9 @@ Discharge and your Energy Ball were a CMP tie it won: your charged move followed
 fast move hit it first). So no sneak, and the Thunder Shock the clock had 71% done counts: 5 and 5,
 as you counted, not 4 and 6. The lead starts 0.2s after GO is
 first read, the only start after the countdown that fits every lead's count; when that first read
-caught GO already growing as it fades, it came late and the start is 0.5s earlier. Your HP bar
+caught GO already growing as it fades, it came late and the start is 0.5s earlier. When GO isn't
+read, any countdown digit read dates it (2.7s after a "3", 1.6s after a "2", 0.8s after a "1"),
+not your buttons, which show about a second before play starts. Your HP bar
 doesn't date the lead: in 223847 (November 8, 2026) Stunfisk threw 6 Thunder Shocks, not 7. Dated from
 its first hit it got 7, since it waited about a second after its sixth before Mud Bomb. A Pokémon switching out in play has
 thrown a whole number of fast moves (the switch waits for the one in progress, like a charged move):

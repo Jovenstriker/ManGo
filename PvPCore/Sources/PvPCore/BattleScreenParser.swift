@@ -127,6 +127,11 @@ public struct BattleScreenParser: Sendable {
     /// GO can't show sooner than this after each digit is first read: the countdown takes about a
     /// second a digit (in every recording GO came 2.46s or more after a "3", 1.30s after a "2").
     static let goAfterDigit: [Int: TimeInterval] = [3: 1.5, 2: 0.8, 1: 0]
+    /// When GO is first read after each digit is, in the middle (your recordings: 2.71s after a
+    /// "3", 1.63s after a "2", 0.83s after a "1"). It times the battle's start when GO isn't read
+    /// (212846: "1" at 0:09.05 and no GO read, Quagsire over it; counting from your buttons instead
+    /// started Feraligatr 1s early, 7 Shadow Claws before Hydro Cannon, not 5).
+    static let goExpectedAfterDigit: [Int: TimeInterval] = [3: 2.7, 2: 1.6, 1: 0.8]
     private var ended = false
     private var searching = false
 
@@ -207,9 +212,11 @@ public struct BattleScreenParser: Sendable {
                     && (Rules.off("fadingGoWider") || line.box.width >= Self.fadingGoWidth)
                 events.append(.battleStarted)
             }
-            if line.box.height > 0.12, line.text.trimmingCharacters(in: .whitespaces) == "2", !started, !countdownSeen {
+            let digits: Set<String> = Rules.off("anyDigit") ? ["2"] : ["1", "2", "3"]
+            if line.box.height > 0.12, let digit = Int(line.text.trimmingCharacters(in: .whitespaces)),
+               digits.contains(String(digit)), let goIn = Self.goExpectedAfterDigit[digit], !started, !countdownSeen {
                 countdownSeen = true
-                events.append(.countdown(goExpectedIn: 1.6))
+                events.append(.countdown(goExpectedIn: goIn))
             }
         }
         searching = false

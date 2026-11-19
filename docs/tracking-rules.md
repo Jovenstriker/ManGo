@@ -69,6 +69,11 @@ explicitly approximate and are not used to identify moves or compute energy.
   after its "3", 0.8s after its "2") is that digit misread (014321: "co" 0.26s after the "3";
   the real GO came 2.7s later). In every other recording GO came 2.46s or more after a "3" and
   1.30s after a "2".
+- When GO isn't read, the first countdown digit read says when it would have been: GO is first
+  read 2.7s after a "3", 1.6s after a "2" and 0.8s after a "1" (the medians in your recordings).
+  Only a "2" used to count (212846: GO behind Quagsire, only the "1" read at 0:09.05; started
+  from your buttons, Feraligatr got 7 Shadow Claws before Hydro Cannon, not 5. 011620: GO read
+  as "GQ", only the "3"; Ninetales got 6 Powder Snows, not 5).
 - A "Go, X!" within 1.5s of your buttons changing to moves X learns is your switch, even with
   your name box covered (014321: "Go, Jumpluff!" as your buttons became Energy Ball and
   Acrobatics, while Cramorant's box went blank for its Dive; taken for theirs, it made Machamp a
